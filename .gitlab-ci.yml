@@ -1,0 +1,16 @@
+# GitLab Pages : publie public/ (build Vite, base './'). Fichiers stockés EN BASE64 ; gros fichiers découpés dans parts/.
+# La CI décode, réassemble, puis vérifie TOUT par SHA-256 (SHA256SUMS).
+pages:
+  stage: deploy
+  image: alpine:3.20
+  script:
+    - find public parts -type f | while read f; do base64 -d "$f" > "$f.bin" && mv "$f.bin" "$f"; done
+    - mkdir -p "$(dirname public/assets/spa/t04.bin)" && cat parts/assets__spa__t04.bin.part00 parts/assets__spa__t04.bin.part01 > public/assets/spa/t04.bin
+    - mkdir -p "$(dirname public/assets/spa/t05.bin)" && cat parts/assets__spa__t05.bin.part00 parts/assets__spa__t05.bin.part01 > public/assets/spa/t05.bin
+    - sha256sum -c SHA256SUMS
+    - du -sh public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
