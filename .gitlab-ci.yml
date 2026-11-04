@@ -17,3 +17,42 @@ pages:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---- Diagnostics en LECTURE SEULE (branche diag-w11 uniquement) : ne publient rien ----
+.decode_w11:
+  script:
+    - find public parts -type f | while read f; do base64 -d "$f" > "$f.bin" && mv "$f.bin" "$f"; done
+    - mkdir -p "$(dirname public/assets/spa/t04.bin)" && cat parts/assets__spa__t04.bin.part00 parts/assets__spa__t04.bin.part01 > public/assets/spa/t04.bin
+    - mkdir -p "$(dirname public/assets/spa/t05.bin)" && cat parts/assets__spa__t05.bin.part00 parts/assets__spa__t05.bin.part01 > public/assets/spa/t05.bin
+    - mkdir -p "$(dirname public/assets/spa/t05_lod.bin)" && cat parts/assets__spa__t05_lod.bin.part00 parts/assets__spa__t05_lod.bin.part01 > public/assets/spa/t05_lod.bin
+    - mkdir -p "$(dirname public/assets/spa/tex/c5ff7d9bfd57bb78.ktx2)" && cat parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part00 parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part01 parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part02 > public/assets/spa/tex/c5ff7d9bfd57bb78.ktx2
+    - mkdir -p "$(dirname public/assets/w11_lh2020_high_ktx2.glb)" && cat parts/assets__w11_lh2020_high_ktx2.glb.part00 parts/assets__w11_lh2020_high_ktx2.glb.part01 parts/assets__w11_lh2020_high_ktx2.glb.part02 parts/assets__w11_lh2020_high_ktx2.glb.part03 > public/assets/w11_lh2020_high_ktx2.glb
+    - sha256sum -c SHA256SUMS | tail -n 2
+
+inspect_static:
+  stage: test
+  image: node:22-bookworm
+  rules:
+    - if: $CI_COMMIT_BRANCH == "diag-w11"
+  script:
+    - !reference [.decode_w11, script]
+    - mkdir -p /tmp/w && cp tools/inspect.mjs /tmp/w/ && cd /tmp/w && npm init -y > /dev/null && npm i --silent @gltf-transform/core @gltf-transform/extensions @gltf-transform/functions draco3dgltf meshoptimizer
+    - cd /tmp/w && node inspect.mjs "$CI_PROJECT_DIR/public"
+
+inspect_runtime:
+  stage: test
+  image: node:22-bookworm
+  timeout: 40m
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "diag-w11"
+  script:
+    - !reference [.decode_w11, script]
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends chromium fonts-liberation > /dev/null
+    - mkdir -p /tmp/w && cp tools/runtime.mjs /tmp/w/ && cd /tmp/w && npm init -y > /dev/null && npm i --silent puppeteer-core sharp
+    - cd /tmp/w && CHROME=/usr/bin/chromium node runtime.mjs "$CI_PROJECT_DIR/public" "$CI_PROJECT_DIR/diag"
+  artifacts:
+    when: always
+    paths:
+      - diag
+    expire_in: 1 week
