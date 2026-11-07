@@ -18,7 +18,7 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# ---- Diagnostics en LECTURE SEULE (branche diag-w11 uniquement) : ne publient rien ----
+# ---- Diagnostics en LECTURE SEULE (branche diag-w11 uniquement, déclenchés par une étiquette dans le message du commit) ----
 .decode_w11:
   script:
     - find public parts -type f | while read f; do base64 -d "$f" > "$f.bin" && mv "$f.bin" "$f"; done
@@ -33,7 +33,7 @@ inspect_static:
   stage: test
   image: node:22-bookworm
   rules:
-    - if: $CI_COMMIT_BRANCH == "diag-w11"
+    - if: $CI_COMMIT_BRANCH == "diag-w11" && $CI_COMMIT_MESSAGE =~ /\[static\]/
   script:
     - !reference [.decode_w11, script]
     - mkdir -p /tmp/w && cp tools/inspect.mjs /tmp/w/ && cd /tmp/w && npm init -y > /dev/null && npm i --silent @gltf-transform/core @gltf-transform/extensions @gltf-transform/functions draco3dgltf meshoptimizer
@@ -45,7 +45,7 @@ inspect_runtime:
   timeout: 40m
   allow_failure: true
   rules:
-    - if: $CI_COMMIT_BRANCH == "diag-w11"
+    - if: $CI_COMMIT_BRANCH == "diag-w11" && $CI_COMMIT_MESSAGE =~ /\[runtime\]/
   script:
     - !reference [.decode_w11, script]
     - apt-get update -qq && apt-get install -y -qq --no-install-recommends chromium fonts-liberation > /dev/null
@@ -56,3 +56,12 @@ inspect_runtime:
     paths:
       - diag
     expire_in: 1 week
+
+dump_code:
+  stage: test
+  image: node:22-bookworm
+  rules:
+    - if: $CI_COMMIT_BRANCH == "diag-w11" && $CI_COMMIT_MESSAGE =~ /\[dump\]/
+  script:
+    - !reference [.decode_w11, script]
+    - node tools/dump.mjs public
