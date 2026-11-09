@@ -62,7 +62,7 @@ class Pool {
 }
 
 export class Effects {
-  sparks: Pool; smoke: Pool; dust: Pool; stones: Pool; group = new THREE.Group()
+  sparks: Pool; smoke: Pool; dust: Pool; stones: Pool; spray: Pool; group = new THREE.Group()
   private rnd = Math.random
   constructor(budget: number) {
     this.sparks = new Pool(Math.max(64, budget), FS_SPARK, true, 9.8, 1.2, 2.4, 0)
@@ -72,7 +72,10 @@ export class Effects {
     this.stones = new Pool(Math.max(64, budget), FS_TINT, false, 9.8, 0.4, 1.6, 0)
     const sm = this.stones.points.material as THREE.ShaderMaterial
     sm.uniforms.uColor.value.setRGB(0.36, 0.33, 0.3); sm.uniforms.uAlpha.value = 1; sm.uniforms.uHard.value = 1
-    this.group.add(this.sparks.points, this.smoke.points, this.dust.points, this.stones.points)
+    // gerbes d'eau (« rooster tail ») : brume claire, grossit vite, ~1,2 s
+    this.spray = new Pool(Math.max(96, budget), FS_TINT, false, 1.5, 1.4, 0.85, 5.5)
+    { const u = (this.spray.points.material as THREE.ShaderMaterial).uniforms; u.uColor.value.setRGB(0.78, 0.8, 0.82); u.uAlpha.value = 0.16 }
+    this.group.add(this.sparks.points, this.smoke.points, this.dust.points, this.stones.points, this.spray.points)
   }
   /** surface sous la roue : 5 gravier (poussière beige + cailloux), 4 herbe (terre sombre + mottes vertes) */
   offroad(x: number, y: number, z: number, v: number[], speed: number, type: number) {
@@ -86,7 +89,15 @@ export class Effects {
     for (let i = 0; i < n; i++) this.stones.emit(x, y + 0.05, z, v[0] * (0.2 + this.rnd() * 0.5) + (this.rnd() - 0.5) * 4, 1 + this.rnd() * 4,
       v[2] * (0.2 + this.rnd() * 0.5) + (this.rnd() - 0.5) * 4, 0.025 + this.rnd() * 0.03, 0.6 + this.rnd() * 0.4)
   }
-  setScale(h: number) { for (const p of [this.sparks, this.smoke, this.dust, this.stones]) (p.points.material as THREE.ShaderMaterial).uniforms.uScale.value = h * 0.9 }
+  /** gerbe derrière une roue : quantité ∝ eau × vitesse */
+  sprayAt(x: number, y: number, z: number, v: number[], amount: number) {
+    const n = Math.floor(amount * 2.5 + this.rnd())
+    for (let i = 0; i < n; i++) this.spray.emit(x + (this.rnd() - 0.5) * 0.4, y + 0.15 + this.rnd() * 0.2, z + (this.rnd() - 0.5) * 0.4,
+      v[0] * (0.55 + this.rnd() * 0.2) + (this.rnd() - 0.5) * 3, 0.8 + this.rnd() * 2.2, v[2] * (0.55 + this.rnd() * 0.2) + (this.rnd() - 0.5) * 3, 0.5 + this.rnd() * 0.6, 1)
+  }
+  /** fumée dense (choc, pièce arrachée, moteur cassé) */
+  burst(p: number[], v: number[], n: number) { for (let i = 0; i < n; i++) this.smoke.emit(p[0] + (this.rnd() - 0.5), p[1] + 0.2, p[2] + (this.rnd() - 0.5), v[0] * 0.3 + (this.rnd() - 0.5) * 3, 0.5 + this.rnd() * 2, v[2] * 0.3 + (this.rnd() - 0.5) * 3, 0.8 + this.rnd() * 0.8, 1) }
+  setScale(h: number) { for (const p of [this.sparks, this.smoke, this.dust, this.stones, this.spray]) (p.points.material as THREE.ShaderMaterial).uniforms.uScale.value = h * 0.9 }
   /** Étincelles au point de contact (monde), avec la vitesse du véhicule. */
   spark(p: number[], v: number[], amount: number) {
     const n = Math.min(12, Math.floor(amount * 6 + this.rnd()))
@@ -100,5 +111,5 @@ export class Effects {
     if (this.rnd() > amount) return
     this.smoke.emit(x, y + 0.15, z, v[0] * 0.3 + (this.rnd() - 0.5), 0.6 + this.rnd() * 0.6, v[2] * 0.3 + (this.rnd() - 0.5), 0.5 + this.rnd() * 0.4, 1)
   }
-  update(dt: number) { this.sparks.update(dt); this.smoke.update(dt); this.dust.update(dt); this.stones.update(dt) }
+  update(dt: number) { this.sparks.update(dt); this.smoke.update(dt); this.dust.update(dt); this.stones.update(dt); this.spray.update(dt) }
 }

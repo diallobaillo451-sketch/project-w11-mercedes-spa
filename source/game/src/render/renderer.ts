@@ -26,6 +26,8 @@ import { loadDetail, applyDetail, type DetailSet } from './detail.ts'
 import { applyBakedAO, stripBakedAO, BAKED_AO_DEFAULT } from './bakedAO.ts'
 import { ReflectionProbe } from './probe.ts'
 import { TREE_RE, prepTreeGeometry, prepTreeMaterial, treeUniforms } from './trees.ts'
+import { applyWet, wetU, SkidMarks, RainStreaks, LensDrops, DebrisView } from './weatherfx.ts'
+import { W11 } from '../physics/params.ts'
 import type { Game, Pose } from '../core/game.ts'
 import type { TrackSurface } from '../track/surface.ts'
 
@@ -132,10 +134,19 @@ function tileLoader(): GLTFLoader {
 // sur les GPU qui suivent strictement la norme (Metal sur iPhone aussi). On remplace par une normale valide.
 { const C = THREE.ShaderChunk as unknown as Record<string, string>
   if (!C.normal_fragment_begin.includes('w11nan')) {
+    // matériaux double face : gl_FrontFacing peut être faux sur certains fragments (pilotes WebKit/ANGLE) → normale inversée → point noir.
+    // On le recoupe avec la normale de sommet interpolée quand celle-ci est franche (|n·v| > 0,2).
+    C.normal_fragment_begin = C.normal_fragment_begin.replace('float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;', 'float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;\n#if defined( DOUBLE_SIDED ) && ! defined( FLAT_SHADED )\n{ float w11fd = dot( normalize( vNormal ), normalize( vViewPosition ) ); if ( abs( w11fd ) > 0.2 ) faceDirection = sign( w11fd ); }\n#endif')
     C.normal_fragment_begin = C.normal_fragment_begin.replace('vec3 nonPerturbedNormal = normal;', '/*w11nan*/ if (any(isnan(normal)) || dot(normal, normal) < 1e-8) normal = vec3(0.0, 0.0, 1.0);\nvec3 nonPerturbedNormal = normal;')
-    C.normal_fragment_maps += '\nif (any(isnan(normal)) || dot(normal, normal) < 1e-8) normal = nonPerturbedNormal;'
+    C.normal_fragment_maps += '\nif (any(isnan(normal)) || dot(normal, normal) < 1e-8 || dot(normal, nonPerturbedNormal) < 0.35) normal = nonPerturbedNormal;'
+    // termes d'éclairage : un terme NaN (spéculaire GGX dégénéré, IBL) est mis à zéro au lieu de noircir le pixel ; sortie finale protégée
+    C.lights_fragment_end += '\nif (any(isnan(reflectedLight.directSpecular)) || any(isinf(reflectedLight.directSpecular))) reflectedLight.directSpecular = vec3(0.0);\nif (any(isnan(reflectedLight.indirectSpecular)) || any(isinf(reflectedLight.indirectSpecular))) reflectedLight.indirectSpecular = vec3(0.0);\nif (any(isnan(reflectedLight.directDiffuse))) reflectedLight.directDiffuse = vec3(0.0);\nif (any(isnan(reflectedLight.indirectDiffuse))) reflectedLight.indirectDiffuse = diffuseColor.rgb * 0.05;'
+    C.opaque_fragment = C.opaque_fragment.replace('gl_FragColor', 'if (any(isnan(outgoingLight)) || any(isinf(outgoingLight))) outgoingLight = diffuseColor.rgb * 0.3;\ngl_FragColor')
     C.clearcoat_normal_fragment_maps += '\n#ifdef USE_CLEARCOAT\nif (any(isnan(clearcoatNormal)) || dot(clearcoatNormal, clearcoatNormal) < 1e-8) clearcoatNormal = nonPerturbedNormal;\n#endif'
   } }
+/** netteté adaptative AMD CAS (0 = aucune, 0,125…0,2 = douce) ; ?cas=0 pour comparer */
+const CAS = (() => { const v = new URLSearchParams(location.search).get('cas'); return v !== null ? Number(v) : 0.16 })()
+const DBG_OVR = new URLSearchParams(location.search).get('ovr')
 const P0trees = () => new URLSearchParams(location.search).get('trees') !== '0'
 export class Renderer {
   canvas: HTMLCanvasElement; r: THREE.WebGLRenderer; scene = new THREE.Scene()
@@ -169,7 +180,7 @@ export class Renderer {
     if (opt.mobile && !opt.safe && this.q.name !== 'ultra') this.q.gtao = false
     // MSAA du canevas inutile quand le rendu passe par le composeur (sa cible a son propre MSAA) → mémoire économisée
     const post = this.q.bloom || this.q.gtao
-    this.r = new THREE.WebGLRenderer({ canvas, antialias: this.q.msaa && !post, powerPreference: 'high-performance', alpha: false, stencil: false })
+    this.r = new THREE.WebGLRenderer({ canvas, antialias: this.q.msaa && !post, depth: !post, powerPreference: 'high-performance', alpha: false, stencil: false })
     this.mobile = !!opt.mobile
     LAZY = false // plus de textures grises provisoires : une tuile n'entre dans la scène qu'avec ses vraies textures
     onLazyReady = () => { if (this.track) this.swapPlaceholders(this.track) }
@@ -184,6 +195,10 @@ export class Renderer {
     this.look = { tm: P.get('tm') ?? 'aces', exp: num('exp', 0.85), sun: num('sun', 3.3), env: num('env', 0.3), hemi: num('hemi', 0.1), sat: num('sat', 1.0), con: num('con', 1.06) } // E : réglage visuel (comparatifs out/look/cmp_light.png)
     this.r.toneMapping = this.look.tm === 'agx' ? THREE.AgXToneMapping : THREE.ACESFilmicToneMapping
     this.r.toneMappingExposure = this.look.exp
+    // rendu direct (iPhone : sans composeur) → même étalonnage que la passe HDR (saturation, contraste) dans le shader, avant ACES
+    { const C = THREE.ShaderChunk as unknown as Record<string, string>, f = (v: number) => v.toFixed(4)
+      if (!C.tonemapping_fragment.includes('w11grade')) C.tonemapping_fragment = C.tonemapping_fragment.replace('gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );',
+        `/*w11grade*/ { vec3 gc = max(gl_FragColor.rgb, 0.0); float gl = dot(gc, vec3(0.2126, 0.7152, 0.0722)); gc = max(mix(vec3(gl), gc, ${f(this.look.sat)}), 0.0); gl_FragColor.rgb = 0.22 * pow(gc / 0.22, vec3(${f(this.look.con)})); }\n\tgl_FragColor.rgb = toneMapping( gl_FragColor.rgb );`) }
     this.sun.intensity = this.look.sun; this.hemi.intensity = this.look.hemi
     this.r.shadowMap.enabled = true
     this.r.shadowMap.type = THREE.PCFShadowMap // r18x : PCF filtré (radius) ; PCFSoft n'existe plus
@@ -215,7 +230,7 @@ export class Renderer {
     this.sun.castShadow = true
     const s = this.sun.shadow; s.mapSize.set(this.q.shadowMap, this.q.shadowMap)
     const R = this.q.shadowRange; Object.assign(s.camera, { left: -R, right: R, top: R, bottom: -R, near: 1, far: 400 }); s.camera.updateProjectionMatrix()
-    s.bias = -0.00025; s.normalBias = 0.035; s.radius = 3
+    { const P = new URLSearchParams(location.search); s.bias = P.has('sb') ? Number(P.get('sb')) : -0.00025; s.normalBias = P.has('snb') ? Number(P.get('snb')) : 0.035; s.radius = 3; if (P.get('sh') === '0') this.sun.castShadow = false }
   }
   async load(game: Game, track: TrackSurface, prog: Progress) {
     // ciel photographique HDRI (CC0) ; repli : ciel physique Preetham (?sky=0 pour comparer)
@@ -223,7 +238,7 @@ export class Renderer {
     let skyOk = false
     if (P0.get('sky') !== '0') {
       try {
-        const { tex, meta } = await loadSky('./assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4))
+        const { tex, meta } = await loadSky('./assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), KTX)
         this.dome = new SkyDome(tex, meta, 215, n0('skyI', 3.2))
         this.sunDir.copy(this.dome.sunDir)
         this.scene.add(this.dome.mesh)
@@ -274,6 +289,8 @@ export class Renderer {
     this.r.setPixelRatio(this.basePR())
     this.cams = new CameraRig(innerWidth / innerHeight, q.drawDistance, track)
     this.fx = new Effects(q.particles); this.scene.add(this.fx.group)
+    this.skid = new SkidMarks(); this.rain = new RainStreaks(); this.drops = new LensDrops(); this.debrisV = new DebrisView()
+    this.scene.add(this.skid.mesh, this.rain.mesh, this.debrisV.group)
     this.rig.onPartLost = (_w, p) => { for (let i = 0; i < 4; i++) this.fx.spark([p.x, p.y, p.z], game.car.vel, 2) }
     // herbe 3D en bord de piste (pas en qualité basse ; ?grass=0 pour comparer)
     if (q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
@@ -332,7 +349,7 @@ export class Renderer {
       for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as unknown as Record<string, unknown>[]) for (const v of Object.values(mt)) {
         const t = v as THREE.Texture; if (!t || !(t as THREE.Texture).isTexture || src.has(t.source)) continue; src.add(t.source); tex += texBytes(t) } })
     const c = this.canvas, px = c.width * c.height
-    const rt = px * 8 + (this.composer ? px * (8 * (this.q.msaa ? 5 : 1) + 4) + (this.q.gtao ? px * 12 : 0) : 0)
+    const rt = px * (this.composer ? 4 : this.q.msaa ? 36 : 8) + (this.composer ? px * 8 + px * (this.q.msaa ? 56 : 12) + (this.q.gtao ? px * 0.25 * 24 : 0) + (this.bloom ? px * 7.3 : 0) : 0)
     const sh = this.sun.shadow.mapSize.x ** 2 * 4, probe = this.probe ? this.probeSize ** 2 * 6 * 8 * 1.33 : 0
     return { tex, geo, rt, sh: sh + probe, total: tex + geo + rt + sh + probe }
   }
@@ -371,6 +388,7 @@ export class Renderer {
     } else stripBakedAO(root)
     if (this.detail && !lod) { const det = this.detail; root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
       for (const mt of (Array.isArray(m.material) ? m.material : [m.material])) applyDetail(mt as THREE.MeshStandardMaterial, det) }) }
+    root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; for (const mt of (Array.isArray(m.material) ? m.material : [m.material])) if ((mt as THREE.MeshStandardMaterial).isMeshStandardMaterial) applyWet(mt as THREE.MeshStandardMaterial) })
     if (new URLSearchParams(location.search).get('weather') !== '0') root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
       for (const mt of (Array.isArray(m.material) ? m.material : [m.material])) if ((mt as THREE.MeshStandardMaterial).isMeshStandardMaterial) applyWeathering(mt as THREE.MeshStandardMaterial) })
     root.name = 'tile_' + t.id + (lod ? '_lod' : '')
@@ -386,7 +404,44 @@ export class Renderer {
     this.lastTile = t.id + (lod ? ' (LOD)' : '')
     if (this.cams) this.memLog('tuile ' + this.lastTile + ' ajoutée')
   }
-  lodIn = new Map<string, THREE.Object3D>()
+  lodIn = new Map<string, THREE.Object3D>(); dbgDone = false
+  skid!: SkidMarks; rain!: RainStreaks; drops!: LensDrops; debrisV!: DebrisView
+  private wx: { sid: number; base: { skyI: number; haze: number; fog: number; fogC: THREE.Color; sun: number; env: number; hemi: number } | null; cloud: number; nDeb: number; w?: string } = { sid: -1, base: null, cloud: -1, nDeb: 0 }
+  /** météo visuelle : ciel couvert, brouillard, soleil voilé, chaussée mouillée ; traces, gerbes, pluie, gouttes, débris */
+  private weatherFrame(game: Game, dt: number) {
+    const e = game.env, c = game.car, X = this.wx
+    if (X.sid !== game.sessionId) { X.sid = game.sessionId; this.skid.clear(); X.nDeb = 0 }
+    if (!X.base) { const fog = this.scene.fog as THREE.FogExp2 | null
+      X.base = { skyI: this.dome?.mat.uniforms.uI.value ?? 1, haze: this.dome?.mat.uniforms.uHaze.value ?? 0.35, fog: fog?.density ?? 0.0003, fogC: fog ? fog.color.clone() : new THREE.Color(0.6, 0.65, 0.7), sun: this.sun.intensity, env: this.scene.environmentIntensity, hemi: this.hemi.intensity } }
+    const B = X.base
+    const snap = X.w !== e.weather; X.w = e.weather // changement de météo (réglage) : ciel et chaussée basculent tout de suite
+    X.cloud = X.cloud < 0 || snap ? e.cloud : X.cloud + (e.cloud - X.cloud) * Math.min(1, dt * 0.5)
+    const co = Math.max(0, (X.cloud - 0.3) / 0.7)
+    if (this.dome) { this.dome.mat.uniforms.uI.value = B.skyI * (1 - 0.55 * co); this.dome.mat.uniforms.uHaze.value = B.haze + 0.5 * co }
+    const fog = this.scene.fog as THREE.FogExp2 | null
+    if (fog) { fog.density = B.fog * (1 + 2 * co * co + 2.5 * Math.min(1, e.rainRate / 9)); fog.color.copy(B.fogC).lerp(new THREE.Color(0.36, 0.38, 0.41), co) }
+    this.sun.intensity = B.sun * (1 - 0.9 * co); this.scene.environmentIntensity = B.env * (1 - 0.5 * co); this.hemi.intensity = B.hemi * (1 + 0.6 * co)
+    const wetT = Math.min(1, Math.max(e.wetness / 0.35, e.rainRate > 0 ? 0.55 + e.rainRate / 20 : 0))
+    wetU.uWet.value = snap ? wetT : wetU.uWet.value + (wetT - wetU.uWet.value) * Math.min(1, dt * 0.3)
+    // traces / gerbes par roue
+    const wetK = 1 - 0.8 * Math.min(1, e.wetness / 0.3)
+    for (let i = 0; i < 4; i++) { const w = c.wheels[i]; if (!w.contact) { this.skid.add(i, [0, 0, 0], 0, 0, 0); continue }
+      const vx = Math.abs(w.omega * w.r) + 0.1, lockK = c.brakeApplied > 0.1 && c.speed > 6 && Math.abs(w.omega * w.r) < c.speed * 0.55 ? 1 : 0
+      const slideK = Math.max(0, Math.min(1, (Math.abs(w.alpha) - W11.tyre.aPeak * 1.25) / 0.12)) * Math.min(1, c.speed / 15)
+      const spinK = Math.max(0, Math.min(1, (w.kappa - W11.tyre.kPeak * 1.5) / 0.5)) * Math.min(1, vx / 8)
+      const off = w.type === 4 || w.type === 5
+      const k = off ? (c.speed > 3 ? 0.7 : 0) : Math.max(lockK, slideK, spinK) * wetK
+      this.skid.add(i, [w.px, w.py, w.pz], w.front ? W11.tyreWidthF : W11.tyreWidthR, k, off ? (w.type === 5 ? 1 : 2) : 0)
+      const water = e.water[e.idx(w.sample.s, w.sample.d)]
+      if (water > 0.08 && c.speed > 12 && !w.front) this.fx.sprayAt(w.px, w.py, w.pz, c.vel, Math.min(1.5, water * 1.2) * Math.min(1, c.speed / 60))
+    }
+    this.rain.update(this.cams.cam.position, performance.now() / 1000, e.rainRate, e.wind, c.vel)
+    this.drops.update(dt, this.cams.mode === 'cockpit' && !game.paused, e.rainRate, c.speed)
+    // débris : apparition → étincelles + fumée ; roue arrachée → la coque racle
+    if (game.debris.length > X.nDeb) { for (const d of game.debris.slice(X.nDeb)) { this.fx.spark(d.pos, c.vel, 2.5); this.fx.burst(d.pos, c.vel, 6) } }
+    X.nDeb = game.debris.length
+    this.debrisV.update(game)
+  }
   detail: DetailSet | null = null
   grass: Grass | null = null
   crowd: Crowd | null = null
@@ -499,8 +554,12 @@ export class Renderer {
   setupPost() {
     const q = this.q
     if (!q.bloom && !q.gtao) { this.composer = null; return }
+    // mémoire : un seul tampon MSAA ×4 + profondeur (la scène y est toujours rendue, cf. frame()) ; le second tampon de
+    // l'enchaînement est simple et sans profondeur (avant : deux tampons MSAA ×4 + profondeur clonés → ~115 Mo de plus à 2121×980)
     const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: q.msaa ? 4 : 0 })
     this.composer = new EffectComposer(this.r, rt)
+    const rt2 = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 0, depthBuffer: false })
+    this.composer.renderTarget2.dispose(); this.composer.renderTarget2 = rt2
     this.composer.addPass(new RenderPass(this.scene, this.cams.cam))
     if (q.gtao) {
       this.gtao = new GTAOPass(this.scene, this.cams.cam, 1, 1)
@@ -511,13 +570,13 @@ export class Renderer {
     }
     // garde-fou HDR : NaN/Inf (spéculaires extrêmes, soleil) → sinon le flou du bloom contamine tout l'écran
     this.composer.addPass(new ShaderPass({
-      uniforms: { tDiffuse: { value: null }, sat: { value: this.look.sat }, con: { value: this.look.con } },
+      uniforms: { tDiffuse: { value: null }, sat: { value: this.look.sat }, con: { value: this.look.con }, cas: { value: CAS } },
       // NaN/Inf : remplacé par la moyenne des voisins valides (et non du noir) → aucun point noir (vu sous WebKit sur la carrosserie)
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
 // + étalonnage léger en linéaire HDR, avant ACES (même passe → coût nul) : saturation et contraste autour d'un gris moyen
-      fragmentShader: 'uniform sampler2D tDiffuse; uniform float sat, con; varying vec2 vUv; bool bad3(vec3 v){ return any(isnan(v)) || any(isinf(v)); } void main(){ vec4 c = texture2D(tDiffuse, vUv); if (bad3(c.rgb)) { vec2 px = 1.0 / vec2(textureSize(tDiffuse, 0)); vec3 acc = vec3(0.0); float n = 0.0; for (int i = 0; i < 12; i++) { float a = float(i) * 0.5236; vec3 v = texture2D(tDiffuse, vUv + vec2(cos(a), sin(a)) * px * (i < 4 ? 1.0 : i < 8 ? 2.5 : 5.0)).rgb; if (!bad3(v)) { acc += min(v, vec3(48.0)); n += 1.0; } } c.rgb = n > 0.0 ? acc / n : vec3(0.0); } c.rgb = clamp(c.rgb, 0.0, 48.0); float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722)); c.rgb = max(mix(vec3(l), c.rgb, sat), 0.0); c.rgb = 0.22 * pow(c.rgb / 0.22, vec3(con)); gl_FragColor = vec4(min(c.rgb, 48.0), 1.0); }',
+      fragmentShader: 'uniform sampler2D tDiffuse; uniform float sat, con, cas; varying vec2 vUv; bool bad3(vec3 v){ return any(isnan(v)) || any(isinf(v)); } void main(){ vec4 c = texture2D(tDiffuse, vUv); if (bad3(c.rgb)) { vec2 px = 1.0 / vec2(textureSize(tDiffuse, 0)); vec3 acc = vec3(0.0); float n = 0.0; for (int i = 0; i < 12; i++) { float a = float(i) * 0.5236; vec3 v = texture2D(tDiffuse, vUv + vec2(cos(a), sin(a)) * px * (i < 4 ? 1.0 : i < 8 ? 2.5 : 5.0)).rgb; if (!bad3(v)) { acc += min(v, vec3(48.0)); n += 1.0; } } c.rgb = n > 0.0 ? acc / n : vec3(0.0); } c.rgb = clamp(c.rgb, 0.0, 48.0); if (cas > 0.0) { vec2 px = 1.0 / vec2(textureSize(tDiffuse, 0)); vec3 n0 = texture2D(tDiffuse, vUv + vec2(0.0, px.y)).rgb, n1 = texture2D(tDiffuse, vUv - vec2(0.0, px.y)).rgb, n2 = texture2D(tDiffuse, vUv + vec2(px.x, 0.0)).rgb, n3 = texture2D(tDiffuse, vUv - vec2(px.x, 0.0)).rgb; if (!(bad3(n0) || bad3(n1) || bad3(n2) || bad3(n3))) { vec3 t = c.rgb / (1.0 + c.rgb), a0 = n0 / (1.0 + n0), a1 = n1 / (1.0 + n1), a2 = n2 / (1.0 + n2), a3 = n3 / (1.0 + n3); vec3 mn = min(t, min(min(a0, a1), min(a2, a3))), mx = max(t, max(max(a0, a1), max(a2, a3))); vec3 amp = sqrt(clamp(min(mn, 1.0 - mx) / max(mx, 1e-4), 0.0, 1.0)); vec3 w = -amp * cas; vec3 r = (t + (a0 + a1 + a2 + a3) * w) / (1.0 + 4.0 * w); r = clamp(r, 0.0, 0.999); c.rgb = r / (1.0 - r); } } float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722)); c.rgb = max(mix(vec3(l), c.rgb, sat), 0.0); c.rgb = 0.22 * pow(c.rgb / 0.22, vec3(con)); gl_FragColor = vec4(min(c.rgb, 48.0), 1.0); }',
     }))
-    if (q.bloom) { this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.12, 0.3, 24.0); this.composer.addPass(this.bloom) }
+    if (q.bloom) { this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.08, 0.15, 30.0); this.composer.addPass(this.bloom) }
     this.composer.addPass(new OutputPass())
   }
   resize() {
@@ -559,6 +618,7 @@ export class Renderer {
       if (sl > 6 && w.type < 4) this.fx.puff(w.px, w.py, w.pz, c.vel, Math.min(1, (sl - 6) / 14))
       else if (w.type >= 4 && w.type <= 5 && c.speed > 4) this.fx.offroad(w.px, w.py, w.pz, c.vel, c.speed, w.type)
     }
+    this.weatherFrame(game, dt)
     this.fx.update(dt)
     treeUniforms.uTime.value = performance.now() / 1000
     this.cams.shake = shake
@@ -576,7 +636,11 @@ export class Renderer {
     this.sun.target.updateMatrixWorld()
     treeUniforms.uSunV.value.copy(this.sunDir).transformDirection(this.cams.cam.matrixWorldInverse)
     this.probe?.update(this.r, this.scene, this.car.position, [this.car, this.fx.group])
-    if (this.composer) this.composer.render(dt)
+    if (DBG_OVR === 'nomap' && !this.dbgDone) { this.dbgDone = true; this.rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as unknown as Record<string, unknown>[]) { for (const k of Object.keys(mt)) if ((mt[k] as THREE.Texture)?.isTexture) mt[k] = null; (mt as unknown as THREE.Material).needsUpdate = true } }) }
+    if ((DBG_OVR === 'an1' || DBG_OVR === 'nomip') && !this.dbgDone) { this.dbgDone = true; this.rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as unknown as Record<string, unknown>[]) { for (const k of Object.keys(mt)) { const t = mt[k] as THREE.Texture; if (t?.isTexture) { t.anisotropy = 1; if (DBG_OVR === 'nomip') t.minFilter = THREE.LinearFilter; t.needsUpdate = true } } } }) }
+    if (DBG_OVR === 'fs' && !this.dbgDone) { this.dbgDone = true; this.rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; for (const mt of (Array.isArray(m.material) ? m.material : [m.material])) { mt.side = THREE.FrontSide; mt.needsUpdate = true } }) }
+    if (DBG_OVR && DBG_OVR.length === 1 && !this.scene.overrideMaterial) this.scene.overrideMaterial = DBG_OVR === 'n' ? new THREE.MeshNormalMaterial() : DBG_OVR === 's' ? new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.5 }) : DBG_OVR === 'd' ? new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide }) : DBG_OVR === 'l' ? new THREE.MeshLambertMaterial({ color: 0xcccccc }) : new THREE.MeshBasicMaterial({ color: 0xffffff })
+    if (this.composer) { const C = this.composer; C.readBuffer = C.renderTarget1; C.writeBuffer = C.renderTarget2; C.render(dt) }
     else this.r.render(this.scene, this.cams.cam)
   }
 }

@@ -64,9 +64,12 @@ export class SkyDome {
   }
 }
 
-export async function loadSky(base: string, mobile: boolean, an: number): Promise<{ tex: THREE.Texture; meta: SkyMeta }> {
+export async function loadSky(base: string, mobile: boolean, an: number, ktx?: { loadAsync(u: string): Promise<THREE.Texture> } | null): Promise<{ tex: THREE.Texture; meta: SkyMeta }> {
   const meta = await (await fetch(base + 'sky.json')).json() as SkyMeta
-  const tex = await new THREE.TextureLoader().loadAsync(base + (mobile ? 'sky_2k.webp' : 'sky_4k.webp'))
+  // ciel 4K en KTX2 (ASTC/BC7 côté GPU : ~6 Mo au lieu de ~24 Mo de WebP décodé), WebP en secours
+  let tex: THREE.Texture | null = null
+  if (ktx && !mobile) { try { tex = await ktx.loadAsync(base + 'sky_4k.ktx2'); tex.minFilter = THREE.LinearMipmapLinearFilter; tex.magFilter = THREE.LinearFilter; tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.ClampToEdgeWrapping; tex.colorSpace = THREE.NoColorSpace; tex.anisotropy = an; return { tex, meta } } catch { tex = null } }
+  tex = await new THREE.TextureLoader().loadAsync(base + (mobile ? 'sky_2k.webp' : 'sky_4k.webp'))
   tex.colorSpace = THREE.NoColorSpace; tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.ClampToEdgeWrapping
   tex.minFilter = THREE.LinearMipmapLinearFilter; tex.magFilter = THREE.LinearFilter; tex.anisotropy = an; tex.generateMipmaps = true
   return { tex, meta }

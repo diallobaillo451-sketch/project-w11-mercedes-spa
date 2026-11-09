@@ -8,6 +8,8 @@ import { W11 } from '../physics/params.ts'
 const WN = ['FL', 'FR', 'RL', 'RR'] as const
 export class CarRig {
   root: THREE.Object3D
+  /** feu arrière FIA (LED rouge) : allumé sous la pluie, clignote en récupération d'énergie */
+  rainLight: THREE.MeshStandardMaterial[] = []; private rlInit = false
   hubs: THREE.Object3D[] = []; spins: THREE.Object3D[] = []; base: THREE.Vector3[] = []
   sw: THREE.Object3D | null = null; swQ0 = new THREE.Quaternion(); swP0 = new THREE.Vector3()
   head: THREE.Object3D | null = null
@@ -97,7 +99,11 @@ export class CarRig {
       for (const mt of mats) {
         if (seen.has(mt)) continue; seen.add(mt)
         const s = mt as THREE.MeshPhysicalMaterial
-        for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap'] as const) { const t = s[k]; if (t) t.anisotropy = anisotropy }
+        // WebKit : le filtrage anisotrope des textures de la voiture (atlas WebP) produisait des points noirs (diagnostic 2026-11-09 :
+        // disparaissent avec anisotropie 1, réapparaissent dès 2 sur la seule carte de couleur) → 1 sur Safari, réglable ?caran=N ; piste inchangée (16)
+        { const P = new URLSearchParams(location.search), ua = navigator.userAgent, wk = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Firefox|Edg\//.test(ua)
+          const an = P.has('caran') ? Number(P.get('caran')) : wk ? 1 : anisotropy
+          for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap'] as const) { const t = s[k]; if (t) t.anisotropy = an } }
         if (/PAINT|merc1|Car_wing/i.test(s.name) && s.isMeshPhysicalMaterial) { s.clearcoat = Math.max(s.clearcoat, 0.9); s.clearcoatRoughness = 0.04 }
         if (/carbon/i.test(s.name) && s.isMeshPhysicalMaterial) { /* pas d anisotropie : sans tangentes, elle créait des lucioles blanches (scintillement) sur tout l arrière */ s.anisotropy = 0; s.clearcoat = Math.max(s.clearcoat, 0.5); s.clearcoatRoughness = 0.08 }
         if (/GLASS|Visor|Clear/i.test(s.name)) { m.castShadow = false }
@@ -132,7 +138,8 @@ export class CarRig {
   }
   /** dégâts visibles : aileron AV qui s'affaisse puis se détache, aileron AR arraché, roue au carrossage faussé.
    *  Rien ne se répare tant que la physique ne remet pas les dégâts à zéro (arrêt aux stands / nouvelle session). */
-  applyDamage(D: { frontWing: number; rearWing: number; suspension: number[] }) {
+  applyDamage(D: { frontWing: number; rearWing: number; suspension: number[]; wheelOff?: boolean[] }) {
+    if (D.wheelOff) for (let i = 0; i < 4; i++) this.hubs[i].visible = !D.wheelOff[i]
     const f = this.dmgFront, r = this.dmgRear
     if (f) { const lost = D.frontWing > 0.7; f.visible = !lost; f.rotation.set(Math.min(0.5, D.frontWing) * 0.35, D.frontWing * 0.12, D.frontWing * 0.08); f.position.y = -D.frontWing * 0.04
       if (lost && !this.wingLost[0]) { this.wingLost[0] = true; this.onPartLost?.('front', f.getWorldPosition(this.dmgFrontP)) } if (!lost) this.wingLost[0] = false }
@@ -182,5 +189,11 @@ export class CarRig {
       hp.getWorldQuaternion(this.hq3).invert(); this.head.quaternion.copy(this.hq3.multiply(this.hq2))
     }
     this.applyDamage(car.damage)
+    if (!this.rlInit) { this.rlInit = true; this.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; const mat = m.material as THREE.MeshStandardMaterial
+      if (mat?.name === '2020_light') { const c = mat.clone(); c.emissive = new THREE.Color(1, 0.04, 0.02); c.emissiveIntensity = 0; m.material = c; this.rainLight.push(c) } }) }
+    { const wet = (car.env?.cloud ?? 0) > 0.75 && ((car.env?.rainRate ?? 0) > 0 || (car.env?.wetness ?? 0) > 0.15)
+      const harvest = car.speed > 15 && (car.brakeApplied > 0.02 || car.throttleApplied < 0.02), blink = performance.now() % 250 < 125
+      const on = harvest ? (blink ? 1 : 0) : wet ? 1 : 0
+      for (const mt of this.rainLight) mt.emissiveIntensity = on * 14 }
   }
 }
