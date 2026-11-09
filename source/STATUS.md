@@ -61,3 +61,23 @@ Dernière mise à jour : 2026-11-03 07:35 (heure Canaries, UTC+0) — piste plei
 - iPhone : streaming des tuiles < 600 m, dispose au-delà de 850 m, 1 opération / 250 ms ; démarrage sans composeur/sonde, ombre 1024, puis montée en qualité après 12 s (effets → ombre 2048 → sonde).
 - Mesure Chromium (UA iPhone 844×390) : avant ≈ 240 Mo textures au boot (dont voiture 223) ; après 90 Mo au boot, 171 Mo tuiles proches, ≈ 215 Mo après montée en qualité.
 - Non testé sur vrai iPhone. LOD / instancing / ombres en cascade : pas faits.
+
+## 2026-11-09 — Grand chantier réalisme/qualité (en cours, heure Canaries)
+- Lot 1 (fait, commit) : qualité max restaurée (faux plantages iOS supprimés : battement de cœur, migration réglages v2, version efface les baisses mémorisées), budget pixels 1080p·60 / 2K·30, cadence 30 i/s en 2K, échelle adaptative plus douce. Dépendances npm réinstallées dans game/node_modules (le lien vers f1sg était cassé).
+- Lot 2 (fait) : audio 3D v2 (HRTF, profils caméra, bas régime réparé, gravier/herbe/cailloux/chocs) — tests/audio_low.mjs.
+- Lot 3 (fait) : volant vivant (src/ui/wheel.ts), panneau réglages, drapeaux, delta, limiteur stands, carburant, caméra cockpit aux yeux, HUD cockpit en haut à gauche — tests/cockpit.mjs.
+- Suite : collisions/barrières/anti-envol/dégâts/surfaces → stands → ciel/bâtiments/herbe/gravier/tribunes → pilote Blender → LOD → 20 améliorations → tests/publication.
+
+### Lot 4 (fait) — collisions réelles + voie des stands
+- Collisions contre la géométrie réelle des barrières (tools/coll : k1_export_coll.py → raster.py → segments.py → game/public/track/barriers.bin ; test balayé, type pneus/rail/béton/objet, dégâts par zone, anti-envol relatif à la pente). Test : `node tests/crash.test.ts` (28 sorties à 216/306 km/h : 0 envol > 1 m, 0 retournement, 0 traversée ; l'ancien modèle traversait 13–19 fois à Pouhon).
+- Raster : niveau de roulage = grille physique (passerelles/grillages de pont ignorés), sol à deux niveaux (mur de l'entrée des stands), auvents des stands exclus de la grille physique (t9_surface_v5.py re-tiré).
+- Voie des stands : tools/coll/pitpath.py (A* sur la géométrie réelle, entrée par l'Arrêt de Bus côté droit, sortie après La Source par la route de dégagement, rejoint la piste vers s≈940) → public/track/pitlane.json ; src/track/pitlane.ts ; limiteur automatique 80 km/h (s 6790 → 200), pénalité +5 s si > 80,5 km/h > 0,5 s. Test : `node tests/pitlane.test.ts` (arrivée, 0 choc, v max 73 km/h dans la zone).
+- Recherche globale du point de piste le plus proche si > 25 m (épingle de La Source).
+- Bus d'événements de course (src/core/events.ts) prêt pour la radio / le futur mode course multi-voitures.
+- Suite : point 7 (gravier/herbe), 2 (ciel), 3 (bâtiments), 8 (tribunes), 9 (pilote), 1/14 (perf), 13 (doc).
+
+## 2026-11-09 16:10 (heure Canaries) — Lot 5 : sol, ciel, bâtiments, tribunes, pilote
+- Gravier/herbe : enfoncement + traînée (test surface OK), poussière/cailloux/mottes, détail PBR CC0 de près, herbe 3D instanciée (masque matériau, teinte du sol). Ciel HDRI CC0 Poly Haven (Kloofendal partly cloudy), soleil analytique 47,9°, IBL du même ciel, brume + brouillard. Bâtiments : albédo ×0,78 + salissure procédurale. Public instancié (Raidillon 3 676, principale 5 109). Tribune Raidillon : position vérifiée contre OSM (écart 16 m, dans l'erreur de recalage 9 m RMS) → non déplacée. Mains : prise du volant corrigée à l'exécution (carRig.fixGrip).
+- Tests : physics (tour IA 1:41.763, 0 choc), crash, pitlane, surface, gyro, app.mjs 844×390 : tous OK ; mémoire GPU estimée profil iPhone 844×390@3 : ≈ 246 Mo après montée en qualité (budget < 300 Mo). i/s non mesurables (rendu logiciel). Non testé sur un vrai iPhone.
+- Non fait : décimation Blender (refusée : baisserait la qualité visible), piste mouillée.
+- Publication GitLab (16:20, heure Canaries) : 6 commits jeu (b021c8be → 541ce02b : 18 nouveaux fichiers, 4 mis à jour, 2 supprimés ; .gitlab-ci.yml inchangé car aucun nouveau fichier découpé), puis source/ mis à jour (59 fichiers texte).
