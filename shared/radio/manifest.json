@@ -1,0 +1,6129 @@
+{
+ "langue": "fr",
+ "version": 1,
+ "pilote_joueur": "Lewis",
+ "voix": {
+  "nom": "F1",
+  "voice_id": "hENoCPm60lhmLthS2uSL",
+  "source": "voix clonée personnelle de l'utilisateur (compte ElevenLabs)"
+ },
+ "modele": "eleven_multilingual_v2",
+ "reglages_voix": {
+  "stability": 0.65,
+  "similarity_boost": 0.9,
+  "style": 0.0,
+  "use_speaker_boost": true,
+  "speed": 1.05,
+  "language_code": "fr"
+ },
+ "format": {
+  "conteneur": "m4a",
+  "codec": "AAC-LC",
+  "echantillonnage_hz": 44100,
+  "canaux": 1,
+  "debit_kbps": 96,
+  "loudness_lufs": -16,
+  "true_peak_max_dbfs": -1,
+  "blancs": "coupés début/fin (marge ~30 ms / ~60 ms)",
+  "effet_radio": "aucun (à appliquer dans le jeu)"
+ },
+ "priorites": {
+  "0": "ambiance / facultatif",
+  "1": "info",
+  "2": "important",
+  "3": "critique (interrompt les autres)"
+ },
+ "messages": [
+  {
+   "id": "radio_check",
+   "categorie": "general",
+   "declencheur": "garage_sortie / debut_session",
+   "texte": "Radio check, Lewis. Tu m'entends ?",
+   "duree_ms": 1122,
+   "fichier": "voix/general/radio_check_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/general/radio_check_v1.m4a",
+     "texte": "Radio check, Lewis. Tu m'entends ?",
+     "duree_ms": 1122
+    },
+    {
+     "fichier": "voix/general/radio_check_v2.m4a",
+     "texte": "Lewis, test radio. Tu me reçois ?",
+     "duree_ms": 1955
+    },
+    {
+     "fichier": "voix/general/radio_check_v3.m4a",
+     "texte": "Contrôle radio. Je t'entends fort et clair, Lewis.",
+     "duree_ms": 2068
+    }
+   ]
+  },
+  {
+   "id": "radio_check_ok",
+   "categorie": "general",
+   "declencheur": "reponse_radio_check",
+   "texte": "Fort et clair, Lewis. Bonne session.",
+   "duree_ms": 1905,
+   "fichier": "voix/general/radio_check_ok_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/general/radio_check_ok_v1.m4a",
+     "texte": "Fort et clair, Lewis. Bonne session.",
+     "duree_ms": 1905
+    },
+    {
+     "fichier": "voix/general/radio_check_ok_v2.m4a",
+     "texte": "Reçu cinq sur cinq. On y va.",
+     "duree_ms": 1467
+    }
+   ]
+  },
+  {
+   "id": "bien_recu",
+   "categorie": "reponses_courtes",
+   "declencheur": "accuse_reception",
+   "texte": "Bien reçu.",
+   "duree_ms": 515,
+   "fichier": "voix/reponses_courtes/bien_recu_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/reponses_courtes/bien_recu_v1.m4a",
+     "texte": "Bien reçu.",
+     "duree_ms": 515
+    },
+    {
+     "fichier": "voix/reponses_courtes/bien_recu_v2.m4a",
+     "texte": "Reçu, Lewis.",
+     "duree_ms": 620
+    },
+    {
+     "fichier": "voix/reponses_courtes/bien_recu_v3.m4a",
+     "texte": "Copie.",
+     "duree_ms": 375
+    }
+   ]
+  },
+  {
+   "id": "compris",
+   "categorie": "reponses_courtes",
+   "declencheur": "accuse_reception",
+   "texte": "Compris.",
+   "duree_ms": 399,
+   "fichier": "voix/reponses_courtes/compris_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/reponses_courtes/compris_v1.m4a",
+     "texte": "Compris.",
+     "duree_ms": 399
+    },
+    {
+     "fichier": "voix/reponses_courtes/compris_v2.m4a",
+     "texte": "C'est compris, on regarde.",
+     "duree_ms": 1107
+    },
+    {
+     "fichier": "voix/reponses_courtes/compris_v3.m4a",
+     "texte": "Ok, compris.",
+     "duree_ms": 560
+    }
+   ]
+  },
+  {
+   "id": "negatif",
+   "categorie": "reponses_courtes",
+   "declencheur": "refus",
+   "texte": "Négatif.",
+   "duree_ms": 432,
+   "fichier": "voix/reponses_courtes/negatif_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/reponses_courtes/negatif_v1.m4a",
+     "texte": "Négatif.",
+     "duree_ms": 432
+    },
+    {
+     "fichier": "voix/reponses_courtes/negatif_v2.m4a",
+     "texte": "Négatif, Lewis. On reste sur le plan.",
+     "duree_ms": 1534
+    },
+    {
+     "fichier": "voix/reponses_courtes/negatif_v3.m4a",
+     "texte": "Non, négatif pour l'instant.",
+     "duree_ms": 1182
+    }
+   ]
+  },
+  {
+   "id": "affirmatif",
+   "categorie": "reponses_courtes",
+   "declencheur": "confirmation",
+   "texte": "Affirmatif.",
+   "duree_ms": 547,
+   "fichier": "voix/reponses_courtes/affirmatif_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/reponses_courtes/affirmatif_v1.m4a",
+     "texte": "Affirmatif.",
+     "duree_ms": 547
+    },
+    {
+     "fichier": "voix/reponses_courtes/affirmatif_v2.m4a",
+     "texte": "Affirmatif, Lewis.",
+     "duree_ms": 1086
+    }
+   ]
+  },
+  {
+   "id": "on_regarde",
+   "categorie": "reponses_courtes",
+   "declencheur": "question_pilote",
+   "texte": "On regarde, on revient vers toi.",
+   "duree_ms": 1132,
+   "fichier": "voix/reponses_courtes/on_regarde_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/reponses_courtes/on_regarde_v1.m4a",
+     "texte": "On regarde, on revient vers toi.",
+     "duree_ms": 1132
+    },
+    {
+     "fichier": "voix/reponses_courtes/on_regarde_v2.m4a",
+     "texte": "Laisse-nous une minute, on analyse.",
+     "duree_ms": 1288
+    },
+    {
+     "fichier": "voix/reponses_courtes/on_regarde_v3.m4a",
+     "texte": "Bien reçu, on vérifie les données.",
+     "duree_ms": 1465
+    }
+   ]
+  },
+  {
+   "id": "stand_by",
+   "categorie": "reponses_courtes",
+   "declencheur": "attente",
+   "texte": "Stand by, Lewis.",
+   "duree_ms": 649,
+   "fichier": "voix/reponses_courtes/stand_by_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/reponses_courtes/stand_by_v1.m4a",
+     "texte": "Stand by, Lewis.",
+     "duree_ms": 649
+    },
+    {
+     "fichier": "voix/reponses_courtes/stand_by_v2.m4a",
+     "texte": "Attends, attends. Stand by.",
+     "duree_ms": 1629
+    },
+    {
+     "fichier": "voix/reponses_courtes/stand_by_v3.m4a",
+     "texte": "Garde la position, stand by.",
+     "duree_ms": 1321
+    }
+   ]
+  },
+  {
+   "id": "concentre",
+   "categorie": "encouragements",
+   "declencheur": "generique",
+   "texte": "Reste concentré, Lewis.",
+   "duree_ms": 1055,
+   "fichier": "voix/encouragements/concentre_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/encouragements/concentre_v1.m4a",
+     "texte": "Reste concentré, Lewis.",
+     "duree_ms": 1055
+    },
+    {
+     "fichier": "voix/encouragements/concentre_v2.m4a",
+     "texte": "Concentration, on est bien.",
+     "duree_ms": 1140
+    },
+    {
+     "fichier": "voix/encouragements/concentre_v3.m4a",
+     "texte": "Tête froide, on gère.",
+     "duree_ms": 986
+    }
+   ]
+  },
+  {
+   "id": "sortie_garage",
+   "categorie": "depart",
+   "declencheur": "sortie_garage_grille",
+   "texte": "Ok Lewis, tu peux sortir. Pit lane ouverte.",
+   "duree_ms": 2321,
+   "fichier": "voix/depart/sortie_garage_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/depart/sortie_garage_v1.m4a",
+     "texte": "Ok Lewis, tu peux sortir. Pit lane ouverte.",
+     "duree_ms": 2321
+    },
+    {
+     "fichier": "voix/depart/sortie_garage_v2.m4a",
+     "texte": "La voie des stands est ouverte. Vas-y quand tu veux.",
+     "duree_ms": 2231
+    },
+    {
+     "fichier": "voix/depart/sortie_garage_v3.m4a",
+     "texte": "On est prêts. Sortie du garage, limiteur activé.",
+     "duree_ms": 3057
+    }
+   ]
+  },
+  {
+   "id": "tour_installation",
+   "categorie": "depart",
+   "declencheur": "tour_installation",
+   "texte": "Tour d'installation. Vérifie les freins et fais un essai de départ en sortie de stands.",
+   "duree_ms": 4607,
+   "fichier": "voix/depart/tour_installation_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/depart/tour_installation_v1.m4a",
+     "texte": "Tour d'installation. Vérifie les freins et fais un essai de départ en sortie de stands.",
+     "duree_ms": 4607
+    },
+    {
+     "fichier": "voix/depart/tour_installation_v2.m4a",
+     "texte": "Fais un essai de départ au bout de la voie des stands, puis tour normal.",
+     "duree_ms": 3288
+    }
+   ]
+  },
+  {
+   "id": "grille_mode_depart",
+   "categorie": "depart",
+   "declencheur": "sur_grille",
+   "texte": "Mode départ activé. Embrayage, réglage huit.",
+   "duree_ms": 3409,
+   "fichier": "voix/depart/grille_mode_depart_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/depart/grille_mode_depart_v1.m4a",
+     "texte": "Mode départ activé. Embrayage, réglage huit.",
+     "duree_ms": 3409
+    },
+    {
+     "fichier": "voix/depart/grille_mode_depart_v2.m4a",
+     "texte": "Rappel : réglage de départ position huit, strat mode trois.",
+     "duree_ms": 4500
+    },
+    {
+     "fichier": "voix/depart/grille_mode_depart_v3.m4a",
+     "texte": "Tout est bon pour le départ, réglages comme prévu.",
+     "duree_ms": 2869
+    }
+   ]
+  },
+  {
+   "id": "tour_formation",
+   "categorie": "depart",
+   "declencheur": "tour_formation",
+   "texte": "Tour de formation. Chauffe bien les pneus et les freins.",
+   "duree_ms": 3440,
+   "fichier": "voix/depart/tour_formation_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/depart/tour_formation_v1.m4a",
+     "texte": "Tour de formation. Chauffe bien les pneus et les freins.",
+     "duree_ms": 3440
+    },
+    {
+     "fichier": "voix/depart/tour_formation_v2.m4a",
+     "texte": "Tour de formation, Lewis. Mets de la température dans les freins, ils sont un peu froids.",
+     "duree_ms": 4318
+    },
+    {
+     "fichier": "voix/depart/tour_formation_v3.m4a",
+     "texte": "Tour de formation. Pense aux burnouts avant ton emplacement.",
+     "duree_ms": 3309
+    }
+   ]
+  },
+  {
+   "id": "formation_temperatures",
+   "categorie": "depart",
+   "declencheur": "tour_formation",
+   "texte": "Températures pneus correctes. Freins avant un peu froids, travaille-les.",
+   "duree_ms": 4603,
+   "fichier": "voix/depart/formation_temperatures_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/depart/formation_temperatures_v1.m4a",
+     "texte": "Températures pneus correctes. Freins avant un peu froids, travaille-les.",
+     "duree_ms": 4603
+    },
+    {
+     "fichier": "voix/depart/formation_temperatures_v2.m4a",
+     "texte": "Les pneus arrière sont dans la fenêtre. Continue comme ça.",
+     "duree_ms": 2457
+    }
+   ]
+  },
+  {
+   "id": "en_place_grille",
+   "categorie": "depart",
+   "declencheur": "pilote_sur_emplacement",
+   "texte": "En place. Mode départ.",
+   "duree_ms": 1306,
+   "fichier": "voix/depart/en_place_grille_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/depart/en_place_grille_v1.m4a",
+     "texte": "En place. Mode départ.",
+     "duree_ms": 1306
+    },
+    {
+     "fichier": "voix/depart/en_place_grille_v2.m4a",
+     "texte": "Tout le monde se met en place. Prépare-toi.",
+     "duree_ms": 1959
+    },
+    {
+     "fichier": "voix/depart/en_place_grille_v3.m4a",
+     "texte": "Dernière voiture en place. Concentration, Lewis.",
+     "duree_ms": 3035
+    }
+   ]
+  },
+  {
+   "id": "feux",
+   "categorie": "depart",
+   "declencheur": "sequence_feux",
+   "texte": "Feux. Concentration.",
+   "duree_ms": 1014,
+   "fichier": "voix/depart/feux_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/depart/feux_v1.m4a",
+     "texte": "Feux. Concentration.",
+     "duree_ms": 1014
+    },
+    {
+     "fichier": "voix/depart/feux_v2.m4a",
+     "texte": "Les feux arrivent. Bonne chance, Lewis.",
+     "duree_ms": 1956
+    }
+   ]
+  },
+  {
+   "id": "bon_depart",
+   "categorie": "depart",
+   "declencheur": "apres_depart_gain",
+   "texte": "Super départ, Lewis !",
+   "duree_ms": 1181,
+   "fichier": "voix/depart/bon_depart_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/depart/bon_depart_v1.m4a",
+     "texte": "Super départ, Lewis !",
+     "duree_ms": 1181
+    },
+    {
+     "fichier": "voix/depart/bon_depart_v2.m4a",
+     "texte": "Très bon envol, bien joué.",
+     "duree_ms": 1276
+    },
+    {
+     "fichier": "voix/depart/bon_depart_v3.m4a",
+     "texte": "Excellent départ. Maintenant, on construit.",
+     "duree_ms": 2947
+    }
+   ]
+  },
+  {
+   "id": "depart_moyen",
+   "categorie": "depart",
+   "declencheur": "apres_depart_perte",
+   "texte": "Départ un peu difficile. On garde la tête froide, la course est longue.",
+   "duree_ms": 3978,
+   "fichier": "voix/depart/depart_moyen_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/depart/depart_moyen_v1.m4a",
+     "texte": "Départ un peu difficile. On garde la tête froide, la course est longue.",
+     "duree_ms": 3978
+    },
+    {
+     "fichier": "voix/depart/depart_moyen_v2.m4a",
+     "texte": "Ok, on a perdu un peu au départ. Pas de panique, le rythme est là.",
+     "duree_ms": 4508
+    }
+   ]
+  },
+  {
+   "id": "patinage_depart",
+   "categorie": "depart",
+   "declencheur": "patinage",
+   "texte": "On a eu beaucoup de patinage au départ. On regarde ça.",
+   "duree_ms": 3230,
+   "fichier": "voix/depart/patinage_depart_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/depart/patinage_depart_v1.m4a",
+     "texte": "On a eu beaucoup de patinage au départ. On regarde ça.",
+     "duree_ms": 3230
+    },
+    {
+     "fichier": "voix/depart/patinage_depart_v2.m4a",
+     "texte": "Trop de patinage à l'envol, on ajuste pour la prochaine fois.",
+     "duree_ms": 3295
+    }
+   ]
+  },
+  {
+   "id": "premier_tour_prudence",
+   "categorie": "depart",
+   "declencheur": "premier_tour",
+   "texte": "Premier tour, prudence au premier virage. Évite les ennuis.",
+   "duree_ms": 4417,
+   "fichier": "voix/depart/premier_tour_prudence_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/depart/premier_tour_prudence_v1.m4a",
+     "texte": "Premier tour, prudence au premier virage. Évite les ennuis.",
+     "duree_ms": 4417
+    },
+    {
+     "fichier": "voix/depart/premier_tour_prudence_v2.m4a",
+     "texte": "Attention dans le premier tour, ça va être serré au virage un.",
+     "duree_ms": 3480
+    }
+   ]
+  },
+  {
+   "id": "faux_depart_rival",
+   "categorie": "depart",
+   "declencheur": "faux_depart",
+   "texte": "Faux départ d'une voiture devant. Ils regardent.",
+   "duree_ms": 3257,
+   "fichier": "voix/depart/faux_depart_rival_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/depart/faux_depart_rival_v1.m4a",
+     "texte": "Faux départ d'une voiture devant. Ils regardent.",
+     "duree_ms": 3257
+    },
+    {
+     "fichier": "voix/depart/faux_depart_rival_v2.m4a",
+     "texte": "Il y a un départ anticipé, la direction de course enquête.",
+     "duree_ms": 3287
+    }
+   ]
+  },
+  {
+   "id": "depart_annule",
+   "categorie": "depart",
+   "declencheur": "depart_avorte",
+   "texte": "Départ annulé, départ annulé ! Coupe le moteur si on te le demande.",
+   "duree_ms": 4593,
+   "fichier": "voix/depart/depart_annule_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/depart/depart_annule_v1.m4a",
+     "texte": "Départ annulé, départ annulé ! Coupe le moteur si on te le demande.",
+     "duree_ms": 4593
+    },
+    {
+     "fichier": "voix/depart/depart_annule_v2.m4a",
+     "texte": "Procédure de départ interrompue. Restez en place, nouveau tour de formation.",
+     "duree_ms": 4792
+    }
+   ]
+  },
+  {
+   "id": "q_sortie",
+   "categorie": "qualification",
+   "declencheur": "debut_q",
+   "texte": "Ok Lewis, on y va. Piste dégagée.",
+   "duree_ms": 2687,
+   "fichier": "voix/qualification/q_sortie_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q_sortie_v1.m4a",
+     "texte": "Ok Lewis, on y va. Piste dégagée.",
+     "duree_ms": 2687
+    },
+    {
+     "fichier": "voix/qualification/q_sortie_v2.m4a",
+     "texte": "Sortie maintenant, tu as de la place devant.",
+     "duree_ms": 2931
+    },
+    {
+     "fichier": "voix/qualification/q_sortie_v3.m4a",
+     "texte": "C'est le moment, va sur la piste.",
+     "duree_ms": 2445
+    }
+   ]
+  },
+  {
+   "id": "q1_debut",
+   "categorie": "qualification",
+   "declencheur": "debut_q1",
+   "texte": "Q1. On fait un run sur les tendres.",
+   "duree_ms": 3081,
+   "fichier": "voix/qualification/q1_debut_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q1_debut_v1.m4a",
+     "texte": "Q1. On fait un run sur les tendres.",
+     "duree_ms": 3081
+    },
+    {
+     "fichier": "voix/qualification/q1_debut_v2.m4a",
+     "texte": "Début de Q1. Un seul tour lancé, puis on évalue.",
+     "duree_ms": 3269
+    }
+   ]
+  },
+  {
+   "id": "q2_debut",
+   "categorie": "qualification",
+   "declencheur": "debut_q2",
+   "texte": "Q2. Rappel, tu pars en course avec ces pneus.",
+   "duree_ms": 3077,
+   "fichier": "voix/qualification/q2_debut_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q2_debut_v1.m4a",
+     "texte": "Q2. Rappel, tu pars en course avec ces pneus.",
+     "duree_ms": 3077
+    },
+    {
+     "fichier": "voix/qualification/q2_debut_v2.m4a",
+     "texte": "Début de Q2. On vise un passage en Q3 au premier run.",
+     "duree_ms": 4087
+    }
+   ]
+  },
+  {
+   "id": "q3_debut",
+   "categorie": "qualification",
+   "declencheur": "debut_q3",
+   "texte": "Q3, Lewis. C'est là que ça compte.",
+   "duree_ms": 2577,
+   "fichier": "voix/qualification/q3_debut_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q3_debut_v1.m4a",
+     "texte": "Q3, Lewis. C'est là que ça compte.",
+     "duree_ms": 2577
+    },
+    {
+     "fichier": "voix/qualification/q3_debut_v2.m4a",
+     "texte": "Q3. Deux runs, on donne tout.",
+     "duree_ms": 2047
+    },
+    {
+     "fichier": "voix/qualification/q3_debut_v3.m4a",
+     "texte": "On est en Q3. Pole position en jeu, donne tout.",
+     "duree_ms": 3600
+    }
+   ]
+  },
+  {
+   "id": "tour_sortie",
+   "categorie": "qualification",
+   "declencheur": "tour_sortie",
+   "texte": "Tour de sortie. Chauffe les pneus, garde l'écart avec la voiture devant.",
+   "duree_ms": 3834,
+   "fichier": "voix/qualification/tour_sortie_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/tour_sortie_v1.m4a",
+     "texte": "Tour de sortie. Chauffe les pneus, garde l'écart avec la voiture devant.",
+     "duree_ms": 3834
+    },
+    {
+     "fichier": "voix/qualification/tour_sortie_v2.m4a",
+     "texte": "Out lap. Prends de l'espace, tu as besoin d'air.",
+     "duree_ms": 3204
+    },
+    {
+     "fichier": "voix/qualification/tour_sortie_v3.m4a",
+     "texte": "Tour de sortie. Prépare la batterie pour le tour lancé.",
+     "duree_ms": 2820
+    }
+   ]
+  },
+  {
+   "id": "tour_lance_go",
+   "categorie": "qualification",
+   "declencheur": "debut_tour_lance",
+   "texte": "Tour lancé. À toi de jouer.",
+   "duree_ms": 1549,
+   "fichier": "voix/qualification/tour_lance_go_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/tour_lance_go_v1.m4a",
+     "texte": "Tour lancé. À toi de jouer.",
+     "duree_ms": 1549
+    },
+    {
+     "fichier": "voix/qualification/tour_lance_go_v2.m4a",
+     "texte": "C'est parti, tour lancé. Tout ce que tu as.",
+     "duree_ms": 2978
+    },
+    {
+     "fichier": "voix/qualification/tour_lance_go_v3.m4a",
+     "texte": "Mode qualif activé. Go, go, go.",
+     "duree_ms": 3592
+    }
+   ]
+  },
+  {
+   "id": "trafic_qualif",
+   "categorie": "qualification",
+   "declencheur": "trafic",
+   "texte": "Attention, voiture lente devant au dernier secteur.",
+   "duree_ms": 2913,
+   "fichier": "voix/qualification/trafic_qualif_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/trafic_qualif_v1.m4a",
+     "texte": "Attention, voiture lente devant au dernier secteur.",
+     "duree_ms": 2913
+    },
+    {
+     "fichier": "voix/qualification/trafic_qualif_v2.m4a",
+     "texte": "Trafic en approche. Une voiture en tour de sortie devant toi.",
+     "duree_ms": 3145
+    },
+    {
+     "fichier": "voix/qualification/trafic_qualif_v3.m4a",
+     "texte": "Attention au trafic au prochain virage.",
+     "duree_ms": 1821
+    }
+   ]
+  },
+  {
+   "id": "tour_annule_limites",
+   "categorie": "qualification",
+   "declencheur": "tour_supprime",
+   "texte": "Tour supprimé, limites de piste.",
+   "duree_ms": 1743,
+   "fichier": "voix/qualification/tour_annule_limites_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/tour_annule_limites_v1.m4a",
+     "texte": "Tour supprimé, limites de piste.",
+     "duree_ms": 1743
+    },
+    {
+     "fichier": "voix/qualification/tour_annule_limites_v2.m4a",
+     "texte": "Ton temps a été supprimé, limites de piste au dernier virage.",
+     "duree_ms": 3886
+    }
+   ]
+  },
+  {
+   "id": "tour_annule_jaune",
+   "categorie": "qualification",
+   "declencheur": "tour_jaune",
+   "texte": "Drapeau jaune, ton tour ne comptera pas. On repart.",
+   "duree_ms": 3383,
+   "fichier": "voix/qualification/tour_annule_jaune_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/tour_annule_jaune_v1.m4a",
+     "texte": "Drapeau jaune, ton tour ne comptera pas. On repart.",
+     "duree_ms": 3383
+    },
+    {
+     "fichier": "voix/qualification/tour_annule_jaune_v2.m4a",
+     "texte": "Jaune dans le secteur deux, tour abandonné.",
+     "duree_ms": 1941
+    }
+   ]
+  },
+  {
+   "id": "qualif_passe",
+   "categorie": "qualification",
+   "declencheur": "qualifie_session_suivante",
+   "texte": "Bien joué, tu es qualifié pour la suite.",
+   "duree_ms": 1764,
+   "fichier": "voix/qualification/qualif_passe_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/qualif_passe_v1.m4a",
+     "texte": "Bien joué, tu es qualifié pour la suite.",
+     "duree_ms": 1764
+    },
+    {
+     "fichier": "voix/qualification/qualif_passe_v2.m4a",
+     "texte": "C'est bon, on est à l'abri. Rentre aux stands.",
+     "duree_ms": 2602
+    },
+    {
+     "fichier": "voix/qualification/qualif_passe_v3.m4a",
+     "texte": "Qualifié. Belle séance, Lewis.",
+     "duree_ms": 2163
+    }
+   ]
+  },
+  {
+   "id": "qualif_elimine",
+   "categorie": "qualification",
+   "declencheur": "elimine",
+   "texte": "Désolé, Lewis. On est éliminés.",
+   "duree_ms": 1906,
+   "fichier": "voix/qualification/qualif_elimine_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/qualif_elimine_v1.m4a",
+     "texte": "Désolé, Lewis. On est éliminés.",
+     "duree_ms": 1906
+    },
+    {
+     "fichier": "voix/qualification/qualif_elimine_v2.m4a",
+     "texte": "On ne passe pas. C'était trop juste, on en reparlera.",
+     "duree_ms": 3093
+    },
+    {
+     "fichier": "voix/qualification/qualif_elimine_v3.m4a",
+     "texte": "Malheureusement, ça ne suffit pas. Rentre au stand.",
+     "duree_ms": 2922
+    }
+   ]
+  },
+  {
+   "id": "qualif_zone_danger",
+   "categorie": "qualification",
+   "declencheur": "zone_elimination",
+   "texte": "Tu es dans la zone d'élimination. Il faut améliorer.",
+   "duree_ms": 2517,
+   "fichier": "voix/qualification/qualif_zone_danger_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/qualif_zone_danger_v1.m4a",
+     "texte": "Tu es dans la zone d'élimination. Il faut améliorer.",
+     "duree_ms": 2517
+    },
+    {
+     "fichier": "voix/qualification/qualif_zone_danger_v2.m4a",
+     "texte": "Attention, tu es juste à la limite. Un autre tour nécessaire.",
+     "duree_ms": 3842
+    }
+   ]
+  },
+  {
+   "id": "pole",
+   "categorie": "qualification",
+   "declencheur": "pole_position",
+   "texte": "Pole position, Lewis ! Pole position ! Magnifique tour.",
+   "duree_ms": 4448,
+   "fichier": "voix/qualification/pole_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/pole_v1.m4a",
+     "texte": "Pole position, Lewis ! Pole position ! Magnifique tour.",
+     "duree_ms": 4448
+    },
+    {
+     "fichier": "voix/qualification/pole_v2.m4a",
+     "texte": "C'est la pole ! Incroyable tour, bravo.",
+     "duree_ms": 3236
+    },
+    {
+     "fichier": "voix/qualification/pole_v3.m4a",
+     "texte": "Pole, Lewis ! Quel tour, mon pote !",
+     "duree_ms": 2273
+    }
+   ]
+  },
+  {
+   "id": "premiere_ligne",
+   "categorie": "qualification",
+   "declencheur": "p2_qualif",
+   "texte": "P2, première ligne. Bon travail.",
+   "duree_ms": 2299,
+   "fichier": "voix/qualification/premiere_ligne_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/premiere_ligne_v1.m4a",
+     "texte": "P2, première ligne. Bon travail.",
+     "duree_ms": 2299
+    },
+    {
+     "fichier": "voix/qualification/premiere_ligne_v2.m4a",
+     "texte": "Première ligne. Belle base pour demain.",
+     "duree_ms": 2123
+    }
+   ]
+  },
+  {
+   "id": "fin_session_rentre",
+   "categorie": "qualification",
+   "declencheur": "fin_session",
+   "texte": "Fin de séance. Rentre au stand.",
+   "duree_ms": 2045,
+   "fichier": "voix/qualification/fin_session_rentre_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/fin_session_rentre_v1.m4a",
+     "texte": "Fin de séance. Rentre au stand.",
+     "duree_ms": 2045
+    },
+    {
+     "fichier": "voix/qualification/fin_session_rentre_v2.m4a",
+     "texte": "Damier. Ramène la voiture, Lewis.",
+     "duree_ms": 2422
+    }
+   ]
+  },
+  {
+   "id": "chrono_ecoule",
+   "categorie": "qualification",
+   "declencheur": "fin_chrono",
+   "texte": "Le chrono est écoulé, tu dois passer la ligne avant le drapeau.",
+   "duree_ms": 3268,
+   "fichier": "voix/qualification/chrono_ecoule_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/chrono_ecoule_v1.m4a",
+     "texte": "Le chrono est écoulé, tu dois passer la ligne avant le drapeau.",
+     "duree_ms": 3268
+    },
+    {
+     "fichier": "voix/qualification/chrono_ecoule_v2.m4a",
+     "texte": "Plus de temps au chrono, dépêche-toi de passer la ligne.",
+     "duree_ms": 2599
+    }
+   ]
+  },
+  {
+   "id": "meilleur_perso",
+   "categorie": "rythme",
+   "declencheur": "meilleur_tour_personnel",
+   "texte": "Meilleur tour personnel. Bon rythme.",
+   "duree_ms": 1959,
+   "fichier": "voix/rythme/meilleur_perso_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/meilleur_perso_v1.m4a",
+     "texte": "Meilleur tour personnel. Bon rythme.",
+     "duree_ms": 1959
+    },
+    {
+     "fichier": "voix/rythme/meilleur_perso_v2.m4a",
+     "texte": "Personnel, Lewis. Continue comme ça.",
+     "duree_ms": 2294
+    },
+    {
+     "fichier": "voix/rythme/meilleur_perso_v3.m4a",
+     "texte": "Ton meilleur tour. Ça marche bien.",
+     "duree_ms": 2045
+    }
+   ]
+  },
+  {
+   "id": "meilleur_tour_course",
+   "categorie": "rythme",
+   "declencheur": "meilleur_tour_course",
+   "texte": "Meilleur tour en course, Lewis. Violet partout.",
+   "duree_ms": 2995,
+   "fichier": "voix/rythme/meilleur_tour_course_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/meilleur_tour_course_v1.m4a",
+     "texte": "Meilleur tour en course, Lewis. Violet partout.",
+     "duree_ms": 2995
+    },
+    {
+     "fichier": "voix/rythme/meilleur_tour_course_v2.m4a",
+     "texte": "Meilleur tour de la course. Superbe.",
+     "duree_ms": 2567
+    },
+    {
+     "fichier": "voix/rythme/meilleur_tour_course_v3.m4a",
+     "texte": "Tu as le tour le plus rapide. Bien joué.",
+     "duree_ms": 2063
+    }
+   ]
+  },
+  {
+   "id": "tenter_meilleur_tour",
+   "categorie": "rythme",
+   "declencheur": "fin_course_point_bonus",
+   "texte": "On a la marge pour le meilleur tour. Vas-y si tu veux le point.",
+   "duree_ms": 3689,
+   "fichier": "voix/rythme/tenter_meilleur_tour_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/tenter_meilleur_tour_v1.m4a",
+     "texte": "On a la marge pour le meilleur tour. Vas-y si tu veux le point.",
+     "duree_ms": 3689
+    },
+    {
+     "fichier": "voix/rythme/tenter_meilleur_tour_v2.m4a",
+     "texte": "Tu peux viser le point du meilleur tour. Pneus neufs, à toi de voir.",
+     "duree_ms": 3960
+    }
+   ]
+  },
+  {
+   "id": "secteur_violet",
+   "categorie": "rythme",
+   "declencheur": "secteur_violet",
+   "texte": "Violet dans le premier secteur.",
+   "duree_ms": 1382,
+   "fichier": "voix/rythme/secteur_violet_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/secteur_violet_v1.m4a",
+     "texte": "Violet dans le premier secteur.",
+     "duree_ms": 1382
+    },
+    {
+     "fichier": "voix/rythme/secteur_violet_v2.m4a",
+     "texte": "Secteur violet. Très bien.",
+     "duree_ms": 1783
+    }
+   ]
+  },
+  {
+   "id": "rythme_bon",
+   "categorie": "rythme",
+   "declencheur": "rythme_stable",
+   "texte": "Le rythme est bon, on est plus rapides que la voiture devant.",
+   "duree_ms": 2747,
+   "fichier": "voix/rythme/rythme_bon_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/rythme_bon_v1.m4a",
+     "texte": "Le rythme est bon, on est plus rapides que la voiture devant.",
+     "duree_ms": 2747
+    },
+    {
+     "fichier": "voix/rythme/rythme_bon_v2.m4a",
+     "texte": "Beau rythme. Garde ce tempo.",
+     "duree_ms": 1815
+    },
+    {
+     "fichier": "voix/rythme/rythme_bon_v3.m4a",
+     "texte": "Les chronos sont très bons, continue.",
+     "duree_ms": 2053
+    }
+   ]
+  },
+  {
+   "id": "pousser",
+   "categorie": "rythme",
+   "declencheur": "pousser",
+   "texte": "Pousse maintenant, Lewis. Mode attaque.",
+   "duree_ms": 1733,
+   "fichier": "voix/rythme/pousser_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/pousser_v1.m4a",
+     "texte": "Pousse maintenant, Lewis. Mode attaque.",
+     "duree_ms": 1733
+    },
+    {
+     "fichier": "voix/rythme/pousser_v2.m4a",
+     "texte": "On a besoin de rythme. Pousse, pousse.",
+     "duree_ms": 2863
+    },
+    {
+     "fichier": "voix/rythme/pousser_v3.m4a",
+     "texte": "C'est le moment, tout ce que tu as. Hammer time.",
+     "duree_ms": 3008
+    }
+   ]
+  },
+  {
+   "id": "gerer",
+   "categorie": "rythme",
+   "declencheur": "gerer",
+   "texte": "On peut gérer maintenant. Pas besoin de prendre de risques.",
+   "duree_ms": 3119,
+   "fichier": "voix/rythme/gerer_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/gerer_v1.m4a",
+     "texte": "On peut gérer maintenant. Pas besoin de prendre de risques.",
+     "duree_ms": 3119
+    },
+    {
+     "fichier": "voix/rythme/gerer_v2.m4a",
+     "texte": "Lève un peu le pied, l'écart est confortable.",
+     "duree_ms": 2481
+    },
+    {
+     "fichier": "voix/rythme/gerer_v3.m4a",
+     "texte": "Gère le rythme, on protège les pneus.",
+     "duree_ms": 1995
+    }
+   ]
+  },
+  {
+   "id": "perte_temps_secteur",
+   "categorie": "rythme",
+   "declencheur": "lent_secteur",
+   "texte": "Tu perds un peu de temps dans le secteur deux.",
+   "duree_ms": 1845,
+   "fichier": "voix/rythme/perte_temps_secteur_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/rythme/perte_temps_secteur_v1.m4a",
+     "texte": "Tu perds un peu de temps dans le secteur deux.",
+     "duree_ms": 1845
+    },
+    {
+     "fichier": "voix/rythme/perte_temps_secteur_v2.m4a",
+     "texte": "Les chronos baissent un peu. On perd au dernier secteur.",
+     "duree_ms": 2989
+    }
+   ]
+  },
+  {
+   "id": "gain_position",
+   "categorie": "positions",
+   "declencheur": "gain_position",
+   "texte": "Bien joué ! Une place de gagnée.",
+   "duree_ms": 2439,
+   "fichier": "voix/positions/gain_position_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/positions/gain_position_v1.m4a",
+     "texte": "Bien joué ! Une place de gagnée.",
+     "duree_ms": 2439
+    },
+    {
+     "fichier": "voix/positions/gain_position_v2.m4a",
+     "texte": "Superbe dépassement, Lewis.",
+     "duree_ms": 1488
+    },
+    {
+     "fichier": "voix/positions/gain_position_v3.m4a",
+     "texte": "Bravo, belle manœuvre. Maintenant, construis l'écart.",
+     "duree_ms": 3848
+    }
+   ]
+  },
+  {
+   "id": "perte_position",
+   "categorie": "positions",
+   "declencheur": "perte_position",
+   "texte": "On a perdu une place. On répond.",
+   "duree_ms": 1805,
+   "fichier": "voix/positions/perte_position_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/positions/perte_position_v1.m4a",
+     "texte": "On a perdu une place. On répond.",
+     "duree_ms": 1805
+    },
+    {
+     "fichier": "voix/positions/perte_position_v2.m4a",
+     "texte": "Il est passé. Reste calme, on va le récupérer.",
+     "duree_ms": 2853
+    },
+    {
+     "fichier": "voix/positions/perte_position_v3.m4a",
+     "texte": "Pas grave, on aura une autre chance.",
+     "duree_ms": 1912
+    }
+   ]
+  },
+  {
+   "id": "attaque_en_vue",
+   "categorie": "positions",
+   "declencheur": "attaque",
+   "texte": "La voiture devant a du mal avec ses pneus. Tu peux attaquer.",
+   "duree_ms": 3177,
+   "fichier": "voix/positions/attaque_en_vue_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/positions/attaque_en_vue_v1.m4a",
+     "texte": "La voiture devant a du mal avec ses pneus. Tu peux attaquer.",
+     "duree_ms": 3177
+    },
+    {
+     "fichier": "voix/positions/attaque_en_vue_v2.m4a",
+     "texte": "Il est vulnérable dans le dernier secteur. Prépare l'attaque.",
+     "duree_ms": 3849
+    },
+    {
+     "fichier": "voix/positions/attaque_en_vue_v3.m4a",
+     "texte": "Tu es plus rapide de cinq dixièmes au tour. Va le chercher.",
+     "duree_ms": 3018
+    }
+   ]
+  },
+  {
+   "id": "defense",
+   "categorie": "positions",
+   "declencheur": "defense",
+   "texte": "Il est dans ton DRS. Défends, défends.",
+   "duree_ms": 2609,
+   "fichier": "voix/positions/defense_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/positions/defense_v1.m4a",
+     "texte": "Il est dans ton DRS. Défends, défends.",
+     "duree_ms": 2609
+    },
+    {
+     "fichier": "voix/positions/defense_v2.m4a",
+     "texte": "Attaque derrière. Protège l'intérieur.",
+     "duree_ms": 2582
+    },
+    {
+     "fichier": "voix/positions/defense_v3.m4a",
+     "texte": "Il arrive, Lewis. Défends bien au freinage.",
+     "duree_ms": 2540
+    }
+   ]
+  },
+  {
+   "id": "pression_derriere",
+   "categorie": "positions",
+   "declencheur": "pression",
+   "texte": "Il est à plus d'une seconde, mais il se rapproche.",
+   "duree_ms": 2491,
+   "fichier": "voix/positions/pression_derriere_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/positions/pression_derriere_v1.m4a",
+     "texte": "Il est à plus d'une seconde, mais il se rapproche.",
+     "duree_ms": 2491
+    },
+    {
+     "fichier": "voix/positions/pression_derriere_v2.m4a",
+     "texte": "Il gagne environ trois dixièmes au tour.",
+     "duree_ms": 2129
+    },
+    {
+     "fichier": "voix/positions/pression_derriere_v3.m4a",
+     "texte": "Écart stable avec la voiture derrière. Tout est sous contrôle.",
+     "duree_ms": 3319
+    }
+   ]
+  },
+  {
+   "id": "garder_espace",
+   "categorie": "positions",
+   "declencheur": "defense_regle",
+   "texte": "Attention, un seul changement de direction.",
+   "duree_ms": 2246,
+   "fichier": "voix/positions/garder_espace_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/positions/garder_espace_v1.m4a",
+     "texte": "Attention, un seul changement de direction.",
+     "duree_ms": 2246
+    },
+    {
+     "fichier": "voix/positions/garder_espace_v2.m4a",
+     "texte": "Laisse l'espace, on ne veut pas d'enquête.",
+     "duree_ms": 2283
+    }
+   ]
+  },
+  {
+   "id": "rends_position",
+   "categorie": "positions",
+   "declencheur": "rendre_position",
+   "texte": "Lewis, il faut rendre la position. Avantage obtenu hors piste.",
+   "duree_ms": 4061,
+   "fichier": "voix/positions/rends_position_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/positions/rends_position_v1.m4a",
+     "texte": "Lewis, il faut rendre la position. Avantage obtenu hors piste.",
+     "duree_ms": 4061
+    },
+    {
+     "fichier": "voix/positions/rends_position_v2.m4a",
+     "texte": "On doit lui rendre la place, sinon pénalité. Laisse-le passer.",
+     "duree_ms": 3942
+    }
+   ]
+  },
+  {
+   "id": "ordre_equipe",
+   "categorie": "positions",
+   "declencheur": "consigne_equipe",
+   "texte": "Lewis, Bottas va te laisser passer ce tour.",
+   "duree_ms": 2597,
+   "fichier": "voix/positions/ordre_equipe_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/positions/ordre_equipe_v1.m4a",
+     "texte": "Lewis, Bottas va te laisser passer ce tour.",
+     "duree_ms": 2597
+    },
+    {
+     "fichier": "voix/positions/ordre_equipe_v2.m4a",
+     "texte": "Lewis, laisse passer Bottas, on échange si ça ne marche pas.",
+     "duree_ms": 4121
+    },
+    {
+     "fichier": "voix/positions/ordre_equipe_v3.m4a",
+     "texte": "Pas de bataille entre nous. Gardez les positions.",
+     "duree_ms": 2027
+    }
+   ]
+  },
+  {
+   "id": "contact",
+   "categorie": "positions",
+   "declencheur": "contact",
+   "texte": "Contact ! Tout va bien ?",
+   "duree_ms": 1128,
+   "fichier": "voix/positions/contact_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/positions/contact_v1.m4a",
+     "texte": "Contact ! Tout va bien ?",
+     "duree_ms": 1128
+    },
+    {
+     "fichier": "voix/positions/contact_v2.m4a",
+     "texte": "On a vu le contact. Tu as des dégâts ?",
+     "duree_ms": 1865
+    },
+    {
+     "fichier": "voix/positions/contact_v3.m4a",
+     "texte": "Tu peux continuer ? On regarde les données.",
+     "duree_ms": 1699
+    }
+   ]
+  },
+  {
+   "id": "drs_dispo",
+   "categorie": "drs",
+   "declencheur": "drs_actif",
+   "texte": "DRS activé.",
+   "duree_ms": 1218,
+   "fichier": "voix/drs/drs_dispo_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/drs/drs_dispo_v1.m4a",
+     "texte": "DRS activé.",
+     "duree_ms": 1218
+    },
+    {
+     "fichier": "voix/drs/drs_dispo_v2.m4a",
+     "texte": "Le DRS est disponible.",
+     "duree_ms": 1414
+    },
+    {
+     "fichier": "voix/drs/drs_dispo_v3.m4a",
+     "texte": "DRS ouvert, vas-y.",
+     "duree_ms": 1607
+    }
+   ]
+  },
+  {
+   "id": "drs_non_dispo",
+   "categorie": "drs",
+   "declencheur": "drs_desactive",
+   "texte": "DRS désactivé, piste humide.",
+   "duree_ms": 1885,
+   "fichier": "voix/drs/drs_non_dispo_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/drs/drs_non_dispo_v1.m4a",
+     "texte": "DRS désactivé, piste humide.",
+     "duree_ms": 1885
+    },
+    {
+     "fichier": "voix/drs/drs_non_dispo_v2.m4a",
+     "texte": "Le DRS est désactivé pour l'instant.",
+     "duree_ms": 1807
+    }
+   ]
+  },
+  {
+   "id": "train_drs",
+   "categorie": "drs",
+   "declencheur": "train_drs",
+   "texte": "C'est un train DRS devant, tout le monde a le DRS. Patiente.",
+   "duree_ms": 4153,
+   "fichier": "voix/drs/train_drs_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/drs/train_drs_v1.m4a",
+     "texte": "C'est un train DRS devant, tout le monde a le DRS. Patiente.",
+     "duree_ms": 4153
+    },
+    {
+     "fichier": "voix/drs/train_drs_v2.m4a",
+     "texte": "Train DRS. Il faudra le faire au freinage.",
+     "duree_ms": 2081
+    },
+    {
+     "fichier": "voix/drs/train_drs_v3.m4a",
+     "texte": "Ils ont tous le DRS devant. Économise la batterie, on attaquera plus tard.",
+     "duree_ms": 4400
+    }
+   ]
+  },
+  {
+   "id": "drs_derriere",
+   "categorie": "drs",
+   "declencheur": "rival_drs",
+   "texte": "Il a le DRS derrière toi.",
+   "duree_ms": 1972,
+   "fichier": "voix/drs/drs_derriere_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/drs/drs_derriere_v1.m4a",
+     "texte": "Il a le DRS derrière toi.",
+     "duree_ms": 1972
+    },
+    {
+     "fichier": "voix/drs/drs_derriere_v2.m4a",
+     "texte": "Il est dans la seconde, il aura le DRS.",
+     "duree_ms": 2781
+    }
+   ]
+  },
+  {
+   "id": "pneus_usure",
+   "categorie": "pneus",
+   "declencheur": "usure",
+   "texte": "Les pneus arrière commencent à tomber.",
+   "duree_ms": 1805,
+   "fichier": "voix/pneus/pneus_usure_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/pneus_usure_v1.m4a",
+     "texte": "Les pneus arrière commencent à tomber.",
+     "duree_ms": 1805
+    },
+    {
+     "fichier": "voix/pneus/pneus_usure_v2.m4a",
+     "texte": "Usure des pneus élevée, gère dans les virages lents.",
+     "duree_ms": 3030
+    },
+    {
+     "fichier": "voix/pneus/pneus_usure_v3.m4a",
+     "texte": "Comment sont les pneus, Lewis ?",
+     "duree_ms": 1588
+    }
+   ]
+  },
+  {
+   "id": "pneus_temp_haute",
+   "categorie": "pneus",
+   "declencheur": "temp_haute",
+   "texte": "Températures pneus arrière trop élevées, ménage la traction.",
+   "duree_ms": 3705,
+   "fichier": "voix/pneus/pneus_temp_haute_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/pneus_temp_haute_v1.m4a",
+     "texte": "Températures pneus arrière trop élevées, ménage la traction.",
+     "duree_ms": 3705
+    },
+    {
+     "fichier": "voix/pneus/pneus_temp_haute_v2.m4a",
+     "texte": "Les pneus surchauffent. Évite le patinage en sortie.",
+     "duree_ms": 3153
+    }
+   ]
+  },
+  {
+   "id": "pneus_temp_basse",
+   "categorie": "pneus",
+   "declencheur": "temp_basse",
+   "texte": "Les pneus sont froids. Travaille-les.",
+   "duree_ms": 2504,
+   "fichier": "voix/pneus/pneus_temp_basse_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/pneus_temp_basse_v1.m4a",
+     "texte": "Les pneus sont froids. Travaille-les.",
+     "duree_ms": 2504
+    },
+    {
+     "fichier": "voix/pneus/pneus_temp_basse_v2.m4a",
+     "texte": "Températures avant basses, attention au blocage.",
+     "duree_ms": 2947
+    }
+   ]
+  },
+  {
+   "id": "graining",
+   "categorie": "pneus",
+   "declencheur": "graining",
+   "texte": "On voit du graining sur l'avant gauche. Ça va se nettoyer.",
+   "duree_ms": 3036,
+   "fichier": "voix/pneus/graining_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/graining_v1.m4a",
+     "texte": "On voit du graining sur l'avant gauche. Ça va se nettoyer.",
+     "duree_ms": 3036
+    },
+    {
+     "fichier": "voix/pneus/graining_v2.m4a",
+     "texte": "Graining à l'avant. Ménage-les deux, trois tours.",
+     "duree_ms": 2599
+    }
+   ]
+  },
+  {
+   "id": "blistering",
+   "categorie": "pneus",
+   "declencheur": "blistering",
+   "texte": "Blistering sur l'arrière gauche. Fais attention.",
+   "duree_ms": 2567,
+   "fichier": "voix/pneus/blistering_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/blistering_v1.m4a",
+     "texte": "Blistering sur l'arrière gauche. Fais attention.",
+     "duree_ms": 2567
+    },
+    {
+     "fichier": "voix/pneus/blistering_v2.m4a",
+     "texte": "On a du blistering arrière. Il faut gérer.",
+     "duree_ms": 2410
+    }
+   ]
+  },
+  {
+   "id": "blocage",
+   "categorie": "pneus",
+   "declencheur": "blocage_roue",
+   "texte": "Gros blocage. Vérifie les vibrations.",
+   "duree_ms": 2251,
+   "fichier": "voix/pneus/blocage_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/blocage_v1.m4a",
+     "texte": "Gros blocage. Vérifie les vibrations.",
+     "duree_ms": 2251
+    },
+    {
+     "fichier": "voix/pneus/blocage_v2.m4a",
+     "texte": "Tu as bloqué. Les pneus vont tenir ?",
+     "duree_ms": 2027
+    }
+   ]
+  },
+  {
+   "id": "vibrations",
+   "categorie": "pneus",
+   "declencheur": "vibrations_plat",
+   "texte": "Tu as des vibrations ? On voit un méplat.",
+   "duree_ms": 1806,
+   "fichier": "voix/pneus/vibrations_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/vibrations_v1.m4a",
+     "texte": "Tu as des vibrations ? On voit un méplat.",
+     "duree_ms": 1806
+    },
+    {
+     "fichier": "voix/pneus/vibrations_v2.m4a",
+     "texte": "Méplat important, dis-nous si c'est trop.",
+     "duree_ms": 1834
+    }
+   ]
+  },
+  {
+   "id": "crevaison",
+   "categorie": "pneus",
+   "declencheur": "crevaison",
+   "texte": "Crevaison ! Crevaison ! Rentre au stand doucement.",
+   "duree_ms": 3178,
+   "fichier": "voix/pneus/crevaison_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/crevaison_v1.m4a",
+     "texte": "Crevaison ! Crevaison ! Rentre au stand doucement.",
+     "duree_ms": 3178
+    },
+    {
+     "fichier": "voix/pneus/crevaison_v2.m4a",
+     "texte": "Tu as une crevaison, Lewis. Box, box. On est prêts.",
+     "duree_ms": 4856
+    },
+    {
+     "fichier": "voix/pneus/crevaison_v3.m4a",
+     "texte": "Perte de pression. Ramène la voiture au stand.",
+     "duree_ms": 2544
+    }
+   ]
+  },
+  {
+   "id": "crevaison_lente",
+   "categorie": "pneus",
+   "declencheur": "perte_pression_lente",
+   "texte": "On voit une perte de pression lente. Reste sur le plan pour l'instant.",
+   "duree_ms": 2557,
+   "fichier": "voix/pneus/crevaison_lente_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/crevaison_lente_v1.m4a",
+     "texte": "On voit une perte de pression lente. Reste sur le plan pour l'instant.",
+     "duree_ms": 2557
+    },
+    {
+     "fichier": "voix/pneus/crevaison_lente_v2.m4a",
+     "texte": "Perte de pression à l'arrière droit. On surveille.",
+     "duree_ms": 2442
+    }
+   ]
+  },
+  {
+   "id": "fin_de_vie_pneus",
+   "categorie": "pneus",
+   "declencheur": "pneus_falaise",
+   "texte": "Les pneus sont en fin de vie. On t'appelle bientôt.",
+   "duree_ms": 2604,
+   "fichier": "voix/pneus/fin_de_vie_pneus_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/fin_de_vie_pneus_v1.m4a",
+     "texte": "Les pneus sont en fin de vie. On t'appelle bientôt.",
+     "duree_ms": 2604
+    },
+    {
+     "fichier": "voix/pneus/fin_de_vie_pneus_v2.m4a",
+     "texte": "Ces pneus n'en ont plus pour longtemps.",
+     "duree_ms": 1225
+    }
+   ]
+  },
+  {
+   "id": "box_box",
+   "categorie": "stands",
+   "declencheur": "appel_stand",
+   "texte": "Box, box. Box, box.",
+   "duree_ms": 1349,
+   "fichier": "voix/stands/box_box_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/stands/box_box_v1.m4a",
+     "texte": "Box, box. Box, box.",
+     "duree_ms": 1349
+    },
+    {
+     "fichier": "voix/stands/box_box_v2.m4a",
+     "texte": "Box, box, Lewis.",
+     "duree_ms": 1524
+    },
+    {
+     "fichier": "voix/stands/box_box_v3.m4a",
+     "texte": "Box, box. Box ce tour.",
+     "duree_ms": 1413
+    }
+   ]
+  },
+  {
+   "id": "box_ce_tour",
+   "categorie": "stands",
+   "declencheur": "appel_stand_tour",
+   "texte": "Box ce tour, box ce tour.",
+   "duree_ms": 1790,
+   "fichier": "voix/stands/box_ce_tour_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/stands/box_ce_tour_v1.m4a",
+     "texte": "Box ce tour, box ce tour.",
+     "duree_ms": 1790
+    },
+    {
+     "fichier": "voix/stands/box_ce_tour_v2.m4a",
+     "texte": "On rentre ce tour, Lewis. Box ce tour.",
+     "duree_ms": 2150
+    },
+    {
+     "fichier": "voix/stands/box_ce_tour_v3.m4a",
+     "texte": "Box ce tour. Confirme.",
+     "duree_ms": 1563
+    }
+   ]
+  },
+  {
+   "id": "box_confirme",
+   "categorie": "stands",
+   "declencheur": "confirmation_box",
+   "texte": "Box confirmé. On est prêts.",
+   "duree_ms": 1736,
+   "fichier": "voix/stands/box_confirme_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/stands/box_confirme_v1.m4a",
+     "texte": "Box confirmé. On est prêts.",
+     "duree_ms": 1736
+    },
+    {
+     "fichier": "voix/stands/box_confirme_v2.m4a",
+     "texte": "Confirmé, box. Les mécaniciens sont prêts.",
+     "duree_ms": 2440
+    }
+   ]
+  },
+  {
+   "id": "box_annule",
+   "categorie": "stands",
+   "declencheur": "annulation_box",
+   "texte": "Reste dehors, reste dehors !",
+   "duree_ms": 1707,
+   "fichier": "voix/stands/box_annule_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/stands/box_annule_v1.m4a",
+     "texte": "Reste dehors, reste dehors !",
+     "duree_ms": 1707
+    },
+    {
+     "fichier": "voix/stands/box_annule_v2.m4a",
+     "texte": "Annule, annule ! Reste en piste.",
+     "duree_ms": 1878
+    },
+    {
+     "fichier": "voix/stands/box_annule_v3.m4a",
+     "texte": "Pas de box. Reste dehors, Lewis.",
+     "duree_ms": 1883
+    }
+   ]
+  },
+  {
+   "id": "rester_dehors",
+   "categorie": "stands",
+   "declencheur": "rester_dehors",
+   "texte": "On reste dehors. Pousse sur ces pneus.",
+   "duree_ms": 2342,
+   "fichier": "voix/stands/rester_dehors_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/stands/rester_dehors_v1.m4a",
+     "texte": "On reste dehors. Pousse sur ces pneus.",
+     "duree_ms": 2342
+    },
+    {
+     "fichier": "voix/stands/rester_dehors_v2.m4a",
+     "texte": "Reste en piste, on étend le relais.",
+     "duree_ms": 1589
+    },
+    {
+     "fichier": "voix/stands/rester_dehors_v3.m4a",
+     "texte": "On ne s'arrête pas, on continue.",
+     "duree_ms": 1144
+    }
+   ]
+  },
+  {
+   "id": "limiteur",
+   "categorie": "stands",
+   "declencheur": "entree_stands",
+   "texte": "Limiteur, limiteur.",
+   "duree_ms": 1033,
+   "fichier": "voix/stands/limiteur_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/stands/limiteur_v1.m4a",
+     "texte": "Limiteur, limiteur.",
+     "duree_ms": 1033
+    },
+    {
+     "fichier": "voix/stands/limiteur_v2.m4a",
+     "texte": "Attention au limiteur. Entrée des stands.",
+     "duree_ms": 2661
+    },
+    {
+     "fichier": "voix/stands/limiteur_v3.m4a",
+     "texte": "N'oublie pas le limiteur.",
+     "duree_ms": 811
+    }
+   ]
+  },
+  {
+   "id": "arret_ok",
+   "categorie": "stands",
+   "declencheur": "arret_rapide",
+   "texte": "Super arrêt. Allez, pousse maintenant.",
+   "duree_ms": 1414,
+   "fichier": "voix/stands/arret_ok_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/stands/arret_ok_v1.m4a",
+     "texte": "Super arrêt. Allez, pousse maintenant.",
+     "duree_ms": 1414
+    },
+    {
+     "fichier": "voix/stands/arret_ok_v2.m4a",
+     "texte": "Bon arrêt, deux secondes. On y va.",
+     "duree_ms": 2061
+    },
+    {
+     "fichier": "voix/stands/arret_ok_v3.m4a",
+     "texte": "Bel arrêt de l'équipe. Go, go.",
+     "duree_ms": 2325
+    }
+   ]
+  },
+  {
+   "id": "arret_lent",
+   "categorie": "stands",
+   "declencheur": "arret_lent",
+   "texte": "Arrêt lent, désolé. On a eu un problème avec le pneu avant gauche.",
+   "duree_ms": 3503,
+   "fichier": "voix/stands/arret_lent_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/stands/arret_lent_v1.m4a",
+     "texte": "Arrêt lent, désolé. On a eu un problème avec le pneu avant gauche.",
+     "duree_ms": 3503
+    },
+    {
+     "fichier": "voix/stands/arret_lent_v2.m4a",
+     "texte": "Désolé, Lewis. Arrêt lent. On va récupérer ça.",
+     "duree_ms": 3527
+    }
+   ]
+  },
+  {
+   "id": "double_arret",
+   "categorie": "stands",
+   "declencheur": "double_empilement",
+   "texte": "Double arrêt. Tu rentres derrière Bottas, sois prêt à attendre.",
+   "duree_ms": 3334,
+   "fichier": "voix/stands/double_arret_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/stands/double_arret_v1.m4a",
+     "texte": "Double arrêt. Tu rentres derrière Bottas, sois prêt à attendre.",
+     "duree_ms": 3334
+    },
+    {
+     "fichier": "voix/stands/double_arret_v2.m4a",
+     "texte": "On fait un double arrêt, attention, tu attends Bottas.",
+     "duree_ms": 2525
+    }
+   ]
+  },
+  {
+   "id": "unsafe_release",
+   "categorie": "stands",
+   "declencheur": "unsafe_release",
+   "texte": "Attention, voiture dans la voie des stands !",
+   "duree_ms": 2079,
+   "fichier": "voix/stands/unsafe_release_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/stands/unsafe_release_v1.m4a",
+     "texte": "Attention, voiture dans la voie des stands !",
+     "duree_ms": 2079
+    },
+    {
+     "fichier": "voix/stands/unsafe_release_v2.m4a",
+     "texte": "Unsafe release, ils vont enquêter.",
+     "duree_ms": 2077
+    },
+    {
+     "fichier": "voix/stands/unsafe_release_v3.m4a",
+     "texte": "Attention à gauche en sortie de garage !",
+     "duree_ms": 1819
+    }
+   ]
+  },
+  {
+   "id": "sortie_stands",
+   "categorie": "stands",
+   "declencheur": "sortie_stands",
+   "texte": "Sortie des stands. Attention à la ligne blanche.",
+   "duree_ms": 3119,
+   "fichier": "voix/stands/sortie_stands_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/stands/sortie_stands_v1.m4a",
+     "texte": "Sortie des stands. Attention à la ligne blanche.",
+     "duree_ms": 3119
+    },
+    {
+     "fichier": "voix/stands/sortie_stands_v2.m4a",
+     "texte": "Ne passe pas la ligne en sortie, Lewis.",
+     "duree_ms": 1564
+    },
+    {
+     "fichier": "voix/stands/sortie_stands_v3.m4a",
+     "texte": "Pneus froids en sortie, attention.",
+     "duree_ms": 1602
+    }
+   ]
+  },
+  {
+   "id": "rejoint_trafic",
+   "categorie": "stands",
+   "declencheur": "sortie_dans_trafic",
+   "texte": "Tu ressors dans le trafic. Attaque tout de suite.",
+   "duree_ms": 2178,
+   "fichier": "voix/stands/rejoint_trafic_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/stands/rejoint_trafic_v1.m4a",
+     "texte": "Tu ressors dans le trafic. Attaque tout de suite.",
+     "duree_ms": 2178
+    },
+    {
+     "fichier": "voix/stands/rejoint_trafic_v2.m4a",
+     "texte": "Tu ressors juste devant lui. Défends bien en premier virage.",
+     "duree_ms": 3151
+    },
+    {
+     "fichier": "voix/stands/rejoint_trafic_v3.m4a",
+     "texte": "Tu ressors en piste libre. Pousse.",
+     "duree_ms": 2547
+    }
+   ]
+  },
+  {
+   "id": "pneus_neufs_chauffe",
+   "categorie": "stands",
+   "declencheur": "tour_apres_arret",
+   "texte": "Pneus neufs. Fais-les monter en température tout de suite.",
+   "duree_ms": 3577,
+   "fichier": "voix/stands/pneus_neufs_chauffe_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/stands/pneus_neufs_chauffe_v1.m4a",
+     "texte": "Pneus neufs. Fais-les monter en température tout de suite.",
+     "duree_ms": 3577
+    },
+    {
+     "fichier": "voix/stands/pneus_neufs_chauffe_v2.m4a",
+     "texte": "Out lap, Lewis. Tout ce que tu as.",
+     "duree_ms": 2395
+    }
+   ]
+  },
+  {
+   "id": "arret_reussi_undercut",
+   "categorie": "stands",
+   "declencheur": "undercut_reussi",
+   "texte": "L'undercut a marché, tu es devant.",
+   "duree_ms": 1939,
+   "fichier": "voix/stands/arret_reussi_undercut_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/stands/arret_reussi_undercut_v1.m4a",
+     "texte": "L'undercut a marché, tu es devant.",
+     "duree_ms": 1939
+    },
+    {
+     "fichier": "voix/stands/arret_reussi_undercut_v2.m4a",
+     "texte": "Ça a marché, on l'a eu au stand.",
+     "duree_ms": 1882
+    }
+   ]
+  },
+  {
+   "id": "fenetre_ouverte",
+   "categorie": "stands",
+   "declencheur": "fenetre_ouverte",
+   "texte": "La fenêtre d'arrêt est ouverte.",
+   "duree_ms": 1483,
+   "fichier": "voix/stands/fenetre_ouverte_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/stands/fenetre_ouverte_v1.m4a",
+     "texte": "La fenêtre d'arrêt est ouverte.",
+     "duree_ms": 1483
+    },
+    {
+     "fichier": "voix/stands/fenetre_ouverte_v2.m4a",
+     "texte": "Fenêtre d'arrêt ouverte. On décide bientôt.",
+     "duree_ms": 2341
+    }
+   ]
+  },
+  {
+   "id": "drapeau_jaune",
+   "categorie": "drapeaux",
+   "declencheur": "jaune",
+   "texte": "Drapeau jaune, drapeau jaune.",
+   "duree_ms": 1607,
+   "fichier": "voix/drapeaux/drapeau_jaune_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_jaune_v1.m4a",
+     "texte": "Drapeau jaune, drapeau jaune.",
+     "duree_ms": 1607
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_jaune_v2.m4a",
+     "texte": "Jaune dans le prochain secteur. Lève le pied.",
+     "duree_ms": 2483
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_jaune_v3.m4a",
+     "texte": "Attention, jaune. Voiture arrêtée à droite.",
+     "duree_ms": 3449
+    }
+   ]
+  },
+  {
+   "id": "double_jaune",
+   "categorie": "drapeaux",
+   "declencheur": "double_jaune",
+   "texte": "Double jaune, double jaune ! Ralentis, sois prêt à t'arrêter.",
+   "duree_ms": 3398,
+   "fichier": "voix/drapeaux/double_jaune_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/double_jaune_v1.m4a",
+     "texte": "Double jaune, double jaune ! Ralentis, sois prêt à t'arrêter.",
+     "duree_ms": 3398
+    },
+    {
+     "fichier": "voix/drapeaux/double_jaune_v2.m4a",
+     "texte": "Double jaune. Commissaires sur la piste.",
+     "duree_ms": 1591
+    }
+   ]
+  },
+  {
+   "id": "drapeau_vert",
+   "categorie": "drapeaux",
+   "declencheur": "vert",
+   "texte": "Vert, vert. La piste est dégagée.",
+   "duree_ms": 2470,
+   "fichier": "voix/drapeaux/drapeau_vert_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_vert_v1.m4a",
+     "texte": "Vert, vert. La piste est dégagée.",
+     "duree_ms": 2470
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_vert_v2.m4a",
+     "texte": "Drapeau vert. On repart en course.",
+     "duree_ms": 2143
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_vert_v3.m4a",
+     "texte": "Vert. On peut pousser.",
+     "duree_ms": 1609
+    }
+   ]
+  },
+  {
+   "id": "drapeau_rouge",
+   "categorie": "drapeaux",
+   "declencheur": "rouge",
+   "texte": "Drapeau rouge, drapeau rouge ! Rentre doucement dans la voie des stands.",
+   "duree_ms": 4118,
+   "fichier": "voix/drapeaux/drapeau_rouge_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_rouge_v1.m4a",
+     "texte": "Drapeau rouge, drapeau rouge ! Rentre doucement dans la voie des stands.",
+     "duree_ms": 4118
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_rouge_v2.m4a",
+     "texte": "Course arrêtée, drapeau rouge. Ralentis et rentre aux stands.",
+     "duree_ms": 4173
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_rouge_v3.m4a",
+     "texte": "Rouge, Lewis. Séance suspendue.",
+     "duree_ms": 2625
+    }
+   ]
+  },
+  {
+   "id": "drapeau_rouge_info",
+   "categorie": "drapeaux",
+   "declencheur": "pendant_rouge",
+   "texte": "On peut changer de pneus pendant le drapeau rouge. On met des durs.",
+   "duree_ms": 3615,
+   "fichier": "voix/drapeaux/drapeau_rouge_info_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_rouge_info_v1.m4a",
+     "texte": "On peut changer de pneus pendant le drapeau rouge. On met des durs.",
+     "duree_ms": 3615
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_rouge_info_v2.m4a",
+     "texte": "Pendant l'interruption, on ajuste l'aileron avant.",
+     "duree_ms": 2390
+    }
+   ]
+  },
+  {
+   "id": "drapeau_bleu_toi",
+   "categorie": "drapeaux",
+   "declencheur": "bleu_pour_joueur",
+   "texte": "Drapeau bleu. Laisse passer les leaders.",
+   "duree_ms": 2289,
+   "fichier": "voix/drapeaux/drapeau_bleu_toi_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_bleu_toi_v1.m4a",
+     "texte": "Drapeau bleu. Laisse passer les leaders.",
+     "duree_ms": 2289
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_bleu_toi_v2.m4a",
+     "texte": "Bleu. Laisse passer la voiture derrière, perds le moins de temps possible.",
+     "duree_ms": 4316
+    }
+   ]
+  },
+  {
+   "id": "drapeau_bleu_rival",
+   "categorie": "drapeaux",
+   "declencheur": "bleu_pour_retarde",
+   "texte": "Il a des drapeaux bleus, il doit te laisser passer.",
+   "duree_ms": 2548,
+   "fichier": "voix/drapeaux/drapeau_bleu_rival_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_bleu_rival_v1.m4a",
+     "texte": "Il a des drapeaux bleus, il doit te laisser passer.",
+     "duree_ms": 2548
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_bleu_rival_v2.m4a",
+     "texte": "Bleu pour la voiture devant. Il doit se ranger.",
+     "duree_ms": 2802
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_bleu_rival_v3.m4a",
+     "texte": "Il ignore les bleus, on le signale à la direction de course.",
+     "duree_ms": 2686
+    }
+   ]
+  },
+  {
+   "id": "drapeau_blanc",
+   "categorie": "drapeaux",
+   "declencheur": "blanc",
+   "texte": "Drapeau blanc. Voiture lente sur la piste.",
+   "duree_ms": 2261,
+   "fichier": "voix/drapeaux/drapeau_blanc_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_blanc_v1.m4a",
+     "texte": "Drapeau blanc. Voiture lente sur la piste.",
+     "duree_ms": 2261
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_blanc_v2.m4a",
+     "texte": "Attention, véhicule lent devant. Drapeau blanc.",
+     "duree_ms": 3314
+    }
+   ]
+  },
+  {
+   "id": "drapeau_noir_blanc",
+   "categorie": "drapeaux",
+   "declencheur": "avertissement_conduite",
+   "texte": "Drapeau noir et blanc. Dernier avertissement, Lewis.",
+   "duree_ms": 2867,
+   "fichier": "voix/drapeaux/drapeau_noir_blanc_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/drapeau_noir_blanc_v1.m4a",
+     "texte": "Drapeau noir et blanc. Dernier avertissement, Lewis.",
+     "duree_ms": 2867
+    },
+    {
+     "fichier": "voix/drapeaux/drapeau_noir_blanc_v2.m4a",
+     "texte": "Avertissement pour comportement. Fais attention.",
+     "duree_ms": 2174
+    }
+   ]
+  },
+  {
+   "id": "debris",
+   "categorie": "drapeaux",
+   "declencheur": "debris",
+   "texte": "Débris sur la piste au virage dix. Évite la trajectoire.",
+   "duree_ms": 3240,
+   "fichier": "voix/drapeaux/debris_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/drapeaux/debris_v1.m4a",
+     "texte": "Débris sur la piste au virage dix. Évite la trajectoire.",
+     "duree_ms": 3240
+    },
+    {
+     "fichier": "voix/drapeaux/debris_v2.m4a",
+     "texte": "Attention, débris à l'extérieur.",
+     "duree_ms": 1909
+    }
+   ]
+  },
+  {
+   "id": "damier",
+   "categorie": "fin_course",
+   "declencheur": "damier",
+   "texte": "Drapeau à damier, Lewis.",
+   "duree_ms": 1444,
+   "fichier": "voix/fin_course/damier_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/damier_v1.m4a",
+     "texte": "Drapeau à damier, Lewis.",
+     "duree_ms": 1444
+    },
+    {
+     "fichier": "voix/fin_course/damier_v2.m4a",
+     "texte": "Damier ! C'est fini.",
+     "duree_ms": 1571
+    }
+   ]
+  },
+  {
+   "id": "sc_deploye",
+   "categorie": "safety_car",
+   "declencheur": "safety_car",
+   "texte": "Safety car, safety car. Respecte le delta.",
+   "duree_ms": 3285,
+   "fichier": "voix/safety_car/sc_deploye_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/sc_deploye_v1.m4a",
+     "texte": "Safety car, safety car. Respecte le delta.",
+     "duree_ms": 3285
+    },
+    {
+     "fichier": "voix/safety_car/sc_deploye_v2.m4a",
+     "texte": "Voiture de sécurité déployée. Reste au-dessus du delta.",
+     "duree_ms": 3391
+    },
+    {
+     "fichier": "voix/safety_car/sc_deploye_v3.m4a",
+     "texte": "Safety car. On réfléchit à un arrêt.",
+     "duree_ms": 2242
+    }
+   ]
+  },
+  {
+   "id": "sc_box",
+   "categorie": "safety_car",
+   "declencheur": "safety_car_box",
+   "texte": "Safety car, box, box ! On profite de l'arrêt.",
+   "duree_ms": 3054,
+   "fichier": "voix/safety_car/sc_box_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/sc_box_v1.m4a",
+     "texte": "Safety car, box, box ! On profite de l'arrêt.",
+     "duree_ms": 3054
+    },
+    {
+     "fichier": "voix/safety_car/sc_box_v2.m4a",
+     "texte": "Box sous safety car, on est prêts.",
+     "duree_ms": 1894
+    }
+   ]
+  },
+  {
+   "id": "sc_reste_dehors",
+   "categorie": "safety_car",
+   "declencheur": "safety_car_dehors",
+   "texte": "Sous safety car, on reste dehors. On garde la position.",
+   "duree_ms": 3138,
+   "fichier": "voix/safety_car/sc_reste_dehors_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/sc_reste_dehors_v1.m4a",
+     "texte": "Sous safety car, on reste dehors. On garde la position.",
+     "duree_ms": 3138
+    },
+    {
+     "fichier": "voix/safety_car/sc_reste_dehors_v2.m4a",
+     "texte": "On reste en piste, ils vont tous rentrer.",
+     "duree_ms": 2115
+    }
+   ]
+  },
+  {
+   "id": "sc_delta",
+   "categorie": "safety_car",
+   "declencheur": "delta",
+   "texte": "Delta positif, garde la marge.",
+   "duree_ms": 1727,
+   "fichier": "voix/safety_car/sc_delta_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/sc_delta_v1.m4a",
+     "texte": "Delta positif, garde la marge.",
+     "duree_ms": 1727
+    },
+    {
+     "fichier": "voix/safety_car/sc_delta_v2.m4a",
+     "texte": "Attention au delta, tu es trop près.",
+     "duree_ms": 2228
+    },
+    {
+     "fichier": "voix/safety_car/sc_delta_v3.m4a",
+     "texte": "Reste au-dessus du delta, Lewis.",
+     "duree_ms": 1976
+    }
+   ]
+  },
+  {
+   "id": "sc_temperatures",
+   "categorie": "safety_car",
+   "declencheur": "sous_sc",
+   "texte": "Garde la température dans les pneus et les freins.",
+   "duree_ms": 2184,
+   "fichier": "voix/safety_car/sc_temperatures_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/sc_temperatures_v1.m4a",
+     "texte": "Garde la température dans les pneus et les freins.",
+     "duree_ms": 2184
+    },
+    {
+     "fichier": "voix/safety_car/sc_temperatures_v2.m4a",
+     "texte": "Fais des zigzags, les pneus refroidissent.",
+     "duree_ms": 2168
+    }
+   ]
+  },
+  {
+   "id": "sc_retardataires",
+   "categorie": "safety_car",
+   "declencheur": "retardataires_doublent",
+   "texte": "Les retardataires peuvent se dédoubler.",
+   "duree_ms": 1675,
+   "fichier": "voix/safety_car/sc_retardataires_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/sc_retardataires_v1.m4a",
+     "texte": "Les retardataires peuvent se dédoubler.",
+     "duree_ms": 1675
+    },
+    {
+     "fichier": "voix/safety_car/sc_retardataires_v2.m4a",
+     "texte": "Les voitures à un tour vont dépasser la safety car.",
+     "duree_ms": 2776
+    }
+   ]
+  },
+  {
+   "id": "sc_fin",
+   "categorie": "safety_car",
+   "declencheur": "safety_car_rentre",
+   "texte": "La safety car rentre ce tour. Prépare la relance.",
+   "duree_ms": 3668,
+   "fichier": "voix/safety_car/sc_fin_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/sc_fin_v1.m4a",
+     "texte": "La safety car rentre ce tour. Prépare la relance.",
+     "duree_ms": 3668
+    },
+    {
+     "fichier": "voix/safety_car/sc_fin_v2.m4a",
+     "texte": "La safety car rentre. C'est toi qui contrôles la relance.",
+     "duree_ms": 3933
+    },
+    {
+     "fichier": "voix/safety_car/sc_fin_v3.m4a",
+     "texte": "Fin de safety car. Pneus et freins au chaud.",
+     "duree_ms": 1891
+    }
+   ]
+  },
+  {
+   "id": "relance",
+   "categorie": "safety_car",
+   "declencheur": "relance",
+   "texte": "Relance. Attention au deuxième virage.",
+   "duree_ms": 1852,
+   "fichier": "voix/safety_car/relance_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/relance_v1.m4a",
+     "texte": "Relance. Attention au deuxième virage.",
+     "duree_ms": 1852
+    },
+    {
+     "fichier": "voix/safety_car/relance_v2.m4a",
+     "texte": "On repart. Pousse dès la ligne.",
+     "duree_ms": 1706
+    }
+   ]
+  },
+  {
+   "id": "vsc",
+   "categorie": "safety_car",
+   "declencheur": "vsc",
+   "texte": "Virtual safety car, VSC. Respecte le delta.",
+   "duree_ms": 3442,
+   "fichier": "voix/safety_car/vsc_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/vsc_v1.m4a",
+     "texte": "Virtual safety car, VSC. Respecte le delta.",
+     "duree_ms": 3442
+    },
+    {
+     "fichier": "voix/safety_car/vsc_v2.m4a",
+     "texte": "VSC déployée. Ralentis maintenant.",
+     "duree_ms": 2356
+    },
+    {
+     "fichier": "voix/safety_car/vsc_v3.m4a",
+     "texte": "VSC, VSC. Box ou pas, on réfléchit.",
+     "duree_ms": 3996
+    }
+   ]
+  },
+  {
+   "id": "vsc_fin",
+   "categorie": "safety_car",
+   "declencheur": "fin_vsc",
+   "texte": "Fin de VSC. Fin de VSC. Go, go.",
+   "duree_ms": 2688,
+   "fichier": "voix/safety_car/vsc_fin_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/safety_car/vsc_fin_v1.m4a",
+     "texte": "Fin de VSC. Fin de VSC. Go, go.",
+     "duree_ms": 2688
+    },
+    {
+     "fichier": "voix/safety_car/vsc_fin_v2.m4a",
+     "texte": "La VSC se termine, prépare-toi à pousser.",
+     "duree_ms": 1987
+    },
+    {
+     "fichier": "voix/safety_car/vsc_fin_v3.m4a",
+     "texte": "VSC terminée. Course reprise.",
+     "duree_ms": 2233
+    }
+   ]
+  },
+  {
+   "id": "limites_piste",
+   "categorie": "penalites",
+   "declencheur": "limites_piste",
+   "texte": "Limites de piste au virage quatre. Fais attention.",
+   "duree_ms": 2296,
+   "fichier": "voix/penalites/limites_piste_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/limites_piste_v1.m4a",
+     "texte": "Limites de piste au virage quatre. Fais attention.",
+     "duree_ms": 2296
+    },
+    {
+     "fichier": "voix/penalites/limites_piste_v2.m4a",
+     "texte": "Attention aux limites de piste.",
+     "duree_ms": 1191
+    }
+   ]
+  },
+  {
+   "id": "avertissement",
+   "categorie": "penalites",
+   "declencheur": "avertissement",
+   "texte": "Deuxième avertissement. Encore un et c'est la pénalité.",
+   "duree_ms": 2987,
+   "fichier": "voix/penalites/avertissement_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/avertissement_v1.m4a",
+     "texte": "Deuxième avertissement. Encore un et c'est la pénalité.",
+     "duree_ms": 2987
+    },
+    {
+     "fichier": "voix/penalites/avertissement_v2.m4a",
+     "texte": "Drapeau noir et blanc à la prochaine.",
+     "duree_ms": 1710
+    },
+    {
+     "fichier": "voix/penalites/avertissement_v3.m4a",
+     "texte": "Dernier avertissement pour les limites de piste.",
+     "duree_ms": 1891
+    }
+   ]
+  },
+  {
+   "id": "enquete",
+   "categorie": "penalites",
+   "declencheur": "enquete",
+   "texte": "Incident sous enquête. On verra après la course.",
+   "duree_ms": 2092,
+   "fichier": "voix/penalites/enquete_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/enquete_v1.m4a",
+     "texte": "Incident sous enquête. On verra après la course.",
+     "duree_ms": 2092
+    },
+    {
+     "fichier": "voix/penalites/enquete_v2.m4a",
+     "texte": "Ils enquêtent sur l'incident. Concentre-toi sur la course.",
+     "duree_ms": 2913
+    }
+   ]
+  },
+  {
+   "id": "penalite_5s",
+   "categorie": "penalites",
+   "declencheur": "penalite_5",
+   "texte": "Pénalité de cinq secondes. Il faut creuser l'écart.",
+   "duree_ms": 2910,
+   "fichier": "voix/penalites/penalite_5s_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/penalite_5s_v1.m4a",
+     "texte": "Pénalité de cinq secondes. Il faut creuser l'écart.",
+     "duree_ms": 2910
+    },
+    {
+     "fichier": "voix/penalites/penalite_5s_v2.m4a",
+     "texte": "Cinq secondes de pénalité. On la purge au stand.",
+     "duree_ms": 3176
+    }
+   ]
+  },
+  {
+   "id": "penalite_10s",
+   "categorie": "penalites",
+   "declencheur": "penalite_10",
+   "texte": "Pénalité de dix secondes, Lewis.",
+   "duree_ms": 2200,
+   "fichier": "voix/penalites/penalite_10s_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/penalite_10s_v1.m4a",
+     "texte": "Pénalité de dix secondes, Lewis.",
+     "duree_ms": 2200
+    },
+    {
+     "fichier": "voix/penalites/penalite_10s_v2.m4a",
+     "texte": "On a dix secondes. Pousse pour créer l'écart.",
+     "duree_ms": 2816
+    }
+   ]
+  },
+  {
+   "id": "drive_through",
+   "categorie": "penalites",
+   "declencheur": "drive_through",
+   "texte": "Drive-through. Tu dois le faire dans les trois tours.",
+   "duree_ms": 2321,
+   "fichier": "voix/penalites/drive_through_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/drive_through_v1.m4a",
+     "texte": "Drive-through. Tu dois le faire dans les trois tours.",
+     "duree_ms": 2321
+    },
+    {
+     "fichier": "voix/penalites/drive_through_v2.m4a",
+     "texte": "Pénalité drive-through, rentre au prochain tour.",
+     "duree_ms": 2347
+    }
+   ]
+  },
+  {
+   "id": "stop_go",
+   "categorie": "penalites",
+   "declencheur": "stop_go",
+   "texte": "Stop and go de dix secondes. Box ce tour.",
+   "duree_ms": 2575,
+   "fichier": "voix/penalites/stop_go_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/stop_go_v1.m4a",
+     "texte": "Stop and go de dix secondes. Box ce tour.",
+     "duree_ms": 2575
+    },
+    {
+     "fichier": "voix/penalites/stop_go_v2.m4a",
+     "texte": "Pénalité stop and go. Il faut rentrer.",
+     "duree_ms": 2232
+    }
+   ]
+  },
+  {
+   "id": "pas_de_penalite",
+   "categorie": "penalites",
+   "declencheur": "pas_de_penalite",
+   "texte": "Aucune action. Pas de pénalité.",
+   "duree_ms": 2102,
+   "fichier": "voix/penalites/pas_de_penalite_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/pas_de_penalite_v1.m4a",
+     "texte": "Aucune action. Pas de pénalité.",
+     "duree_ms": 2102
+    },
+    {
+     "fichier": "voix/penalites/pas_de_penalite_v2.m4a",
+     "texte": "Pas d'enquête, tout va bien.",
+     "duree_ms": 1226
+    }
+   ]
+  },
+  {
+   "id": "exces_vitesse_stands",
+   "categorie": "penalites",
+   "declencheur": "exces_vitesse_pit",
+   "texte": "Excès de vitesse dans les stands. Attention au limiteur.",
+   "duree_ms": 3467,
+   "fichier": "voix/penalites/exces_vitesse_stands_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/penalites/exces_vitesse_stands_v1.m4a",
+     "texte": "Excès de vitesse dans les stands. Attention au limiteur.",
+     "duree_ms": 3467
+    },
+    {
+     "fichier": "voix/penalites/exces_vitesse_stands_v2.m4a",
+     "texte": "Tu étais trop rapide dans la voie des stands.",
+     "duree_ms": 2083
+    }
+   ]
+  },
+  {
+   "id": "degats_aileron",
+   "categorie": "degats",
+   "declencheur": "aileron_avant",
+   "texte": "Dégâts sur l'aileron avant. Box ce tour, on change le nez.",
+   "duree_ms": 3847,
+   "fichier": "voix/degats/degats_aileron_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/degats/degats_aileron_v1.m4a",
+     "texte": "Dégâts sur l'aileron avant. Box ce tour, on change le nez.",
+     "duree_ms": 3847
+    },
+    {
+     "fichier": "voix/degats/degats_aileron_v2.m4a",
+     "texte": "Aileron avant endommagé. Comment tu sens la voiture ?",
+     "duree_ms": 3309
+    }
+   ]
+  },
+  {
+   "id": "degats_fond",
+   "categorie": "degats",
+   "declencheur": "fond_plat",
+   "texte": "On voit des dégâts sur le fond plat. On perd de l'appui.",
+   "duree_ms": 2555,
+   "fichier": "voix/degats/degats_fond_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/degats/degats_fond_v1.m4a",
+     "texte": "On voit des dégâts sur le fond plat. On perd de l'appui.",
+     "duree_ms": 2555
+    },
+    {
+     "fichier": "voix/degats/degats_fond_v2.m4a",
+     "texte": "Dégâts sur le fond, on perd environ trois dixièmes.",
+     "duree_ms": 2773
+    }
+   ]
+  },
+  {
+   "id": "degats_mineurs",
+   "categorie": "degats",
+   "declencheur": "degats_legers",
+   "texte": "Petits dégâts, rien de grave. Continue.",
+   "duree_ms": 2899,
+   "fichier": "voix/degats/degats_mineurs_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/degats/degats_mineurs_v1.m4a",
+     "texte": "Petits dégâts, rien de grave. Continue.",
+     "duree_ms": 2899
+    },
+    {
+     "fichier": "voix/degats/degats_mineurs_v2.m4a",
+     "texte": "On a regardé, les dégâts sont mineurs.",
+     "duree_ms": 2205
+    }
+   ]
+  },
+  {
+   "id": "freins_temp",
+   "categorie": "degats",
+   "declencheur": "freins_chauds",
+   "texte": "Températures freins avant élevées. Fais du lift and coast.",
+   "duree_ms": 3385,
+   "fichier": "voix/degats/freins_temp_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/degats/freins_temp_v1.m4a",
+     "texte": "Températures freins avant élevées. Fais du lift and coast.",
+     "duree_ms": 3385
+    },
+    {
+     "fichier": "voix/degats/freins_temp_v2.m4a",
+     "texte": "Freins arrière chauds. Change la balance.",
+     "duree_ms": 1913
+    },
+    {
+     "fichier": "voix/degats/freins_temp_v3.m4a",
+     "texte": "Les freins surchauffent, gère dans les grandes lignes droites.",
+     "duree_ms": 2713
+    }
+   ]
+  },
+  {
+   "id": "moteur_temp",
+   "categorie": "degats",
+   "declencheur": "moteur_chaud",
+   "texte": "Températures moteur élevées. Sors de l'aspiration.",
+   "duree_ms": 3514,
+   "fichier": "voix/degats/moteur_temp_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/degats/moteur_temp_v1.m4a",
+     "texte": "Températures moteur élevées. Sors de l'aspiration.",
+     "duree_ms": 3514
+    },
+    {
+     "fichier": "voix/degats/moteur_temp_v2.m4a",
+     "texte": "Le moteur chauffe. Prends de l'air propre.",
+     "duree_ms": 2362
+    }
+   ]
+  },
+  {
+   "id": "probleme_hydraulique",
+   "categorie": "degats",
+   "declencheur": "hydraulique",
+   "texte": "On a un problème hydraulique. Reste calme.",
+   "duree_ms": 2784,
+   "fichier": "voix/degats/probleme_hydraulique_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/degats/probleme_hydraulique_v1.m4a",
+     "texte": "On a un problème hydraulique. Reste calme.",
+     "duree_ms": 2784
+    },
+    {
+     "fichier": "voix/degats/probleme_hydraulique_v2.m4a",
+     "texte": "Problème de pression hydraulique, on regarde.",
+     "duree_ms": 2439
+    }
+   ]
+  },
+  {
+   "id": "probleme_boite",
+   "categorie": "degats",
+   "declencheur": "boite",
+   "texte": "Problème de boîte de vitesses. Évite les rétrogradages brusques.",
+   "duree_ms": 3613,
+   "fichier": "voix/degats/probleme_boite_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/degats/probleme_boite_v1.m4a",
+     "texte": "Problème de boîte de vitesses. Évite les rétrogradages brusques.",
+     "duree_ms": 3613
+    },
+    {
+     "fichier": "voix/degats/probleme_boite_v2.m4a",
+     "texte": "On a une alerte sur la boîte.",
+     "duree_ms": 1298
+    }
+   ]
+  },
+  {
+   "id": "arreter_voiture",
+   "categorie": "degats",
+   "declencheur": "arret_force",
+   "texte": "Arrête la voiture, arrête la voiture. Sécurité d'abord.",
+   "duree_ms": 2686,
+   "fichier": "voix/degats/arreter_voiture_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/degats/arreter_voiture_v1.m4a",
+     "texte": "Arrête la voiture, arrête la voiture. Sécurité d'abord.",
+     "duree_ms": 2686
+    },
+    {
+     "fichier": "voix/degats/arreter_voiture_v2.m4a",
+     "texte": "Gare la voiture. Coupe tout.",
+     "duree_ms": 1263
+    },
+    {
+     "fichier": "voix/degats/arreter_voiture_v3.m4a",
+     "texte": "Lewis, on doit abandonner. Arrête la voiture en sécurité.",
+     "duree_ms": 4086
+    }
+   ]
+  },
+  {
+   "id": "lift_coast",
+   "categorie": "gestion",
+   "declencheur": "lift_and_coast",
+   "texte": "Lift and coast, cinquante mètres avant chaque freinage.",
+   "duree_ms": 3303,
+   "fichier": "voix/gestion/lift_coast_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/lift_coast_v1.m4a",
+     "texte": "Lift and coast, cinquante mètres avant chaque freinage.",
+     "duree_ms": 3303
+    },
+    {
+     "fichier": "voix/gestion/lift_coast_v2.m4a",
+     "texte": "On a besoin de lift and coast. Gère le carburant.",
+     "duree_ms": 2850
+    },
+    {
+     "fichier": "voix/gestion/lift_coast_v3.m4a",
+     "texte": "Lève le pied plus tôt avant les freinages.",
+     "duree_ms": 2160
+    }
+   ]
+  },
+  {
+   "id": "carburant",
+   "categorie": "gestion",
+   "declencheur": "carburant",
+   "texte": "Carburant : on est dans la cible.",
+   "duree_ms": 1968,
+   "fichier": "voix/gestion/carburant_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/carburant_v1.m4a",
+     "texte": "Carburant : on est dans la cible.",
+     "duree_ms": 1968
+    },
+    {
+     "fichier": "voix/gestion/carburant_v2.m4a",
+     "texte": "On est un peu en dessous de la cible carburant, il faut économiser.",
+     "duree_ms": 3516
+    },
+    {
+     "fichier": "voix/gestion/carburant_v3.m4a",
+     "texte": "Le carburant est bon, tu peux pousser.",
+     "duree_ms": 2048
+    }
+   ]
+  },
+  {
+   "id": "mode_moteur_attaque",
+   "categorie": "gestion",
+   "declencheur": "mode_moteur_plus",
+   "texte": "Strat mode un. Mode attaque.",
+   "duree_ms": 1811,
+   "fichier": "voix/gestion/mode_moteur_attaque_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/mode_moteur_attaque_v1.m4a",
+     "texte": "Strat mode un. Mode attaque.",
+     "duree_ms": 1811
+    },
+    {
+     "fichier": "voix/gestion/mode_moteur_attaque_v2.m4a",
+     "texte": "Passe en strat mode deux, on pousse.",
+     "duree_ms": 1809
+    },
+    {
+     "fichier": "voix/gestion/mode_moteur_attaque_v3.m4a",
+     "texte": "Mode moteur maximum pour ce tour.",
+     "duree_ms": 1870
+    }
+   ]
+  },
+  {
+   "id": "mode_moteur_eco",
+   "categorie": "gestion",
+   "declencheur": "mode_moteur_moins",
+   "texte": "Repasse en strat mode cinq.",
+   "duree_ms": 1262,
+   "fichier": "voix/gestion/mode_moteur_eco_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/mode_moteur_eco_v1.m4a",
+     "texte": "Repasse en strat mode cinq.",
+     "duree_ms": 1262
+    },
+    {
+     "fichier": "voix/gestion/mode_moteur_eco_v2.m4a",
+     "texte": "Mode standard, on économise le moteur.",
+     "duree_ms": 1871
+    }
+   ]
+  },
+  {
+   "id": "recharge_ers",
+   "categorie": "gestion",
+   "declencheur": "recharge_ers",
+   "texte": "Recharge la batterie ce tour.",
+   "duree_ms": 1514,
+   "fichier": "voix/gestion/recharge_ers_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/recharge_ers_v1.m4a",
+     "texte": "Recharge la batterie ce tour.",
+     "duree_ms": 1514
+    },
+    {
+     "fichier": "voix/gestion/recharge_ers_v2.m4a",
+     "texte": "Mode recharge. On prépare l'attaque.",
+     "duree_ms": 1891
+    },
+    {
+     "fichier": "voix/gestion/recharge_ers_v3.m4a",
+     "texte": "La batterie est basse, recharge.",
+     "duree_ms": 1208
+    }
+   ]
+  },
+  {
+   "id": "overtake",
+   "categorie": "gestion",
+   "declencheur": "bouton_overtake",
+   "texte": "Overtake activé. Utilise-le maintenant.",
+   "duree_ms": 2941,
+   "fichier": "voix/gestion/overtake_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/overtake_v1.m4a",
+     "texte": "Overtake activé. Utilise-le maintenant.",
+     "duree_ms": 2941
+    },
+    {
+     "fichier": "voix/gestion/overtake_v2.m4a",
+     "texte": "Utilise le bouton overtake dans la ligne droite.",
+     "duree_ms": 2265
+    }
+   ]
+  },
+  {
+   "id": "diff_balance",
+   "categorie": "gestion",
+   "declencheur": "reglages_volant",
+   "texte": "Différentiel entrée position six.",
+   "duree_ms": 1755,
+   "fichier": "voix/gestion/diff_balance_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/diff_balance_v1.m4a",
+     "texte": "Différentiel entrée position six.",
+     "duree_ms": 1755
+    },
+    {
+     "fichier": "voix/gestion/diff_balance_v2.m4a",
+     "texte": "Balance freins, un clic vers l'arrière.",
+     "duree_ms": 1785
+    },
+    {
+     "fichier": "voix/gestion/diff_balance_v3.m4a",
+     "texte": "Tu peux jouer sur le différentiel en sortie.",
+     "duree_ms": 1910
+    }
+   ]
+  },
+  {
+   "id": "refroidissement",
+   "categorie": "gestion",
+   "declencheur": "refroidissement",
+   "texte": "Il faut refroidir la voiture, sors de l'aspiration.",
+   "duree_ms": 2607,
+   "fichier": "voix/gestion/refroidissement_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/gestion/refroidissement_v1.m4a",
+     "texte": "Il faut refroidir la voiture, sors de l'aspiration.",
+     "duree_ms": 2607
+    },
+    {
+     "fichier": "voix/gestion/refroidissement_v2.m4a",
+     "texte": "Prends de l'espace, on a besoin de refroidir.",
+     "duree_ms": 1880
+    }
+   ]
+  },
+  {
+   "id": "pluie_annoncee",
+   "categorie": "meteo",
+   "declencheur": "pluie_annoncee",
+   "texte": "Pluie annoncée dans dix minutes.",
+   "duree_ms": 1316,
+   "fichier": "voix/meteo/pluie_annoncee_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/pluie_annoncee_v1.m4a",
+     "texte": "Pluie annoncée dans dix minutes.",
+     "duree_ms": 1316
+    },
+    {
+     "fichier": "voix/meteo/pluie_annoncee_v2.m4a",
+     "texte": "Le radar montre de la pluie qui arrive.",
+     "duree_ms": 1728
+    },
+    {
+     "fichier": "voix/meteo/pluie_annoncee_v3.m4a",
+     "texte": "Pluie attendue dans cinq tours.",
+     "duree_ms": 1407
+    }
+   ]
+  },
+  {
+   "id": "pluie_legere",
+   "categorie": "meteo",
+   "declencheur": "pluie_legere",
+   "texte": "Quelques gouttes au virage huit.",
+   "duree_ms": 1424,
+   "fichier": "voix/meteo/pluie_legere_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/pluie_legere_v1.m4a",
+     "texte": "Quelques gouttes au virage huit.",
+     "duree_ms": 1424
+    },
+    {
+     "fichier": "voix/meteo/pluie_legere_v2.m4a",
+     "texte": "Petite pluie dans le secteur trois.",
+     "duree_ms": 1432
+    }
+   ]
+  },
+  {
+   "id": "pluie_forte",
+   "categorie": "meteo",
+   "declencheur": "pluie_forte",
+   "texte": "Grosse pluie arrive. Prudence.",
+   "duree_ms": 2844,
+   "fichier": "voix/meteo/pluie_forte_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/pluie_forte_v1.m4a",
+     "texte": "Grosse pluie arrive. Prudence.",
+     "duree_ms": 2844
+    },
+    {
+     "fichier": "voix/meteo/pluie_forte_v2.m4a",
+     "texte": "La pluie s'intensifie, la piste est très glissante.",
+     "duree_ms": 2363
+    }
+   ]
+  },
+  {
+   "id": "piste_sechante",
+   "categorie": "meteo",
+   "declencheur": "piste_sechante",
+   "texte": "La piste sèche. Trajectoire presque sèche.",
+   "duree_ms": 2717,
+   "fichier": "voix/meteo/piste_sechante_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/piste_sechante_v1.m4a",
+     "texte": "La piste sèche. Trajectoire presque sèche.",
+     "duree_ms": 2717
+    },
+    {
+     "fichier": "voix/meteo/piste_sechante_v2.m4a",
+     "texte": "La trajectoire sèche rapidement. On pense aux slicks.",
+     "duree_ms": 2548
+    }
+   ]
+  },
+  {
+   "id": "passage_inters",
+   "categorie": "meteo",
+   "declencheur": "passage_inters",
+   "texte": "Box, box. On passe sur les intermédiaires.",
+   "duree_ms": 2304,
+   "fichier": "voix/meteo/passage_inters_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/passage_inters_v1.m4a",
+     "texte": "Box, box. On passe sur les intermédiaires.",
+     "duree_ms": 2304
+    },
+    {
+     "fichier": "voix/meteo/passage_inters_v2.m4a",
+     "texte": "Inters prêts. Box ce tour.",
+     "duree_ms": 1871
+    }
+   ]
+  },
+  {
+   "id": "passage_pluie",
+   "categorie": "meteo",
+   "declencheur": "passage_wets",
+   "texte": "Box, on met les pneus pluie.",
+   "duree_ms": 1234,
+   "fichier": "voix/meteo/passage_pluie_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/passage_pluie_v1.m4a",
+     "texte": "Box, on met les pneus pluie.",
+     "duree_ms": 1234
+    },
+    {
+     "fichier": "voix/meteo/passage_pluie_v2.m4a",
+     "texte": "Pneus pluie prêts, box.",
+     "duree_ms": 1324
+    }
+   ]
+  },
+  {
+   "id": "passage_slicks",
+   "categorie": "meteo",
+   "declencheur": "passage_slicks",
+   "texte": "On passe en slicks. Box, box.",
+   "duree_ms": 2454,
+   "fichier": "voix/meteo/passage_slicks_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/passage_slicks_v1.m4a",
+     "texte": "On passe en slicks. Box, box.",
+     "duree_ms": 2454
+    },
+    {
+     "fichier": "voix/meteo/passage_slicks_v2.m4a",
+     "texte": "Les slicks sont prêts. C'est le moment.",
+     "duree_ms": 2337
+    }
+   ]
+  },
+  {
+   "id": "question_meteo",
+   "categorie": "meteo",
+   "declencheur": "demande_ressenti",
+   "texte": "Comment est la piste, Lewis ?",
+   "duree_ms": 1511,
+   "fichier": "voix/meteo/question_meteo_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/question_meteo_v1.m4a",
+     "texte": "Comment est la piste, Lewis ?",
+     "duree_ms": 1511
+    },
+    {
+     "fichier": "voix/meteo/question_meteo_v2.m4a",
+     "texte": "Tu peux nous dire comment c'est au virage un ?",
+     "duree_ms": 1601
+    }
+   ]
+  },
+  {
+   "id": "aquaplaning",
+   "categorie": "meteo",
+   "declencheur": "aquaplaning",
+   "texte": "Attention à l'aquaplaning en ligne droite.",
+   "duree_ms": 1749,
+   "fichier": "voix/meteo/aquaplaning_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/meteo/aquaplaning_v1.m4a",
+     "texte": "Attention à l'aquaplaning en ligne droite.",
+     "duree_ms": 1749
+    },
+    {
+     "fichier": "voix/meteo/aquaplaning_v2.m4a",
+     "texte": "Beaucoup d'eau dans la ligne droite.",
+     "duree_ms": 1194
+    }
+   ]
+  },
+  {
+   "id": "plan_a",
+   "categorie": "strategie",
+   "declencheur": "plan_a",
+   "texte": "On reste sur le plan A.",
+   "duree_ms": 1098,
+   "fichier": "voix/strategie/plan_a_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/plan_a_v1.m4a",
+     "texte": "On reste sur le plan A.",
+     "duree_ms": 1098
+    },
+    {
+     "fichier": "voix/strategie/plan_a_v2.m4a",
+     "texte": "Plan A, Lewis. Un arrêt.",
+     "duree_ms": 2410
+    }
+   ]
+  },
+  {
+   "id": "plan_b",
+   "categorie": "strategie",
+   "declencheur": "plan_b",
+   "texte": "On passe au plan B.",
+   "duree_ms": 749,
+   "fichier": "voix/strategie/plan_b_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/plan_b_v1.m4a",
+     "texte": "On passe au plan B.",
+     "duree_ms": 749
+    },
+    {
+     "fichier": "voix/strategie/plan_b_v2.m4a",
+     "texte": "Plan B. Deux arrêts.",
+     "duree_ms": 925
+    },
+    {
+     "fichier": "voix/strategie/plan_b_v3.m4a",
+     "texte": "Changement de stratégie, plan B.",
+     "duree_ms": 1454
+    }
+   ]
+  },
+  {
+   "id": "plan_c",
+   "categorie": "strategie",
+   "declencheur": "plan_c",
+   "texte": "Plan C, Lewis. On s'adapte.",
+   "duree_ms": 1563,
+   "fichier": "voix/strategie/plan_c_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/plan_c_v1.m4a",
+     "texte": "Plan C, Lewis. On s'adapte.",
+     "duree_ms": 1563
+    },
+    {
+     "fichier": "voix/strategie/plan_c_v2.m4a",
+     "texte": "On bascule sur le plan C.",
+     "duree_ms": 1049
+    }
+   ]
+  },
+  {
+   "id": "undercut",
+   "categorie": "strategie",
+   "declencheur": "undercut",
+   "texte": "On tente l'undercut.",
+   "duree_ms": 888,
+   "fichier": "voix/strategie/undercut_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/undercut_v1.m4a",
+     "texte": "On tente l'undercut.",
+     "duree_ms": 888
+    },
+    {
+     "fichier": "voix/strategie/undercut_v2.m4a",
+     "texte": "Il faut faire l'undercut, pousse au maximum.",
+     "duree_ms": 1752
+    },
+    {
+     "fichier": "voix/strategie/undercut_v3.m4a",
+     "texte": "Ils vont tenter l'undercut. Prépare-toi.",
+     "duree_ms": 1388
+    }
+   ]
+  },
+  {
+   "id": "overcut",
+   "categorie": "strategie",
+   "declencheur": "overcut",
+   "texte": "On fait l'overcut. Pousse en piste libre.",
+   "duree_ms": 1908,
+   "fichier": "voix/strategie/overcut_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/overcut_v1.m4a",
+     "texte": "On fait l'overcut. Pousse en piste libre.",
+     "duree_ms": 1908
+    },
+    {
+     "fichier": "voix/strategie/overcut_v2.m4a",
+     "texte": "Overcut, Lewis. On va rester dehors plus longtemps.",
+     "duree_ms": 3634
+    }
+   ]
+  },
+  {
+   "id": "un_arret",
+   "categorie": "strategie",
+   "declencheur": "un_arret",
+   "texte": "On vise un seul arrêt.",
+   "duree_ms": 890,
+   "fichier": "voix/strategie/un_arret_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/un_arret_v1.m4a",
+     "texte": "On vise un seul arrêt.",
+     "duree_ms": 890
+    },
+    {
+     "fichier": "voix/strategie/un_arret_v2.m4a",
+     "texte": "Stratégie un arrêt. Gère les pneus.",
+     "duree_ms": 2338
+    }
+   ]
+  },
+  {
+   "id": "deux_arrets",
+   "categorie": "strategie",
+   "declencheur": "deux_arrets",
+   "texte": "On passe sur deux arrêts.",
+   "duree_ms": 983,
+   "fichier": "voix/strategie/deux_arrets_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/deux_arrets_v1.m4a",
+     "texte": "On passe sur deux arrêts.",
+     "duree_ms": 983
+    },
+    {
+     "fichier": "voix/strategie/deux_arrets_v2.m4a",
+     "texte": "Deux arrêts, tu peux pousser maintenant.",
+     "duree_ms": 1555
+    }
+   ]
+  },
+  {
+   "id": "couverture_rival",
+   "categorie": "strategie",
+   "declencheur": "couvrir_rival",
+   "texte": "Il est rentré. On le couvre, box le tour prochain.",
+   "duree_ms": 2512,
+   "fichier": "voix/strategie/couverture_rival_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/strategie/couverture_rival_v1.m4a",
+     "texte": "Il est rentré. On le couvre, box le tour prochain.",
+     "duree_ms": 2512
+    },
+    {
+     "fichier": "voix/strategie/couverture_rival_v2.m4a",
+     "texte": "On réagit à son arrêt.",
+     "duree_ms": 1012
+    }
+   ]
+  },
+  {
+   "id": "dernier_tour",
+   "categorie": "fin_course",
+   "declencheur": "dernier_tour",
+   "texte": "Dernier tour, Lewis. Ramène-la.",
+   "duree_ms": 1745,
+   "fichier": "voix/fin_course/dernier_tour_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/dernier_tour_v1.m4a",
+     "texte": "Dernier tour, Lewis. Ramène-la.",
+     "duree_ms": 1745
+    },
+    {
+     "fichier": "voix/fin_course/dernier_tour_v2.m4a",
+     "texte": "Dernier tour. Reste concentré.",
+     "duree_ms": 1634
+    },
+    {
+     "fichier": "voix/fin_course/dernier_tour_v3.m4a",
+     "texte": "C'est le dernier tour. Pas d'erreur.",
+     "duree_ms": 1589
+    }
+   ]
+  },
+  {
+   "id": "deux_tours_restants",
+   "categorie": "fin_course",
+   "declencheur": "deux_tours",
+   "texte": "Encore deux tours.",
+   "duree_ms": 723,
+   "fichier": "voix/fin_course/deux_tours_restants_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/deux_tours_restants_v1.m4a",
+     "texte": "Encore deux tours.",
+     "duree_ms": 723
+    },
+    {
+     "fichier": "voix/fin_course/deux_tours_restants_v2.m4a",
+     "texte": "Deux tours restants. Garde ça.",
+     "duree_ms": 1313
+    }
+   ]
+  },
+  {
+   "id": "victoire",
+   "categorie": "fin_course",
+   "declencheur": "p1",
+   "texte": "Oui ! Victoire, Lewis ! Quelle course !",
+   "duree_ms": 3038,
+   "fichier": "voix/fin_course/victoire_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/victoire_v1.m4a",
+     "texte": "Oui ! Victoire, Lewis ! Quelle course !",
+     "duree_ms": 3038
+    },
+    {
+     "fichier": "voix/fin_course/victoire_v2.m4a",
+     "texte": "Tu l'as fait ! P1 ! Bravo à toi !",
+     "duree_ms": 2437
+    },
+    {
+     "fichier": "voix/fin_course/victoire_v3.m4a",
+     "texte": "Victoire ! Fantastique. Merci, l'équipe !",
+     "duree_ms": 2283
+    }
+   ]
+  },
+  {
+   "id": "podium",
+   "categorie": "fin_course",
+   "declencheur": "podium",
+   "texte": "Podium, Lewis ! Super course.",
+   "duree_ms": 1724,
+   "fichier": "voix/fin_course/podium_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/podium_v1.m4a",
+     "texte": "Podium, Lewis ! Super course.",
+     "duree_ms": 1724
+    },
+    {
+     "fichier": "voix/fin_course/podium_v2.m4a",
+     "texte": "Sur le podium. Bien joué.",
+     "duree_ms": 1161
+    },
+    {
+     "fichier": "voix/fin_course/podium_v3.m4a",
+     "texte": "Podium, belle remontée.",
+     "duree_ms": 1249
+    }
+   ]
+  },
+  {
+   "id": "points",
+   "categorie": "fin_course",
+   "declencheur": "dans_les_points",
+   "texte": "On marque des points. Bon travail.",
+   "duree_ms": 1502,
+   "fichier": "voix/fin_course/points_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/points_v1.m4a",
+     "texte": "On marque des points. Bon travail.",
+     "duree_ms": 1502
+    },
+    {
+     "fichier": "voix/fin_course/points_v2.m4a",
+     "texte": "Dans les points, c'est solide.",
+     "duree_ms": 1357
+    }
+   ]
+  },
+  {
+   "id": "hors_points",
+   "categorie": "fin_course",
+   "declencheur": "hors_points",
+   "texte": "Pas de points aujourd'hui. On reviendra plus forts.",
+   "duree_ms": 2281,
+   "fichier": "voix/fin_course/hors_points_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/hors_points_v1.m4a",
+     "texte": "Pas de points aujourd'hui. On reviendra plus forts.",
+     "duree_ms": 2281
+    },
+    {
+     "fichier": "voix/fin_course/hors_points_v2.m4a",
+     "texte": "Course difficile. Merci pour les efforts.",
+     "duree_ms": 1817
+    }
+   ]
+  },
+  {
+   "id": "tour_retour",
+   "categorie": "fin_course",
+   "declencheur": "tour_honneur",
+   "texte": "Ramène-la au parc fermé. Attention, ne t'arrête pas.",
+   "duree_ms": 2162,
+   "fichier": "voix/fin_course/tour_retour_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/tour_retour_v1.m4a",
+     "texte": "Ramène-la au parc fermé. Attention, ne t'arrête pas.",
+     "duree_ms": 2162
+    },
+    {
+     "fichier": "voix/fin_course/tour_retour_v2.m4a",
+     "texte": "Tour de décélération. Ramasse un peu de gomme.",
+     "duree_ms": 2008
+    }
+   ]
+  },
+  {
+   "id": "abandon",
+   "categorie": "fin_course",
+   "declencheur": "abandon",
+   "texte": "Désolé, Lewis. On abandonne.",
+   "duree_ms": 1533,
+   "fichier": "voix/fin_course/abandon_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/abandon_v1.m4a",
+     "texte": "Désolé, Lewis. On abandonne.",
+     "duree_ms": 1533
+    },
+    {
+     "fichier": "voix/fin_course/abandon_v2.m4a",
+     "texte": "On doit arrêter la voiture. Fin de course.",
+     "duree_ms": 2773
+    },
+    {
+     "fichier": "voix/fin_course/abandon_v3.m4a",
+     "texte": "Abandon. Je suis désolé.",
+     "duree_ms": 2048
+    }
+   ]
+  },
+  {
+   "id": "champion",
+   "categorie": "fin_course",
+   "declencheur": "titre_mondial",
+   "texte": "Champion du monde ! Lewis, champion du monde !",
+   "duree_ms": 1979,
+   "fichier": "voix/fin_course/champion_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/fin_course/champion_v1.m4a",
+     "texte": "Champion du monde ! Lewis, champion du monde !",
+     "duree_ms": 1979
+    },
+    {
+     "fichier": "voix/fin_course/champion_v2.m4a",
+     "texte": "Tu es champion du monde ! Incroyable !",
+     "duree_ms": 1476
+    }
+   ]
+  },
+  {
+   "id": "encouragement",
+   "categorie": "encouragements",
+   "declencheur": "generique",
+   "texte": "Allez, Lewis ! On y croit.",
+   "duree_ms": 1677,
+   "fichier": "voix/encouragements/encouragement_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/encouragements/encouragement_v1.m4a",
+     "texte": "Allez, Lewis ! On y croit.",
+     "duree_ms": 1677
+    },
+    {
+     "fichier": "voix/encouragements/encouragement_v2.m4a",
+     "texte": "Tu fais un travail incroyable.",
+     "duree_ms": 974
+    },
+    {
+     "fichier": "voix/encouragements/encouragement_v3.m4a",
+     "texte": "On est avec toi, on y va.",
+     "duree_ms": 1211
+    }
+   ]
+  },
+  {
+   "id": "calme",
+   "categorie": "encouragements",
+   "declencheur": "pilote_enerve",
+   "texte": "Reste calme, on va s'en sortir.",
+   "duree_ms": 1405,
+   "fichier": "voix/encouragements/calme_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/encouragements/calme_v1.m4a",
+     "texte": "Reste calme, on va s'en sortir.",
+     "duree_ms": 1405
+    },
+    {
+     "fichier": "voix/encouragements/calme_v2.m4a",
+     "texte": "Respire, Lewis. Concentre-toi.",
+     "duree_ms": 1883
+    }
+   ]
+  },
+  {
+   "id": "muret_info",
+   "categorie": "muret",
+   "declencheur": "info_generique",
+   "texte": "Message du muret : tout est sous contrôle.",
+   "duree_ms": 1959,
+   "fichier": "voix/muret/muret_info_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/muret/muret_info_v1.m4a",
+     "texte": "Message du muret : tout est sous contrôle.",
+     "duree_ms": 1959
+    },
+    {
+     "fichier": "voix/muret/muret_info_v2.m4a",
+     "texte": "Le muret confirme le plan.",
+     "duree_ms": 1231
+    }
+   ]
+  },
+  {
+   "id": "muret_temps",
+   "categorie": "muret",
+   "declencheur": "temps_restant",
+   "texte": "Dix minutes restantes.",
+   "duree_ms": 907,
+   "fichier": "voix/muret/muret_temps_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/muret/muret_temps_v1.m4a",
+     "texte": "Dix minutes restantes.",
+     "duree_ms": 907
+    },
+    {
+     "fichier": "voix/muret/muret_temps_v2.m4a",
+     "texte": "Cinq minutes restantes.",
+     "duree_ms": 1284
+    },
+    {
+     "fichier": "voix/muret/muret_temps_v3.m4a",
+     "texte": "Une minute.",
+     "duree_ms": 739
+    }
+   ]
+  },
+  {
+   "id": "muret_classement",
+   "categorie": "muret",
+   "declencheur": "classement",
+   "texte": "Tu es le plus rapide en piste.",
+   "duree_ms": 1429,
+   "fichier": "voix/muret/muret_classement_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/muret/muret_classement_v1.m4a",
+     "texte": "Tu es le plus rapide en piste.",
+     "duree_ms": 1429
+    },
+    {
+     "fichier": "voix/muret/muret_classement_v2.m4a",
+     "texte": "Les leaders ralentissent.",
+     "duree_ms": 1291
+    }
+   ]
+  },
+  {
+   "id": "q_dernier_run",
+   "categorie": "qualification",
+   "declencheur": "dernier_run",
+   "texte": "Dernier run, Lewis. C'est maintenant.",
+   "duree_ms": 1621,
+   "fichier": "voix/qualification/q_dernier_run_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q_dernier_run_v1.m4a",
+     "texte": "Dernier run, Lewis. C'est maintenant.",
+     "duree_ms": 1621
+    }
+   ]
+  },
+  {
+   "id": "q_temps_un_tour",
+   "categorie": "qualification",
+   "declencheur": "temps_pour_un_tour",
+   "texte": "Il reste le temps pour un seul tour.",
+   "duree_ms": 1462,
+   "fichier": "voix/qualification/q_temps_un_tour_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q_temps_un_tour_v1.m4a",
+     "texte": "Il reste le temps pour un seul tour.",
+     "duree_ms": 1462
+    }
+   ]
+  },
+  {
+   "id": "q_abandonne_tour",
+   "categorie": "qualification",
+   "declencheur": "abandon_tour",
+   "texte": "Abandonne le tour. Rentre au stand.",
+   "duree_ms": 2045,
+   "fichier": "voix/qualification/q_abandonne_tour_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q_abandonne_tour_v1.m4a",
+     "texte": "Abandonne le tour. Rentre au stand.",
+     "duree_ms": 2045
+    }
+   ]
+  },
+  {
+   "id": "q_sors_maintenant",
+   "categorie": "qualification",
+   "declencheur": "sortie_piste_libre",
+   "texte": "Sors maintenant, piste libre.",
+   "duree_ms": 1367,
+   "fichier": "voix/qualification/q_sors_maintenant_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q_sors_maintenant_v1.m4a",
+     "texte": "Sors maintenant, piste libre.",
+     "duree_ms": 1367
+    }
+   ]
+  },
+  {
+   "id": "q_gros_tour",
+   "categorie": "qualification",
+   "declencheur": "p1_provisoire",
+   "texte": "Gros tour, Lewis ! P1 provisoire.",
+   "duree_ms": 2184,
+   "fichier": "voix/qualification/q_gros_tour_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q_gros_tour_v1.m4a",
+     "texte": "Gros tour, Lewis ! P1 provisoire.",
+     "duree_ms": 2184
+    }
+   ]
+  },
+  {
+   "id": "q_rouge",
+   "categorie": "qualification",
+   "declencheur": "drapeau_rouge_qualif",
+   "texte": "Drapeau rouge, séance arrêtée.",
+   "duree_ms": 1623,
+   "fichier": "voix/qualification/q_rouge_v1.m4a",
+   "priorite": 3,
+   "variantes": [
+    {
+     "fichier": "voix/qualification/q_rouge_v1.m4a",
+     "texte": "Drapeau rouge, séance arrêtée.",
+     "duree_ms": 1623
+    }
+   ]
+  },
+  {
+   "id": "reg_mode_qualif",
+   "categorie": "reglages",
+   "declencheur": "mode_qualif",
+   "texte": "Passe en mode qualif.",
+   "duree_ms": 854,
+   "fichier": "voix/reglages/reg_mode_qualif_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/reglages/reg_mode_qualif_v1.m4a",
+     "texte": "Passe en mode qualif.",
+     "duree_ms": 854
+    }
+   ]
+  },
+  {
+   "id": "reg_confirme",
+   "categorie": "reglages",
+   "declencheur": "confirmation_reglage",
+   "texte": "Bien, c'est réglé.",
+   "duree_ms": 1037,
+   "fichier": "voix/reglages/reg_confirme_v1.m4a",
+   "priorite": 0,
+   "variantes": [
+    {
+     "fichier": "voix/reglages/reg_confirme_v1.m4a",
+     "texte": "Bien, c'est réglé.",
+     "duree_ms": 1037
+    }
+   ]
+  },
+  {
+   "id": "reg_defaut",
+   "categorie": "reglages",
+   "declencheur": "reglage_defaut",
+   "texte": "Reviens au réglage par défaut.",
+   "duree_ms": 1333,
+   "fichier": "voix/reglages/reg_defaut_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/reglages/reg_defaut_v1.m4a",
+     "texte": "Reviens au réglage par défaut.",
+     "duree_ms": 1333
+    }
+   ]
+  },
+  {
+   "id": "course_ecart_fond",
+   "categorie": "course",
+   "declencheur": "ecart_diminue_rival_derriere",
+   "texte": "L'écart fond, il revient.",
+   "duree_ms": 1255,
+   "fichier": "voix/course/course_ecart_fond_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/course/course_ecart_fond_v1.m4a",
+     "texte": "L'écart fond, il revient.",
+     "duree_ms": 1255
+    }
+   ]
+  },
+  {
+   "id": "course_creer_ecart",
+   "categorie": "course",
+   "declencheur": "creer_ecart",
+   "texte": "Pousse maintenant, il faut créer l'écart.",
+   "duree_ms": 1795,
+   "fichier": "voix/course/course_creer_ecart_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/course/course_creer_ecart_v1.m4a",
+     "texte": "Pousse maintenant, il faut créer l'écart.",
+     "duree_ms": 1795
+    }
+   ]
+  },
+  {
+   "id": "chauffe_zigzag",
+   "categorie": "pneus",
+   "declencheur": "chauffe_pneus_tour_formation_ou_sortie",
+   "texte": "Chauffe les pneus, zigzag autorisé.",
+   "duree_ms": 2140,
+   "fichier": "voix/pneus/chauffe_zigzag_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/chauffe_zigzag_v1.m4a",
+     "texte": "Chauffe les pneus, zigzag autorisé.",
+     "duree_ms": 2140
+    }
+   ]
+  },
+  {
+   "id": "chauffe_premier_virage",
+   "categorie": "pneus",
+   "declencheur": "pneus_froids_avant_premier_virage",
+   "texte": "Pneus encore froids, attention au premier virage.",
+   "duree_ms": 2746,
+   "fichier": "voix/pneus/chauffe_premier_virage_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/chauffe_premier_virage_v1.m4a",
+     "texte": "Pneus encore froids, attention au premier virage.",
+     "duree_ms": 2746
+    }
+   ]
+  },
+  {
+   "id": "chauffe_avant_gauche",
+   "categorie": "pneus",
+   "declencheur": "pneu_avant_gauche_froid_chauffe",
+   "texte": "Avant gauche encore froid.",
+   "duree_ms": 1367,
+   "fichier": "voix/pneus/chauffe_avant_gauche_v1.m4a",
+   "priorite": 1,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/chauffe_avant_gauche_v1.m4a",
+     "texte": "Avant gauche encore froid.",
+     "duree_ms": 1367
+    }
+   ]
+  },
+  {
+   "id": "chauffe_ok_attaque",
+   "categorie": "pneus",
+   "declencheur": "pneus_en_temperature_fin_chauffe",
+   "texte": "Pneus dans la fenêtre, tu peux attaquer.",
+   "duree_ms": 2154,
+   "fichier": "voix/pneus/chauffe_ok_attaque_v1.m4a",
+   "priorite": 2,
+   "variantes": [
+    {
+     "fichier": "voix/pneus/chauffe_ok_attaque_v1.m4a",
+     "texte": "Pneus dans la fenêtre, tu peux attaquer.",
+     "duree_ms": 2154
+    }
+   ]
+  }
+ ],
+ "clips_assemblables": {
+  "description": "Clips courts à enchaîner pour les messages avec variables (écarts, tours, positions, pilotes, pneus). Insérer 40 à 80 ms de silence entre deux clips. Les nombres num_0..num_70 servent aussi pour les tours 1-70 et les secondes 0-30 ; dixieme_N = « virgule N ».",
+  "groupes": [
+   "dixiemes",
+   "ecuries",
+   "nombres",
+   "pilotes",
+   "pneus",
+   "positions",
+   "segments"
+  ],
+  "items": [
+   {
+    "id": "num_0",
+    "groupe": "nombres",
+    "texte": "Zéro.",
+    "fichier": "clips/nombres/num_0.m4a",
+    "duree_ms": 266
+   },
+   {
+    "id": "num_1",
+    "groupe": "nombres",
+    "texte": "Un.",
+    "fichier": "clips/nombres/num_1.m4a",
+    "duree_ms": 187
+   },
+   {
+    "id": "num_2",
+    "groupe": "nombres",
+    "texte": "Deux.",
+    "fichier": "clips/nombres/num_2.m4a",
+    "duree_ms": 192
+   },
+   {
+    "id": "num_3",
+    "groupe": "nombres",
+    "texte": "Trois.",
+    "fichier": "clips/nombres/num_3.m4a",
+    "duree_ms": 242
+   },
+   {
+    "id": "num_4",
+    "groupe": "nombres",
+    "texte": "Quatre.",
+    "fichier": "clips/nombres/num_4.m4a",
+    "duree_ms": 225
+   },
+   {
+    "id": "num_5",
+    "groupe": "nombres",
+    "texte": "Cinq.",
+    "fichier": "clips/nombres/num_5.m4a",
+    "duree_ms": 182
+   },
+   {
+    "id": "num_6",
+    "groupe": "nombres",
+    "texte": "Six.",
+    "fichier": "clips/nombres/num_6.m4a",
+    "duree_ms": 192
+   },
+   {
+    "id": "num_7",
+    "groupe": "nombres",
+    "texte": "Sept.",
+    "fichier": "clips/nombres/num_7.m4a",
+    "duree_ms": 314
+   },
+   {
+    "id": "num_8",
+    "groupe": "nombres",
+    "texte": "Huit.",
+    "fichier": "clips/nombres/num_8.m4a",
+    "duree_ms": 200
+   },
+   {
+    "id": "num_9",
+    "groupe": "nombres",
+    "texte": "Neuf.",
+    "fichier": "clips/nombres/num_9.m4a",
+    "duree_ms": 182
+   },
+   {
+    "id": "num_10",
+    "groupe": "nombres",
+    "texte": "Dix.",
+    "fichier": "clips/nombres/num_10.m4a",
+    "duree_ms": 151
+   },
+   {
+    "id": "num_11",
+    "groupe": "nombres",
+    "texte": "Onze.",
+    "fichier": "clips/nombres/num_11.m4a",
+    "duree_ms": 224
+   },
+   {
+    "id": "num_12",
+    "groupe": "nombres",
+    "texte": "Douze.",
+    "fichier": "clips/nombres/num_12.m4a",
+    "duree_ms": 228
+   },
+   {
+    "id": "num_13",
+    "groupe": "nombres",
+    "texte": "Treize.",
+    "fichier": "clips/nombres/num_13.m4a",
+    "duree_ms": 186
+   },
+   {
+    "id": "num_14",
+    "groupe": "nombres",
+    "texte": "Quatorze.",
+    "fichier": "clips/nombres/num_14.m4a",
+    "duree_ms": 295
+   },
+   {
+    "id": "num_15",
+    "groupe": "nombres",
+    "texte": "Quinze.",
+    "fichier": "clips/nombres/num_15.m4a",
+    "duree_ms": 217
+   },
+   {
+    "id": "num_16",
+    "groupe": "nombres",
+    "texte": "Seize.",
+    "fichier": "clips/nombres/num_16.m4a",
+    "duree_ms": 209
+   },
+   {
+    "id": "num_17",
+    "groupe": "nombres",
+    "texte": "Dix-sept.",
+    "fichier": "clips/nombres/num_17.m4a",
+    "duree_ms": 274
+   },
+   {
+    "id": "num_18",
+    "groupe": "nombres",
+    "texte": "Dix-huit.",
+    "fichier": "clips/nombres/num_18.m4a",
+    "duree_ms": 279
+   },
+   {
+    "id": "num_19",
+    "groupe": "nombres",
+    "texte": "Dix-neuf.",
+    "fichier": "clips/nombres/num_19.m4a",
+    "duree_ms": 262
+   },
+   {
+    "id": "num_20",
+    "groupe": "nombres",
+    "texte": "Vingt.",
+    "fichier": "clips/nombres/num_20.m4a",
+    "duree_ms": 190
+   },
+   {
+    "id": "num_21",
+    "groupe": "nombres",
+    "texte": "Vingt et un.",
+    "fichier": "clips/nombres/num_21.m4a",
+    "duree_ms": 390
+   },
+   {
+    "id": "num_22",
+    "groupe": "nombres",
+    "texte": "Vingt-deux.",
+    "fichier": "clips/nombres/num_22.m4a",
+    "duree_ms": 370
+   },
+   {
+    "id": "num_23",
+    "groupe": "nombres",
+    "texte": "Vingt-trois.",
+    "fichier": "clips/nombres/num_23.m4a",
+    "duree_ms": 387
+   },
+   {
+    "id": "num_24",
+    "groupe": "nombres",
+    "texte": "Vingt-quatre.",
+    "fichier": "clips/nombres/num_24.m4a",
+    "duree_ms": 373
+   },
+   {
+    "id": "num_25",
+    "groupe": "nombres",
+    "texte": "Vingt-cinq.",
+    "fichier": "clips/nombres/num_25.m4a",
+    "duree_ms": 477
+   },
+   {
+    "id": "num_26",
+    "groupe": "nombres",
+    "texte": "Vingt-six.",
+    "fichier": "clips/nombres/num_26.m4a",
+    "duree_ms": 513
+   },
+   {
+    "id": "num_27",
+    "groupe": "nombres",
+    "texte": "Vingt-sept.",
+    "fichier": "clips/nombres/num_27.m4a",
+    "duree_ms": 415
+   },
+   {
+    "id": "num_28",
+    "groupe": "nombres",
+    "texte": "Vingt-huit.",
+    "fichier": "clips/nombres/num_28.m4a",
+    "duree_ms": 389
+   },
+   {
+    "id": "num_29",
+    "groupe": "nombres",
+    "texte": "Vingt-neuf.",
+    "fichier": "clips/nombres/num_29.m4a",
+    "duree_ms": 431
+   },
+   {
+    "id": "num_30",
+    "groupe": "nombres",
+    "texte": "Trente.",
+    "fichier": "clips/nombres/num_30.m4a",
+    "duree_ms": 282
+   },
+   {
+    "id": "num_31",
+    "groupe": "nombres",
+    "texte": "Trente et un.",
+    "fichier": "clips/nombres/num_31.m4a",
+    "duree_ms": 364
+   },
+   {
+    "id": "num_32",
+    "groupe": "nombres",
+    "texte": "Trente-deux.",
+    "fichier": "clips/nombres/num_32.m4a",
+    "duree_ms": 319
+   },
+   {
+    "id": "num_33",
+    "groupe": "nombres",
+    "texte": "Trente-trois.",
+    "fichier": "clips/nombres/num_33.m4a",
+    "duree_ms": 384
+   },
+   {
+    "id": "num_34",
+    "groupe": "nombres",
+    "texte": "Trente-quatre.",
+    "fichier": "clips/nombres/num_34.m4a",
+    "duree_ms": 402
+   },
+   {
+    "id": "num_35",
+    "groupe": "nombres",
+    "texte": "Trente-cinq.",
+    "fichier": "clips/nombres/num_35.m4a",
+    "duree_ms": 354
+   },
+   {
+    "id": "num_36",
+    "groupe": "nombres",
+    "texte": "Trente-six.",
+    "fichier": "clips/nombres/num_36.m4a",
+    "duree_ms": 447
+   },
+   {
+    "id": "num_37",
+    "groupe": "nombres",
+    "texte": "Trente-sept.",
+    "fichier": "clips/nombres/num_37.m4a",
+    "duree_ms": 408
+   },
+   {
+    "id": "num_38",
+    "groupe": "nombres",
+    "texte": "Trente-huit.",
+    "fichier": "clips/nombres/num_38.m4a",
+    "duree_ms": 366
+   },
+   {
+    "id": "num_39",
+    "groupe": "nombres",
+    "texte": "Trente-neuf.",
+    "fichier": "clips/nombres/num_39.m4a",
+    "duree_ms": 368
+   },
+   {
+    "id": "num_40",
+    "groupe": "nombres",
+    "texte": "Quarante.",
+    "fichier": "clips/nombres/num_40.m4a",
+    "duree_ms": 371
+   },
+   {
+    "id": "num_41",
+    "groupe": "nombres",
+    "texte": "Quarante et un.",
+    "fichier": "clips/nombres/num_41.m4a",
+    "duree_ms": 533
+   },
+   {
+    "id": "num_42",
+    "groupe": "nombres",
+    "texte": "Quarante-deux.",
+    "fichier": "clips/nombres/num_42.m4a",
+    "duree_ms": 460
+   },
+   {
+    "id": "num_43",
+    "groupe": "nombres",
+    "texte": "Quarante-trois.",
+    "fichier": "clips/nombres/num_43.m4a",
+    "duree_ms": 519
+   },
+   {
+    "id": "num_44",
+    "groupe": "nombres",
+    "texte": "Quarante-quatre.",
+    "fichier": "clips/nombres/num_44.m4a",
+    "duree_ms": 504
+   },
+   {
+    "id": "num_45",
+    "groupe": "nombres",
+    "texte": "Quarante-cinq.",
+    "fichier": "clips/nombres/num_45.m4a",
+    "duree_ms": 513
+   },
+   {
+    "id": "num_46",
+    "groupe": "nombres",
+    "texte": "Quarante-six.",
+    "fichier": "clips/nombres/num_46.m4a",
+    "duree_ms": 468
+   },
+   {
+    "id": "num_47",
+    "groupe": "nombres",
+    "texte": "Quarante-sept.",
+    "fichier": "clips/nombres/num_47.m4a",
+    "duree_ms": 473
+   },
+   {
+    "id": "num_48",
+    "groupe": "nombres",
+    "texte": "Quarante-huit.",
+    "fichier": "clips/nombres/num_48.m4a",
+    "duree_ms": 454
+   },
+   {
+    "id": "num_49",
+    "groupe": "nombres",
+    "texte": "Quarante-neuf.",
+    "fichier": "clips/nombres/num_49.m4a",
+    "duree_ms": 432
+   },
+   {
+    "id": "num_50",
+    "groupe": "nombres",
+    "texte": "Cinquante.",
+    "fichier": "clips/nombres/num_50.m4a",
+    "duree_ms": 343
+   },
+   {
+    "id": "num_51",
+    "groupe": "nombres",
+    "texte": "Cinquante et un.",
+    "fichier": "clips/nombres/num_51.m4a",
+    "duree_ms": 524
+   },
+   {
+    "id": "num_52",
+    "groupe": "nombres",
+    "texte": "Cinquante-deux.",
+    "fichier": "clips/nombres/num_52.m4a",
+    "duree_ms": 452
+   },
+   {
+    "id": "num_53",
+    "groupe": "nombres",
+    "texte": "Cinquante-trois.",
+    "fichier": "clips/nombres/num_53.m4a",
+    "duree_ms": 499
+   },
+   {
+    "id": "num_54",
+    "groupe": "nombres",
+    "texte": "Cinquante-quatre.",
+    "fichier": "clips/nombres/num_54.m4a",
+    "duree_ms": 501
+   },
+   {
+    "id": "num_55",
+    "groupe": "nombres",
+    "texte": "Cinquante-cinq.",
+    "fichier": "clips/nombres/num_55.m4a",
+    "duree_ms": 500
+   },
+   {
+    "id": "num_56",
+    "groupe": "nombres",
+    "texte": "Cinquante-six.",
+    "fichier": "clips/nombres/num_56.m4a",
+    "duree_ms": 515
+   },
+   {
+    "id": "num_57",
+    "groupe": "nombres",
+    "texte": "Cinquante-sept.",
+    "fichier": "clips/nombres/num_57.m4a",
+    "duree_ms": 502
+   },
+   {
+    "id": "num_58",
+    "groupe": "nombres",
+    "texte": "Cinquante-huit.",
+    "fichier": "clips/nombres/num_58.m4a",
+    "duree_ms": 465
+   },
+   {
+    "id": "num_59",
+    "groupe": "nombres",
+    "texte": "Cinquante-neuf.",
+    "fichier": "clips/nombres/num_59.m4a",
+    "duree_ms": 466
+   },
+   {
+    "id": "num_60",
+    "groupe": "nombres",
+    "texte": "Soixante.",
+    "fichier": "clips/nombres/num_60.m4a",
+    "duree_ms": 440
+   },
+   {
+    "id": "num_61",
+    "groupe": "nombres",
+    "texte": "Soixante et un.",
+    "fichier": "clips/nombres/num_61.m4a",
+    "duree_ms": 505
+   },
+   {
+    "id": "num_62",
+    "groupe": "nombres",
+    "texte": "Soixante-deux.",
+    "fichier": "clips/nombres/num_62.m4a",
+    "duree_ms": 424
+   },
+   {
+    "id": "num_63",
+    "groupe": "nombres",
+    "texte": "Soixante-trois.",
+    "fichier": "clips/nombres/num_63.m4a",
+    "duree_ms": 534
+   },
+   {
+    "id": "num_64",
+    "groupe": "nombres",
+    "texte": "Soixante-quatre.",
+    "fichier": "clips/nombres/num_64.m4a",
+    "duree_ms": 528
+   },
+   {
+    "id": "num_65",
+    "groupe": "nombres",
+    "texte": "Soixante-cinq.",
+    "fichier": "clips/nombres/num_65.m4a",
+    "duree_ms": 511
+   },
+   {
+    "id": "num_66",
+    "groupe": "nombres",
+    "texte": "Soixante-six.",
+    "fichier": "clips/nombres/num_66.m4a",
+    "duree_ms": 551
+   },
+   {
+    "id": "num_67",
+    "groupe": "nombres",
+    "texte": "Soixante-sept.",
+    "fichier": "clips/nombres/num_67.m4a",
+    "duree_ms": 505
+   },
+   {
+    "id": "num_68",
+    "groupe": "nombres",
+    "texte": "Soixante-huit.",
+    "fichier": "clips/nombres/num_68.m4a",
+    "duree_ms": 454
+   },
+   {
+    "id": "num_69",
+    "groupe": "nombres",
+    "texte": "Soixante-neuf.",
+    "fichier": "clips/nombres/num_69.m4a",
+    "duree_ms": 473
+   },
+   {
+    "id": "num_70",
+    "groupe": "nombres",
+    "texte": "Soixante-dix.",
+    "fichier": "clips/nombres/num_70.m4a",
+    "duree_ms": 527
+   },
+   {
+    "id": "dixieme_0",
+    "groupe": "dixiemes",
+    "texte": "virgule zéro.",
+    "fichier": "clips/dixiemes/dixieme_0.m4a",
+    "duree_ms": 605
+   },
+   {
+    "id": "dixieme_1",
+    "groupe": "dixiemes",
+    "texte": "virgule un.",
+    "fichier": "clips/dixiemes/dixieme_1.m4a",
+    "duree_ms": 519
+   },
+   {
+    "id": "dixieme_2",
+    "groupe": "dixiemes",
+    "texte": "virgule deux.",
+    "fichier": "clips/dixiemes/dixieme_2.m4a",
+    "duree_ms": 514
+   },
+   {
+    "id": "dixieme_3",
+    "groupe": "dixiemes",
+    "texte": "virgule trois.",
+    "fichier": "clips/dixiemes/dixieme_3.m4a",
+    "duree_ms": 552
+   },
+   {
+    "id": "dixieme_4",
+    "groupe": "dixiemes",
+    "texte": "virgule quatre.",
+    "fichier": "clips/dixiemes/dixieme_4.m4a",
+    "duree_ms": 509
+   },
+   {
+    "id": "dixieme_5",
+    "groupe": "dixiemes",
+    "texte": "virgule cinq.",
+    "fichier": "clips/dixiemes/dixieme_5.m4a",
+    "duree_ms": 569
+   },
+   {
+    "id": "dixieme_6",
+    "groupe": "dixiemes",
+    "texte": "virgule six.",
+    "fichier": "clips/dixiemes/dixieme_6.m4a",
+    "duree_ms": 559
+   },
+   {
+    "id": "dixieme_7",
+    "groupe": "dixiemes",
+    "texte": "virgule sept.",
+    "fichier": "clips/dixiemes/dixieme_7.m4a",
+    "duree_ms": 648
+   },
+   {
+    "id": "dixieme_8",
+    "groupe": "dixiemes",
+    "texte": "virgule huit.",
+    "fichier": "clips/dixiemes/dixieme_8.m4a",
+    "duree_ms": 506
+   },
+   {
+    "id": "dixieme_9",
+    "groupe": "dixiemes",
+    "texte": "virgule neuf.",
+    "fichier": "clips/dixiemes/dixieme_9.m4a",
+    "duree_ms": 502
+   },
+   {
+    "id": "pos_1",
+    "groupe": "positions",
+    "texte": "P1.",
+    "fichier": "clips/positions/pos_1.m4a",
+    "duree_ms": 532
+   },
+   {
+    "id": "pos_2",
+    "groupe": "positions",
+    "texte": "P2.",
+    "fichier": "clips/positions/pos_2.m4a",
+    "duree_ms": 413
+   },
+   {
+    "id": "pos_3",
+    "groupe": "positions",
+    "texte": "P3.",
+    "fichier": "clips/positions/pos_3.m4a",
+    "duree_ms": 437
+   },
+   {
+    "id": "pos_4",
+    "groupe": "positions",
+    "texte": "P4.",
+    "fichier": "clips/positions/pos_4.m4a",
+    "duree_ms": 405
+   },
+   {
+    "id": "pos_5",
+    "groupe": "positions",
+    "texte": "P5.",
+    "fichier": "clips/positions/pos_5.m4a",
+    "duree_ms": 468
+   },
+   {
+    "id": "pos_6",
+    "groupe": "positions",
+    "texte": "P6.",
+    "fichier": "clips/positions/pos_6.m4a",
+    "duree_ms": 488
+   },
+   {
+    "id": "pos_7",
+    "groupe": "positions",
+    "texte": "P7.",
+    "fichier": "clips/positions/pos_7.m4a",
+    "duree_ms": 425
+   },
+   {
+    "id": "pos_8",
+    "groupe": "positions",
+    "texte": "P8.",
+    "fichier": "clips/positions/pos_8.m4a",
+    "duree_ms": 398
+   },
+   {
+    "id": "pos_9",
+    "groupe": "positions",
+    "texte": "P9.",
+    "fichier": "clips/positions/pos_9.m4a",
+    "duree_ms": 433
+   },
+   {
+    "id": "pos_10",
+    "groupe": "positions",
+    "texte": "P10.",
+    "fichier": "clips/positions/pos_10.m4a",
+    "duree_ms": 257
+   },
+   {
+    "id": "pos_11",
+    "groupe": "positions",
+    "texte": "P11.",
+    "fichier": "clips/positions/pos_11.m4a",
+    "duree_ms": 300
+   },
+   {
+    "id": "pos_12",
+    "groupe": "positions",
+    "texte": "P12.",
+    "fichier": "clips/positions/pos_12.m4a",
+    "duree_ms": 314
+   },
+   {
+    "id": "pos_13",
+    "groupe": "positions",
+    "texte": "P13.",
+    "fichier": "clips/positions/pos_13.m4a",
+    "duree_ms": 316
+   },
+   {
+    "id": "pos_14",
+    "groupe": "positions",
+    "texte": "P14.",
+    "fichier": "clips/positions/pos_14.m4a",
+    "duree_ms": 258
+   },
+   {
+    "id": "pos_15",
+    "groupe": "positions",
+    "texte": "P15.",
+    "fichier": "clips/positions/pos_15.m4a",
+    "duree_ms": 224
+   },
+   {
+    "id": "pos_16",
+    "groupe": "positions",
+    "texte": "P16.",
+    "fichier": "clips/positions/pos_16.m4a",
+    "duree_ms": 258
+   },
+   {
+    "id": "pos_17",
+    "groupe": "positions",
+    "texte": "P17.",
+    "fichier": "clips/positions/pos_17.m4a",
+    "duree_ms": 347
+   },
+   {
+    "id": "pos_18",
+    "groupe": "positions",
+    "texte": "P18.",
+    "fichier": "clips/positions/pos_18.m4a",
+    "duree_ms": 283
+   },
+   {
+    "id": "pos_19",
+    "groupe": "positions",
+    "texte": "P19.",
+    "fichier": "clips/positions/pos_19.m4a",
+    "duree_ms": 312
+   },
+   {
+    "id": "pos_20",
+    "groupe": "positions",
+    "texte": "P20.",
+    "fichier": "clips/positions/pos_20.m4a",
+    "duree_ms": 254
+   },
+   {
+    "id": "pilote_hamilton",
+    "groupe": "pilotes",
+    "texte": "Hamilton.",
+    "fichier": "clips/pilotes/pilote_hamilton.m4a",
+    "duree_ms": 340
+   },
+   {
+    "id": "pilote_bottas",
+    "groupe": "pilotes",
+    "texte": "Bottas.",
+    "fichier": "clips/pilotes/pilote_bottas.m4a",
+    "duree_ms": 264
+   },
+   {
+    "id": "pilote_verstappen",
+    "groupe": "pilotes",
+    "texte": "Verstappen.",
+    "fichier": "clips/pilotes/pilote_verstappen.m4a",
+    "duree_ms": 285
+   },
+   {
+    "id": "pilote_albon",
+    "groupe": "pilotes",
+    "texte": "Albon.",
+    "fichier": "clips/pilotes/pilote_albon.m4a",
+    "duree_ms": 255
+   },
+   {
+    "id": "pilote_leclerc",
+    "groupe": "pilotes",
+    "texte": "Leclerc.",
+    "fichier": "clips/pilotes/pilote_leclerc.m4a",
+    "duree_ms": 302
+   },
+   {
+    "id": "pilote_vettel",
+    "groupe": "pilotes",
+    "texte": "Vettel.",
+    "fichier": "clips/pilotes/pilote_vettel.m4a",
+    "duree_ms": 273
+   },
+   {
+    "id": "pilote_norris",
+    "groupe": "pilotes",
+    "texte": "Norris.",
+    "fichier": "clips/pilotes/pilote_norris.m4a",
+    "duree_ms": 287
+   },
+   {
+    "id": "pilote_sainz",
+    "groupe": "pilotes",
+    "texte": "Sainz.",
+    "fichier": "clips/pilotes/pilote_sainz.m4a",
+    "duree_ms": 225
+   },
+   {
+    "id": "pilote_ricciardo",
+    "groupe": "pilotes",
+    "texte": "Ricciardo.",
+    "fichier": "clips/pilotes/pilote_ricciardo.m4a",
+    "duree_ms": 239
+   },
+   {
+    "id": "pilote_ocon",
+    "groupe": "pilotes",
+    "texte": "Ocon.",
+    "fichier": "clips/pilotes/pilote_ocon.m4a",
+    "duree_ms": 170
+   },
+   {
+    "id": "pilote_gasly",
+    "groupe": "pilotes",
+    "texte": "Gasly.",
+    "fichier": "clips/pilotes/pilote_gasly.m4a",
+    "duree_ms": 166
+   },
+   {
+    "id": "pilote_kvyat",
+    "groupe": "pilotes",
+    "texte": "Kvyat.",
+    "fichier": "clips/pilotes/pilote_kvyat.m4a",
+    "duree_ms": 294
+   },
+   {
+    "id": "pilote_stroll",
+    "groupe": "pilotes",
+    "texte": "Stroll.",
+    "fichier": "clips/pilotes/pilote_stroll.m4a",
+    "duree_ms": 270
+   },
+   {
+    "id": "pilote_perez",
+    "groupe": "pilotes",
+    "texte": "Pérez.",
+    "fichier": "clips/pilotes/pilote_perez.m4a",
+    "duree_ms": 308
+   },
+   {
+    "id": "pilote_hulkenberg",
+    "groupe": "pilotes",
+    "texte": "Hülkenberg.",
+    "fichier": "clips/pilotes/pilote_hulkenberg.m4a",
+    "duree_ms": 462
+   },
+   {
+    "id": "pilote_raikkonen",
+    "groupe": "pilotes",
+    "texte": "Räikkönen.",
+    "fichier": "clips/pilotes/pilote_raikkonen.m4a",
+    "duree_ms": 550
+   },
+   {
+    "id": "pilote_giovinazzi",
+    "groupe": "pilotes",
+    "texte": "Giovinazzi.",
+    "fichier": "clips/pilotes/pilote_giovinazzi.m4a",
+    "duree_ms": 645
+   },
+   {
+    "id": "pilote_magnussen",
+    "groupe": "pilotes",
+    "texte": "Magnussen.",
+    "fichier": "clips/pilotes/pilote_magnussen.m4a",
+    "duree_ms": 527
+   },
+   {
+    "id": "pilote_grosjean",
+    "groupe": "pilotes",
+    "texte": "Grosjean.",
+    "fichier": "clips/pilotes/pilote_grosjean.m4a",
+    "duree_ms": 407
+   },
+   {
+    "id": "pilote_russell",
+    "groupe": "pilotes",
+    "texte": "Russell.",
+    "fichier": "clips/pilotes/pilote_russell.m4a",
+    "duree_ms": 402
+   },
+   {
+    "id": "pilote_latifi",
+    "groupe": "pilotes",
+    "texte": "Latifi.",
+    "fichier": "clips/pilotes/pilote_latifi.m4a",
+    "duree_ms": 360
+   },
+   {
+    "id": "pilote_aitken",
+    "groupe": "pilotes",
+    "texte": "Aitken.",
+    "fichier": "clips/pilotes/pilote_aitken.m4a",
+    "duree_ms": 386
+   },
+   {
+    "id": "pilote_fittipaldi",
+    "groupe": "pilotes",
+    "texte": "Fittipaldi.",
+    "fichier": "clips/pilotes/pilote_fittipaldi.m4a",
+    "duree_ms": 491
+   },
+   {
+    "id": "ecurie_mercedes",
+    "groupe": "ecuries",
+    "texte": "Mercedes.",
+    "fichier": "clips/ecuries/ecurie_mercedes.m4a",
+    "duree_ms": 427
+   },
+   {
+    "id": "ecurie_red_bull",
+    "groupe": "ecuries",
+    "texte": "Red Bull.",
+    "fichier": "clips/ecuries/ecurie_red_bull.m4a",
+    "duree_ms": 383
+   },
+   {
+    "id": "ecurie_mclaren",
+    "groupe": "ecuries",
+    "texte": "McLaren.",
+    "fichier": "clips/ecuries/ecurie_mclaren.m4a",
+    "duree_ms": 426
+   },
+   {
+    "id": "ecurie_racing_point",
+    "groupe": "ecuries",
+    "texte": "Racing Point.",
+    "fichier": "clips/ecuries/ecurie_racing_point.m4a",
+    "duree_ms": 509
+   },
+   {
+    "id": "ecurie_renault",
+    "groupe": "ecuries",
+    "texte": "Renault.",
+    "fichier": "clips/ecuries/ecurie_renault.m4a",
+    "duree_ms": 339
+   },
+   {
+    "id": "ecurie_ferrari",
+    "groupe": "ecuries",
+    "texte": "Ferrari.",
+    "fichier": "clips/ecuries/ecurie_ferrari.m4a",
+    "duree_ms": 403
+   },
+   {
+    "id": "ecurie_alphatauri",
+    "groupe": "ecuries",
+    "texte": "AlphaTauri.",
+    "fichier": "clips/ecuries/ecurie_alphatauri.m4a",
+    "duree_ms": 523
+   },
+   {
+    "id": "ecurie_alfa_romeo",
+    "groupe": "ecuries",
+    "texte": "Alfa Romeo.",
+    "fichier": "clips/ecuries/ecurie_alfa_romeo.m4a",
+    "duree_ms": 589
+   },
+   {
+    "id": "ecurie_haas",
+    "groupe": "ecuries",
+    "texte": "Haas.",
+    "fichier": "clips/ecuries/ecurie_haas.m4a",
+    "duree_ms": 314
+   },
+   {
+    "id": "ecurie_williams",
+    "groupe": "ecuries",
+    "texte": "Williams.",
+    "fichier": "clips/ecuries/ecurie_williams.m4a",
+    "duree_ms": 431
+   },
+   {
+    "id": "pneu_tendres",
+    "groupe": "pneus",
+    "texte": "Tendres.",
+    "fichier": "clips/pneus/pneu_tendres.m4a",
+    "duree_ms": 278
+   },
+   {
+    "id": "pneu_mediums",
+    "groupe": "pneus",
+    "texte": "Mediums.",
+    "fichier": "clips/pneus/pneu_mediums.m4a",
+    "duree_ms": 429
+   },
+   {
+    "id": "pneu_durs",
+    "groupe": "pneus",
+    "texte": "Durs.",
+    "fichier": "clips/pneus/pneu_durs.m4a",
+    "duree_ms": 288
+   },
+   {
+    "id": "pneu_intermediaires",
+    "groupe": "pneus",
+    "texte": "Intermédiaires.",
+    "fichier": "clips/pneus/pneu_intermediaires.m4a",
+    "duree_ms": 600
+   },
+   {
+    "id": "pneu_pluie",
+    "groupe": "pneus",
+    "texte": "Pneus pluie.",
+    "fichier": "clips/pneus/pneu_pluie.m4a",
+    "duree_ms": 480
+   },
+   {
+    "id": "seg_ecart_devant",
+    "groupe": "segments",
+    "texte": "Écart avec la voiture devant :",
+    "fichier": "clips/segments/seg_ecart_devant.m4a",
+    "duree_ms": 886
+   },
+   {
+    "id": "seg_ecart_derriere",
+    "groupe": "segments",
+    "texte": "Écart avec la voiture derrière :",
+    "fichier": "clips/segments/seg_ecart_derriere.m4a",
+    "duree_ms": 1194
+   },
+   {
+    "id": "seg_tour",
+    "groupe": "segments",
+    "texte": "Tour",
+    "fichier": "clips/segments/seg_tour.m4a",
+    "duree_ms": 298
+   },
+   {
+    "id": "seg_tours",
+    "groupe": "segments",
+    "texte": "tours.",
+    "fichier": "clips/segments/seg_tours.m4a",
+    "duree_ms": 303
+   },
+   {
+    "id": "seg_tours_restants",
+    "groupe": "segments",
+    "texte": "tours restants.",
+    "fichier": "clips/segments/seg_tours_restants.m4a",
+    "duree_ms": 711
+   },
+   {
+    "id": "seg_tour_restant",
+    "groupe": "segments",
+    "texte": "tour restant.",
+    "fichier": "clips/segments/seg_tour_restant.m4a",
+    "duree_ms": 716
+   },
+   {
+    "id": "seg_il_reste",
+    "groupe": "segments",
+    "texte": "Il reste",
+    "fichier": "clips/segments/seg_il_reste.m4a",
+    "duree_ms": 384
+   },
+   {
+    "id": "seg_tu_es",
+    "groupe": "segments",
+    "texte": "Tu es",
+    "fichier": "clips/segments/seg_tu_es.m4a",
+    "duree_ms": 431
+   },
+   {
+    "id": "seg_tu_es_en",
+    "groupe": "segments",
+    "texte": "Tu es en",
+    "fichier": "clips/segments/seg_tu_es_en.m4a",
+    "duree_ms": 698
+   },
+   {
+    "id": "seg_secondes",
+    "groupe": "segments",
+    "texte": "secondes.",
+    "fichier": "clips/segments/seg_secondes.m4a",
+    "duree_ms": 654
+   },
+   {
+    "id": "seg_seconde",
+    "groupe": "segments",
+    "texte": "seconde.",
+    "fichier": "clips/segments/seg_seconde.m4a",
+    "duree_ms": 556
+   },
+   {
+    "id": "seg_virgule",
+    "groupe": "segments",
+    "texte": "virgule",
+    "fichier": "clips/segments/seg_virgule.m4a",
+    "duree_ms": 484
+   },
+   {
+    "id": "seg_dixiemes",
+    "groupe": "segments",
+    "texte": "dixièmes.",
+    "fichier": "clips/segments/seg_dixiemes.m4a",
+    "duree_ms": 453
+   },
+   {
+    "id": "seg_une_minute",
+    "groupe": "segments",
+    "texte": "Une minute",
+    "fichier": "clips/segments/seg_une_minute.m4a",
+    "duree_ms": 473
+   },
+   {
+    "id": "seg_deux_minutes",
+    "groupe": "segments",
+    "texte": "Deux minutes",
+    "fichier": "clips/segments/seg_deux_minutes.m4a",
+    "duree_ms": 440
+   },
+   {
+    "id": "seg_temps_au_tour",
+    "groupe": "segments",
+    "texte": "Temps au tour :",
+    "fichier": "clips/segments/seg_temps_au_tour.m4a",
+    "duree_ms": 623
+   },
+   {
+    "id": "seg_plus",
+    "groupe": "segments",
+    "texte": "plus",
+    "fichier": "clips/segments/seg_plus.m4a",
+    "duree_ms": 222
+   },
+   {
+    "id": "seg_moins",
+    "groupe": "segments",
+    "texte": "moins",
+    "fichier": "clips/segments/seg_moins.m4a",
+    "duree_ms": 257
+   },
+   {
+    "id": "seg_delta",
+    "groupe": "segments",
+    "texte": "Delta :",
+    "fichier": "clips/segments/seg_delta.m4a",
+    "duree_ms": 349
+   },
+   {
+    "id": "seg_box_box",
+    "groupe": "segments",
+    "texte": "Box, box.",
+    "fichier": "clips/segments/seg_box_box.m4a",
+    "duree_ms": 964
+   },
+   {
+    "id": "seg_box_ce_tour",
+    "groupe": "segments",
+    "texte": "Box ce tour.",
+    "fichier": "clips/segments/seg_box_ce_tour.m4a",
+    "duree_ms": 677
+   },
+   {
+    "id": "seg_on_passe_en",
+    "groupe": "segments",
+    "texte": "On passe en",
+    "fichier": "clips/segments/seg_on_passe_en.m4a",
+    "duree_ms": 467
+   },
+   {
+    "id": "seg_on_met_les",
+    "groupe": "segments",
+    "texte": "On met les",
+    "fichier": "clips/segments/seg_on_met_les.m4a",
+    "duree_ms": 419
+   },
+   {
+    "id": "seg_pneus_prets",
+    "groupe": "segments",
+    "texte": "Pneus prêts :",
+    "fichier": "clips/segments/seg_pneus_prets.m4a",
+    "duree_ms": 428
+   },
+   {
+    "id": "seg_est_devant_a",
+    "groupe": "segments",
+    "texte": "est devant, à",
+    "fichier": "clips/segments/seg_est_devant_a.m4a",
+    "duree_ms": 899
+   },
+   {
+    "id": "seg_est_derriere_a",
+    "groupe": "segments",
+    "texte": "est derrière, à",
+    "fichier": "clips/segments/seg_est_derriere_a.m4a",
+    "duree_ms": 1180
+   },
+   {
+    "id": "seg_voiture_devant",
+    "groupe": "segments",
+    "texte": "Voiture devant :",
+    "fichier": "clips/segments/seg_voiture_devant.m4a",
+    "duree_ms": 589
+   },
+   {
+    "id": "seg_voiture_derriere",
+    "groupe": "segments",
+    "texte": "Voiture derrière :",
+    "fichier": "clips/segments/seg_voiture_derriere.m4a",
+    "duree_ms": 617
+   },
+   {
+    "id": "seg_s_arrete_ce_tour",
+    "groupe": "segments",
+    "texte": "s'arrête ce tour.",
+    "fichier": "clips/segments/seg_s_arrete_ce_tour.m4a",
+    "duree_ms": 602
+   },
+   {
+    "id": "seg_est_rentre_stands",
+    "groupe": "segments",
+    "texte": "est rentré aux stands.",
+    "fichier": "clips/segments/seg_est_rentre_stands.m4a",
+    "duree_ms": 860
+   },
+   {
+    "id": "seg_ressort_des_stands",
+    "groupe": "segments",
+    "texte": "ressort des stands.",
+    "fichier": "clips/segments/seg_ressort_des_stands.m4a",
+    "duree_ms": 799
+   },
+   {
+    "id": "seg_est_reparti_en",
+    "groupe": "segments",
+    "texte": "est reparti en",
+    "fichier": "clips/segments/seg_est_reparti_en.m4a",
+    "duree_ms": 599
+   },
+   {
+    "id": "seg_attention",
+    "groupe": "segments",
+    "texte": "Attention,",
+    "fichier": "clips/segments/seg_attention.m4a",
+    "duree_ms": 481
+   },
+   {
+    "id": "seg_en_difficulte",
+    "groupe": "segments",
+    "texte": "est en difficulté.",
+    "fichier": "clips/segments/seg_en_difficulte.m4a",
+    "duree_ms": 683
+   },
+   {
+    "id": "seg_ralentit",
+    "groupe": "segments",
+    "texte": "ralentit fortement.",
+    "fichier": "clips/segments/seg_ralentit.m4a",
+    "duree_ms": 750
+   },
+   {
+    "id": "seg_a_abandonne",
+    "groupe": "segments",
+    "texte": "a abandonné.",
+    "fichier": "clips/segments/seg_a_abandonne.m4a",
+    "duree_ms": 607
+   },
+   {
+    "id": "seg_dans_le_mur",
+    "groupe": "segments",
+    "texte": "est dans le mur.",
+    "fichier": "clips/segments/seg_dans_le_mur.m4a",
+    "duree_ms": 565
+   },
+   {
+    "id": "seg_penalite_5",
+    "groupe": "segments",
+    "texte": "a pris cinq secondes de pénalité.",
+    "fichier": "clips/segments/seg_penalite_5.m4a",
+    "duree_ms": 1472
+   },
+   {
+    "id": "seg_penalite_10",
+    "groupe": "segments",
+    "texte": "a pris dix secondes de pénalité.",
+    "fichier": "clips/segments/seg_penalite_10.m4a",
+    "duree_ms": 1403
+   },
+   {
+    "id": "seg_drive_through_rival",
+    "groupe": "segments",
+    "texte": "a un drive-through.",
+    "fichier": "clips/segments/seg_drive_through_rival.m4a",
+    "duree_ms": 824
+   },
+   {
+    "id": "seg_sous_enquete",
+    "groupe": "segments",
+    "texte": "est sous enquête.",
+    "fichier": "clips/segments/seg_sous_enquete.m4a",
+    "duree_ms": 789
+   },
+   {
+    "id": "seg_meilleur_tour_rival",
+    "groupe": "segments",
+    "texte": "vient de faire le meilleur tour.",
+    "fichier": "clips/segments/seg_meilleur_tour_rival.m4a",
+    "duree_ms": 944
+   },
+   {
+    "id": "seg_plus_rapide_de",
+    "groupe": "segments",
+    "texte": "est plus rapide de",
+    "fichier": "clips/segments/seg_plus_rapide_de.m4a",
+    "duree_ms": 925
+   },
+   {
+    "id": "seg_plus_lent_de",
+    "groupe": "segments",
+    "texte": "est plus lent de",
+    "fichier": "clips/segments/seg_plus_lent_de.m4a",
+    "duree_ms": 665
+   },
+   {
+    "id": "seg_au_tour",
+    "groupe": "segments",
+    "texte": "au tour.",
+    "fichier": "clips/segments/seg_au_tour.m4a",
+    "duree_ms": 410
+   },
+   {
+    "id": "seg_tu_ressors_derriere",
+    "groupe": "segments",
+    "texte": "Tu vas ressortir derrière",
+    "fichier": "clips/segments/seg_tu_ressors_derriere.m4a",
+    "duree_ms": 944
+   },
+   {
+    "id": "seg_tu_ressors_devant",
+    "groupe": "segments",
+    "texte": "Tu vas ressortir devant",
+    "fichier": "clips/segments/seg_tu_ressors_devant.m4a",
+    "duree_ms": 835
+   },
+   {
+    "id": "seg_ta_cible",
+    "groupe": "segments",
+    "texte": "Ta cible, c'est",
+    "fichier": "clips/segments/seg_ta_cible.m4a",
+    "duree_ms": 702
+   },
+   {
+    "id": "seg_drapeau_bleu_laisse",
+    "groupe": "segments",
+    "texte": "Drapeau bleu, laisse passer",
+    "fichier": "clips/segments/seg_drapeau_bleu_laisse.m4a",
+    "duree_ms": 1339
+   },
+   {
+    "id": "seg_et",
+    "groupe": "segments",
+    "texte": "et",
+    "fichier": "clips/segments/seg_et.m4a",
+    "duree_ms": 260
+   },
+   {
+    "id": "seg_se_bat_avec",
+    "groupe": "segments",
+    "texte": "se bat avec",
+    "fichier": "clips/segments/seg_se_bat_avec.m4a",
+    "duree_ms": 688
+   },
+   {
+    "id": "seg_a_un_probleme",
+    "groupe": "segments",
+    "texte": "a un problème.",
+    "fichier": "clips/segments/seg_a_un_probleme.m4a",
+    "duree_ms": 583
+   },
+   {
+    "id": "seg_arret_de",
+    "groupe": "segments",
+    "texte": "Arrêt de",
+    "fichier": "clips/segments/seg_arret_de.m4a",
+    "duree_ms": 495
+   },
+   {
+    "id": "seg_le_leader",
+    "groupe": "segments",
+    "texte": "Le leader,",
+    "fichier": "clips/segments/seg_le_leader.m4a",
+    "duree_ms": 543
+   },
+   {
+    "id": "seg_ton_coequipier",
+    "groupe": "segments",
+    "texte": "Ton coéquipier,",
+    "fichier": "clips/segments/seg_ton_coequipier.m4a",
+    "duree_ms": 629
+   },
+   {
+    "id": "seg_fenetre_dans",
+    "groupe": "segments",
+    "texte": "Fenêtre d'arrêt dans",
+    "fichier": "clips/segments/seg_fenetre_dans.m4a",
+    "duree_ms": 902
+   },
+   {
+    "id": "seg_dans",
+    "groupe": "segments",
+    "texte": "dans",
+    "fichier": "clips/segments/seg_dans.m4a",
+    "duree_ms": 300
+   },
+   {
+    "id": "seg_virage",
+    "groupe": "segments",
+    "texte": "virage",
+    "fichier": "clips/segments/seg_virage.m4a",
+    "duree_ms": 549
+   },
+   {
+    "id": "seg_secteur",
+    "groupe": "segments",
+    "texte": "Secteur",
+    "fichier": "clips/segments/seg_secteur.m4a",
+    "duree_ms": 312
+   },
+   {
+    "id": "seg_violet",
+    "groupe": "segments",
+    "texte": "violet.",
+    "fichier": "clips/segments/seg_violet.m4a",
+    "duree_ms": 284
+   },
+   {
+    "id": "seg_vert",
+    "groupe": "segments",
+    "texte": "vert.",
+    "fichier": "clips/segments/seg_vert.m4a",
+    "duree_ms": 271
+   },
+   {
+    "id": "seg_qualifie",
+    "groupe": "segments",
+    "texte": "Qualifié",
+    "fichier": "clips/segments/seg_qualifie.m4a",
+    "duree_ms": 360
+   },
+   {
+    "id": "seg_tu_termines",
+    "groupe": "segments",
+    "texte": "Tu termines",
+    "fichier": "clips/segments/seg_tu_termines.m4a",
+    "duree_ms": 441
+   },
+   {
+    "id": "seg_position_gagnee",
+    "groupe": "segments",
+    "texte": "Position gagnée.",
+    "fichier": "clips/segments/seg_position_gagnee.m4a",
+    "duree_ms": 578
+   },
+   {
+    "id": "seg_position_perdue",
+    "groupe": "segments",
+    "texte": "Position perdue.",
+    "fichier": "clips/segments/seg_position_perdue.m4a",
+    "duree_ms": 566
+   },
+   {
+    "id": "seg_pneus_de",
+    "groupe": "segments",
+    "texte": "Pneus de",
+    "fichier": "clips/segments/seg_pneus_de.m4a",
+    "duree_ms": 305
+   },
+   {
+    "id": "seg_age_pneus",
+    "groupe": "segments",
+    "texte": "tours d'usure.",
+    "fichier": "clips/segments/seg_age_pneus.m4a",
+    "duree_ms": 409
+   },
+   {
+    "id": "seg_bien_joue",
+    "groupe": "segments",
+    "texte": "Bien joué.",
+    "fichier": "clips/segments/seg_bien_joue.m4a",
+    "duree_ms": 360
+   },
+   {
+    "id": "seg_pole_de",
+    "groupe": "segments",
+    "texte": "La pole est à",
+    "fichier": "clips/segments/seg_pole_de.m4a",
+    "duree_ms": 471
+   },
+   {
+    "id": "seg_chrono_a_battre",
+    "groupe": "segments",
+    "texte": "Chrono à battre :",
+    "fichier": "clips/segments/seg_chrono_a_battre.m4a",
+    "duree_ms": 465
+   },
+   {
+    "id": "seg_minutes_restantes",
+    "groupe": "segments",
+    "texte": "minutes restantes.",
+    "fichier": "clips/segments/seg_minutes_restantes.m4a",
+    "duree_ms": 854
+   },
+   {
+    "id": "seg_provisoirement",
+    "groupe": "segments",
+    "texte": "Provisoirement",
+    "fichier": "clips/segments/seg_provisoirement.m4a",
+    "duree_ms": 709
+   },
+   {
+    "id": "seg_jaune",
+    "groupe": "segments",
+    "texte": "jaune.",
+    "fichier": "clips/segments/seg_jaune.m4a",
+    "duree_ms": 430
+   },
+   {
+    "id": "seg_brake_bias",
+    "groupe": "segments",
+    "texte": "Brake bias, position",
+    "fichier": "clips/segments/seg_brake_bias.m4a",
+    "duree_ms": 1697
+   },
+   {
+    "id": "seg_revient_fort",
+    "groupe": "segments",
+    "texte": "revient fort.",
+    "fichier": "clips/segments/seg_revient_fort.m4a",
+    "duree_ms": 655
+   },
+   {
+    "id": "seg_sorti_de_piste",
+    "groupe": "segments",
+    "texte": "est sorti de la piste.",
+    "fichier": "clips/segments/seg_sorti_de_piste.m4a",
+    "duree_ms": 978
+   }
+  ],
+  "exemples_assemblage": [
+   {
+    "sens": "Huit minutes restantes.",
+    "clips": [
+     "num_8",
+     "seg_minutes_restantes"
+    ]
+   },
+   {
+    "sens": "Provisoirement P4.",
+    "clips": [
+     "seg_provisoirement",
+     "pos_4"
+    ]
+   },
+   {
+    "sens": "Secteur deux, jaune.",
+    "clips": [
+     "seg_secteur",
+     "num_2",
+     "seg_jaune"
+    ]
+   },
+   {
+    "sens": "Secteur un, violet.",
+    "clips": [
+     "seg_secteur",
+     "num_1",
+     "seg_violet"
+    ]
+   },
+   {
+    "sens": "Delta : moins zéro virgule deux.",
+    "clips": [
+     "seg_delta",
+     "seg_moins",
+     "num_0",
+     "dixieme_2"
+    ]
+   },
+   {
+    "sens": "Chrono à battre : une minute ... (temps de référence).",
+    "clips": [
+     "seg_chrono_a_battre",
+     "seg_une_minute",
+     "num_14",
+     "dixieme_3"
+    ]
+   },
+   {
+    "sens": "Brake bias, position 3.",
+    "clips": [
+     "seg_brake_bias",
+     "num_3"
+    ]
+   },
+   {
+    "sens": "Red Bull revient fort.",
+    "clips": [
+     "ecurie_red_bull",
+     "seg_revient_fort"
+    ]
+   },
+   {
+    "sens": "Verstappen revient fort.",
+    "clips": [
+     "pilote_verstappen",
+     "seg_revient_fort"
+    ]
+   },
+   {
+    "sens": "Ferrari s'arrête ce tour.",
+    "clips": [
+     "ecurie_ferrari",
+     "seg_s_arrete_ce_tour"
+    ]
+   },
+   {
+    "sens": "Leclerc et Vettel s'arrêtent (les deux Ferrari).",
+    "clips": [
+     "pilote_leclerc",
+     "seg_et",
+     "pilote_vettel",
+     "seg_s_arrete_ce_tour"
+    ]
+   },
+   {
+    "sens": "Attention, Albon est sorti de la piste.",
+    "clips": [
+     "seg_attention",
+     "pilote_albon",
+     "seg_sorti_de_piste"
+    ]
+   },
+   {
+    "sens": "Duel : Norris se bat avec Sainz.",
+    "clips": [
+     "pilote_norris",
+     "seg_se_bat_avec",
+     "pilote_sainz"
+    ]
+   },
+   {
+    "sens": "Écart qui fond : Bottas plus rapide de quatre dixièmes au tour.",
+    "clips": [
+     "pilote_bottas",
+     "seg_plus_rapide_de",
+     "num_0",
+     "dixieme_4",
+     "seg_au_tour"
+    ]
+   },
+   {
+    "sens": "Écart avec la voiture devant : un virgule quatre secondes.",
+    "clips": [
+     "seg_ecart_devant",
+     "num_1",
+     "dixieme_4",
+     "seg_secondes"
+    ]
+   },
+   {
+    "sens": "Écart avec la voiture derrière : zéro virgule huit seconde.",
+    "clips": [
+     "seg_ecart_derriere",
+     "num_0",
+     "dixieme_8",
+     "seg_seconde"
+    ]
+   },
+   {
+    "sens": "Verstappen est derrière, à deux virgule un secondes.",
+    "clips": [
+     "pilote_verstappen",
+     "seg_est_derriere_a",
+     "num_2",
+     "dixieme_1",
+     "seg_secondes"
+    ]
+   },
+   {
+    "sens": "Leclerc est devant, à trois virgule cinq secondes.",
+    "clips": [
+     "pilote_leclerc",
+     "seg_est_devant_a",
+     "num_3",
+     "dixieme_5",
+     "seg_secondes"
+    ]
+   },
+   {
+    "sens": "Tour vingt-trois.",
+    "clips": [
+     "seg_tour",
+     "num_23"
+    ]
+   },
+   {
+    "sens": "Douze tours restants.",
+    "clips": [
+     "num_12",
+     "seg_tours_restants"
+    ]
+   },
+   {
+    "sens": "Il reste un tour restant (dernier tour : préférer le message dernier_tour).",
+    "clips": [
+     "seg_il_reste",
+     "num_1",
+     "seg_tour_restant"
+    ]
+   },
+   {
+    "sens": "Tu es P3.",
+    "clips": [
+     "seg_tu_es",
+     "pos_3"
+    ]
+   },
+   {
+    "sens": "Box, box. On met les durs.",
+    "clips": [
+     "seg_box_box",
+     "seg_on_met_les",
+     "pneu_durs"
+    ]
+   },
+   {
+    "sens": "Box ce tour. On passe en intermédiaires.",
+    "clips": [
+     "seg_box_ce_tour",
+     "seg_on_passe_en",
+     "pneu_intermediaires"
+    ]
+   },
+   {
+    "sens": "Leclerc s'arrête ce tour.",
+    "clips": [
+     "pilote_leclerc",
+     "seg_s_arrete_ce_tour"
+    ]
+   },
+   {
+    "sens": "Pérez est reparti en mediums.",
+    "clips": [
+     "pilote_perez",
+     "seg_est_reparti_en",
+     "pneu_mediums"
+    ]
+   },
+   {
+    "sens": "Attention, Bottas est en difficulté.",
+    "clips": [
+     "seg_attention",
+     "pilote_bottas",
+     "seg_en_difficulte"
+    ]
+   },
+   {
+    "sens": "Gasly a pris cinq secondes de pénalité.",
+    "clips": [
+     "pilote_gasly",
+     "seg_penalite_5"
+    ]
+   },
+   {
+    "sens": "Drapeau bleu, laisse passer Russell.",
+    "clips": [
+     "seg_drapeau_bleu_laisse",
+     "pilote_russell"
+    ]
+   },
+   {
+    "sens": "Tu vas ressortir derrière Norris.",
+    "clips": [
+     "seg_tu_ressors_derriere",
+     "pilote_norris"
+    ]
+   },
+   {
+    "sens": "Ta cible, c'est Sainz.",
+    "clips": [
+     "seg_ta_cible",
+     "pilote_sainz"
+    ]
+   },
+   {
+    "sens": "Albon se bat avec Ocon.",
+    "clips": [
+     "pilote_albon",
+     "seg_se_bat_avec",
+     "pilote_ocon"
+    ]
+   },
+   {
+    "sens": "Ricciardo est plus rapide de zéro virgule trois au tour.",
+    "clips": [
+     "pilote_ricciardo",
+     "seg_plus_rapide_de",
+     "num_0",
+     "dixieme_3",
+     "seg_au_tour"
+    ]
+   },
+   {
+    "sens": "Temps au tour : une minute quarante-cinq virgule trois.",
+    "clips": [
+     "seg_temps_au_tour",
+     "seg_une_minute",
+     "num_45",
+     "dixieme_3"
+    ]
+   },
+   {
+    "sens": "Delta : plus zéro virgule cinq.",
+    "clips": [
+     "seg_delta",
+     "seg_plus",
+     "num_0",
+     "dixieme_5"
+    ]
+   },
+   {
+    "sens": "Fenêtre d'arrêt dans trois tours.",
+    "clips": [
+     "seg_fenetre_dans",
+     "num_3",
+     "seg_tours"
+    ]
+   },
+   {
+    "sens": "Secteur deux, violet.",
+    "clips": [
+     "seg_secteur",
+     "num_2",
+     "seg_violet"
+    ]
+   },
+   {
+    "sens": "Qualifié P2.",
+    "clips": [
+     "seg_qualifie",
+     "pos_2"
+    ]
+   },
+   {
+    "sens": "Tu termines P1.",
+    "clips": [
+     "seg_tu_termines",
+     "pos_1"
+    ]
+   },
+   {
+    "sens": "Pneus de dix-huit tours d'usure.",
+    "clips": [
+     "seg_pneus_de",
+     "num_18",
+     "seg_age_pneus"
+    ]
+   },
+   {
+    "sens": "Le leader, Hamilton, s'arrête ce tour.",
+    "clips": [
+     "seg_le_leader",
+     "pilote_hamilton",
+     "seg_s_arrete_ce_tour"
+    ]
+   },
+   {
+    "sens": "La pole est à une minute quarante-trois virgule deux.",
+    "clips": [
+     "seg_pole_de",
+     "seg_une_minute",
+     "num_43",
+     "dixieme_2"
+    ]
+   },
+   {
+    "sens": "Vettel vient de faire le meilleur tour.",
+    "clips": [
+     "pilote_vettel",
+     "seg_meilleur_tour_rival"
+    ]
+   },
+   {
+    "sens": "Racing Point : Stroll s'arrête ce tour.",
+    "clips": [
+     "ecurie_racing_point",
+     "pilote_stroll",
+     "seg_s_arrete_ce_tour"
+    ]
+   }
+  ]
+ },
+ "pilotes_2020": [
+  {
+   "clip": "pilote_hamilton",
+   "nom": "Lewis Hamilton",
+   "ecurie": "Mercedes",
+   "numero": 44,
+   "note": "titulaire (Sakhir : absent, Covid)"
+  },
+  {
+   "clip": "pilote_bottas",
+   "nom": "Valtteri Bottas",
+   "ecurie": "Mercedes",
+   "numero": 77,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_russell",
+   "nom": "George Russell",
+   "ecurie": "Williams",
+   "numero": 63,
+   "note": "titulaire Williams ; remplace Hamilton chez Mercedes au GP de Sakhir"
+  },
+  {
+   "clip": "pilote_latifi",
+   "nom": "Nicholas Latifi",
+   "ecurie": "Williams",
+   "numero": 6,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_aitken",
+   "nom": "Jack Aitken",
+   "ecurie": "Williams",
+   "numero": 89,
+   "note": "remplaçant Williams au GP de Sakhir"
+  },
+  {
+   "clip": "pilote_verstappen",
+   "nom": "Max Verstappen",
+   "ecurie": "Red Bull",
+   "numero": 33,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_albon",
+   "nom": "Alexander Albon",
+   "ecurie": "Red Bull",
+   "numero": 23,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_leclerc",
+   "nom": "Charles Leclerc",
+   "ecurie": "Ferrari",
+   "numero": 16,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_vettel",
+   "nom": "Sebastian Vettel",
+   "ecurie": "Ferrari",
+   "numero": 5,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_norris",
+   "nom": "Lando Norris",
+   "ecurie": "McLaren",
+   "numero": 4,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_sainz",
+   "nom": "Carlos Sainz",
+   "ecurie": "McLaren",
+   "numero": 55,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_ricciardo",
+   "nom": "Daniel Ricciardo",
+   "ecurie": "Renault",
+   "numero": 3,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_ocon",
+   "nom": "Esteban Ocon",
+   "ecurie": "Renault",
+   "numero": 31,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_gasly",
+   "nom": "Pierre Gasly",
+   "ecurie": "AlphaTauri",
+   "numero": 10,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_kvyat",
+   "nom": "Daniil Kvyat",
+   "ecurie": "AlphaTauri",
+   "numero": 26,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_perez",
+   "nom": "Sergio Pérez",
+   "ecurie": "Racing Point",
+   "numero": 11,
+   "note": "titulaire (absent Silverstone x2, Covid)"
+  },
+  {
+   "clip": "pilote_stroll",
+   "nom": "Lance Stroll",
+   "ecurie": "Racing Point",
+   "numero": 18,
+   "note": "titulaire (absent Nürburgring)"
+  },
+  {
+   "clip": "pilote_hulkenberg",
+   "nom": "Nico Hülkenberg",
+   "ecurie": "Racing Point",
+   "numero": 27,
+   "note": "remplaçant : GP de Grande-Bretagne, 70e anniversaire, Eifel"
+  },
+  {
+   "clip": "pilote_raikkonen",
+   "nom": "Kimi Räikkönen",
+   "ecurie": "Alfa Romeo",
+   "numero": 7,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_giovinazzi",
+   "nom": "Antonio Giovinazzi",
+   "ecurie": "Alfa Romeo",
+   "numero": 99,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_magnussen",
+   "nom": "Kevin Magnussen",
+   "ecurie": "Haas",
+   "numero": 20,
+   "note": "titulaire"
+  },
+  {
+   "clip": "pilote_grosjean",
+   "nom": "Romain Grosjean",
+   "ecurie": "Haas",
+   "numero": 8,
+   "note": "titulaire (forfait après Bahreïn)"
+  },
+  {
+   "clip": "pilote_fittipaldi",
+   "nom": "Pietro Fittipaldi",
+   "ecurie": "Haas",
+   "numero": 51,
+   "note": "remplaçant : Sakhir et Abu Dhabi"
+  }
+ ],
+ "sfx": {
+  "ouverture": [
+   {
+    "fichier": "sfx/radio_ouverture_1.m4a",
+    "duree_ms": 600,
+    "lufs_cible": -16,
+    "boucle": false,
+    "origine": "elevenlabs",
+    "licence": "Généré avec ElevenLabs Sound Effects (eleven_text_to_sound_v2) sur le compte de l'utilisateur ; utilisation commerciale selon les conditions de son abonnement ElevenLabs"
+   },
+   {
+    "fichier": "sfx/radio_ouverture_2.m4a",
+    "duree_ms": 600,
+    "lufs_cible": -16,
+    "boucle": false,
+    "origine": "elevenlabs",
+    "licence": "Généré avec ElevenLabs Sound Effects (eleven_text_to_sound_v2) sur le compte de l'utilisateur ; utilisation commerciale selon les conditions de son abonnement ElevenLabs"
+   },
+   {
+    "fichier": "sfx/radio_ouverture_3_synth.m4a",
+    "duree_ms": 200,
+    "lufs_cible": -16,
+    "boucle": false,
+    "origine": "synth",
+    "licence": "CC0 / domaine public — synthétisé avec ffmpeg (sinus + bruit rose), aucune source tierce"
+   }
+  ],
+  "fermeture": [
+   {
+    "fichier": "sfx/radio_fermeture_1.m4a",
+    "duree_ms": 646,
+    "lufs_cible": -16,
+    "boucle": false,
+    "origine": "elevenlabs",
+    "licence": "Généré avec ElevenLabs Sound Effects (eleven_text_to_sound_v2) sur le compte de l'utilisateur ; utilisation commerciale selon les conditions de son abonnement ElevenLabs"
+   },
+   {
+    "fichier": "sfx/radio_fermeture_2.m4a",
+    "duree_ms": 680,
+    "lufs_cible": -16,
+    "boucle": false,
+    "origine": "elevenlabs",
+    "licence": "Généré avec ElevenLabs Sound Effects (eleven_text_to_sound_v2) sur le compte de l'utilisateur ; utilisation commerciale selon les conditions de son abonnement ElevenLabs"
+   },
+   {
+    "fichier": "sfx/radio_fermeture_3_synth.m4a",
+    "duree_ms": 280,
+    "lufs_cible": -16,
+    "boucle": false,
+    "origine": "synth",
+    "licence": "CC0 / domaine public — synthétisé avec ffmpeg (sinus + bruit rose), aucune source tierce"
+   }
+  ],
+  "souffle_boucle": [
+   {
+    "fichier": "sfx/radio_souffle_boucle_1.m4a",
+    "duree_ms": 8000,
+    "lufs_cible": -30,
+    "boucle": true,
+    "origine": "elevenlabs",
+    "licence": "Généré avec ElevenLabs Sound Effects (eleven_text_to_sound_v2) sur le compte de l'utilisateur ; utilisation commerciale selon les conditions de son abonnement ElevenLabs"
+   },
+   {
+    "fichier": "sfx/radio_souffle_boucle_2.m4a",
+    "duree_ms": 8000,
+    "lufs_cible": -30,
+    "boucle": true,
+    "origine": "elevenlabs",
+    "licence": "Généré avec ElevenLabs Sound Effects (eleven_text_to_sound_v2) sur le compte de l'utilisateur ; utilisation commerciale selon les conditions de son abonnement ElevenLabs"
+   },
+   {
+    "fichier": "sfx/radio_souffle_boucle_3_synth.m4a",
+    "duree_ms": 8000,
+    "lufs_cible": -30,
+    "boucle": true,
+    "origine": "synth",
+    "licence": "CC0 / domaine public — synthétisé avec ffmpeg (sinus + bruit rose), aucune source tierce"
+   }
+  ]
+ }
+}
