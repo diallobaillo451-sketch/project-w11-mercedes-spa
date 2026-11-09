@@ -92,3 +92,89 @@ Dernière mise à jour : 2026-11-03 07:35 (heure Canaries, UTC+0) — piste plei
 - **Radio** (src/audio/radio.ts, tools/pack_radio.mjs → public/radio/bank.bin 3,3 Mo) : 41 messages + 95 clips, filtre radio, bips/souffle ffmpeg, 40–80 ms entre clips, bulle Apple + portrait générique (public/radio/engineer.webp, image générée), Options → Radio on/off + volume. Test : tests/radio.mjs (Chromium) OK.
 - Mesures WebKit iPhone 844×390@3 (local) : canvas 2121×980, GPU estimé ≈ 281–302 Mo, 0 erreur console, textures en attente 0. Rendu logiciel → i/s non mesurables. NON testé sur vrai iPhone.
 - Publication : lots 1 (0ddf84ea/83bbd789), 2 (34598b29/3f98a3d1), 3 (5c654bb2 + 1a1d6c12). Attention : le site a migré vers https://project-w11-mercedes-spa-3715f7.gitlab.io/ (l'ancienne URL redirige). Toujours mettre `[skip ci]` sur les commits intermédiaires et ne jamais lancer deux add_commit en parallèle.
+
+### 2026-11-09 ~18:40 (Canaries) — Lot 4 publié + source/ à jour
+- Garde-fous NaN : normales dégénérées corrigées dans les ShaderChunks (clearcoat sous #ifdef USE_CLEARCOAT) + passe NaN qui remplit par les voisins au lieu du noir. Commits 85b0ed8e [skip ci] + 472d7bd3 ; JS en ligne index-Cow_MYZB.js.
+- Points noirs encore visibles dans WebKit logiciel (llvmpipe) en ?q=low ; Chromium propre ; profondeur 24 bits OK → probablement propre à la pile logicielle, à confirmer sur vrai iPhone.
+- URL publique WebKit iPhone 844×390@3 : high · DPR max 3 · KTX2, PR 2.51, canvas 2121×980, 0 erreur. Captures out/wk/pub_v4_*.png.
+- source/ mis à jour (commits 01e39505…f970f754, [skip ci]).
+
+## 2026-11-09 ~19:30 (heure Canaries) — Lot 5 rendu publié · Lot 6 physique piste / pluie / pneus / dégâts / audio
+
+### Lot 5 (rendu) — publié : 7603f2f2 + 1cafd84a
+
+**Points noirs dans WebKit**
+- Cause : l'anisotropie de la texture de couleur de base de la voiture. Les points apparaissent dès aniso ≥ 2 et disparaissent à aniso 1.
+- Correctif : anisotropie de la voiture fixée à 1 sous WebKit. La piste reste à 16. Le réglage peut être forcé avec `?caran=N`.
+
+**Mémoire GPU : 359 → 254–271 Mo**
+- Bloom désactivé.
+- Une seule cible MSAA.
+- Pas de profondeur sur le canevas quand le composeur est actif.
+- Ciel converti en KTX2.
+
+**Netteté**
+- CAS 0,16 sur ordinateur.
+- Pas de flou de mouvement.
+- Pas de composeur sur iPhone (MSAA du canevas).
+
+### Lot 6 — implémenté et testé
+
+**Piste** (`physics/env.ts`)
+- Grilles de 8 m × 0,75 m : gomme (+3 %), marbles (−22 %), eau, flaques, saleté.
+- Météo : Sec / Humide / Pluie légère / Forte pluie.
+- Drainage et évaporation, trajectoire qui sèche avec le trafic virtuel.
+- Aquaplaning selon le débit d'eau à évacuer par le pneu, comparé à sa capacité : slick 4, inter 30, pluie 85 L/s (Pirelli).
+- Rafales de vent (processus Ornstein-Uhlenbeck).
+
+**Pneus** (`physics/tyre.ts`)
+- Composés C1–C5, intermédiaire et pluie, avec leurs fenêtres de température.
+- Températures surface et carcasse, sur 3 zones.
+- Dégradation thermique et mécanique, graining, blistering, plats (flat spots), crevaison, pression.
+- Page Pneus du volant.
+
+**Dégâts**
+- Aileron AV et AR, dérives, déflecteurs (bargeboards), suspension.
+- Roue arrachée : le fond racle la piste.
+- Crevaison sur un choc ou en roulant sur un débris.
+- Effets aéro : appui asymétrique.
+- Débris persistants, avec étincelles et fumée.
+- Messages : « Crevaison » / « Roue arrachée ».
+- Les dégâts restent jusqu'au stand ou à une nouvelle session.
+
+**Rendu**
+- Chaussée mouillée : plus sombre et plus réfléchissante, avec flaques.
+- Ciel couvert, brouillard.
+- Traces de pneus persistantes (6000 segments).
+- Gerbes d'eau, pluie, gouttes sur la caméra cockpit.
+
+**Audio**
+- Inertie du turbo, sifflement MGU-H, crépitements en décélération.
+- Blocage de roue distinct du glissement.
+- Chuintement des pneus sur l'eau.
+- Pluie plus forte dans le cockpit.
+
+**Physique générale**
+- Effet de sol / décrochage sous 8 mm.
+- Aspiration et air sale (actifs seulement avec plusieurs voitures).
+- Freins refroidis par la pluie.
+- Consommation limitée à 100 kg/h.
+
+**10 nouveautés** : voir `docs/IMPROVEMENTS_10_NEW.md`.
+
+### Tests
+
+**Node — tous OK**
+- Tour sec 1:41,23.
+- Forte pluie en pneus pluie : 2:05,1 (+24 %), 0 choc.
+- Gomme ×1,030, marbles ×0,861.
+- Graining 7,7 %.
+- crash, pitlane, physics : OK.
+
+**Chromium** (`app.mjs`) : tous OK, 0 erreur console.
+
+**WebKit iPhone 13** (`tests/lot6_wk.mjs`)
+- Forte pluie à 165 km/h : eau 1,5 mm, wetGrip 0,67, aquaplaning 0 en pneus pluie.
+- Vrai choc à La Source (85 m/s, 24°) : aileron AV arraché, dérive gauche, suspension ARG 60 %, crevaison ARG, 2 débris.
+- GPU ≈ 268–281 Mo, 0 erreur.
+- Rendu logiciel : les images/s ne sont pas mesurables. **Non testé sur un vrai iPhone.**
