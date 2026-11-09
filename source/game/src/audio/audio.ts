@@ -22,6 +22,8 @@ export interface AudioFrame {
   shift: number; gear: number; limiter: boolean; ers: number; inside: boolean; pan: number; dist: number; radialV: number
   /** v2 (facultatifs) : herbe séparée du gravier, caméra, positions monde (spatialisation HRTF) */
   grass?: number; cam?: AudioCam
+  /** pluie (mm/h), film d'eau sous les roues (mm), blocage de roue 0..1 */
+  rain?: number; wet?: number; lock?: number
   src?: [number, number, number]; fwd?: [number, number, number]
   lis?: [number, number, number]; lisF?: [number, number, number]; lisU?: [number, number, number]
 }
@@ -45,12 +47,15 @@ export class AudioEngine {
   private on: Loop[] = []; private off: Loop[] = []
   private idle!: OscillatorNode; private idle2!: OscillatorNode; private idleG!: GainNode; private idleLP!: BiquadFilterNode
   private intakeG!: GainNode; private intakeF!: BiquadFilterNode; private transO!: OscillatorNode; private transG!: GainNode
+  private mguhF!: BiquadFilterNode
   private turbo!: OscillatorNode; private turboG!: GainNode; private mguk!: OscillatorNode; private mgukG!: GainNode
   private windG!: GainNode; private windF!: BiquadFilterNode
   private tyreG!: GainNode; private tyreF!: BiquadFilterNode; private squealG!: GainNode
   private kerbO!: OscillatorNode; private kerbG!: GainNode; private gravelG!: GainNode; private gravelF!: BiquadFilterNode
   private grassG!: GainNode; private scrapeG!: GainNode
   private ambG!: GainNode; private noise!: AudioBuffer
+  private rainG!: GainNode; private rainLowG!: GainNode; private hissG!: GainNode; private mguh!: OscillatorNode; private mguhG!: GainNode; private lockG!: GainNode
+  private spool = 0; private crackT = 0
   private cut = 0; private dop = 1; private lastThr = 0; private pebT = 0; private popT = 0
   async init(base = './audio/engine/', offline?: BaseAudioContext) {
     if (this.ctx) { if (live(this.ctx)) await this.ctx.resume(); return }
@@ -133,6 +138,14 @@ export class AudioEngine {
     this.grassG = noiseNode('lowpass', 380, 0.7, this.wheelP).g
     this.scrapeG = noiseNode('highpass', 3200, 0.7, this.wheelP).g
     this.ambG = noiseNode('lowpass', 650, 0.5, this.master).g; this.ambG.gain.value = 0.02
+    // pluie : crépitement aigu (gouttes) + grondement sourd (sur le casque / la coque) ; chuintement des pneus dans l'eau
+    this.rainG = noiseNode('bandpass', 5200, 0.5, this.master).g; this.rainLowG = noiseNode('lowpass', 260, 0.6, this.master).g
+    this.hissG = noiseNode('highpass', 2400, 0.6, this.wheelP).g
+    // blocage : crissement aigu et serré (gomme qui frotte en un point)
+    this.lockG = noiseNode('bandpass', 2300, 18, this.wheelP).g
+    // MGU-H : moteur-générateur sur l'arbre du turbo (sifflement électrique qui suit la vitesse du turbo)
+    this.mguh = ctx.createOscillator(); this.mguh.type = 'sawtooth'; const mf = ctx.createBiquadFilter(); mf.type = 'bandpass'; mf.Q.value = 6
+    this.mguhG = ctx.createGain(); this.mguhG.gain.value = 0; this.mguh.connect(mf); mf.connect(this.mguhG); this.mguhG.connect(this.engLP); this.mguh.start(); this.mguhF = mf
     const kl = ctx.createBiquadFilter(); kl.type = 'lowpass'; kl.frequency.value = 240
     this.kerbO = ctx.createOscillator(); this.kerbO.type = 'sawtooth'; this.kerbG = ctx.createGain(); this.kerbG.gain.value = 0
     this.kerbO.connect(kl); kl.connect(this.kerbG); this.kerbG.connect(this.wheelP); this.kerbO.start()
@@ -206,8 +219,13 @@ export class AudioEngine {
     this.intakeG.gain.setTargetAtTime(P.intake * 0.05 * (0.3 + load) * clamp(rpm / 12000, 0.3, 1), t, 0.05)
     this.transO.frequency.setTargetAtTime(40 + a.speed * 21, t, 0.05)
     this.transG.gain.setTargetAtTime(P.trans * 0.008 * clamp(a.speed / 40, 0, 1) * (1.2 - load * 0.6), t, 0.08)
-    this.turbo.frequency.setTargetAtTime(1800 + rpm * 0.32, t, 0.05)
-    this.turboG.gain.setTargetAtTime(0.012 * load * clamp(rpm / 11000, 0, 1) * dist, t, 0.08)
+    // turbo : inertie de l'arbre (montée ≈ 0,25 s, descente ≈ 0,8 s) ; au lever de pied le MGU-H garde le turbo lancé (anti-lag 2020)
+    const spT = clamp(load * rpm / 11500, 0, 1.1) * 0.85 + (load < 0.2 && rpm > 8000 ? 0.35 : 0)
+    this.spool += (spT - this.spool) * Math.min(1, dt / (spT > this.spool ? 0.25 : 0.8))
+    this.turbo.frequency.setTargetAtTime(2600 + this.spool * 6200, t, 0.03)
+    this.turboG.gain.setTargetAtTime(0.014 * this.spool * this.spool * dist * (cam === 'cockpit' || cam === 'tcam' ? 1.4 : 0.8), t, 0.05)
+    this.mguh.frequency.setTargetAtTime(700 + this.spool * 2400, t, 0.03); this.mguhF.frequency.setTargetAtTime(1400 + this.spool * 4800, t, 0.03)
+    this.mguhG.gain.setTargetAtTime(0.006 * this.spool * (load < 0.2 ? 1.4 : 0.7) * dist, t, 0.08)
     this.mguk.frequency.setTargetAtTime(260 + a.speed * 9, t, 0.05)
     this.mgukG.gain.setTargetAtTime(clamp(Math.abs(a.ers), 0, 1) * 0.012 * dist, t, 0.1)
     const v = a.speed
@@ -216,7 +234,13 @@ export class AudioEngine {
     const sl = clamp(a.slip, 0, 1)
     this.tyreG.gain.setTargetAtTime((sl * 0.12 + 0.012 * clamp(v / 60, 0, 1)) * clamp(v / 15, 0, 1) * dist, t, 0.04)
     this.tyreF.frequency.setTargetAtTime(800 + sl * 900, t, 0.05)
-    this.squealG.gain.setTargetAtTime(clamp((a.slip - 0.45) * 2, 0, 1) * 0.16 * dist, t, 0.04)
+    const wetK = clamp((a.wet ?? 0) / 0.3, 0, 1)
+    this.squealG.gain.setTargetAtTime(clamp((a.slip - 0.45) * 2, 0, 1) * 0.16 * dist * (1 - 0.8 * wetK), t, 0.04)
+    this.lockG.gain.setTargetAtTime(clamp(a.lock ?? 0, 0, 1) * 0.14 * clamp(v / 15, 0, 1) * dist * (1 - 0.8 * wetK), t, 0.03)
+    // eau : chuintement des pneus ∝ vitesse × film ; pluie : plus forte à bord (gouttes sur le casque)
+    this.hissG.gain.setTargetAtTime(wetK * clamp(v / 50, 0, 1.4) * 0.12 * dist, t, 0.1)
+    const rr = clamp((a.rain ?? 0) / 9, 0, 1)
+    this.rainG.gain.setTargetAtTime(rr * (cam === 'cockpit' ? 0.09 : 0.05), t, 0.3); this.rainLowG.gain.setTargetAtTime(rr * (cam === 'cockpit' ? 0.12 : 0.03), t, 0.3)
     // vibreurs de Spa : bandes ≈ 1 m → battement = vitesse / 1 m
     this.kerbO.frequency.setTargetAtTime(clamp(v / 1.0, 8, 110), t, 0.02)
     this.kerbG.gain.setTargetAtTime(clamp(a.kerb, 0, 1) * 0.24 * clamp(v / 20, 0, 1) * dist, t, 0.02)
@@ -233,6 +257,9 @@ export class AudioEngine {
     // retour de flamme léger au lever de pied à haut régime (rare sur les V6 hybrides 2020)
     this.popT -= dt
     if (this.lastThr > 0.7 && a.throttle < 0.2 && rpm > 10000 && this.popT <= 0) { this.popT = 0.4; for (let k = 0; k < 3; k++) setTimeout(() => this.burst(0.03, 700, 'lowpass', 0.12 * dist, this.engP), k * 55 + Math.random() * 30) }
+    // décélération : crépitements d'échappement en frein moteur à haut régime (irréguliers)
+    this.crackT -= dt
+    if (a.throttle < 0.08 && rpm > 8500 && a.speed > 25 && this.crackT <= 0) { this.crackT = 0.08 + Math.random() * 0.35; this.burst(0.018 + Math.random() * 0.02, 500 + Math.random() * 900, 'bandpass', (0.04 + Math.random() * 0.05) * dist * (cam === 'cockpit' ? 0.6 : 1), this.engP) }
     this.lastThr = a.throttle
     // un seul son par choc (le pic d'impact décroît sur ~0,2 s) ; timbre selon la barrière (pneus sourds, rail métallique, béton sec)
     this.crashT -= dt

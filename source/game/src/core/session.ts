@@ -31,7 +31,7 @@ export class Session {
     }
     this.inDrsZone = this.zones.some(([a, b]) => s >= a && s <= b)
     // qualif / contre-la-montre : DRS libre dans les zones (règlement 2020, hors pluie)
-    car.drsAvailable = this.inDrsZone && car.setup.drsAllowed !== false
+    car.drsAvailable = this.inDrsZone && car.setup.drsAllowed !== false && (car.env?.wetness ?? 0) < 0.3 // piste mouillée : la direction de course désactive le DRS (règl. sportif F1 2020)
     // limites de piste : 4 roues hors (types herbe/gravier/eau) plus de 0,25 s → tour invalidé
     const off = car.wheels.every(w => w.type >= 4 || w.type === 0)
     this.trackLimitTime = off ? this.trackLimitTime + dt : 0

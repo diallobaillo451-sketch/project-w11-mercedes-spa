@@ -51,8 +51,14 @@ async function loadTrack(): Promise<TrackSurface> {
   pitData = await fetch('./track/pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null)
   return t
 }
+let appliedTyres = '', lastPunct = '00000000'
 function applySettings() {
+  const prevC = game.car.setup.compound
   Object.assign(game.car.setup, settings.setup)
+  // météo : la piste se mouille / s'assèche ; pneus : un changement de composé ou de couvertures monte un train neuf
+  if (game.env.weather !== settings.weather) game.setWeather(settings.weather)
+  const tk = settings.setup.compound + settings.blanketF + '/' + settings.blanketR
+  if (tk !== appliedTyres || prevC !== settings.setup.compound) { appliedTyres = tk; game.car.fitTyres(settings.setup.compound, settings.blanketF, settings.blanketR) }
   game.car.damageMode = settings.damage
   game.car.ers.mode = settings.ersMode
   input.set = settings.input
@@ -72,6 +78,7 @@ function startSession(k: SessionKind | 'demo') {
   mode = k
   game.autopilot = k === 'demo'
   game.start(k === 'demo' ? 'timetrial' : k)
+  appliedTyres = ''
   game.paused = false
   applySettings()
   setScreen('drive')
@@ -252,6 +259,8 @@ function frame(now: number) {
   aFrame.src![0] = carW.x; aFrame.src![1] = carW.y + 0.5; aFrame.src![2] = carW.z; aFrame.fwd![0] = carF.x; aFrame.fwd![1] = carF.y; aFrame.fwd![2] = carF.z
   aFrame.lis![0] = cam.position.x; aFrame.lis![1] = cam.position.y; aFrame.lis![2] = cam.position.z
   aFrame.lisF![0] = camF.x; aFrame.lisF![1] = camF.y; aFrame.lisF![2] = camF.z; aFrame.lisU![0] = camU.x; aFrame.lisU![1] = camU.y; aFrame.lisU![2] = camU.z
+  { const e = game.env, cw = game.car.wheels; aFrame.rain = e.rainRate; aFrame.wet = e.water[e.idx(game.car.s, game.car.d)]
+    aFrame.lock = game.car.brakeApplied > 0.1 && game.car.speed > 6 ? Math.max(0, ...cw.map(w => w.contact && Math.abs(w.omega * w.r) < game.car.speed * 0.5 ? 1 : 0)) : 0 }
   audio.update(aFrame, dt)
   radioTelemetry(dt)
   camPrev.copy(cam.position)
@@ -295,6 +304,11 @@ function wireRadio() {
 }
 /** télémétrie lue toutes les 2 s : pneus hors fenêtre, freins, ERS vide, blocage de roue */
 function radioTelemetry(dt: number) {
+  { const c = game.car, k = c.wheels.map(w => w.tyre.puncture > 0 ? 1 : 0).join('') + c.damage.wheelOff.map(o => o ? 1 : 0).join('')
+    if (k !== lastPunct) { const n = ['avant gauche', 'avant droite', 'arrière gauche', 'arrière droite']
+      const i = c.wheels.findIndex((w, j) => w.tyre.puncture > 0 && lastPunct[j] !== '1'), j = c.damage.wheelOff.findIndex((o, q) => o && lastPunct[4 + q] !== '1')
+      if (j >= 0) hud.toast('Roue arrachée · ' + n[j] + ' — rentre au stand'); else if (i >= 0) hud.toast('Crevaison · ' + n[i] + ' — rentre au stand')
+      lastPunct = k } }
   radioPoll += dt; if (radioPoll < 2 || screen !== 'drive' || game.autopilot) return; radioPoll = 0
   const c = game.car, w = c.wheels, T = w.reduce((a, x) => a + x.tyre.temp, 0) / 4
   if (T > 118) radio.say('pneus_temp_haute', 120); else if (T < 62 && c.speed > 40 && lapsDone >= 1) radio.say('pneus_temp_basse', 120)

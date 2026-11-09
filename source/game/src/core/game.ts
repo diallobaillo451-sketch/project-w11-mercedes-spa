@@ -1,6 +1,7 @@
 /** Boucle de simulation : pas fixe 240 Hz découplé de l'affichage, état précédent/courant pour interpolation,
  *  session (chrono, DRS, limites de piste), remise en piste, meilleur tour persistant (localStorage). */
 import { Vehicle, type Controls } from '../physics/vehicle.ts'
+import { TrackEnv, type Weather } from '../physics/env.ts'
 import { TrackSurface } from '../track/surface.ts'
 import { buildRacingLine, type RacingLine } from '../track/racingLine.ts'
 import { Autopilot } from '../physics/autopilot.ts'
@@ -30,25 +31,34 @@ export class Game {
   /** bus d'événements de course (radio, HUD, volant ; plus tard tout le plateau) */
   bus = new EventBus()
   /** voie des stands (limiteur automatique 80 km/h, pénalité d'excès de vitesse) */
-  pit: Pitlane | null = null; inPit = false; pitSpeedT = 0; pitStopT = 0; pitPenalised = false; penalties = 0
+  pit: Pitlane | null = null; pitServed = false; inPit = false; pitSpeedT = 0; pitStopT = 0; pitPenalised = false; penalties = 0
   private lastFlag = ''; private lastDmg = 0
+  /** état de piste / météo partagé (physique, rendu, audio) */
+  env: TrackEnv; private envAcc = 0
+  /** débris physiques restés sur la piste (pièces arrachées) : position, vitesse, au repos ou non */
+  debris: { part: string; pos: number[]; vel: number[]; rest: boolean; rot: number[]; spin: number[] }[] = []
   constructor(track: TrackSurface, kind: SessionKind = 'timetrial') {
     this.track = track
     this.line = buildRacingLine(track, 1600, 1.0)
     this.car = new Vehicle(track)
+    this.env = new TrackEnv(track.length, s => this.lineOffset(s)); this.car.env = this.env
     this.auto = new Autopilot(this.line, 1.06) // E : marge pilote calée (après muX 0,67) → tour ≈ 1:41,75 (pole réelle 1:41,252)
     this.session = new Session(track.length, kind)
     try { const b = localStorage.getItem(this.bestKey); this.storedBest = b ? Number(b) : null } catch { this.storedBest = null }
     this.start(kind)
   }
   /** Départ lancé (contre-la-montre : tour de sortie court avant la ligne) ou arrêté aux stands. */
+  sessionId = 0
   start(kind: SessionKind = this.session.kind) {
+    this.sessionId++
     this.session = new Session(this.track.length, kind)
     const L = this.track.length
     if (kind === 'timetrial') { const s0 = L - 200; this.car.placeAt(s0, this.lineOffset(s0), 55) }
     else this.car.placeAt(L - 120, this.lineOffset(L - 120), 0)
     this.car.ers.soc = 4.0e6
-    this.car.fuel = 12; this.car.damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }; this.lastDmg = 0
+    this.car.fuel = 12; this.car.repair(); this.car.fitTyres(); this.lastDmg = 0; this.debris = []
+    // piste de la session : contre-la-montre = piste déjà gommée (fin de qualif), essais = piste plus verte qui évolue
+    this.env?.setEvolution(kind === 'timetrial' ? 0.75 : 0.35); this.env?.setWeather(this.env.weather)
     this.snapshot(); this.acc = 0
   }
   lineOffset(s: number) { const i = Math.floor(((s % this.track.length) + this.track.length) % this.track.length / this.line.ds) % this.line.N; return this.line.e[i] }
@@ -92,6 +102,10 @@ export class Game {
       this.acc -= DT; n++
     }
     if (n === MAX_STEPS) this.acc = 0
+    // piste / météo à 10 Hz ; débris
+    this.envAcc += Math.min(realDt, 0.1)
+    if (this.envAcc >= 0.1) { this.env.update(this.envAcc, this.session.timing.best?.time ?? 106); this.envAcc = 0 }
+    this.updateDebris(Math.min(realDt, 0.05))
     this.updatePit(realDt)
     const c0 = this.car, ses = this.session
     if (ses.flag !== this.lastFlag) { this.lastFlag = ses.flag; this.bus.emit({ t: 'flag', car: 0, flag: ses.flag }) }
@@ -117,13 +131,40 @@ export class Game {
     if (this.inPit) {
       // réparation UNIQUEMENT à l'arrêt dans la voie des stands (2 s immobile) : une voiture cassée ne se répare jamais seule
       this.pitStopT = c.speed < 0.6 ? this.pitStopT + dt : 0
-      if (this.pitStopT > 2 && c.damage.total > 0) { c.damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }; this.lastDmg = 0; this.events.repair = true; this.bus.emit({ t: 'repair', car: 0 }) }
+      if (this.pitStopT > 2 && !this.pitServed) { this.pitServed = true; const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
+        c.repair(); c.fitTyres(); this.lastDmg = 0 // arrêt : pièces réparées + train de pneus neufs
+        if (dmg) { this.events.repair = true; this.bus.emit({ t: 'repair', car: 0 }) } }
+      if (c.speed > 2) this.pitServed = false
       const kmh = c.speed * 3.6
       this.pitSpeedT = kmh > 80.5 ? this.pitSpeedT + dt : Math.min(this.pitSpeedT + dt, 0)
       if (this.pitSpeedT > 0.5 && !this.pitPenalised) {
         this.pitPenalised = true; this.penalties += 5; this.events.pitSpeeding = Math.round(kmh)
         this.bus.emit({ t: 'pitSpeeding', car: 0, kmh, penalty: 5 })
         if (this.session.kind === 'timetrial') this.session.timing.invalidate()
+      }
+    }
+  }
+  setWeather(w: Weather) { this.env.setWeather(w) }
+  /** débris : balistique simple + rebonds sur la surface de la piste ; restent au sol jusqu'au redémarrage. Une roue qui
+   *  roule dessus à plus de 70 km/h peut crever (E : 30 %) et le débris est projeté. */
+  private updateDebris(dt: number) {
+    const c = this.car
+    for (const d of c.debris.splice(0)) this.debris.push({ ...d, rest: false, rot: [0, 0, 0], spin: [(Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20] })
+    if (this.debris.length > 40) this.debris.splice(0, this.debris.length - 40)
+    const smp = { h: 0, nx: 0, ny: 1, nz: 0, type: 1, s: 0, d: 0, i: c.hint }
+    for (const d of this.debris) {
+      if (!d.rest) {
+        d.vel[1] -= 9.81 * dt
+        for (let k = 0; k < 3; k++) { d.pos[k] += d.vel[k] * dt; d.rot[k] += d.spin[k] * dt }
+        const g = this.track.sample(d.pos[0], d.pos[2], c.hint, smp)
+        if (d.pos[1] < g.h + 0.03) { d.pos[1] = g.h + 0.03; d.vel[1] = Math.abs(d.vel[1]) * 0.3
+          const f = g.type >= 4 ? 0.5 : 0.8; d.vel[0] *= f; d.vel[2] *= f; for (let k = 0; k < 3; k++) d.spin[k] *= 0.6
+          if (Math.hypot(d.vel[0], d.vel[1], d.vel[2]) < 0.6) { d.rest = true; d.vel = [0, 0, 0] } }
+      }
+      if (c.speed > 19) for (const w of c.wheels) {
+        if (!w.contact || Math.hypot(w.px - d.pos[0], w.pz - d.pos[2]) > 0.35) continue
+        if (c.damageMode === 'real' && w.tyre.puncture === 0 && Math.random() < 0.3) w.tyre.puncture = 0.02
+        d.rest = false; d.vel = [c.vel[0] * 0.6 + (Math.random() - 0.5) * 4, 2.5, c.vel[2] * 0.6 + (Math.random() - 0.5) * 4]
       }
     }
   }
