@@ -645,9 +645,23 @@ export class Vehicle {
             if (this.pos[1] - g.h - this.cg[1] < 0.2) { const vyS = -(g.nx * this.vel[0] + g.nz * this.vel[2]) / Math.max(0.5, g.ny); if (this.vel[1] > vyS) this.vel[1] = vyS } }
           this.impact = Math.max(this.impact, Math.min(1, -vn / 15)); this.impactPos = [px, this.pos[1], pz]; this.hitKind = kind
           // dégâts : au-delà de ~3 m/s de vitesse normale, selon la zone touchée
-          const dv = -vn
+          this.applyHit(-vn, p[2], pa)
+        }
+      }
+      this.bPrev[k * 2] = px; this.bPrev[k * 2 + 1] = pz
+    }
+    this.bInit = true
+    // bord de la grille physique (±44 m) : limite de sécurité là où aucune barrière n'existe
+    const smp = this.surface.sample(this.pos[0], this.pos[2], this.hint, tmp)
+    const lim = 44
+    if (Math.abs(smp.d) > lim) { const c = this.surface.centre(smp.s), sg = smp.d > 0 ? -1 : 1, nx = -c.tz * sg, nz = c.tx * sg, pen = Math.abs(smp.d) - lim
+      this.pos[0] += nx * pen; this.pos[2] += nz * pen; const vn = this.vel[0] * nx + this.vel[2] * nz; if (vn < 0) { this.vel[0] -= nx * vn * 1.2; this.vel[2] -= nz * vn * 1.2 } }
+  }
+  /** dégâts d'un choc (vitesse normale dv, m/s) sur une zone : 1 aileron AV, 2 aileron AR, 5/6 dérives, 7/8 déflecteurs,
+   *  10..13 roues, autre = fond. Partagé par les barrières et les contacts entre voitures (lot 8 C). */
+  applyHit(dv: number, part: number, pa: number[]) {
           if (dv > 3 && this.damageMode !== 'off') {
-            const dmg = Math.min(1, (dv - 3) / 22), D = this.damage, part = p[2]
+            const dmg = Math.min(1, (dv - 3) / 22), D = this.damage
             if (part === 1) D.frontWing = Math.min(1, D.frontWing + dmg)
             else if (part === 5 || part === 6) { const k = part - 5; D.endplate[k] = Math.min(1, D.endplate[k] + dmg * 1.4); D.frontWing = Math.min(1, D.frontWing + dmg * 0.5) }
             else if (part === 7 || part === 8) { const k = part - 7; D.barge[k] = Math.min(1, D.barge[k] + dmg * 1.2); D.floor = Math.min(1, D.floor + dmg * 0.3) }
@@ -661,16 +675,16 @@ export class Vehicle {
             this.emitDebris(pa)
             this.damageEvent = Math.max(this.damageEvent, dmg)
           }
-        }
-      }
-      this.bPrev[k * 2] = px; this.bPrev[k * 2 + 1] = pz
-    }
-    this.bInit = true
-    // bord de la grille physique (±44 m) : limite de sécurité là où aucune barrière n'existe
-    const smp = this.surface.sample(this.pos[0], this.pos[2], this.hint, tmp)
-    const lim = 44
-    if (Math.abs(smp.d) > lim) { const c = this.surface.centre(smp.s), sg = smp.d > 0 ? -1 : 1, nx = -c.tz * sg, nz = c.tx * sg, pen = Math.abs(smp.d) - lim
-      this.pos[0] += nx * pen; this.pos[2] += nz * pen; const vn = this.vel[0] * nx + this.vel[2] * nz; if (vn < 0) { this.vel[0] -= nx * vn * 1.2; this.vel[2] -= nz * vn * 1.2 } }
+  }
+  /** contact avec une autre voiture (lot 8 C) : impulsion dans le plan (n = normale monde vers cette voiture),
+   *  dvn = vitesse relative de rapprochement (m/s), partage des masses 50/50 (voitures de même masse) */
+  carHit(nx: number, nz: number, dvn: number, part: number, tang = 0) {
+    if (dvn <= 0) return
+    const j = dvn * 0.55
+    this.vel[0] += nx * j - nz * tang; this.vel[2] += nz * j + nx * tang
+    this.wb[1] += (Math.random() - 0.5) * dvn * 0.12
+    this.impact = Math.max(this.impact, Math.min(1, dvn / 15)); this.impactPos = [this.pos[0] - nx, this.pos[1], this.pos[2] - nz]; this.hitKind = 5
+    this.applyHit(dvn, part, [-nx, 0, -nz])
   }
   /** pièces qui se détachent (une seule fois chacune) → débris (pos/vitesse monde) pour le rendu et la piste */
   private emitDebris(pa: number[]) {

@@ -92,3 +92,34 @@ export function buildRacingLine(t: TrackSurface, iters = 1600, mu = 0.92): Racin
   }
   return { x, z, e, k: ks, v, N, ds }
 }
+
+/** Lot 8 C — profil de vitesse générique (même méthode que ci-dessus) pour une voiture quelconque : adversaires IA
+ *  (paramètres 2020 de leur équipe), safety car (voiture de route). `drs` : indices où l'aileron est ouvert (traînée × drsCd). */
+export interface ProfileCar { m: number; ClA: number; CdA: number; power: (v: number) => number; muM?: number; muA?: number; vCap?: number; tracFrac?: number; brakeK?: number }
+export function speedProfile(t: TrackSurface, Ln: RacingLine, P: ProfileCar, mu = 1, drs?: Uint8Array, drsCd = 0.84): Float64Array {
+  const N = Ln.N, g = 9.81, rho = W11.rho, m = P.m, ClA = P.ClA, muM = P.muM ?? MU_M, muA = P.muA ?? MU_A, kx = W11.tyre.muX / 0.78
+  const tf = P.tracFrac ?? 0.55, bk = P.brakeK ?? 0.93, cap = P.vCap ?? 100, ks = Ln.k
+  const cd = (i: number) => drs && drs[i] ? P.CdA * drsCd : P.CdA
+  const v = new Float64Array(N)
+  for (let i = 0; i < N; i++) { const kk = Math.abs(ks[i]), den = m * kk - mu * muA * 0.5 * rho * ClA; v[i] = den <= 0 ? cap : Math.min(cap, Math.sqrt(mu * muM * g * m / den)) }
+  const ds = t.ds
+  for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < N * 1.2; i++) {
+      const a = i % N, b = (i + 1) % N, va = v[a], q = 0.5 * rho * va * va
+      const grip = kx * mu * (muM * m * g * tf + muA * q * ClA * 0.6)
+      const latA = va * va * Math.abs(ks[a]), latMax = mu * (muM * g + muA * q * ClA / m)
+      const ell = Math.sqrt(Math.max(0.05, 1 - (latA / latMax) ** 2))
+      const acc = (Math.min(P.power(va) / Math.max(va, 5), grip * ell) - q * cd(a)) / m
+      v[b] = Math.min(v[b], Math.sqrt(Math.max(0, va * va + 2 * acc * ds)))
+    }
+    for (let i = Math.floor(N * 1.2); i > 0; i--) {
+      const b = i % N, a = (i - 1) % N, vb = v[b], q = 0.5 * rho * vb * vb
+      const latB = vb * vb * Math.abs(ks[b]), latMaxB = mu * (muM * g + muA * q * ClA / m)
+      const ellB = Math.sqrt(Math.max(0.03, 1 - (latB / latMaxB) ** 2))
+      v[a] = Math.min(v[a], Math.sqrt(vb * vb + 2 * (kx * mu * bk * (muM * m * g + muA * q * ClA) * ellB + q * cd(b)) / m * ds))
+    }
+  }
+  return v
+}
+/** temps au tour d'un profil (s) */
+export function profileLapTime(v: Float64Array | number[], ds: number) { let T = 0; for (let i = 0; i < v.length; i++) T += ds / Math.max(1, v[i]); return T }
