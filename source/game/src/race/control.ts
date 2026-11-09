@@ -26,7 +26,7 @@ export class RaceControl {
   vsc = false; vscEnding = 0; vscEnd = 0
   red = false; redT = 0; resumeAt = 0; private redOrder: Racer[] = []
   unlap = false
-  lightsN = 0; lightsT = 0; lightsHold = 0; goT = -1; private gridT = 0; private jumpRef = { s: 0, ok: false }
+  lightsN = 0; lightsT = 0; lightsHold = 0; goT = -1; private gridT = 0; jumpRef = { s: 0, ok: false }
   greenT = 0
   private blueFor = new Map<number, { t: number; posts: number; warned: boolean }>()
   private lastPost = new Map<number, number>()
@@ -330,7 +330,7 @@ export class RaceControl {
     }
   }
   clearIncident(r: Racer) { for (const inc of this.incidents.slice()) if (inc.r === r && inc.kind === 'spin') this.endIncident(inc) }
-  private endIncident(inc: Incident) { this.incidents.splice(this.incidents.indexOf(inc), 1); if (inc.r?.mode === 'dnf') inc.r.out = inc.r.out ?? 'Accident'; if (!this.sc.active && !this.vsc && !this.red) this.msg(`Poste ${this.postBefore(inc.s).n} : piste dégagée, drapeau vert`, 'flag') }
+  private endIncident(inc: Incident) { this.incidents.splice(this.incidents.indexOf(inc), 1); if (inc.r?.mode === 'dnf') { inc.r.out = inc.r.out ?? 'Accident'; (inc.r as Racer & { _gone?: boolean })._gone = true } if (!this.sc.active && !this.vsc && !this.red) this.msg(`Poste ${this.postBefore(inc.s).n} : piste dégagée, drapeau vert`, 'flag') }
   // ───────────── commissaires
   caseNew(a: Racer, b: Racer | null, what: string, pen: string, reason: string, delay = 20) {
     const S = this.sim

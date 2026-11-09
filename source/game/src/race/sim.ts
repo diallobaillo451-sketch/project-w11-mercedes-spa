@@ -71,7 +71,7 @@ export class RaceSim {
   wetness = () => 0
   sessionLen = 0; chequered = false; wearScale = 1
   playerOnHot = false
-  constructor(o: { track: TrackSurface; line: RacingLine; pit: Pitlane | null; kind: SessionKind; circuit?: string; laps?: number; player: string; seed?: number; sessionLen?: number; grid?: string[]; playerAi?: boolean }) {
+  constructor(o: { track: TrackSurface; line: RacingLine; pit: Pitlane | null; kind: SessionKind; circuit?: string; laps?: number; player: string; seed?: number; sessionLen?: number; grid?: string[]; playerAi?: boolean; exclude?: string[] }) {
     this.track = o.track; this.line = o.line; this.L = o.track.length; this.N = o.line.N; this.ds = o.track.ds
     this.kind = o.kind; this.circuit = o.circuit ?? 'bel'; this.laps = o.laps ?? 10; this.rng = new Rng(o.seed ?? (Date.now() & 0xffffff))
     this.pit = o.pit; this.sessionLen = o.sessionLen ?? 0
@@ -91,6 +91,8 @@ export class RaceSim {
     order.forEach((id, k) => { const r = this.cars.find(c => c.id === id); if (r) r.slot = k })
     if (this.kind === 'race') for (const r of this.cars) this.placeOnGrid(r)
     else for (const r of this.cars) { if (!r.player) { r.mode = 'garage'; this.planRuns(r) } }
+    // qualif : pilotes éliminés à la séance précédente (restent au garage, classés après)
+    for (const id of o.exclude ?? []) { const r = this.cars.find(c => c.id === id && !c.player); if (r) { r.out = 'Éliminé'; r.mode = 'garage'; r.runs = [] } }
   }
   /** ordre par défaut : temps réels de Spa 2020 (pilote du joueur à sa place réelle) */
   defaultOrder(_p: string) { return Object.keys(SPA_Q).sort((a, b) => SPA_Q[a] - SPA_Q[b]) }
@@ -183,6 +185,8 @@ export class RaceSim {
     let rest = Math.min(dt, 0.1)
     while (rest > 1e-6) { const h = Math.min(rest, 1 / 60); this.step(h); rest -= h }
   }
+  /** avance rapide (garage, fin de séance) : pas fixes de 1/60 s */
+  advance(sec: number) { const n = Math.round(sec * 60); for (let k = 0; k < n; k++) this.step(1 / 60) }
   step(dt: number) {
     this.t += dt
     if (this.vehicle) this.syncPlayer(this.vehicle)

@@ -5,9 +5,10 @@ import { TrackEnv, type Weather } from '../physics/env.ts'
 import { TrackSurface } from '../track/surface.ts'
 import { buildRacingLine, type RacingLine } from '../track/racingLine.ts'
 import { Autopilot } from '../physics/autopilot.ts'
-import { Session, type SessionKind } from './session.ts'
+import { Session, type SessionKind, type Flag } from './session.ts'
 import { EventBus } from './events.ts'
 import type { Pitlane } from '../track/pitlane.ts'
+import { RaceSim } from '../race/sim.ts'
 
 export const DT = 1 / 240
 const MAX_STEPS = 12 // au-delà : ralenti plutôt que spirale de la mort
@@ -32,11 +33,23 @@ export class Game {
   bus = new EventBus()
   /** voie des stands (limiteur automatique 80 km/h, pénalité d'excès de vitesse) */
   pit: Pitlane | null = null; pitServed = false; inPit = false; pitSpeedT = 0; pitStopT = 0; pitPenalised = false; penalties = 0
+  /** immobilisation au stand (pénalité purgée) : freins serrés */
+  holdT = 0
   private lastFlag = ''; private lastDmg = 0
   /** état de piste / météo partagé (physique, rendu, audio) */
   env: TrackEnv; private envAcc = 0
   /** débris physiques restés sur la piste (pièces arrachées) : position, vitesse, au repos ou non */
   debris: { part: string; pos: number[]; vel: number[]; rest: boolean; rot: number[]; spin: number[] }[] = []
+  /** lot 8 C : plateau de 19 IA + direction de course (null en contre-la-montre / démo) */
+  field: RaceSim | null = null
+  startField(o: { kind: SessionKind; laps: number; player: string; grid?: string[]; sessionLen?: number; seed?: number; posts?: unknown; exclude?: string[] }) {
+    const F = new RaceSim({ track: this.track, line: this.line, pit: this.pit, kind: o.kind, laps: o.laps, player: o.player, grid: o.grid, sessionLen: o.sessionLen, seed: o.seed, exclude: o.exclude })
+    F.vehicle = this.car; F.wetness = () => this.env.wetness
+    if (o.posts) F.ctrl.buildPosts(o.posts as Parameters<typeof F.ctrl.buildPosts>[0])
+    if (o.kind === 'race') { const g = F.gridPos(F.player.slot); this.car.placeAt(g.s, g.d, 0); this.car.fuel = F.player.fuel; this.snapshot() }
+    this.field = F
+    return F
+  }
   constructor(track: TrackSurface, kind: SessionKind = 'timetrial') {
     this.track = track
     this.line = buildRacingLine(track, 1600, 1.0)
@@ -87,6 +100,9 @@ export class Game {
       this.snapshot()
       const ctl = this.autopilot ? this.auto.control(this.car) : this.ctl
       if (this.inPit) ctl.pitLim = true
+      ctl.noReverse = false
+      if (this.holdT > 0 && this.inPit && this.pitStopT > 0) { ctl.throttle = 0; ctl.brake = 1; ctl.noReverse = true }
+      if (this.field && (this.field.ctrl.phase === 'lights' || this.field.ctrl.phase === 'gridding') && !this.autopilot && this.car.speed < 3) { ctl.throttle = Math.min(ctl.throttle, 0.25); ctl.brake = Math.max(ctl.brake, this.field.ctrl.phase === 'lights' ? 1 : 0); ctl.noReverse = true }
       this.car.step(DT, ctl)
       if (this.car.shiftEvent) { this.shifts++; this.ctl.shiftUp = false; this.ctl.shiftDown = false }
       this.maxScrape = Math.max(this.maxScrape, this.car.scrape); this.maxImpact = Math.max(this.maxImpact, this.car.impact)
@@ -104,6 +120,14 @@ export class Game {
       this.acc -= DT; n++
     }
     if (n === MAX_STEPS) this.acc = 0
+    if (this.field && n > 0) {
+      const F = this.field, C = F.ctrl
+      F.update(n * DT)
+      // DRS : règle 2020 (course : < 1 s au point de détection, à partir du 3e tour ; jamais sous SC / VSC / drapeau rouge / pluie)
+      if (this.car.drsAvailable) this.car.drsAvailable = C.drsGlobal() && (this.session.kind !== 'race' || (F.player.drs && C.phase === 'racing'))
+      const f = C.playerFlag() as Flag | ''
+      if (f) { if (this.session.flag !== f) this.session.setFlag(f, 1.2); else this.session.setFlag(f, 1.2) }
+    }
     // piste / météo à 10 Hz ; débris
     this.envAcc += Math.min(realDt, 0.1)
     if (this.envAcc >= 0.1) { this.env.update(this.envAcc, this.session.timing.best?.time ?? 106); this.envAcc = 0 }
@@ -128,12 +152,16 @@ export class Game {
   private updatePit(dt: number) {
     if (!this.pit) return
     const c = this.car, z = this.pit.inLimitZone(c.pos[0], c.pos[2])
-    if (z && !this.inPit) { this.inPit = true; this.pitSpeedT = -2; this.pitPenalised = false; this.events.pitEntry = true; this.bus.emit({ t: 'pitEntry', car: 0 }) }
+    if (z && !this.inPit) { this.inPit = true; this.pitSpeedT = -2; this.pitPenalised = false; this.events.pitEntry = true; this.bus.emit({ t: 'pitEntry', car: 0 }); this.field?.ctrl.pitEvent(this.field.player, 'in') }
     else if (!z && this.inPit) { this.inPit = false; this.events.pitExit = true; this.bus.emit({ t: 'pitExit', car: 0 }) }
     if (this.inPit) {
       // réparation UNIQUEMENT à l'arrêt dans la voie des stands (2 s immobile) : une voiture cassée ne se répare jamais seule
       this.pitStopT = c.speed < 0.6 ? this.pitStopT + dt : 0
-      if (this.pitStopT > 2 && !this.pitServed) { this.pitServed = true; const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
+      if (this.pitStopT > 2 && !this.pitServed && this.field) { const p = this.field.player, C = this.field.ctrl
+        // pénalités purgées à l'arrêt : temps (5 / 10 s) puis stop-and-go (10 s) — aucun travail pendant ce temps (règl. 2020, art. 38)
+        const hold = p.pen + (p.sgPend > 0 ? 10 : 0)
+        if (hold > 0 && this.session.kind === 'race') { this.holdT = hold; C.msg(`${p.code} purge ${p.sgPend > 0 ? 'son stop-and-go' : 'sa pénalité de ' + p.pen + ' s'}`, 'pen'); p.penServed += p.pen; p.pen = 0; if (p.sgPend > 0) p.sgPend-- } }
+      if (this.pitStopT > 2 + this.holdT && !this.pitServed) { this.pitServed = true; this.holdT = 0; const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
         this.events.pitStop = true; c.repair(); c.fitTyres(); this.lastDmg = 0 // arrêt : pièces réparées + train de pneus neufs
         if (dmg) { this.events.repair = true; this.bus.emit({ t: 'repair', car: 0 }) } }
       if (c.speed > 2) this.pitServed = false
