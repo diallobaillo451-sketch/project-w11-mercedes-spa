@@ -1,0 +1,1006 @@
+{
+ "id": "monza_2020",
+ "name": "Autodromo Nazionale Monza (tracé 2020)",
+ "country": "Italie",
+ "legend": "P = publié (source citée), M = mesuré sur le modèle, E = estimé",
+ "length": {
+  "official_m": 5793,
+  "P": "FIA, 2020 Italian Grand Prix preview (20_08_italy_v3.pdf)",
+  "centerline_m": 5786.2,
+  "M": "ligne centrale lissée (Dijkstra + lissage), écart -0,12 % ; avant lissage local 5 792,7 m"
+ },
+ "direction": "horaire (sens réel)",
+ "coords": {
+  "frame": "glTF Y haut, mètres, avant de la ligne de départ ≈ -Z",
+  "origin": "ligne de DÉPART (bande peinte transversale, s = 0), au sol",
+  "from_sketchfab_blender": "glTF = (X - -170.802, Z - 197.800, -(Y - -101.873)) avec (X,Y,Z) = coordonnées Blender (Z haut) du GLB Sketchfab importé",
+  "centerline_point0_offset_m": [
+   -1.697,
+   -0.0,
+   -0.285
+  ],
+  "note": "le point 0 de la ligne centrale est 1,7 m à gauche de l'origine, sur la ligne de départ (lissage local)"
+ },
+ "startFinish": {
+  "startLineS": 0.0,
+  "finishLineS": 5474.5,
+  "offset_m": {
+   "M": 311.7,
+   "P": 309,
+   "source": "FIA 2020 : Start line/finish line offset 0,309 km"
+  },
+  "note": "Monza a des lignes de départ et d'arrivée séparées : la ligne de départ est 309 m APRÈS la ligne d'arrivée. Chrono au tour = ligne d'arrivée (s ≈ 5474,5) ; grille derrière la ligne de départ (s négatif / fin de boucle)."
+ },
+ "grid": {
+  "E": true,
+  "slots": [
+   {
+    "pos": 1,
+    "s": 5780.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 2,
+    "s": 5772.2,
+    "side": "droite"
+   },
+   {
+    "pos": 3,
+    "s": 5764.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 4,
+    "s": 5756.2,
+    "side": "droite"
+   },
+   {
+    "pos": 5,
+    "s": 5748.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 6,
+    "s": 5740.2,
+    "side": "droite"
+   },
+   {
+    "pos": 7,
+    "s": 5732.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 8,
+    "s": 5724.2,
+    "side": "droite"
+   },
+   {
+    "pos": 9,
+    "s": 5716.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 10,
+    "s": 5708.2,
+    "side": "droite"
+   },
+   {
+    "pos": 11,
+    "s": 5700.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 12,
+    "s": 5692.2,
+    "side": "droite"
+   },
+   {
+    "pos": 13,
+    "s": 5684.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 14,
+    "s": 5676.2,
+    "side": "droite"
+   },
+   {
+    "pos": 15,
+    "s": 5668.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 16,
+    "s": 5660.2,
+    "side": "droite"
+   },
+   {
+    "pos": 17,
+    "s": 5652.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 18,
+    "s": 5644.2,
+    "side": "droite"
+   },
+   {
+    "pos": 19,
+    "s": 5636.2,
+    "side": "gauche"
+   },
+   {
+    "pos": 20,
+    "s": 5628.2,
+    "side": "droite"
+   }
+  ],
+  "note": "emplacements estimés (pas de 8 m, décalés), à recaler sur les marques peintes du modèle"
+ },
+ "pitlane": {
+  "speedLimitKmh": 80,
+  "P": "FIA 2020 : 80 km/h essais, qualifs, course",
+  "file": "pitlane.json",
+  "side": "droite"
+ },
+ "corners": [
+  {
+   "n": 1,
+   "name": "Variante del Rettifilo (1)",
+   "dir": "D",
+   "s": 624
+  },
+  {
+   "n": 2,
+   "name": "Variante del Rettifilo (2)",
+   "dir": "G",
+   "s": 664
+  },
+  {
+   "n": 3,
+   "name": "Curva Grande (Curva Biassono)",
+   "dir": "D",
+   "s": 1082
+  },
+  {
+   "n": 4,
+   "name": "Variante della Roggia (1)",
+   "dir": "G",
+   "s": 1834
+  },
+  {
+   "n": 5,
+   "name": "Variante della Roggia (2)",
+   "dir": "D",
+   "s": 1878
+  },
+  {
+   "n": 6,
+   "name": "Curva di Lesmo 1",
+   "dir": "D",
+   "s": 2250
+  },
+  {
+   "n": 7,
+   "name": "Curva di Lesmo 2",
+   "dir": "D",
+   "s": 2568
+  },
+  {
+   "n": 8,
+   "name": "Variante Ascari (1)",
+   "dir": "G",
+   "s": 3642
+  },
+  {
+   "n": 9,
+   "name": "Variante Ascari (2)",
+   "dir": "D",
+   "s": 3708
+  },
+  {
+   "n": 10,
+   "name": "Variante Ascari (3)",
+   "dir": "G",
+   "s": 3829
+  },
+  {
+   "n": 11,
+   "name": "Curva Parabolica (Curva Alboreto)",
+   "dir": "D",
+   "s": 4841,
+   "apex_s": 4911
+  }
+ ],
+ "corners_note": "s = pic de courbure de la ligne centrale (M) ; noms P (FIA/usage)",
+ "drs": {
+  "P": "FIA 2020 preview : zone 1 détection 95 m avant T7, activation 170 m après T7 ; zone 2 détection 20 m avant T11, activation 115 m après la ligne d'arrivée",
+  "zones": [
+   {
+    "detectS": 2473,
+    "activateS": 2738,
+    "endS": 3560,
+    "E_end": "freinage Ascari"
+   },
+   {
+    "detectS": 4821,
+    "activateS": 5589,
+    "endS": 480,
+    "E_end": "freinage Variante del Rettifilo"
+   }
+  ],
+  "note": "référence « avant/après T7, T11 » prise au pic de courbure (E) ; une autre source (preview tiers) donne 210 m pour l'activation zone 1"
+ },
+ "sectors": {
+  "E": true,
+  "S1_end_s": 1600,
+  "S2_end_s": 3950,
+  "note": "limites FIA 2020 non trouvées : estimées (avant Roggia, après Ascari), comptées depuis la ligne de départ"
+ },
+ "records": {
+  "lapRecordRace": {
+   "time": "1:21.046",
+   "driver": "Rubens Barrichello",
+   "team": "Ferrari",
+   "year": 2004,
+   "P": "FIA 2020 preview"
+  },
+  "pole2020": {
+   "time": "1:18.887",
+   "driver": "Lewis Hamilton",
+   "team": "Mercedes",
+   "P": "résultats officiels Q3 2020"
+  },
+  "fastestLap2020": {
+   "time": "1:22.746",
+   "driver": "Lewis Hamilton",
+   "P": "résultats officiels course 2020"
+  },
+  "winner2020": "Pierre Gasly (AlphaTauri)",
+  "laps2020": 53
+ },
+ "elevation_m": {
+  "min": -4.39,
+  "max": 8.28,
+  "M": "ligne centrale, relatif à l'origine"
+ },
+ "surfaceTypes": {
+  "0": "vide",
+  "1": "asphalte",
+  "2": "vibreur",
+  "3": "tapis/peint",
+  "4": "herbe",
+  "5": "gravier/sable",
+  "6": "eau",
+  "7": "objet/mur"
+ },
+ "materials": {
+  "note": "noms d’ORIGINE du modèle ; noms livrés dans les tuiles : voir visualParity.materials (src → name)",
+  "ground": [
+   "apsh-shader-norm",
+   "apsh-shader-scuro",
+   "apsh-shader2",
+   "asph-pitlane",
+   "curb-NM",
+   "curb-shader",
+   "brd2",
+   "grs_brd",
+   "whiteline",
+   "groove",
+   "groove2",
+   "groove2b",
+   "grass-shader",
+   "top_new",
+   "top_B",
+   "sand",
+   "grille",
+   "tree_shadow",
+   "shadow_serraglio"
+  ],
+  "mask": [
+   "trees",
+   "tree8",
+   "branch5",
+   "treesline",
+   "fences1",
+   "fences2",
+   "antennas",
+   "gstand-alpha",
+   "paddk"
+  ],
+  "blend": [
+   "groove",
+   "groove2",
+   "groove2b",
+   "grs_brd",
+   "tree_shadow",
+   "glass_B"
+  ],
+  "w11_layer": {
+   "0": [
+    "grass-shader",
+    "top_new",
+    "top_B",
+    "sand"
+   ],
+   "2": [
+    "apsh-shader-norm",
+    "apsh-shader-scuro",
+    "asph-pitlane"
+   ],
+   "3": [
+    "apsh-shader2"
+   ],
+   "4": [
+    "brd2"
+   ],
+   "5": [
+    "curb-NM",
+    "curb-shader"
+   ],
+   "6": [
+    "groove",
+    "groove2",
+    "groove2b",
+    "grs_brd",
+    "tree_shadow",
+    "shadow_serraglio",
+    "grille"
+   ],
+   "7": [
+    "whiteline"
+   ]
+  },
+  "asph-pitlane": "sert à la voie des stands ET à l'ancien anneau de vitesse (Sopraelevata), non roulable en course"
+ },
+ "sources": "voir SOURCES.md",
+ "visualParity": {
+  "note": "Parité visuelle Spa appliquée côté assets (voir /workspace/w11-shared/work/SPA_VISUAL_PARITY.md) : noms canoniques Spa → les shaders d'Opi s'appliquent sans modification ; albédo/spéculaire/rugosité déjà calibrés dans les matériaux (ALBEDO_FIX inutile, aucune clé ALBEDO_FIX de Spa n'est réutilisée).",
+  "runtime": {
+   "bakedAO.GROUND": "asph, kerb_new, line, carpet, groove, GRASS, sand_new",
+   "detail.gravel": "sand_new, construction_dirt",
+   "detail.grass": "GRASS, grass-side1B",
+   "trees.TREE_RE": "trees1_*, bushesB_*",
+   "weathering.BUILD": "houses1NN (0,78), concrete-barrie-raw (0,82)",
+   "weatherfx.ROAD (mouillé)": "asph, kerb_new, line, groove",
+   "grass3D": "track/grassmask.bin (classe 1 = GRASS)",
+   "crowd": "track/crowd.bin"
+  },
+  "materials": [
+   {
+    "src": "adv_add.003",
+    "name": "adv_add.003",
+    "class": "other",
+    "mean": 0.365,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "antennas.005",
+    "name": "antennas.005",
+    "class": "other",
+    "mean": 0.214,
+    "alphaFrac": 0.835,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "apsh-shader2.005",
+    "name": "carpet.001",
+    "class": "carpet",
+    "mean": 0.24,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.88,
+    "metal": 0
+   },
+   {
+    "src": "apsh-shader-norm.005",
+    "name": "asph.001",
+    "class": "road",
+    "mean": 0.235,
+    "alphaFrac": 0,
+    "factor": 0.383,
+    "alpha": "OPAQUE",
+    "rough": 0.88,
+    "metal": 0
+   },
+   {
+    "src": "apsh-shader-scuro.005",
+    "name": "asph.002",
+    "class": "road",
+    "mean": 0.235,
+    "alphaFrac": 0,
+    "factor": 0.383,
+    "alpha": "OPAQUE",
+    "rough": 0.88,
+    "metal": 0
+   },
+   {
+    "src": "asph-pitlane.005",
+    "name": "asph.003",
+    "class": "pit",
+    "mean": 0.415,
+    "alphaFrac": 0,
+    "factor": 0.314,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "Bark.005",
+    "name": "Bark.005",
+    "class": "other",
+    "mean": 0.118,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "box.005",
+    "name": "houses101",
+    "class": "building",
+    "mean": 0.431,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.547,
+    "metal": 0
+   },
+   {
+    "src": "box_M.005",
+    "name": "houses102",
+    "class": "building",
+    "mean": 0.431,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.495,
+    "metal": 0
+   },
+   {
+    "src": "branch5.005",
+    "name": "trees1_branch5.001",
+    "class": "trees",
+    "mean": 0.035,
+    "alphaFrac": 0.72,
+    "factor": 0.724,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "brd2.005",
+    "name": "carpet.002",
+    "class": "carpet",
+    "mean": 0.083,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.88,
+    "metal": 0
+   },
+   {
+    "src": "bridges.005",
+    "name": "houses103",
+    "class": "building",
+    "mean": 0.565,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.606,
+    "metal": 0
+   },
+   {
+    "src": "bushes.005",
+    "name": "bushesB_bushes.001",
+    "class": "bushes",
+    "mean": 0.061,
+    "alphaFrac": 0,
+    "factor": 0.802,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "curb-NM.005",
+    "name": "kerb_new.001",
+    "class": "kerb",
+    "mean": 0.332,
+    "alphaFrac": 0,
+    "factor": 0.662,
+    "alpha": "OPAQUE",
+    "rough": 0.86,
+    "metal": 0
+   },
+   {
+    "src": "curb-shader.005",
+    "name": "kerb_new.002",
+    "class": "kerb",
+    "mean": 0.332,
+    "alphaFrac": 0,
+    "factor": 0.662,
+    "alpha": "OPAQUE",
+    "rough": 0.86,
+    "metal": 0
+   },
+   {
+    "src": "fences1.005",
+    "name": "fences1.005",
+    "class": "other",
+    "mean": 0.239,
+    "alphaFrac": 0.994,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "fences2.005",
+    "name": "fences2.005",
+    "class": "other",
+    "mean": 0.132,
+    "alphaFrac": 0.998,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.923,
+    "metal": 0
+   },
+   {
+    "src": "flag1.005",
+    "name": "flag1.005",
+    "class": "other",
+    "mean": 0.371,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "flag2.005",
+    "name": "flag2.005",
+    "class": "other",
+    "mean": 0.03,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "flag3.005",
+    "name": "flag3.005",
+    "class": "other",
+    "mean": 0.675,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "flag4.005",
+    "name": "flag4.005",
+    "class": "other",
+    "mean": 0.197,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "flag5.005",
+    "name": "flag5.005",
+    "class": "other",
+    "mean": 0.13,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "flag6.005",
+    "name": "flag6.005",
+    "class": "other",
+    "mean": 0.208,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "flag7.005",
+    "name": "flag7.005",
+    "class": "other",
+    "mean": 0.054,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "flag8.005",
+    "name": "flag8.005",
+    "class": "other",
+    "mean": 0.13,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "glass_B.005",
+    "name": "glass_B.005",
+    "class": "other",
+    "mean": 0.255,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0,
+    "metal": 1
+   },
+   {
+    "src": "grass-shader.005",
+    "name": "GRASS.001",
+    "class": "grass",
+    "mean": 0.079,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "grille.005",
+    "name": "grille.005",
+    "class": "other",
+    "mean": 0.102,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.8,
+    "metal": 0
+   },
+   {
+    "src": "groove2.005",
+    "name": "groove.001",
+    "class": "groove",
+    "mean": 0,
+    "alphaFrac": 1,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "groove2b.005",
+    "name": "groove.002",
+    "class": "groove",
+    "mean": 0,
+    "alphaFrac": 1,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "groove.003",
+    "name": "groove.003",
+    "class": "groove",
+    "mean": 0.051,
+    "alphaFrac": 0.737,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "grs_brd.005",
+    "name": "groove.004",
+    "class": "groove",
+    "mean": 0.116,
+    "alphaFrac": 0.528,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "gstand-alpha.005",
+    "name": "gstand-alpha.005",
+    "class": "other",
+    "mean": 0.322,
+    "alphaFrac": 0.326,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.859,
+    "metal": 0
+   },
+   {
+    "src": "gstand.005",
+    "name": "gstand.005",
+    "class": "other",
+    "mean": 0.203,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 1,
+    "metal": 0
+   },
+   {
+    "src": "hedge.005",
+    "name": "bushesB_hedge.002",
+    "class": "bushes",
+    "mean": 0.067,
+    "alphaFrac": 0,
+    "factor": 0.727,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "metals-alpha.005",
+    "name": "metals-alpha.005",
+    "class": "other",
+    "mean": 0.123,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.842,
+    "metal": 0
+   },
+   {
+    "src": "metals.005",
+    "name": "metals.005",
+    "class": "other",
+    "mean": 0.123,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.324,
+    "metal": 0
+   },
+   {
+    "src": "misc1.005",
+    "name": "misc1.005",
+    "class": "other",
+    "mean": 0.366,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.505,
+    "metal": 0.3
+   },
+   {
+    "src": "misc_alpha.005",
+    "name": "misc_alpha.005",
+    "class": "other",
+    "mean": 0.164,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.937,
+    "metal": 0
+   },
+   {
+    "src": "misc_alphatest.005",
+    "name": "misc_alphatest.005",
+    "class": "other",
+    "mean": 0.164,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "objects1.005",
+    "name": "objects1.005",
+    "class": "other",
+    "mean": 0.158,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "paddk.005",
+    "name": "paddk.005",
+    "class": "other",
+    "mean": 0.225,
+    "alphaFrac": 0.117,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "sand.005",
+    "name": "sand_new.001",
+    "class": "gravel",
+    "mean": 0.27,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "serraglio.003",
+    "name": "serraglio.003",
+    "class": "other",
+    "mean": 0.171,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.8,
+    "metal": 0
+   },
+   {
+    "src": "shadow_serraglio.005",
+    "name": "groove.005",
+    "class": "groove",
+    "mean": 0,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "signal_1_green",
+    "name": "signal_1_green",
+    "class": "lamp"
+   },
+   {
+    "src": "signal_1_red_mid",
+    "name": "signal_1_red_mid",
+    "class": "lamp"
+   },
+   {
+    "src": "signal_1_red_top",
+    "name": "signal_1_red_top",
+    "class": "lamp"
+   },
+   {
+    "src": "top_B.005",
+    "name": "top-ext.001",
+    "class": "terrain",
+    "mean": 0.093,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "top_new.005",
+    "name": "top-ext.002",
+    "class": "terrain",
+    "mean": 0.167,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "tree8.005",
+    "name": "trees1_tree8.002",
+    "class": "trees",
+    "mean": 0.023,
+    "alphaFrac": 0.428,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "tree_shadow.005",
+    "name": "groove.006",
+    "class": "groove",
+    "mean": 0,
+    "alphaFrac": 1,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "trees.005",
+    "name": "trees1_trees.003",
+    "class": "trees",
+    "mean": 0.039,
+    "alphaFrac": 0.518,
+    "factor": 0.639,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "treesline.005",
+    "name": "treesline.001",
+    "class": "treesline",
+    "mean": 0.039,
+    "alphaFrac": 0.154,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "tyres.003",
+    "name": "tyres.003",
+    "class": "other",
+    "mean": 0.819,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.8,
+    "metal": 0.5
+   },
+   {
+    "src": "Vehicles.005",
+    "name": "Vehicles.005",
+    "class": "other",
+    "mean": 0.191,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.776,
+    "metal": 0
+   },
+   {
+    "src": "wall2.005",
+    "name": "concrete-barrie-raw.001",
+    "class": "concrete",
+    "mean": 0.41,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.911,
+    "metal": 0
+   },
+   {
+    "src": "walls.005",
+    "name": "concrete-barrie-raw.002",
+    "class": "concrete",
+    "mean": 0.499,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.776,
+    "metal": 0
+   },
+   {
+    "src": "whiteline.005",
+    "name": "line.001",
+    "class": "line",
+    "mean": 0.536,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.84,
+    "metal": 0
+   }
+  ],
+  "autoAlpha": [
+   "shadow_serraglio.005(BLEND 0.45)"
+  ]
+ }
+}
