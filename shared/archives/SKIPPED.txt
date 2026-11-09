@@ -22,5 +22,5 @@ terre/polyhaven_dirt/dirt_nor_gl_2k.jpg (4914156 bytes)
 
 Toujours disponibles sur /workspace/w11-shared/downloads/
 
-# incoming cars skipped
-shared/incoming/cars/982c12670ee6a38e5c5fe1ef7aaaeae6db36debb8ff3efb317b7d17f4de95c85.glb (19339284 bytes)
+# incoming/cars
+Tous les 9 GLB sont sur la branche : 8 en .glb, le plus gros (982c1267, 18.4 Mo) en .glb.part00–part06 + REASSEMBLE_982c1267.md.
