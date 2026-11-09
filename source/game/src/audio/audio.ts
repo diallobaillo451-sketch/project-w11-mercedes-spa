@@ -37,6 +37,7 @@ const PROFILE: Record<AudioCam, { lp: number; low: number; intake: number; wind:
   tv:      { lp: 14000, low: 0, intake: 0.1, wind: 0.1, wet: 0.32, trans: 0.05, gain: 1.15 },
 }
 export class AudioEngine {
+  radioIn: GainNode | null = null
   ctx: BaseAudioContext | null = null; ready = false; volume = 0.8; muted = false
   private master!: GainNode; private engBus!: GainNode; private engLP!: BiquadFilterNode; private engLow!: BiquadFilterNode
   private engP!: PannerNode | StereoPannerNode; private wheelP!: PannerNode | StereoPannerNode; private air!: BiquadFilterNode
@@ -68,6 +69,7 @@ export class AudioEngine {
     const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.08
     const makeup = ctx.createGain(); makeup.gain.value = 1.6
     this.master.connect(comp); comp.connect(makeup); makeup.connect(lim); lim.connect(ctx.destination)
+    this.radioIn = ctx.createGain(); this.radioIn.connect(lim) // radio de l'ingénieur : hors bus moteur, même limiteur
     // bruit partagé (blanc + rose léger)
     this.noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
     const d = this.noise.getChannelData(0); let b = 0

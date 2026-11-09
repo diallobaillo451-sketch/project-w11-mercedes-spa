@@ -12,7 +12,7 @@ export const DT = 1 / 240
 const MAX_STEPS = 12 // au-delà : ralenti plutôt que spirale de la mort
 
 export interface Pose { pos: number[]; q: number[] }
-export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean; pitEntry?: boolean; pitExit?: boolean; pitSpeeding?: number }
+export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean; pitEntry?: boolean; pitExit?: boolean; pitSpeeding?: number; repair?: boolean }
 
 export class Game {
   track: TrackSurface; line: RacingLine; car: Vehicle; session: Session
@@ -30,7 +30,7 @@ export class Game {
   /** bus d'événements de course (radio, HUD, volant ; plus tard tout le plateau) */
   bus = new EventBus()
   /** voie des stands (limiteur automatique 80 km/h, pénalité d'excès de vitesse) */
-  pit: Pitlane | null = null; inPit = false; pitSpeedT = 0; pitPenalised = false; penalties = 0
+  pit: Pitlane | null = null; inPit = false; pitSpeedT = 0; pitStopT = 0; pitPenalised = false; penalties = 0
   private lastFlag = ''; private lastDmg = 0
   constructor(track: TrackSurface, kind: SessionKind = 'timetrial') {
     this.track = track
@@ -48,7 +48,7 @@ export class Game {
     if (kind === 'timetrial') { const s0 = L - 200; this.car.placeAt(s0, this.lineOffset(s0), 55) }
     else this.car.placeAt(L - 120, this.lineOffset(L - 120), 0)
     this.car.ers.soc = 4.0e6
-    this.car.fuel = 12; this.car.damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }
+    this.car.fuel = 12; this.car.damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }; this.lastDmg = 0
     this.snapshot(); this.acc = 0
   }
   lineOffset(s: number) { const i = Math.floor(((s % this.track.length) + this.track.length) % this.track.length / this.line.ds) % this.line.N; return this.line.e[i] }
@@ -115,6 +115,9 @@ export class Game {
     if (z && !this.inPit) { this.inPit = true; this.pitSpeedT = -2; this.pitPenalised = false; this.events.pitEntry = true; this.bus.emit({ t: 'pitEntry', car: 0 }) }
     else if (!z && this.inPit) { this.inPit = false; this.events.pitExit = true; this.bus.emit({ t: 'pitExit', car: 0 }) }
     if (this.inPit) {
+      // réparation UNIQUEMENT à l'arrêt dans la voie des stands (2 s immobile) : une voiture cassée ne se répare jamais seule
+      this.pitStopT = c.speed < 0.6 ? this.pitStopT + dt : 0
+      if (this.pitStopT > 2 && c.damage.total > 0) { c.damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }; this.lastDmg = 0; this.events.repair = true; this.bus.emit({ t: 'repair', car: 0 }) }
       const kmh = c.speed * 3.6
       this.pitSpeedT = kmh > 80.5 ? this.pitSpeedT + dt : Math.min(this.pitSpeedT + dt, 0)
       if (this.pitSpeedT > 0.5 && !this.pitPenalised) {
