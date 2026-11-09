@@ -1,0 +1,520 @@
+/**
+ * Dynamique du véhicule W11 : corps rigide 6 DDL + 4 suspensions à rayon + pneus Pacejka (glissement combiné),
+ * groupe propulseur hybride (V6 + MGU-K/MGU-H + batterie), boîte 8 rapports, différentiel autobloquant,
+ * freins carbone (répartition, température, brake-by-wire AR), aéro (appui ∝ v², traînée, DRS, vent).
+ * Repère glTF monde (Y haut). Repère caisse : x droite, y haut, z arrière (la voiture regarde −Z).
+ * Pas fixe (240 Hz par défaut). Aucune dépendance à three.js → testable sous Node.
+ */
+import { W11, SURFACE, type Compound } from './params.ts'
+import { mf, muPeak, newTyre, tyreThermal, type TyreState } from './tyre.ts'
+import { ERS, GEAR_RATIOS, REVERSE_RATIO, icePower, engineBrakeTorque, type EngineMode } from './powertrain.ts'
+import { newSample, type Surface, type SurfaceSample } from '../track/surface.ts'
+
+export interface Controls {
+  throttle: number; brake: number; steer: number        // 0..1, 0..1, -1 (gauche) .. 1 (droite)
+  shiftUp?: boolean; shiftDown?: boolean
+  drs?: boolean; das?: boolean
+}
+export interface Setup {
+  brakeBias: number; diffOn: number; diffOff: number; engineMode: EngineMode; compound: Compound
+  autoGear: boolean; tc: number; abs: boolean; steerAssist: number; stability: number
+  drsAllowed: boolean; dasEnabled: boolean
+}
+export const defaultSetup = (): Setup => ({ brakeBias: W11.brakeBias, diffOn: 0.45, diffOff: 0.25, engineMode: 'quali', compound: 'C4', // P : pole Spa 2020 en tendre C4
+  autoGear: true, tc: 1, abs: true, steerAssist: 1, stability: 0.3, drsAllowed: true, dasEnabled: true })
+
+export interface Wheel {
+  front: boolean; left: boolean; hub: [number, number, number]; r: number; I: number
+  omega: number; angle: number; c: number; cPrev: number; cdot: number; contact: boolean; fz: number; fx: number; fy: number
+  kappa: number; alpha: number; steer: number; type: number; tyre: TyreState; brakeT: number; brakeTq: number; driveTq: number
+  absF: number; px: number; py: number; pz: number; slipVel: number; groundH: number; sample: SurfaceSample
+}
+const G = 9.81
+const tmp = newSample()
+
+export class Vehicle {
+  surface: Surface
+  setup: Setup = defaultSetup()
+  mass = W11.massMin + W11.fuelQuali
+  pos = [0, 0, 0]; vel = [0, 0, 0]; q = [0, 0, 0, 1]; wb = [0, 0, 0] // vitesse angulaire repère caisse
+  R = new Float64Array(9)
+  cg = [0, W11.cgHeight, 0] // position CG dans le repère « modèle » (origine au sol, milieu empattement)
+  wheels: Wheel[] = []
+  ers = new ERS()
+  gear = 1; shiftTimer = 0; rpm = 4000; rpmVis = 4000; clutchSlip = false; limiter = false
+  throttleApplied = 0; brakeApplied = 0; tcCut = 0
+  drsOpen = false; drsPos = 0; drsAvailable = false; dasPulled = false; dasPos = 0
+  hint = -1; s = 0; d = 0; trackIdx = 0
+  wind = [0, 0, 0]; airT = 18; trackT = 26
+  // télémétrie / évènements
+  gLat = 0; gLong = 0; speed = 0; downforce = 0; drag = 0
+  scrape = 0; scrapePos = [0, 0, 0]; impact = 0; impactPos = [0, 0, 0]; offTrack = false; wheelsOut = 0; flipped = 0
+  time = 0; reverseHold = 0; ebCut = 0; shiftEvent = 0; lastShiftDir = 0
+  private prevVel = [0, 0, 0]
+
+  constructor(surface: Surface) {
+    this.surface = surface
+    const b = W11.wheelbase, a = b * (1 - W11.frontMassMin) // distance CG → essieu AV
+    this.cg[2] = -b / 2 + a
+    const mk = (front: boolean, left: boolean): Wheel => {
+      const r = front ? W11.wheelRadiusF : W11.wheelRadiusR
+      const x = (left ? -1 : 1) * (front ? W11.halfTrackF : W11.halfTrackR)
+      const z = front ? -b / 2 : b / 2
+      return { front, left, hub: [x - this.cg[0], r - this.cg[1], z - this.cg[2]], r, I: front ? W11.wheelInertiaF : W11.wheelInertiaR,
+        omega: 0, angle: 0, c: 0, cPrev: 0, cdot: 0, contact: true, fz: 0, fx: 0, fy: 0, kappa: 0, alpha: 0, steer: 0, type: 1,
+        tyre: newTyre(front), brakeT: front ? 420 : 380, brakeTq: 0, driveTq: 0, absF: 1, px: 0, py: 0, pz: 0, slipVel: 0, groundH: 0, sample: newSample() }
+    }
+    this.wheels = [mk(true, true), mk(true, false), mk(false, true), mk(false, false)]
+  }
+
+  /** Place la voiture sur la ligne centrale à l'abscisse s (m), décalage latéral d, cap = tangente. */
+  placeAt(s: number, d = 0, speed = 0) {
+    const c = this.surface.centre(s)
+    const rx = -c.tz, rz = c.tx
+    const x = c.x + rx * d, z = c.z + rz * d
+    const smp = this.surface.sample(x, z, c.i, tmp)
+    this.hint = smp.i
+    // repère aligné sur la normale locale de la piste (pente + dévers)
+    const n = [smp.nx, smp.ny, smp.nz]
+    let f = [c.tx, 0, c.tz]; const fd = f[0] * n[0] + f[2] * n[2]
+    f = [f[0] - fd * n[0], -fd * n[1], f[2] - fd * n[2]]; const fl = Math.hypot(f[0], f[1], f[2]); f = f.map(v => v / fl)
+    const back = [-f[0], -f[1], -f[2]]
+    const right = [n[1] * back[2] - n[2] * back[1], n[2] * back[0] - n[0] * back[2], n[0] * back[1] - n[1] * back[0]]
+    this.q = quatFromBasis(right, n, back)
+    this.updateR()
+    const R = this.R
+    this.pos = [x + R[3] * this.cg[1] + R[6] * this.cg[2], smp.h + R[4] * this.cg[1] + R[7] * this.cg[2], z + R[5] * this.cg[1] + R[8] * this.cg[2]]
+    // ajustement de hauteur : compression nulle en moyenne (pose sans choc)
+    const hw = [0, 0, 0], sm = newSample()
+    for (let it = 0; it < 4; it++) {
+      let sum = 0
+      for (const w of this.wheels) {
+        this.toWorld(w.hub[0], w.hub[1], w.hub[2], hw)
+        const g = this.surface.sample(this.pos[0] + hw[0], this.pos[2] + hw[2], this.hint, sm)
+        sum += (g.h + w.r / Math.max(0.5, g.ny) - (this.pos[1] + hw[1])) / Math.max(0.2, R[4])
+      }
+      const m = sum / 4
+      this.pos[0] += R[3] * m; this.pos[1] += R[4] * m; this.pos[2] += R[5] * m
+    }
+    this.vel = [f[0] * speed, f[1] * speed, f[2] * speed]; this.wb = [0, 0, 0]
+    for (const w of this.wheels) { w.omega = speed / w.r; w.c = 0; w.cPrev = 0; w.cdot = 0; w.alpha = 0; w.kappa = 0; w.fx = 0; w.fy = 0 }
+    this.gear = speed > 1 ? Math.max(1, GEAR_RATIOS.findIndex(gr => speed / W11.wheelRadiusR * gr * 60 / (2 * Math.PI) < 11500) + 1) : 1
+    this.scrape = 0; this.impact = 0; this.flipped = 0
+  }
+  updateR() {
+    const [x, y, z, w] = this.q, R = this.R
+    R[0] = 1 - 2 * (y * y + z * z); R[1] = 2 * (x * y + z * w); R[2] = 2 * (x * z - y * w)
+    R[3] = 2 * (x * y - z * w); R[4] = 1 - 2 * (x * x + z * z); R[5] = 2 * (y * z + x * w)
+    R[6] = 2 * (x * z + y * w); R[7] = 2 * (y * z - x * w); R[8] = 1 - 2 * (x * x + y * y)
+  }
+  /** local (caisse) → monde (direction) */
+  toWorld(lx: number, ly: number, lz: number, out: number[]) {
+    const R = this.R
+    out[0] = R[0] * lx + R[3] * ly + R[6] * lz; out[1] = R[1] * lx + R[4] * ly + R[7] * lz; out[2] = R[2] * lx + R[5] * ly + R[8] * lz
+    return out
+  }
+  forwardSpeed(): number { return -(this.vel[0] * this.R[6] + this.vel[1] * this.R[7] + this.vel[2] * this.R[8]) }
+  ratio(): number { return this.gear === -1 ? -REVERSE_RATIO : this.gear >= 1 ? GEAR_RATIOS[this.gear - 1] : 0 }
+
+  step(dt: number, ctl: Controls) {
+    this.time += dt
+    const S = this.setup, R = this.R
+    this.updateR()
+    const m = this.mass
+    const F = [0, 0, 0], Tq = [0, 0, 0] // force et couple (monde)
+    const wW = this.toWorld(this.wb[0], this.wb[1], this.wb[2], [0, 0, 0]) // ω monde
+    const up = [R[3], R[4], R[5]]
+    const vF = this.forwardSpeed()
+    const speed = Math.hypot(this.vel[0], this.vel[1], this.vel[2])
+    this.speed = speed
+
+    // ---- position sur la piste
+    const cs = this.surface.sample(this.pos[0], this.pos[2], this.hint, tmp)
+    this.hint = cs.i; this.s = cs.s; this.d = cs.d; this.trackIdx = cs.i
+
+    // ---- commandes, aides
+    let steerCmd = Math.max(-1, Math.min(1, ctl.steer))
+    const vRef = S.steerAssist >= 2 ? 26 : S.steerAssist >= 1 ? 34 : 1e9
+    const lock = W11.steerLock * Math.max(0.11, 1 / (1 + (vF * vF) / (vRef * vRef)))
+    // DAS : tiré → pincement AV ≈ 0
+    this.dasPulled = !!ctl.das
+    this.dasPos += ((this.dasPulled ? 1 : 0) - this.dasPos) * Math.min(1, dt * 14)
+    const toeF = W11.toeF * (1 - this.dasPos)
+
+    // DRS : zones + fermeture au freinage
+    if (!this.drsAvailable || ctl.brake > 0.08) this.drsOpen = false
+    else if (ctl.drs) this.drsOpen = true
+    this.drsPos += ((this.drsOpen ? 1 : 0) - this.drsPos) * Math.min(1, dt * 9)
+
+    // ---- boîte
+    this.shiftEvent = 0
+    if (this.shiftTimer > 0) this.shiftTimer -= dt
+    const rearOmega = (this.wheels[2].omega + this.wheels[3].omega) / 2
+    const rpmAt = (g: number) => Math.max(Math.abs(rearOmega), Math.abs(vF) / W11.wheelRadiusR) * ( (g === -1 ? REVERSE_RATIO : GEAR_RATIOS[g - 1])) * 60 / (2 * Math.PI)
+    let throttle = Math.max(0, Math.min(1, ctl.throttle)), brake = Math.max(0, Math.min(1, ctl.brake))
+    // marche arrière automatique : frein maintenu à l'arrêt
+    if (S.autoGear) {
+      if (this.gear >= 1 && Math.abs(vF) < 0.4 && brake > 0.5 && throttle < 0.05) { this.reverseHold += dt; if (this.reverseHold > 0.7) { this.gear = -1; this.reverseHold = 0 } }
+      else if (this.gear !== -1) this.reverseHold = 0
+      if (this.gear === -1) {
+        if (throttle > 0.1 && vF > -0.5) { this.gear = 1 }
+        else { const b = brake; brake = vF < -0.3 && throttle > 0.05 ? throttle : 0; throttle = b }
+      }
+    }
+    if (this.gear >= 1 && this.shiftTimer <= 0) {
+      let want = 0
+      if (S.autoGear) {
+        if (this.gear < 8 && this.rpm > W11.upshiftRpm && !this.clutchSlip) want = 1
+        else if (this.gear > 1) {
+          const lower = rpmAt(this.gear - 1)
+          const thr = brake > 0.2 ? 11800 : W11.downshiftRpm
+          if (this.rpm < thr && lower < 12600) want = -1
+        }
+      }
+      if (ctl.shiftUp) want = 1
+      if (ctl.shiftDown) want = -1
+      if (want === 1 && this.gear < 8) { this.gear++; this.shiftTimer = W11.shiftCut; this.shiftEvent = 1; this.lastShiftDir = 1 }
+      else if (want === -1 && this.gear > 1 && rpmAt(this.gear - 1) < 14800) { this.gear--; this.shiftTimer = W11.downShiftTime; this.shiftEvent = -1; this.lastShiftDir = -1 }
+    }
+
+    // TC : coupe si patinage AR
+    if (S.tc > 0) {
+      // patinage combiné (long. + lat.) des roues AR motrices
+      let rho = 0
+      for (const w of [this.wheels[2], this.wheels[3]]) if (w.kappa > 0) rho = Math.max(rho, Math.hypot(w.kappa / W11.tyre.kPeak, w.alpha / W11.tyre.aPeak * 0.7))
+      const lim = S.tc >= 2 ? 0.95 : 1.12
+      if (rho > lim && vF > 1) this.tcCut = Math.min(0.9, this.tcCut + dt * 40 * (rho / lim - 1))
+      else this.tcCut = Math.max(0, this.tcCut - dt * 4)
+      throttle *= 1 - this.tcCut
+    } else this.tcCut = 0
+    this.throttleApplied = throttle; this.brakeApplied = brake
+
+    // ---- moteur / ERS
+    const ratio = this.ratio()
+    const wheelRpm = Math.abs(rearOmega * ratio * 60 / (2 * Math.PI))
+    const clutchRpm = 4500 + 6500 * throttle
+    this.clutchSlip = this.gear !== 0 && wheelRpm < clutchRpm && Math.abs(this.gear) <= 2 && throttle > 0.02
+    let rpm = this.clutchSlip ? clutchRpm : Math.max(wheelRpm, W11.rpmIdle)
+    this.limiter = rpm > W11.rpmMax
+    const shifting = this.shiftTimer > 0
+    const omegaE = Math.max(100, rpm * 2 * Math.PI / 60)
+    let tCrank: number
+    if (throttle > 0.01) {
+      let p = icePower(rpm, throttle, S.engineMode)
+      p += this.ers.deploy(throttle, rpm, vF, dt)
+      tCrank = p / omegaE
+    } else { this.ers.deploy(0, rpm, vF, dt); tCrank = engineBrakeTorque(rpm) }
+    if (this.limiter) tCrank = Math.min(tCrank, 0)
+    if (shifting) tCrank *= this.lastShiftDir > 0 ? 0.35 : 0.2
+    if (this.clutchSlip && rpm < 5000 && throttle < 0.05) tCrank = 0
+    // contrôle de glissement AR du brake-by-wire : frein moteur + récupération limités si l'AR bloque
+    const krMin = Math.min(this.wheels[2].kappa, this.wheels[3].kappa)
+    if (krMin < -W11.tyre.kPeak * 1.15 && vF > 3) this.ebCut = Math.min(1, this.ebCut + dt * 12)
+    else this.ebCut = Math.max(0, this.ebCut - dt * 2.5)
+    if (tCrank < 0) tCrank *= 1 - this.ebCut
+    const tAxle = this.gear === 0 ? 0 : tCrank * ratio * W11.driveEff
+    this.rpm = rpm
+    this.rpmVis += (rpm - this.rpmVis) * Math.min(1, dt * 30)
+
+    // ---- freins (+ brake-by-wire AR avec récupération MGU-K)
+    const bFade = (T: number) => T < W11.brakeOptLo ? 0.72 + 0.28 * Math.max(0, T - 100) / (W11.brakeOptLo - 100) : T > 1100 ? Math.max(0.55, 1 - (T - 1100) / 600) : 1
+    const fl = this.wheels[0], fr = this.wheels[1], rl = this.wheels[2], rr = this.wheels[3]
+    const tTot = brake * (W11.brakeTorqueF * 2 + W11.brakeTorqueR * 2)
+    let tFront = tTot * S.brakeBias / 2, tRear = tTot * (1 - S.brakeBias) / 2
+    tFront = Math.min(tFront, W11.brakeTorqueF * 1.25); tRear = Math.min(tRear, W11.brakeTorqueR * 1.4)
+    let regen = 0
+    if (brake > 0.02 && vF > 5) {
+      const want = tRear * 2 * Math.abs(rearOmega)
+      const p = this.ers.harvest(Math.min(want, W11.mgukPower), dt)
+      regen = p / Math.max(5, Math.abs(rearOmega)) / 2
+    } else if (throttle < 0.01 && vF > 20) {
+      const p = this.ers.harvest(this.ers.mode === 'charge' ? 60_000 : 25_000, dt)
+      regen = p / Math.max(5, Math.abs(rearOmega)) / 2
+    }
+    regen *= 1 - this.ebCut * 0.8
+    // le BBW retranche le frein moteur du couple AR demandé (répartition conservée)
+    const ebWheel = tAxle < 0 ? -tAxle / 2 : 0
+    tRear = Math.max(0, tRear - ebWheel)
+    fl.brakeTq = tFront * bFade(fl.brakeT) * fl.absF; fr.brakeTq = tFront * bFade(fr.brakeT) * fr.absF
+    const rearFric = Math.max(0, tRear - regen)
+    rl.brakeTq = rearFric * bFade(rl.brakeT) * rl.absF + regen; rr.brakeTq = rearFric * bFade(rr.brakeT) * rr.absF + regen
+
+    // ---- aéro
+    const vair = [this.vel[0] - this.wind[0], this.vel[1] - this.wind[1], this.vel[2] - this.wind[2]]
+    const va = Math.hypot(vair[0], vair[1], vair[2])
+    const qd = 0.5 * W11.rho * va * va
+    const cFront = (fl.c + fr.c) / 2, cRear = (rl.c + rr.c) / 2
+    // sensibilité hauteur de caisse (E) : plus bas → plus d'appui jusqu'au contact du plancher
+    const hF = W11.rideF - cFront, hR = W11.rideR - cRear
+    const rh = Math.max(0.75, Math.min(1.12, 1 + 1.6 * (0.03 - hF) * 0.5 + 0.8 * (0.075 - hR) * 0.5)) * (this.scrape > 0 ? 0.92 : 1)
+    const ClA = (W11.ClA + W11.drsClA * this.drsPos) * rh
+    const CdA = W11.CdA + W11.drsCdA * this.drsPos + 0.03 * (1 - this.dasPos) * 0
+    const bal = W11.aeroBalF + 0.5 * (cFront - cRear) - 0.06 * this.drsPos
+    const down = qd * ClA, drag = qd * CdA
+    this.downforce = down; this.drag = drag
+    if (va > 0.1) { for (let k = 0; k < 3; k++) F[k] -= vair[k] / va * drag }
+    const dF = down * bal, dR = down * (1 - bal)
+    const addForceAt = (fx: number, fy: number, fz: number, px: number, py: number, pz: number) => {
+      F[0] += fx; F[1] += fy; F[2] += fz
+      const rx = px - this.pos[0], ry = py - this.pos[1], rz = pz - this.pos[2]
+      Tq[0] += ry * fz - rz * fy; Tq[1] += rz * fx - rx * fz; Tq[2] += rx * fy - ry * fx
+    }
+    const pa = [0, 0, 0]
+    this.toWorld(0, 0, fl.hub[2], pa); addForceAt(-up[0] * dF, -up[1] * dF, -up[2] * dF, this.pos[0] + pa[0], this.pos[1] + pa[1], this.pos[2] + pa[2])
+    this.toWorld(0, 0, rl.hub[2], pa); addForceAt(-up[0] * dR, -up[1] * dR, -up[2] * dR, this.pos[0] + pa[0], this.pos[1] + pa[1], this.pos[2] + pa[2])
+
+    // ---- suspensions
+    const hw = [0, 0, 0]
+    for (const w of this.wheels) {
+      this.toWorld(w.hub[0], w.hub[1], w.hub[2], hw)
+      const hx = this.pos[0] + hw[0], hy = this.pos[1] + hw[1], hz = this.pos[2] + hw[2]
+      const smp = this.surface.sample(hx, hz, this.hint, w.sample)
+      w.type = smp.type
+      const sf = SURFACE[smp.type] ?? SURFACE[1]
+      let gh = smp.h
+      if (sf.bump > 0) {
+        const s = smp.s, d = smp.d
+        gh += smp.type === 2 ? sf.bump * Math.max(0, Math.sin(s * 10.5 + d * 0.5)) : sf.bump * (Math.sin(s * 3.1 + d * 2.3) * Math.sin(s * 1.7 - d * 4.1))
+      }
+      // marche verticale (mur, trottoir haut) : ce n'est pas un appui pour le pneu → traité par les collisions
+      if (gh - (hy - w.r) > 0.11 && w.contact) gh = w.groundH
+      w.groundH = gh
+      const uy = Math.max(0.2, up[1])
+      const c = (gh + w.r / Math.max(0.5, smp.ny) - hy) / uy
+      w.cPrev = w.c
+      const k = w.front ? W11.springF : W11.springR, dmp = w.front ? W11.dampF : W11.dampR
+      const Wst = this.mass * G * (w.front ? W11.frontMassMin : 1 - W11.frontMassMin) / 2
+      if (c < -W11.droop) { w.contact = false; w.c = -W11.droop; w.fz = 0; w.cdot = 0 }
+      else {
+        w.contact = true; w.c = c
+        w.cdot = (c - w.cPrev) / dt
+        let f = Wst + k * c + dmp * (w.cdot > 0 ? w.cdot : w.cdot * 0.75)
+        if (c > W11.bumpTravel) f += W11.bumpK * (c - W11.bumpTravel) + dmp * 2 * Math.max(0, w.cdot)
+        w.fz = Math.max(0, f)
+      }
+      w.px = hx + up[0] * w.c - smp.nx * w.r; w.py = hy + up[1] * w.c - smp.ny * w.r; w.pz = hz + up[2] * w.c - smp.nz * w.r
+    }
+    // barres antiroulis
+    for (const [a, b, karb] of [[fl, fr, W11.arbF], [rl, rr, W11.arbR]] as [Wheel, Wheel, number][]) {
+      if (a.contact && b.contact) { const df = karb * (a.c - b.c); a.fz = Math.max(0, a.fz + df); b.fz = Math.max(0, b.fz - df) }
+    }
+
+    // ---- direction (volant → roues), pincement, Ackermann léger
+    const steerAng = steerCmd * lock
+    // toe-out : roue G tournée vers la gauche (négatif), D vers la droite (positif) → toeF<0 donc signes ci-dessus
+    fl.steer = steerAng * (steerAng < 0 ? 1.04 : 0.96) + toeF
+    fr.steer = steerAng * (steerAng > 0 ? 1.04 : 0.96) - toeF
+    rl.steer = W11.toeR; rr.steer = -W11.toeR // pincement AR fermé
+
+    // ---- pneus + rotation des roues
+    const driveEach = tAxle / 2
+    // inertie moteur/transmission ramenée aux roues AR (×rapport²) quand l'embrayage est fermé : freine les reprises en bas rapports, sans effet en vitesse stabilisée
+    const Ieng = this.gear !== 0 && !this.clutchSlip ? 0.5 * W11.engineInertia * ratio * ratio : 0
+    rl.I = W11.wheelInertiaR + Ieng; rr.I = W11.wheelInertiaR + Ieng
+    rl.driveTq = driveEach; rr.driveTq = driveEach; fl.driveTq = 0; fr.driveTq = 0
+    const fw = [0, 0, 0], rw = [0, 0, 0]
+    const TY = W11.tyre
+    let latHold = Math.max(0, 1 - speed / 3)
+    for (const w of this.wheels) {
+      if (!w.contact || w.fz <= 0) {
+        // roue en l'air : rotation libre
+        w.omega += (w.driveTq - Math.sign(w.omega) * Math.min(Math.abs(w.omega) * w.I / dt, w.brakeTq * 0.5)) / w.I * dt
+        w.fx = 0; w.fy = 0; w.slipVel = 0; continue
+      }
+      const n = [w.sample.nx, w.sample.ny, w.sample.nz]
+      const sn = Math.sin(w.steer), csn = Math.cos(w.steer)
+      this.toWorld(sn, 0, -csn, fw)
+      const fdn = fw[0] * n[0] + fw[1] * n[1] + fw[2] * n[2]
+      fw[0] -= n[0] * fdn; fw[1] -= n[1] * fdn; fw[2] -= n[2] * fdn
+      const fl2 = Math.hypot(fw[0], fw[1], fw[2]) || 1; fw[0] /= fl2; fw[1] /= fl2; fw[2] /= fl2
+      rw[0] = fw[1] * n[2] - fw[2] * n[1]; rw[1] = fw[2] * n[0] - fw[0] * n[2]; rw[2] = fw[0] * n[1] - fw[1] * n[0]
+      const rx = w.px - this.pos[0], ry = w.py - this.pos[1], rz = w.pz - this.pos[2]
+      const vcx = this.vel[0] + wW[1] * rz - wW[2] * ry, vcy = this.vel[1] + wW[2] * rx - wW[0] * rz, vcz = this.vel[2] + wW[0] * ry - wW[1] * rx
+      const vx = vcx * fw[0] + vcy * fw[1] + vcz * fw[2]
+      const vy = vcx * rw[0] + vcy * rw[1] + vcz * rw[2]
+      const sf = SURFACE[w.type] ?? SURFACE[1]
+      const mu = muPeak(w.fz, w.tyre, S.compound, w.front) * sf.mu
+      const fzE = Math.min(w.fz, 14000)
+      const Dmax = mu * fzE
+      // dérive avec longueur de relaxation
+      const aRaw = Math.atan2(vy, Math.max(Math.abs(vx), 2.5))
+      w.alpha += (aRaw - w.alpha) * Math.min(1, dt * Math.max(Math.abs(vx), 3) / TY.relax)
+      const v0 = Math.max(Math.abs(vx), 3)
+      const force = (om: number) => {
+        const kap = (om * w.r - vx) / v0
+        const sx = kap / TY.kPeak, sy = Math.tan(w.alpha) / TY.aPeak
+        const s = Math.hypot(sx, sy)
+        if (s < 1e-9) return [0, 0, kap]
+        const mag = Dmax * mf(s)
+        return [mag * sx / s * TY.muX, -mag * sy / s, kap]
+      }
+      // rotation implicite (2 sous-pas)
+      const sub = 2, h = dt / sub
+      let fxy = force(w.omega)
+      for (let k = 0; k < sub; k++) {
+        const eps = 0.05
+        const f1 = force(w.omega + eps)
+        const dFdw = Math.max(0, (f1[0] - fxy[0]) / eps)
+        let om = w.omega + h / w.I * (w.driveTq - w.r * fxy[0]) / (1 + h / w.I * w.r * dFdw)
+        // frein : frottement sec (peut bloquer la roue)
+        const dB = w.brakeTq * h / w.I
+        if (Math.abs(om) <= dB) om = 0; else om -= Math.sign(om) * dB
+        // ABS
+        w.omega = om
+        fxy = force(w.omega)
+      }
+      // différentiel traité après la boucle
+      w.kappa = fxy[2]
+      let Fx = fxy[0], Fy = fxy[1]
+      // résistance au roulement
+      Fx -= Math.sign(vx) * Math.min(Math.abs(vx) * 50, sf.rr * w.fz)
+      // maintien basse vitesse (évite la dérive à l'arrêt, stable car < 1/2 de l'annulation par pas)
+      if (latHold > 0) {
+        const mq = this.mass / 4
+        Fy += -vy * mq / dt * 0.45 * latHold
+        if (brake > 0.1 || Math.abs(w.omega) < 0.05) Fx += -vx * mq / dt * 0.45 * latHold
+        const lim = Dmax * 1.05, mg = Math.hypot(Fx, Fy)
+        if (mg > lim) { Fx *= lim / mg; Fy *= lim / mg }
+      }
+      w.fx = Fx; w.fy = Fy
+      w.slipVel = Math.hypot(w.omega * w.r - vx, vy)
+      // ABS : relâche si blocage
+      if (S.abs && brake > 0.05 && w.kappa < -TY.kPeak * 1.15 && vx > 4) w.absF = Math.max(0.35, w.absF - dt * 18)
+      else w.absF = Math.min(1, w.absF + dt * 8)
+      // forces au contact
+      const fxw = fw[0] * Fx + rw[0] * Fy + n[0] * w.fz
+      const fyw = fw[1] * Fx + rw[1] * Fy + n[1] * w.fz
+      const fzw = fw[2] * Fx + rw[2] * Fy + n[2] * w.fz
+      addForceAt(fxw, fyw, fzw, w.px, w.py, w.pz)
+      // thermique pneus & freins
+      const slipP = Math.abs(Fx * (w.omega * w.r - vx)) + Math.abs(Fy * vy)
+      tyreThermal(w.tyre, slipP, speed, this.airT, this.trackT, dt, S.compound, w.front, w.fz * Math.abs(vx) * 0.002)
+    }
+    // différentiel autobloquant (embrayages + précharge) — couplage implicite des roues AR
+    {
+      const lockF = throttle > 0.05 ? S.diffOn : S.diffOff
+      const tMax = 120 + lockF * Math.abs(tAxle) * 0.9 + (throttle <= 0.05 ? lockF * 900 : 0)
+      const dw = rl.omega - rr.omega
+      const Ieq = rl.I * rr.I / (rl.I + rr.I)
+      let J = dw * Ieq
+      const Jm = tMax * dt
+      J = Math.max(-Jm, Math.min(Jm, J))
+      rl.omega -= J / rl.I; rr.omega += J / rr.I
+    }
+    for (const w of this.wheels) {
+      w.angle += w.omega * dt
+      const pB = w.brakeTq * Math.abs(w.omega) * (w.front ? 1 : 0.6)
+      w.brakeT += (pB - W11.brakeCool * (0.3 + speed / 15) * (w.brakeT - this.airT)) * dt / W11.brakeHeatCap
+    }
+
+    // ---- contact plancher / patin (étincelles)
+    this.scrape = 0
+    const plank: [number, number, number][] = [[0, 0.012 - this.cg[1] + 0.022, -1.25 - this.cg[2]], [0, 0.012 - this.cg[1] + 0.045, 0.2 - this.cg[2]], [0, 0.012 - this.cg[1] + 0.07, 1.5 - this.cg[2]], [-0.6, 0.06 - this.cg[1], -0.2 - this.cg[2]], [0.6, 0.06 - this.cg[1], -0.2 - this.cg[2]]]
+    for (const p of plank) {
+      this.toWorld(p[0], p[1], p[2], pa)
+      const px = this.pos[0] + pa[0], py = this.pos[1] + pa[1], pz = this.pos[2] + pa[2]
+      const smp = this.surface.sample(px, pz, this.hint, tmp)
+      const pen = smp.h - py
+      if (pen > 0) {
+        const rx = px - this.pos[0], ry = py - this.pos[1], rz = pz - this.pos[2]
+        const vpx = this.vel[0] + wW[1] * rz - wW[2] * ry, vpy = this.vel[1] + wW[2] * rx - wW[0] * rz, vpz = this.vel[2] + wW[0] * ry - wW[1] * rx
+        const vn = vpx * smp.nx + vpy * smp.ny + vpz * smp.nz
+        const fn = Math.max(0, 3_000_000 * pen - 40_000 * vn)
+        const tx = vpx - smp.nx * vn, ty = vpy - smp.ny * vn, tz = vpz - smp.nz * vn, tl = Math.hypot(tx, ty, tz) || 1
+        const ff = Math.min(0.45 * fn, this.mass * tl / dt * 0.2)
+        addForceAt(smp.nx * fn - tx / tl * ff, smp.ny * fn - ty / tl * ff, smp.nz * fn - tz / tl * ff, px, py, pz)
+        if (tl > 3) { this.scrape = Math.max(this.scrape, Math.min(1, fn / 8000)); this.scrapePos = [px, py, pz] }
+      }
+    }
+
+    // ---- intégration
+    const ax = F[0] / m, ay = F[1] / m - G, az = F[2] / m
+    this.vel[0] += ax * dt; this.vel[1] += ay * dt; this.vel[2] += az * dt
+    // aide stabilité (amortissement lacet virtuel, aide de jeu, réglable/désactivable)
+    const tb = [R[0] * Tq[0] + R[1] * Tq[1] + R[2] * Tq[2], R[3] * Tq[0] + R[4] * Tq[1] + R[5] * Tq[2], R[6] * Tq[0] + R[7] * Tq[1] + R[8] * Tq[2]]
+    const I = [W11.inertia.pitch, W11.inertia.yaw, W11.inertia.roll]
+    if (S.stability > 0 && vF > 8) {
+      const yawRef = -vF * Math.tan(steerAng) / W11.wheelbase
+      // n'agit qu'en survirage (lacet supérieur au lacet cinématique ou opposé au braquage)
+      const over = Math.abs(this.wb[1]) > Math.abs(yawRef) * 1.08 || this.wb[1] * yawRef < 0
+      if (over) tb[1] += -(this.wb[1] - yawRef) * I[1] * 2.2 * S.stability
+    }
+    const w0 = this.wb
+    const Lx = I[0] * w0[0], Ly = I[1] * w0[1], Lz = I[2] * w0[2]
+    const gx = w0[1] * Lz - w0[2] * Ly, gy = w0[2] * Lx - w0[0] * Lz, gz = w0[0] * Ly - w0[1] * Lx
+    w0[0] += (tb[0] - gx) / I[0] * dt; w0[1] += (tb[1] - gy) / I[1] * dt; w0[2] += (tb[2] - gz) / I[2] * dt
+    this.pos[0] += this.vel[0] * dt; this.pos[1] += this.vel[1] * dt; this.pos[2] += this.vel[2] * dt
+    // q ← q ⊗ (ω_b dt)
+    {
+      const [qx, qy, qz, qw] = this.q, hx = w0[0] * dt / 2, hy = w0[1] * dt / 2, hz = w0[2] * dt / 2
+      const nx = qx + (qw * hx + qy * hz - qz * hy), ny = qy + (qw * hy + qz * hx - qx * hz), nz = qz + (qw * hz + qx * hy - qy * hx), nw = qw - (qx * hx + qy * hy + qz * hz)
+      const nl = Math.hypot(nx, ny, nz, nw); this.q = [nx / nl, ny / nl, nz / nl, nw / nl]
+    }
+    this.updateR()
+    this.collideWalls(dt)
+
+    // ---- télémétrie
+    const dvx = (this.vel[0] - this.prevVel[0]) / dt, dvz = (this.vel[2] - this.prevVel[2]) / dt, dvy = (this.vel[1] - this.prevVel[1]) / dt
+    const gl = -(dvx * this.R[6] + dvy * this.R[7] + dvz * this.R[8]) / G, gt = (dvx * this.R[0] + dvy * this.R[1] + dvz * this.R[2]) / G
+    this.gLong += (gl - this.gLong) * Math.min(1, dt * 12); this.gLat += (gt - this.gLat) * Math.min(1, dt * 12)
+    this.prevVel = [this.vel[0], this.vel[1], this.vel[2]]
+    let out = 0
+    for (const w of this.wheels) {
+      const [eL, eR] = this.surface.edges(w.sample.i, w.sample.s)
+      if (w.sample.d > eR + 0.05 || w.sample.d < -eL - 0.05) out++
+    }
+    this.wheelsOut = out; this.offTrack = out === 4
+    this.flipped = this.R[4] < 0.25 ? this.flipped + dt : 0
+  }
+
+  private collideWalls(dt: number) {
+    this.impact = Math.max(0, this.impact - dt * 4)
+    const pts: [number, number, number][] = [[-0.98, 0.25, -2.55], [0.98, 0.25, -2.55], [-1.0, 0.3, 0.1], [1.0, 0.3, 0.1], [-0.55, 0.4, 2.55], [0.55, 0.4, 2.55], [-0.95, 0.3, 1.6], [0.95, 0.3, 1.6]]
+    const pa = [0, 0, 0]
+    const I = [W11.inertia.pitch, W11.inertia.yaw, W11.inertia.roll]
+    for (const p of pts) {
+      this.toWorld(p[0] - this.cg[0], p[1] - this.cg[1], p[2] - this.cg[2], pa)
+      const px = this.pos[0] + pa[0], pz = this.pos[2] + pa[2]
+      const smp = this.surface.sample(px, pz, this.hint, tmp)
+      const [WL, WR] = this.surface.walls(smp.i, smp.s)
+      let pen = 0, sgn = 0
+      if (smp.d > WR - 0.05) { pen = smp.d - (WR - 0.05); sgn = -1 } else if (smp.d < -WL + 0.05) { pen = (-WL + 0.05) - smp.d; sgn = 1 }
+      if (pen <= 0) continue
+      const c = this.surface.centre(smp.s)
+      const nx = -c.tz * sgn, nz = c.tx * sgn // normale horizontale vers le centre de la piste
+      this.pos[0] += nx * pen * 0.9; this.pos[2] += nz * pen * 0.9
+      const wW = this.toWorld(this.wb[0], this.wb[1], this.wb[2], [0, 0, 0])
+      const rx = pa[0], ry = 0, rz = pa[2] // contact ramené à la hauteur du CdG : pas de couple de roulis/tangage parasite (évite les retournements)
+      const vpx = this.vel[0] + wW[1] * rz - wW[2] * ry, vpz = this.vel[2] + wW[0] * ry - wW[1] * rx
+      const vn = vpx * nx + vpz * nz
+      if (vn >= 0) continue
+      // impulsion (restitution 0,25, frottement 0,4) avec inertie
+      const rxn = [ry * nz, rz * nx - rx * nz, -ry * nx] // r × n
+      const R = this.R
+      const rb = [R[0] * rxn[0] + R[1] * rxn[1] + R[2] * rxn[2], R[3] * rxn[0] + R[4] * rxn[1] + R[5] * rxn[2], R[6] * rxn[0] + R[7] * rxn[1] + R[8] * rxn[2]]
+      const ang = rb[0] * rb[0] / I[0] + rb[1] * rb[1] / I[1] + rb[2] * rb[2] / I[2]
+      const j = -(1.25) * vn / (1 / this.mass + ang)
+      const tvx = vpx - nx * vn, tvz = vpz - nz * vn, tl = Math.hypot(tvx, tvz) || 1
+      const jt = Math.min(0.4 * j, this.mass * tl * 0.5)
+      const Jx = nx * j - tvx / tl * jt, Jz = nz * j - tvz / tl * jt
+      this.vel[0] += Jx / this.mass; this.vel[2] += Jz / this.mass
+      // ΔL = r × J
+      const tqx = ry * Jz, tqy = rz * Jx - rx * Jz, tqz = -ry * Jx
+      const tbx = R[0] * tqx + R[1] * tqy + R[2] * tqz, tby = R[3] * tqx + R[4] * tqy + R[5] * tqz, tbz = R[6] * tqx + R[7] * tqy + R[8] * tqz
+      this.wb[0] += tbx / I[0]; this.wb[1] += tby / I[1]; this.wb[2] += tbz / I[2]
+      this.impact = Math.max(this.impact, Math.min(1, -vn / 15)); this.impactPos = [px, this.pos[1], pz]
+    }
+  }
+}
+
+function quatFromBasis(r: number[], u: number[], b: number[]): number[] {
+  // colonnes r, u, b → quaternion [x, y, z, w]
+  const m00 = r[0], m10 = r[1], m20 = r[2], m01 = u[0], m11 = u[1], m21 = u[2], m02 = b[0], m12 = b[1], m22 = b[2]
+  const tr = m00 + m11 + m22
+  let x, y, z, w
+  if (tr > 0) { const S = Math.sqrt(tr + 1) * 2; w = 0.25 * S; x = (m21 - m12) / S; y = (m02 - m20) / S; z = (m10 - m01) / S }
+  else if (m00 > m11 && m00 > m22) { const S = Math.sqrt(1 + m00 - m11 - m22) * 2; w = (m21 - m12) / S; x = 0.25 * S; y = (m01 + m10) / S; z = (m02 + m20) / S }
+  else if (m11 > m22) { const S = Math.sqrt(1 + m11 - m00 - m22) * 2; w = (m02 - m20) / S; x = (m01 + m10) / S; y = 0.25 * S; z = (m12 + m21) / S }
+  else { const S = Math.sqrt(1 + m22 - m00 - m11) * 2; w = (m10 - m01) / S; x = (m02 + m20) / S; y = (m12 + m21) / S; z = 0.25 * S }
+  return [x, y, z, w]
+}
