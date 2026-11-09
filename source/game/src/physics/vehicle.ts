@@ -16,6 +16,8 @@ export interface Controls {
   throttle: number; brake: number; steer: number        // 0..1, 0..1, -1 (gauche) .. 1 (droite)
   shiftUp?: boolean; shiftDown?: boolean
   drs?: boolean; das?: boolean
+  /** grille / feux / stand : frein tenu sans enclencher la marche arrière */
+  noReverse?: boolean
   /** limiteur de vitesse des stands (80 km/h à Spa 2020) */
   pitLim?: boolean; overtake?: boolean
 }
@@ -197,7 +199,7 @@ export class Vehicle {
     let throttle = Math.max(0, Math.min(1, ctl.throttle)), brake = Math.max(0, Math.min(1, ctl.brake))
     // marche arrière automatique : frein maintenu à l'arrêt
     if (S.autoGear) {
-      if (this.gear >= 1 && Math.abs(vF) < 0.4 && brake > 0.5 && throttle < 0.05) { this.reverseHold += dt; if (this.reverseHold > 0.7) { this.gear = -1; this.reverseHold = 0 } }
+      if (!ctl.noReverse && this.gear >= 1 && Math.abs(vF) < 0.4 && brake > 0.5 && throttle < 0.05) { this.reverseHold += dt; if (this.reverseHold > 0.7) { this.gear = -1; this.reverseHold = 0 } }
       else if (this.gear !== -1) this.reverseHold = 0
       if (this.gear === -1) {
         if (throttle > 0.1 && vF > -0.5) { this.gear = 1 }
@@ -262,6 +264,8 @@ export class Vehicle {
     if (this.limiter) tCrank = Math.min(tCrank, 0)
     if (shifting) tCrank *= this.lastShiftDir > 0 ? 0.35 : 0.2
     if (this.clutchSlip && rpm < 5000 && throttle < 0.05) tCrank = 0
+    // embrayage ouvert sous le régime de ralenti sans gaz (anti-calage) : pas de frein moteur à l'arrêt (sinon la voiture recule)
+    if (throttle <= 0.02 && wheelRpm < W11.rpmIdle * 1.15) tCrank = 0
     // contrôle de glissement AR du brake-by-wire : frein moteur + récupération limités si l'AR bloque
     const krMin = Math.min(this.wheels[2].kappa, this.wheels[3].kappa)
     if (krMin < -W11.tyre.kPeak * 1.15 && vF > 3) this.ebCut = Math.min(1, this.ebCut + dt * 12)

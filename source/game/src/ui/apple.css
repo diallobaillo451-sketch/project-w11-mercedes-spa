@@ -162,3 +162,12 @@
 .sesschip{font-variant-numeric:tabular-nums}
 @media (max-height:420px){.ap-large{font-size:26px}.ap-tile{min-height:104px}.ap-hero .num{font-size:52px}.ap-hero .last{font-size:24px}}
 @media (prefers-reduced-motion:reduce){.ap-page,.ap-panel,.ap-tile,.ap-btn{transition-duration:.01s!important;animation-duration:.01s!important}}
+/* lot 8 C : tour de chronométrage + messages de la direction de course */
+#tower{position:absolute;top:calc(44px + var(--safe-t));left:calc(8px + var(--safe-l));width:128px;pointer-events:auto;font:600 10.5px -apple-system,system-ui;font-variant-numeric:tabular-nums;color:#fff;background:rgba(12,12,16,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:10px;padding:3px 0;overflow:hidden;z-index:6}
+#tower .th{font:800 9.5px -apple-system,system-ui;letter-spacing:.06em;padding:2px 8px 3px;color:#ffd400}
+#tower .tr{display:grid;grid-template-columns:16px 3px 30px 1fr 10px;gap:4px;align-items:center;height:14.5px;padding:0 6px}
+#tower .tr b{text-align:right;font-weight:700;color:#ddd}#tower .tr i{height:10px;border-radius:1px}#tower .tr em{font-style:normal;text-align:right;color:#cfd3da}#tower .tr u{text-decoration:none;font-weight:800;font-size:9px;text-align:center}
+#tower .tr.me{background:rgba(255,255,255,.18)}#tower .tr.pen span{color:#ff8a80}
+#rcmsg{position:absolute;top:calc(96px + var(--safe-t));left:50%;transform:translateX(-50%);max-width:62vw;padding:4px 12px;border-radius:9px;font:700 11.5px -apple-system,system-ui;color:#fff;background:rgba(15,15,20,.8);border-left:4px solid #8e8e93;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:7}
+#rcmsg.pen{border-left-color:#ff453a}#rcmsg.flag{border-left-color:#ffd400}#rcmsg.rc{border-left-color:#0a84ff}#rcmsg.info{border-left-color:#30d158}
+#bSkipF{position:absolute;bottom:calc(120px + var(--safe-b));left:50%;transform:translateX(-50%);pointer-events:auto;z-index:8;padding:8px 16px;border-radius:14px;border:0;font:700 13px -apple-system,system-ui;background:rgba(255,255,255,.9);color:#000}

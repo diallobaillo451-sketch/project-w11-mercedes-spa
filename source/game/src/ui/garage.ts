@@ -135,7 +135,7 @@ export class Garage {
 }
 
 /** écran de résultats (séance du week-end ou course rapide) */
-export interface ResultsOpt { title: string; eyebrow: string; r: SessionResult; driver: string; race: boolean; note?: string; actions: { label: string; sec?: boolean; on: () => void }[]; summary?: SessionResult[] }
+export interface ResultsOpt { table?: { pos: number | string; code: string; name: string; team: string; time: string; laps: number | string; me: boolean; pen?: number }[]; title: string; eyebrow: string; r: SessionResult; driver: string; race: boolean; note?: string; actions: { label: string; sec?: boolean; on: () => void }[]; summary?: SessionResult[] }
 export function showResults(root: HTMLElement, o: ResultsOpt) {
   root.className = 'ap'; root.innerHTML = ''
   const d = driverById(o.driver), tc = teamAccent(d.team); root.style.setProperty('--tc', tc)
@@ -150,10 +150,12 @@ export function showResults(root: HTMLElement, o: ResultsOpt) {
   B.append(big)
   const tb = h('table', 'rs-table')
   tb.innerHTML = `<tr><th>Pos</th><th>Pilote</th><th>${o.race ? 'Temps' : 'Meilleur'}</th><th>Tours</th></tr>`
-  const tr = h('tr'); tr.innerHTML = `<td class="p">${r.dnf ? 'AB' : r.pos}</td><td><span class="bar"></span><b></b> <small style="opacity:.6">${TEAMS[d.team].short ?? ''}</small></td><td class="t">${o.race ? (r.total != null ? fmtTime(r.total) : '—') : fmtTime(r.best)}</td><td>${r.laps}</td>`
-  tr.querySelector('b')!.textContent = d.last.toUpperCase(); tb.append(tr)
+  if (o.table?.length) for (const x of o.table) { const tr = h('tr'); tr.innerHTML = `<td class="p">${x.pos}</td><td><span class="bar" style="background:${teamAccent(x.team)}"></span><b></b> <small style="opacity:.6">${TEAMS[x.team]?.short ?? ''}</small></td><td class="t">${x.time}${x.pen ? ` <small style="color:#ff6b60">(+${x.pen} s)</small>` : ''}</td><td>${x.laps}</td>`
+    tr.querySelector('b')!.textContent = x.name; if (x.me) tr.style.background = 'rgba(127,127,127,.18)'; tb.append(tr) }
+  else { const tr = h('tr'); tr.innerHTML = `<td class="p">${r.dnf ? 'AB' : r.pos}</td><td><span class="bar"></span><b></b> <small style="opacity:.6">${TEAMS[d.team].short ?? ''}</small></td><td class="t">${o.race ? (r.total != null ? fmtTime(r.total) : '—') : fmtTime(r.best)}</td><td>${r.laps}</td>`
+  tr.querySelector('b')!.textContent = d.last.toUpperCase(); tb.append(tr) }
   const g = h('div', 'ap-group'); g.style.padding = '4px 8px'; g.append(tb)
-  B.append(header('Classement'), g, footnote(o.note ?? 'Plateau IA à venir : le classement ne contient que toi pour l’instant.'))
+  B.append(header('Classement'), g, footnote(o.note ?? ''))
   if (r.penalties) B.append(footnote(`Pénalités : +${r.penalties} s (incluses).`))
   if (r.bestSectors.some(isFinite)) B.append(header('Meilleurs secteurs'), group(...r.bestSectors.map((s, i) => row({ title: 'Secteur ' + (i + 1), value: isFinite(s) ? s.toFixed(3).replace('.', ',') + ' s' : '—' }))))
   if (r.lapTimes.length) B.append(header('Tours'), group(...r.lapTimes.map((x, i) => row({ title: 'Tour ' + (i + 1), value: fmtTime(Math.abs(x)) + (x < 0 ? ' (invalide)' : '') }))))

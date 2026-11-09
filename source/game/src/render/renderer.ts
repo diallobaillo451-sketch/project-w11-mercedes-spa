@@ -36,13 +36,13 @@ import type { TrackSurface } from '../track/surface.ts'
 export type Progress = (label: string, frac: number) => void
 /** Téléchargement avec progression (fetch + flux), puis analyse glTF (meshopt). */
 /** libère géométries, matériaux et textures d'un sous-arbre (hors pilote W11 déplacé avant l'appel) */
-function disposeTree(root: THREE.Object3D) {
+export function disposeTree(root: THREE.Object3D) {
   const tx = new Set<THREE.Texture>()
   root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; m.geometry.dispose()
     for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as unknown as Record<string, unknown>[]) { for (const v of Object.values(mt)) if ((v as THREE.Texture)?.isTexture) tx.add(v as THREE.Texture); (mt as unknown as THREE.Material).dispose() } })
   for (const t of tx) t.dispose()
 }
-async function loadGLB(url: string, onp: (f: number) => void, ktx: KTX2Loader | null = null): Promise<GLTF> {
+export async function loadGLB(url: string, onp: (f: number) => void, ktx: KTX2Loader | null = null): Promise<GLTF> {
   const r = await fetch(url); if (!r.ok) throw new Error(url + ' : HTTP ' + r.status)
   const total = Number(r.headers.get('content-length')) || 0
   let buf: ArrayBuffer
@@ -484,7 +484,7 @@ export class Renderer {
   private carSeq = 0; private drvHome: { o: THREE.Object3D; parent: THREE.Object3D; p: THREE.Vector3; q: THREE.Quaternion; s: THREE.Vector3 }[] = []
   onCarChanged: (() => void) | null = null
   carMeta: Record<string, unknown> | null = null
-  private ktxAny() { return KTX ?? (this.drvKtx ??= new KTX2Loader().setTranscoderPath('./basis/').setWorkerLimit(2).detectSupport(this.r)) }
+  ktxAny() { return KTX ?? (this.drvKtx ??= new KTX2Loader().setTranscoderPath('./basis/').setWorkerLimit(2).detectSupport(this.r)) }
   private moveDriver(dst: THREE.Object3D | null, seat: number[]) {
     const src = this.w11Rig!.root
     if (!this.drvHome.length) for (const n of ['DRV_rig', 'STEERING_WHEEL']) { const o = src.getObjectByName(n); if (o) this.drvHome.push({ o, parent: o.parent!, p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }) }
