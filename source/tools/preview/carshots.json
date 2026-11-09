@@ -1,0 +1,4 @@
+[{"name":"car_00_grille_arriere","car":20,"cam":"chase","steer":0},
+{"name":"car_01_grille_tv","car":20,"cam":"tv","steer":0},
+{"name":"car_02_eau_rouge_avant","car":1040,"cam":"front","steer":-0.6},
+{"name":"car_03_la_source_braque","car":250,"cam":"front","steer":1}]
