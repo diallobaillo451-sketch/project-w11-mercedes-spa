@@ -50,3 +50,25 @@ Hamilton : son casque d'origine est conservé (référence de qualité).
 Écarts connus : motifs fins simplifiés (dégradés, éléments de casque événementiels, numéros stylisés) et couleurs exactes approchées.
 Modèle 3D du pilote : `driver_bell.glb` (CC BY-NC-SA), maillage commun aux 20 pilotes.
 Durées réelles des séances 2020 : EL 90/90/60 min, Q 18/15/12 min. Pneus Pirelli à Spa 2020 : C2/C3/C4, pressions minimales 24,5 / 21,0 psi.
+
+## Lot 8 — voitures 2020 des 9 autres équipes + safety car (Sketchfab, fournis par New Bot dans `/workspace/w11-shared/incoming/cars/`)
+Modifiés pour le jeu (rig roues/DRS, matériaux, décimation, LOD, KTX2) par `blender/scripts/t1_team_car.py`. Licences
+**CC BY-NC-SA 4.0** (usage non commercial, partage dans les mêmes conditions) sauf le safety car (**CC BY 4.0**).
+⚠ Redistribution sur un dépôt public sous NC-SA : à confirmer par Baillo (même situation que la W11 et le pilote déjà publiés).
+| Voiture dans le jeu | Modèle source | Auteur | Lien | Licence |
+|---|---|---|---|---|
+| Red Bull RB16 | 2020 F1 Red Bull RB16 | OUTPISTON | https://sketchfab.com/3d-models/2020-f1-red-bull-rb16-9f6e6e5830df430d9d940dacc7e12d15 | CC BY-NC-SA 4.0 |
+| Ferrari SF1000 | 2020 F1 Ferrari SF1000 | OUTPISTON | https://sketchfab.com/3d-models/2020-f1-ferrari-sf1000-b41d5f1096664601ad1f511ca4cd138f | CC BY-NC-SA 4.0 |
+| McLaren MCL35 | 2020 F1 McLaren MCL35 | OUTPISTON | https://sketchfab.com/3d-models/2020-f1-mclaren-mcl35-9b962b233892491285cb6f467d43ab46 | CC BY-NC-SA 4.0 |
+| Renault R.S.20 | 2020 F1 Renault RS20 | OUTPISTON | https://sketchfab.com/3d-models/2020-f1-renault-rs20-9a908497f1674f8797264edd3c10077c | CC BY-NC-SA 4.0 |
+| Racing Point RP20 | 2020 F1 Racing Point RP20 | OUTPISTON | https://sketchfab.com/3d-models/2020-f1-racing-point-rp20-1e395a1dbeb645febeeffe5e14adf071 | CC BY-NC-SA 4.0 |
+| Alfa Romeo C39 | 2020 F1 Alfa Romeo C39 | OUTPISTON | https://sketchfab.com/3d-models/2020-f1-alfa-romeo-c39-3854ade7db224b3ebfd1455f5c1abcab | CC BY-NC-SA 4.0 |
+| Haas VF-20 | 2020 F1 Haas VF20 | OUTPISTON | https://sketchfab.com/3d-models/2020-f1-haas-vf20-6d5a786a32414edd9a7753181684e78f | CC BY-NC-SA 4.0 |
+| Williams FW43 (**doublure : modèle FW42 de 2019**) | 2019 F1 Williams FW42 | OUTPISTON | https://sketchfab.com/3d-models/2019-f1-williams-fw42-7e91db14c20e410caae45cf943f2e41b | CC BY-NC-SA 4.0 |
+| AlphaTauri AT01 | AlphaTauri 2020 (corps gris, échelle 0,01 corrigée ×100) | MattDoesBlender | https://sketchfab.com/3d-models/alphatauri-2020-2-8d67d88756f0405d802a61190a5f9c3c | CC BY-NC-SA 4.0 |
+| Safety car Mercedes-AMG GT Black Series | Mercedes-AMG GT BS Safety Car | DR1KING100K | https://sketchfab.com/3d-models/mercedes-amg-gt-bs-safety-car-8fda6fc1fc4741b78890d3b548b2d990 | CC BY 4.0 |
+
+Livrée AlphaTauri AT01 **recréée** (blanc / bleu nuit, `blender/scripts/t2_livery.py`) : zones de couleur d'après les photos
+de présentation 2020 (racefans.net, autosport.com, global.honda) ; marques **en texte seulement** (« AlphaTauri », « HONDA »,
+police Open Sauce Sans, OFL) — aucun logo officiel copié. Couleurs du safety car (argent, noir, rampe orange) attribuées
+par nom de pièce, le modèle source n'ayant aucune texture. Physique 2020 : sources dans `docs/RESEARCH_CARS_2020.md`.

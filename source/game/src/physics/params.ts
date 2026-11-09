@@ -5,6 +5,7 @@
  */
 export type Compound = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'I' | 'W'
 
+/** Paramètres de la voiture du joueur : W11 par défaut, surchargés par applyCarPhysics() (lot 8, cars2020.ts). */
 export const W11 = {
   massMin: 746,            // P : masse minimale avec pilote, sans carburant (FIA TR 2020 art. 4.1)
   fuelQuali: 12,           // E : carburant en qualif
@@ -65,7 +66,7 @@ export const W11 = {
   steeringWheelRatio: 5.2,// E : angle volant / angle roue
   toeF: -0.0045, toeR: 0.002, // E : pincement AV ouvert (DAS tiré → 0), AR fermé (rad, par roue)
   dasTravel: 0.035,       // E : course du volant DAS (m)
-} as const
+}
 
 export type Surf = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 export const SURFACE = {

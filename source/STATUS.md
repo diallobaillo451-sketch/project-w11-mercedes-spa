@@ -228,3 +228,22 @@ Dernière mise à jour : 2026-11-03 07:35 (heure Canaries, UTC+0) — piste plei
 - ⚠ Plateau IA absent : courses et classements en solo. Points d'accroche : `gridHooks` (`classify`, `startingGrid`) dans `core/weekend.ts`.
 - Autres circuits et voitures : en attente des assets de Baillo (structures `CIRCUITS` et `CARS` prêtes).
 - Livrées des 19 autres pilotes : approximatives (voir `docs/SOURCES.md`).
+
+## 2026-11-09 ~21:50 (heure Canaries) — Lot 8 en cours : 9 voitures + safety car, physique 2020, course complète, stands
+Consignes : /workspace/w11-shared/CONSIGNES_BAILLO_2026-11-09.txt (+ compléments : panneaux lumineux/commissaires, SC complet,
+drapeau rouge, tour de formation, erreurs IA rares et plausibles). New Bot livre circuits/garages/PNJ dans /workspace/w11-shared/assets/
+(lecture seule pour moi).
+**Fait**
+- A : `blender/scripts/t1_team_car.py` (+ `t1_cars.json`) : pipeline générique — import, orientation W11 (avant +Y, sol z=0, origine
+  mi-essieux), roues W_xx / W_xx_spin (couverture angulaire), volet DRS (îlots ou nœud source), volant d'origine retiré (le pilote W11
+  + volant sont greffés au chargement à l'offset `seat`), matériaux renommés + vernis, export hi / LOD1 / LOD2 + méta JSON
+  (assets-work/cars/). Contrôles visuels out/cars/*_side|rear34|wing|cockpit.png. Fait pour les 8 voitures OUTPISTON.
+- `blender/scripts/t2_livery.py` : livrée AlphaTauri recréée (blanc/bleu nuit, marques texte AlphaTauri / HONDA) par cuisson
+  position+normale → couleurs numpy sur UV uniques.
+- A terminé : 9 voitures 2020 + safety car AMG GT Black Series (KTX2 UASTC + meshopt, LOD1/LOD2, + LOD Mercedes via
+  tools/w11_lods.mjs), menu Voiture (pilote ⇄ voiture d'équipe), greffe pilote 2020 + volant W11. Captures out/wk/pub8_a_*.
+- B terminé : src/physics/cars2020.ts (PU, ClA/CdA calibrés), docs/RESEARCH_CARS_2020.md ; tests/cars2020.test.ts : tours Spa
+  à ±0,13 s des écarts réels 2020 (W11 1:41.51 vs pole 1:41.252).
+- Publié GitLab (commit 6df828e3, JS index-BwQbJ_-m.js).
+**Suite** : C course IA (19 IA, règles FIA 2020, commissaires/pénalités, SC/VSC/drapeau rouge, tour de formation, panneaux
+marshals placeholders) · D stands (assets New Bot `spa_pits` apparus dans w11-shared/assets) · Monza (public conservé).
