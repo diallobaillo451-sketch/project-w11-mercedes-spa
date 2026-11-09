@@ -405,6 +405,7 @@ export class Renderer {
     if (this.cams) this.memLog('tuile ' + this.lastTile + ' ajoutée')
   }
   lodIn = new Map<string, THREE.Object3D>(); dbgDone = false
+  skK = [0, 0, 0, 0]
   skid!: SkidMarks; rain!: RainStreaks; drops!: LensDrops; debrisV!: DebrisView
   private wx: { sid: number; base: { skyI: number; haze: number; fog: number; fogC: THREE.Color; sun: number; env: number; hemi: number } | null; cloud: number; nDeb: number; w?: string } = { sid: -1, base: null, cloud: -1, nDeb: 0 }
   /** météo visuelle : ciel couvert, brouillard, soleil voilé, chaussée mouillée ; traces, gerbes, pluie, gouttes, débris */
@@ -420,7 +421,7 @@ export class Renderer {
     if (this.dome) { this.dome.mat.uniforms.uI.value = B.skyI * (1 - 0.55 * co); this.dome.mat.uniforms.uHaze.value = B.haze + 0.5 * co }
     const fog = this.scene.fog as THREE.FogExp2 | null
     if (fog) { fog.density = B.fog * (1 + 2 * co * co + 2.5 * Math.min(1, e.rainRate / 9)); fog.color.copy(B.fogC).lerp(new THREE.Color(0.36, 0.38, 0.41), co) }
-    this.sun.intensity = B.sun * (1 - 0.9 * co); this.scene.environmentIntensity = B.env * (1 - 0.5 * co); this.hemi.intensity = B.hemi * (1 + 0.6 * co)
+    this.sun.intensity = B.sun * (1 - 0.9 * co); this.scene.environmentIntensity = B.env * (1 - 0.5 * co); this.hemi.intensity = B.hemi * (1 + 1.1 * co)
     const wetT = Math.min(1, Math.max(e.wetness / 0.35, e.rainRate > 0 ? 0.55 + e.rainRate / 20 : 0))
     wetU.uWet.value = snap ? wetT : wetU.uWet.value + (wetT - wetU.uWet.value) * Math.min(1, dt * 0.3)
     // traces / gerbes par roue
@@ -430,7 +431,8 @@ export class Renderer {
       const slideK = Math.max(0, Math.min(1, (Math.abs(w.alpha) - W11.tyre.aPeak * 1.25) / 0.12)) * Math.min(1, c.speed / 15)
       const spinK = Math.max(0, Math.min(1, (w.kappa - W11.tyre.kPeak * 1.5) / 0.5)) * Math.min(1, vx / 8)
       const off = w.type === 4 || w.type === 5
-      const k = off ? (c.speed > 3 ? 0.7 : 0) : Math.max(lockK, slideK, spinK) * wetK
+      const k0 = off ? (c.speed > 3 ? 0.7 : 0) : Math.max(lockK, slideK, spinK) * wetK
+      const k = this.skK[i] = c.speed < 1 ? 0 : Math.max(k0, this.skK[i] - dt * 5) // maintien ~0,15 s : la roue qui bloque/débloque laisse une trace continue
       this.skid.add(i, [w.px, w.py, w.pz], w.front ? W11.tyreWidthF : W11.tyreWidthR, k, off ? (w.type === 5 ? 1 : 2) : 0)
       const water = e.water[e.idx(w.sample.s, w.sample.d)]
       if (water > 0.08 && c.speed > 12 && !w.front) this.fx.sprayAt(w.px, w.py, w.pz, c.vel, Math.min(1.5, water * 1.2) * Math.min(1, c.speed / 60))

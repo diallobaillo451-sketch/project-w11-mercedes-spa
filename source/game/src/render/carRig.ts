@@ -26,6 +26,7 @@ export class CarRig {
   private headRestP = new THREE.Vector3(); private headRestQ = new THREE.Quaternion(); private headOk = false
   private hv = new THREE.Vector3(); private hq2 = new THREE.Quaternion(); private hq3 = new THREE.Quaternion()
   /** dégâts visibles : aileron AV / AR séparés du maillage Car_wing au chargement */
+  dmgFrontX: THREE.Object3D[] = []; dmgRearX: THREE.Object3D[] = []
   dmgFront: THREE.Object3D | null = null; dmgRear: THREE.Object3D | null = null
   private dmgFrontP = new THREE.Vector3(); private dmgRearP = new THREE.Vector3(); private wingLost = [false, false]
   onPartLost: ((which: 'front' | 'rear', worldPos: THREE.Vector3) => void) | null = null
@@ -83,6 +84,7 @@ export class CarRig {
     if (this.head) { this.root.updateMatrixWorld(true); this.head.getWorldPosition(this.headRestP); this.root.worldToLocal(this.headRestP)
       this.head.getWorldQuaternion(this.headRestQ); this.headRestQ.premultiply(this.root.getWorldQuaternion(new THREE.Quaternion()).invert()); this.headOk = true }
     this.splitWings(byName('Car_wing') as THREE.Mesh | null, byName('W_FL'), byName('W_RL'))
+    this.splitExtras(byName('W_FL'), byName('W_RL'))
     // œil du pilote : derrière la visière (centre de la fente), mesuré sur le casque → caméra cockpit réaliste
     const vis = byName('Helmet_Visor_Helmet_Visor_0')
     if (vis) { this.root.updateMatrixWorld(true); const v = new THREE.Vector3(); vis.getWorldPosition(v); this.root.worldToLocal(v); this.eye.set(0, v.y - 0.005, v.z + 0.02) }
@@ -131,6 +133,32 @@ export class CarRig {
       const piv = new THREE.Group(); piv.name = name + '_pivot'; wing.add(piv); piv.add(m); return piv }
     this.dmgFront = part(fr, 'dmg_front_wing'); this.dmgRear = part(rr, 'dmg_rear_wing')
   }
+  /** autres maillages de la voiture (nez, volets, dérives, aileron AR…) : triangles devant l'essieu AV (ensemble nez + aileron, une seule pièce en F1)
+   *  et, à l'arrière, au-dessus des roues derrière l'essieu (aileron AR + dérives) → copies masquables quand la pièce est arrachée */
+  private splitExtras(fl: THREE.Object3D | null, rl: THREE.Object3D | null) {
+    if (!fl || !rl) return
+    this.root.updateMatrixWorld(true)
+    const Fw = fl.getWorldPosition(new THREE.Vector3()), Rw = rl.getWorldPosition(new THREE.Vector3()), ax = Fw.clone().sub(Rw), L = ax.length(); ax.normalize()
+    const meshes: THREE.Mesh[] = []
+    this.root.traverse(o => { const m = o as THREE.Mesh
+      if (!m.isMesh || !m.geometry.index || /^dmg_|Car_wing|W_|Wheel|Tyre|Tire|Rim|Brake|Disc|Caliper|Helmet|Visor|Head|Eyes|HANS|hand|finger|Driver|body_driver|steer/i.test(m.name)) return
+      let p: THREE.Object3D | null = m.parent; while (p) { if (this.hubs.includes(p)) return; p = p.parent }
+      meshes.push(m) })
+    const c = new THREE.Vector3(), v = new THREE.Vector3()
+    for (const m of meshes) {
+      const g = m.geometry, pos = g.getAttribute('position'), idx = g.index!.array, fr: number[] = [], rr: number[] = [], rest: number[] = []
+      for (let t = 0; t < idx.length; t += 3) {
+        c.set(0, 0, 0); for (let k = 0; k < 3; k++) c.add(v.fromBufferAttribute(pos, idx[t + k]))
+        c.multiplyScalar(1 / 3).applyMatrix4(m.matrixWorld); const d = c.clone().sub(Rw).dot(ax) / L
+        ;(d > 1.12 ? fr : d < -0.14 && c.y > Rw.y + 0.33 ? rr : rest).push(idx[t], idx[t + 1], idx[t + 2])
+      }
+      if (fr.length < 9 && rr.length < 9) continue
+      const mk = (ix: number[]) => { const ng = new THREE.BufferGeometry(); for (const [k, a] of Object.entries(g.attributes)) ng.setAttribute(k, a); ng.setIndex(ix); ng.computeBoundingSphere(); return ng }
+      const add = (ix: number[], arr: THREE.Object3D[]) => { if (ix.length < 9) { rest.push(...ix); return } const n = new THREE.Mesh(mk(ix), m.material); n.name = 'dmg_x_' + m.name; n.castShadow = m.castShadow; n.receiveShadow = m.receiveShadow; m.add(n); arr.push(n) }
+      add(fr, this.dmgFrontX); add(rr, this.dmgRearX)
+      m.geometry = mk(rest)
+    }
+  }
   private setSteer(theta: number) { // theta en degrés, + = droite, borné ±90 (plage du clip)
     if (!this.mixer || !this.action) return
     const t = (Math.max(-90, Math.min(90, theta)) / 90 + 1) / 2 * this.clipDur
@@ -145,6 +173,7 @@ export class CarRig {
       if (lost && !this.wingLost[0]) { this.wingLost[0] = true; this.onPartLost?.('front', f.getWorldPosition(this.dmgFrontP)) } if (!lost) this.wingLost[0] = false }
     if (r) { const lost = D.rearWing > 0.65; r.visible = !lost; r.rotation.set(-D.rearWing * 0.3, 0, D.rearWing * 0.15)
       if (lost && !this.wingLost[1]) { this.wingLost[1] = true; this.onPartLost?.('rear', r.getWorldPosition(this.dmgRearP)) } if (!lost) this.wingLost[1] = false }
+    { const lf = D.frontWing > 0.7, lr = D.rearWing > 0.65; for (const o of this.dmgFrontX) o.visible = !lf; for (const o of this.dmgRearX) o.visible = !lr }
     for (let i = 0; i < 4; i++) { const s = D.suspension[i] ?? 0; if (s > 0.05) this.hubs[i].rotation.z = (i % 2 ? -1 : 1) * s * 0.18 }
   }
   /** wheels : états interpolés (compression, angle, braquage). */

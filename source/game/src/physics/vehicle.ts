@@ -302,7 +302,8 @@ export class Vehicle {
     const hF = W11.rideF - cFront, hR = W11.rideR - cRear
     let rh = Math.max(0.75, Math.min(1.12, 1 + 1.6 * (0.03 - hF) * 0.5 + 0.8 * (0.075 - hR) * 0.5)) * (this.scrape > 0 ? 0.92 : 1)
     // effet de sol : sous ~8 mm à l'AV le flux sous le fond décroche (E) → perte brutale jusqu'à 15 %
-    rh *= 1 - 0.15 * Math.max(0, Math.min(1, (0.008 - hF) / 0.008))
+    // (seulement sur sol dur : dans le gravier la voiture s'enfonce, la hauteur mesurée n'a plus de sens aéro)
+    if (this.wheels[0].type <= 3 && this.wheels[1].type <= 3) rh *= 1 - 0.15 * Math.max(0, Math.min(1, (0.008 - hF) / 0.008))
     // aileron AR aéroélastique : il fléchit avec la pression dynamique → moins de traînée (et un peu moins d'appui) à haute vitesse (E)
     const flex = Math.max(0, Math.min(1, (va - 55) / 30)); const flexS = flex * flex * (3 - 2 * flex)
     // aspiration / air sale derrière une voiture (E : −30 % de traînée à 1 longueur, appui −20 % à 10 m, sur ±1,5 m latéraux)

@@ -178,3 +178,24 @@ Dernière mise à jour : 2026-11-03 07:35 (heure Canaries, UTC+0) — piste plei
 - Vrai choc à La Source (85 m/s, 24°) : aileron AV arraché, dérive gauche, suspension ARG 60 %, crevaison ARG, 2 débris.
 - GPU ≈ 268–281 Mo, 0 erreur.
 - Rendu logiciel : les images/s ne sont pas mesurables. **Non testé sur un vrai iPhone.**
+
+### Publications du lot 6 (heure Canaries)
+
+**Lot 6** — commits a190f17f [skip ci] + d8256ccf ; JS `index-BhIAwQSZ.js`.
+- source/ : commits 9fadb57d → 02e9bb26.
+
+**Lot 6b** — commits 50b89794 [skip ci] + f9f516c6 ; JS `index-DCF6gZIW.js`.
+- Arrachage visible de l'ensemble nez + aileron AV. Tous les maillages sont découpés, plus seulement `Car_wing`. Même traitement pour l'aileron AR au-dessus des roues.
+- Traces de pneus continues : maintien de 0,15 s.
+- Ciel couvert plus clair.
+- Décrochage de l'effet de sol limité au sol dur. Avant ce correctif, le test gravier était hors plage : 1,36 g, contre une référence de 0,8 à 1,3 g. Il est maintenant à 1,30 g.
+
+**Tests**
+- surface, physics, crash, pitlane, env, gyro : tous OK.
+- `app.mjs` (Chromium) : tous OK.
+
+**WebKit**
+- Traces visibles après un freinage roues bloquées (ABS coupé).
+- Ensemble nez + aileron AV absent après le choc.
+- Piste mouillée sombre, ciel couvert.
+- Note de test : faire avancer la simulation sans rendu téléporte la voiture plus loin que les tuiles chargées. On voit alors un sol blanc sans texture. C'est un artefact du test : une fois les tuiles chargées, le rendu est correct.
