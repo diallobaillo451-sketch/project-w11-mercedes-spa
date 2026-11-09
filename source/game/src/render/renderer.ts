@@ -18,6 +18,11 @@ import { QUALITY, type QualityName, type QualityPreset } from '../quality/qualit
 import { CarRig } from './carRig.ts'
 import { CameraRig } from './cameras.ts'
 import { Effects } from './effects.ts'
+import { Grass } from './grass.ts'
+import { Crowd } from './crowd.ts'
+import { applyWeathering } from './weathering.ts'
+import { SkyDome, loadSky } from './skydome.ts'
+import { loadDetail, applyDetail, type DetailSet } from './detail.ts'
 import { applyBakedAO, stripBakedAO, BAKED_AO_DEFAULT } from './bakedAO.ts'
 import { ReflectionProbe } from './probe.ts'
 import type { Game, Pose } from '../core/game.ts'
@@ -144,13 +149,14 @@ export class Renderer {
   look: { tm: string; exp: number; sun: number; env: number; hemi: number; sat: number; con: number }
   private pose: Pose = { pos: [0, 0, 0], q: [0, 0, 0, 1] }
   private cgOff = new THREE.Vector3(); private v3 = new THREE.Vector3()
-  private drv: THREE.Object3D | null = null
+  private ckPrev = false
   private wheelsBuf: { c: number; angle: number; steer: number }[] = []
   constructor(canvas: HTMLCanvasElement, quality: QualityName, opt: { safe?: boolean; mobile?: boolean; ktx?: boolean; onLost?: () => void } = {}) {
     this.canvas = canvas
     // mode sans échec : préréglage le plus léger. Mobile : densité de pixels plafonnée à 1,5 (écran 3× → 2,25× moins de pixels)
     this.q = opt.safe ? { ...QUALITY.low, dprMax: 1 } : { ...QUALITY[quality] }
-    if (opt.mobile && !opt.safe) this.q.dprMax = Math.min(this.q.dprMax, 2) // DPR natif jusqu'à 2 ; la résolution dynamique baisse si les images chutent
+    // mobile : le GTAO écran (coûteux en pixels) n'est gardé qu'en 2K/30 i/s ; l'AO Cycles précalculée reste partout
+    if (opt.mobile && !opt.safe && this.q.name !== 'ultra') this.q.gtao = false
     // MSAA du canevas inutile quand le rendu passe par le composeur (sa cible a son propre MSAA) → mémoire économisée
     const post = this.q.bloom || this.q.gtao
     this.r = new THREE.WebGLRenderer({ canvas, antialias: this.q.msaa && !post, powerPreference: 'high-performance', alpha: false, stencil: false })
@@ -192,13 +198,31 @@ export class Renderer {
     this.scene.environment = env; this.scene.environmentIntensity = this.look.env * this.q.envIntensity
     this.scene.add(sky); sky.frustumCulled = false
     pm.dispose()
+    this.setupSun()
+  }
+  dome: SkyDome | null = null
+  setupSun() {
     this.sun.castShadow = true
     const s = this.sun.shadow; s.mapSize.set(this.q.shadowMap, this.q.shadowMap)
     const R = this.q.shadowRange; Object.assign(s.camera, { left: -R, right: R, top: R, bottom: -R, near: 1, far: 400 }); s.camera.updateProjectionMatrix()
     s.bias = -0.00025; s.normalBias = 0.035; s.radius = 3
   }
   async load(game: Game, track: TrackSurface, prog: Progress) {
-    this.buildSky()
+    // ciel photographique HDRI (CC0) ; repli : ciel physique Preetham (?sky=0 pour comparer)
+    const P0 = new URLSearchParams(location.search), n0 = (k: string, d: number) => P0.has(k) ? Number(P0.get(k)) : d
+    let skyOk = false
+    if (P0.get('sky') !== '0') {
+      try {
+        const { tex, meta } = await loadSky('./assets/sky/', this.mobile, Math.min(this.r.capabilities.getMaxAnisotropy(), 4))
+        this.dome = new SkyDome(tex, meta, 215, n0('skyI', 3.2))
+        this.sunDir.copy(this.dome.sunDir)
+        this.scene.add(this.dome.mesh)
+        this.scene.environment = this.dome.envMap(this.r, 0x2c2e26); this.scene.environmentIntensity = n0('envH', 0.65) * this.q.envIntensity
+        this.scene.fog = new THREE.FogExp2(this.dome.fogColor(), n0('fog', 0.00032))
+        this.setupSun(); skyOk = true; dlog('ciel HDRI actif (soleil ' + meta.sun.elev.toFixed(1) + '°)')
+      } catch (e) { dlog('ciel HDRI indisponible : ' + (e as Error).message) }
+    }
+    if (!skyOk) this.buildSky()
     const q = this.q
     // piste PLEINE QUALITÉ pour tous les niveaux (source la plus détaillée : 1,18 M triangles, textures natives jusqu'à
     // 8192×1024, AO Cycles cuite) découpée en 13 tuiles (tools/build_track_tiles.mjs) : décor global + tuiles proches
@@ -215,6 +239,10 @@ export class Renderer {
     const upd = () => prog('Chargement de la piste', Math.min(1, ft / W) * 0.88 + fc * 0.12)
     this.track = new THREE.Group(); this.track.name = 'track'
     const an = Math.min(this.r.capabilities.getMaxAnisotropy(), q.anisotropy); this.an = an
+    // détail gravier / herbe de près (CC0) : chargé avant les tuiles pour être appliqué dès la première ; ?det=0 pour comparer
+    if (q.name !== 'low' && new URLSearchParams(location.search).get('det') !== '0') {
+      try { this.detail = await loadDetail('./assets/detail/', KTX, an); dlog('détail gravier/herbe actif') } catch (e) { dlog('détail indisponible : ' + (e as Error).message) }
+    }
     this.memLog('avant chargement')
     const [cg] = await Promise.all([(KTX ? loadGLB(cuK, f => { fc = f; upd() }, KTX).catch(e => { dlog('voiture KTX2 → repli WebP : ' + (e as Error).message); return loadGLB(cu, f => { fc = f; upd() }) }) : loadGLB(cu, f => { fc = f; upd() })),
       ...first.map(t => this.loadTile(t).then(() => { ft += w(t); upd() }))])
@@ -235,10 +263,20 @@ export class Renderer {
         for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) if ('envMap' in mt) { mt.envMap = this.probe!.texture; mt.envMapIntensity = ei; mt.needsUpdate = true } })
     }
     this.cgOff.set(game.car.cg[0], game.car.cg[1], game.car.cg[2])
-    const dpr = Math.min(window.devicePixelRatio || 1, q.dprMax)
-    this.r.setPixelRatio(dpr)
+    this.r.setPixelRatio(this.basePR())
     this.cams = new CameraRig(innerWidth / innerHeight, q.drawDistance, track)
     this.fx = new Effects(q.particles); this.scene.add(this.fx.group)
+    // herbe 3D en bord de piste (pas en qualité basse ; ?grass=0 pour comparer)
+    if (q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
+      const gm = await fetch('./track/grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+      if (gm) this.grass = new Grass(track, gm, q.name === 'medium' ? 0.6 : 1.0, q.name === 'medium' ? 8000 : 14000, 34, this.detail?.tex.grass ?? null); if (this.grass) { this.scene.add(this.grass.mesh)
+      dlog(`herbe 3D : ${this.grass.n} touffes (fenêtre ≤ ${this.grass.cap})`) }
+    }
+    // public des tribunes (toutes qualités : ≤ 36 triangles par personne près, 4 loin)
+    if (new URLSearchParams(location.search).get('crowd') !== '0') {
+      const cb = await fetch('./track/crowd.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+      if (cb) { this.crowd = new Crowd(cb); this.scene.add(this.crowd.group); dlog(`public : ${this.crowd.chunks.length} blocs`) }
+    }
     // mobile : démarrage SANS composeur (cibles HalfFloat MSAA), sans sonde cube, ombre 1024 → upgrade() après stabilité
     if (this.mobile) { const s = this.sun.shadow, sm = Math.min(1024, q.shadowMap); s.mapSize.set(sm, sm) } else this.setupPost()
     this.resize()
@@ -256,8 +294,8 @@ export class Renderer {
     if (this.upgraded || !this.mobile) return
     this.upgraded = true
     const q = this.q, wait = (ms: number) => new Promise(r => setTimeout(r, ms))
-    if (q.bloom || q.gtao) { this.setupPost(); this.resize(); const f = this.fxLevel; this.fxLevel = -1; this.setFx(f); this.memLog('qualité ↑ effets (composeur)'); await wait(4000) }
-    const s = this.sun.shadow; if (s.mapSize.x !== q.shadowMap && this.fxLevel < 3) { s.mapSize.set(q.shadowMap, q.shadowMap); s.map?.dispose(); s.map = null; this.memLog('qualité ↑ ombre ' + q.shadowMap); await wait(4000) }
+    if (q.bloom || q.gtao) { this.setupPost(); this.resize(); const f = this.fxLevel; this.fxLevel = -1; this.setFx(f); this.memLog('qualité ↑ effets (composeur)'); await wait(1500) }
+    const s = this.sun.shadow; if (s.mapSize.x !== q.shadowMap && this.fxLevel < 3) { s.mapSize.set(q.shadowMap, q.shadowMap); s.map?.dispose(); s.map = null; this.memLog('qualité ↑ ombre ' + q.shadowMap); await wait(1500) }
     if (this.probeSize > 0 && this.rig && !this.probe) {
       this.probe = new ReflectionProbe(this.probeSize, q.probeEvery)
       const ei = this.look.env * q.envIntensity
@@ -306,6 +344,10 @@ export class Renderer {
       const r = applyBakedAO(root, { strength: n('aok', BAKED_AO_DEFAULT.strength), ground: n('aog', BAKED_AO_DEFAULT.ground), direct: n('aod', BAKED_AO_DEFAULT.direct), floor: n('aof', BAKED_AO_DEFAULT.floor) })
       this.bakedAO = { meshes: (this.bakedAO?.meshes ?? 0) + r.meshes, materials: (this.bakedAO?.materials ?? 0) + r.materials }
     } else stripBakedAO(root)
+    if (this.detail && !lod) { const det = this.detail; root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      for (const mt of (Array.isArray(m.material) ? m.material : [m.material])) applyDetail(mt as THREE.MeshStandardMaterial, det) }) }
+    if (new URLSearchParams(location.search).get('weather') !== '0') root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      for (const mt of (Array.isArray(m.material) ? m.material : [m.material])) if ((mt as THREE.MeshStandardMaterial).isMeshStandardMaterial) applyWeathering(mt as THREE.MeshStandardMaterial) })
     root.name = 'tile_' + t.id + (lod ? '_lod' : '')
     root.updateMatrixWorld(true)
     if (this.cams) { // streaming en jeu : shaders compilés et textures envoyées au GPU avant l'ajout (pas de saccade visible)
@@ -320,6 +362,9 @@ export class Renderer {
     if (this.cams) this.memLog('tuile ' + this.lastTile + ' ajoutée')
   }
   lodIn = new Map<string, THREE.Object3D>()
+  detail: DetailSet | null = null
+  grass: Grass | null = null
+  crowd: Crowd | null = null
   /** remplace les textures provisoires dont la vraie version est arrivée (y compris les clones « texture transform ») */
   swapPlaceholders(root: THREE.Object3D) {
     const SLOTS = ['map', 'specularIntensityMap', 'specularColorMap', 'emissiveMap', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'alphaMap'] as const
@@ -441,13 +486,15 @@ export class Renderer {
   resize() {
     const w = innerWidth, h = innerHeight
     this.r.setSize(w, h, false)
-    const pr = Math.min(window.devicePixelRatio || 1, this.q.dprMax) * this.scale
+    const pr = this.basePR() * this.scale
     this.r.setPixelRatio(pr)
     if (this.cams) { this.cams.cam.aspect = w / h; this.cams.cam.updateProjectionMatrix() }
     if (this.composer) { this.composer.setPixelRatio(pr); this.composer.setSize(w, h) }
     if (this.gtao) this.gtao.setSize(Math.round(w * pr * this.q.gtaoScale), Math.round(h * pr * this.q.gtaoScale))
     if (this.fx) this.fx.setScale(h * pr)
   }
+  /** densité de pixels : natif plafonné par le budget de pixels du préréglage (1080p ou 2K) et par dprMax */
+  basePR() { const n = window.devicePixelRatio || 1, px = innerWidth * innerHeight; return Math.max(1, Math.min(n, this.q.dprMax, Math.sqrt(this.q.pxBudget / Math.max(1, px)))) }
   setScale(s: number) { this.scale = s; this.resize() }
   /** Pose interpolée : physique (CG) → origine du modèle (sol, milieu d'empattement). */
   syncCar(game: Game, _dt: number) {
@@ -473,13 +520,15 @@ export class Renderer {
       if (!w.contact) continue
       const sl = Math.abs(w.slipVel ?? 0)
       if (sl > 6 && w.type < 4) this.fx.puff(w.px, w.py, w.pz, c.vel, Math.min(1, (sl - 6) / 14))
-      else if (w.type >= 4 && w.type <= 5 && c.speed > 8) this.fx.puff(w.px, w.py, w.pz, c.vel, 0.25)
+      else if (w.type >= 4 && w.type <= 5 && c.speed > 4) this.fx.offroad(w.px, w.py, w.pz, c.vel, c.speed, w.type)
     }
     this.fx.update(dt)
     this.cams.shake = shake
     this.cams.update(this.car, this.rig.eye, this.rig.tcam, c.speed, dt, c.gLat, c.gLong)
+    this.crowd?.update(this.cams.cam.position)
+    this.grass?.update(this.cams.cam.position, Math.max(0, this.grass.lastI), performance.now() / 1000)
     // pilote masqué en cockpit (la caméra est dans sa tête)
-    const drv = this.drv ?? (this.drv = this.rig.root.getObjectByName('DRV_rig') ?? null); if (drv) drv.visible = this.cams.mode !== 'cockpit'
+    const ck = this.cams.mode === 'cockpit'; if (ck !== this.ckPrev) { this.ckPrev = ck; this.rig.setCockpit(ck) }
     // ombres : la caméra d'ombre suit la voiture, recalée sur la grille de texels (pas de scintillement)
     const R = this.q.shadowRange, tex = (2 * R) / this.sun.shadow.mapSize.x
     const cx = this.car.position.x, cz = this.car.position.z
