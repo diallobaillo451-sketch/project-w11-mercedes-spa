@@ -19,6 +19,30 @@ export class CarRig {
   tcam = new THREE.Vector3(0, 1.2, 0.15)
   private q = new THREE.Quaternion(); private e = new THREE.Euler()
   private headLook = 0
+  /** gants : main tournée de 18° vers l'extérieur autour de l'axe du volant, doigts enroulés derrière la poignée
+   *  (direction mesurée, repère voiture Blender) au lieu de traverser la face du volant */
+  grip: { h: THREE.Object3D; f: THREE.Object3D; sg: number }[] = []
+  gripOn = typeof location === 'undefined' || new URLSearchParams(location.search).get('grip') !== '0'
+  swRel0 = new THREE.Quaternion(); gripHA = 18 * Math.PI / 180; gripFD = new THREE.Vector3(-0.6, 0.75, -0.1)
+  private gq = [new THREE.Quaternion(), new THREE.Quaternion(), new THREE.Quaternion(), new THREE.Quaternion(), new THREE.Quaternion()]
+  private gv = [new THREE.Vector3(), new THREE.Vector3()]
+  private fixGrip() {
+    if (!this.sw || !this.grip.length) return
+    const [rq, rc, a, b, c] = this.gq, [v1, v2] = this.gv
+    this.root.updateMatrixWorld(true)
+    this.root.getWorldQuaternion(rq)
+    this.sw.getWorldQuaternion(rc).multiply(a.copy(rq).multiply(this.swRel0).invert()) // rotation actuelle du volant (monde)
+    for (const { h, f, sg } of this.grip) {
+      v1.set(0, 1, 0).applyQuaternion(rq).applyQuaternion(rc)
+      a.setFromAxisAngle(v1, -this.gripHA * sg)
+      h.getWorldQuaternion(b).premultiply(a); h.parent!.getWorldQuaternion(c).invert(); h.quaternion.copy(c.multiply(b)); h.updateMatrixWorld(true)
+      f.getWorldQuaternion(b); v1.set(0, 1, 0).applyQuaternion(b)
+      v2.set(this.gripFD.x * sg, this.gripFD.z, -this.gripFD.y).normalize().applyQuaternion(rq).applyQuaternion(rc)
+      a.setFromUnitVectors(v1, v2); b.premultiply(a); f.parent!.getWorldQuaternion(c).invert(); f.quaternion.copy(c.multiply(b)); f.updateMatrixWorld(true)
+    }
+  }
+  headMeshes: THREE.Object3D[] = []
+  setCockpit(on: boolean) { for (const o of this.headMeshes) o.visible = !on }
   constructor(gltf: { scene: THREE.Object3D; animations: THREE.AnimationClip[] }, anisotropy: number) {
     this.root = gltf.scene
     const byName = (n: string) => this.root.getObjectByName(n) ?? null
@@ -43,6 +67,14 @@ export class CarRig {
       this.action = this.mixer.clipAction(clip); this.action.play(); this.action.paused = true; this.clipDur = clip.duration
       this.setSteer(0)
     }
+    // prise du volant corrigée (point 9) : réglage mesuré dans Blender (blender/scripts/d7_grip_check.py, captures out/blender/mains_*)
+    for (const k of ['R', 'L']) { const h = byName('hand.' + k), f = byName('fingers.' + k); if (h && f) this.grip.push({ h, f, sg: k === 'R' ? 1 : -1 }) }
+    if (this.sw) { this.root.updateMatrixWorld(true); const rq = this.root.getWorldQuaternion(new THREE.Quaternion()); this.swRel0.copy(rq.invert().multiply(this.sw.getWorldQuaternion(new THREE.Quaternion()))) }
+    // œil du pilote : derrière la visière (centre de la fente), mesuré sur le casque → caméra cockpit réaliste
+    const vis = byName('Helmet_Visor_Helmet_Visor_0')
+    if (vis) { this.root.updateMatrixWorld(true); const v = new THREE.Vector3(); vis.getWorldPosition(v); this.root.worldToLocal(v); this.eye.set(0, v.y - 0.005, v.z + 0.02) }
+    // en cockpit on masque seulement la tête (casque, visière, yeux) : bras, gants et volant restent visibles
+    this.root.traverse(o => { if ((o as THREE.Mesh).isMesh && /Helmet|VISOR|Visor|Head|Eyes|HANS/i.test(o.name)) this.headMeshes.push(o) })
     const tv = byName('tvcam'); if (tv) { const b = new THREE.Box3().setFromObject(tv); b.getCenter(this.tcam); this.tcam.y = b.max.y + 0.06 }
     // matériaux : vernis carrosserie, carbone anisotrope, ombres
     const seen = new Set<THREE.Material>()
@@ -90,6 +122,7 @@ export class CarRig {
       this.sw.position.copy(this.swP0); this.sw.position.z += car.dasPos * 0.035 // DAS : volant tiré vers le pilote
     }
     this.setSteer(theta)
+    if (this.gripOn) this.fixGrip()
     // DRS : le volet pivote autour de son bord de fuite (car.drsPos lissé ~0,1 s dans la physique)
     if (this.drs) this.drs.rotation.x = car.drsPos * this.drsDeg * Math.PI / 180
     // tête : regard vers la corde + inclinaison sous G latéral / longitudinal (après le clip)

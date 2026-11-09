@@ -15,6 +15,8 @@ export class CameraRig {
   private tmp = new THREE.Vector3(); private tmp2 = new THREE.Vector3(); private m = new THREE.Matrix4()
   private tvPoints: THREE.Vector3[] = []; private tvIdx = -1
   private yawS = 0
+  private hp = [0, 0]; private hv = [0, 0]
+  cockpitFov = 56
   constructor(aspect: number, far: number, track: TrackSurface) {
     this.cam = new THREE.PerspectiveCamera(60, aspect, 0.08, far)
     // caméras TV : tous les ~260 m, côté extérieur alterné, 3–6 m de haut, au-delà du mur
@@ -35,17 +37,27 @@ export class CameraRig {
     const t = performance.now() * 0.001
     switch (this.mode) {
       case 'cockpit': case 'tcam': {
-        const p = (this.mode === 'cockpit' ? eye : tcam)
-        this.pos.copy(p).applyMatrix4(car.matrixWorld)
-        // secousses : vitesse + vibreurs (amplitude fournie par le moteur via this.shake)
-        const a = (this.shake * 0.012 + Math.min(1, speed / 90) * 0.0012)
-        this.pos.x += Math.sin(t * 61) * a; this.pos.y += Math.sin(t * 47 + 1) * a
+        const ck = this.mode === 'cockpit'
+        // tête du pilote = masse-ressort amortie (cou + HANS) : se décale sous les G avec un léger retard, sans à-coups
+        if (ck) {
+          const kH = 90, cH = 2 * Math.sqrt(kH) * 0.75, h = Math.min(dt, 0.05)
+          const tx = THREE.MathUtils.clamp(-gLat * 0.006, -0.03, 0.03), tz = THREE.MathUtils.clamp(-gLong * 0.005, -0.025, 0.025)
+          this.hv[0] += ((tx - this.hp[0]) * kH - this.hv[0] * cH) * h; this.hp[0] += this.hv[0] * h
+          this.hv[1] += ((tz - this.hp[1]) * kH - this.hv[1] * cH) * h; this.hp[1] += this.hv[1] * h
+          if (this.first) { this.hp[0] = tx; this.hp[1] = tz; this.hv[0] = this.hv[1] = 0 }
+        }
+        this.tmp2.copy(ck ? eye : tcam); if (ck) { this.tmp2.x += this.hp[0]; this.tmp2.z += this.hp[1] }
+        this.pos.copy(this.tmp2).applyMatrix4(car.matrixWorld)
+        // vibrations : moteur (haute fréquence, très faible), revêtement (vitesse), vibreurs/herbe/chocs (this.shake)
+        const a = this.shake * (ck ? 0.006 : 0.009) + Math.min(1, speed / 90) * 0.0006, eng = 0.00025
+        this.pos.x += Math.sin(t * 61) * a + Math.sin(t * 173) * eng; this.pos.y += Math.sin(t * 47 + 1) * a + Math.sin(t * 211 + 2) * eng
         c.position.copy(this.pos)
         c.quaternion.copy(q)
-        // tête qui encaisse les G (cockpit uniquement)
-        if (this.mode === 'cockpit') { c.rotateZ(-gLat * 0.012); c.rotateX(gLong * 0.006 - 0.035) }
+        // regard : ~3° sous l'horizon, tête inclinée par les G latéraux (≤ 3°), légère anticipation dans les virages
+        if (ck) { c.rotateY(THREE.MathUtils.clamp(gLat * 0.008, -0.05, 0.05)); c.rotateZ(THREE.MathUtils.clamp(-gLat * 0.01, -0.05, 0.05)); c.rotateX(THREE.MathUtils.clamp(gLong * 0.004, -0.03, 0.03) - 0.05) }
         else c.rotateX(-0.05)
-        fov = this.mode === 'cockpit' ? 72 : 66
+        // champ vertical réaliste (≈ 56° → ~98° horizontal en paysage 19,5:9) ; réglable dans Options
+        fov = ck ? this.cockpitFov : 62
         break
       }
       case 'close': case 'chase': {

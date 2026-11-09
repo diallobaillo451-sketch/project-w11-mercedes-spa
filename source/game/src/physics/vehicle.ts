@@ -9,11 +9,14 @@ import { W11, SURFACE, type Compound } from './params.ts'
 import { mf, muPeak, newTyre, tyreThermal, type TyreState } from './tyre.ts'
 import { ERS, GEAR_RATIOS, REVERSE_RATIO, icePower, engineBrakeTorque, type EngineMode } from './powertrain.ts'
 import { newSample, type Surface, type SurfaceSample } from '../track/surface.ts'
+import { BARRIER_KIND, type Barriers } from '../track/barriers.ts'
 
 export interface Controls {
   throttle: number; brake: number; steer: number        // 0..1, 0..1, -1 (gauche) .. 1 (droite)
   shiftUp?: boolean; shiftDown?: boolean
   drs?: boolean; das?: boolean
+  /** limiteur de vitesse des stands (80 km/h à Spa 2020) */
+  pitLim?: boolean; overtake?: boolean
 }
 export interface Setup {
   brakeBias: number; diffOn: number; diffOff: number; engineMode: EngineMode; compound: Compound
@@ -25,7 +28,7 @@ export const defaultSetup = (): Setup => ({ brakeBias: W11.brakeBias, diffOn: 0.
 
 export interface Wheel {
   front: boolean; left: boolean; hub: [number, number, number]; r: number; I: number
-  omega: number; angle: number; c: number; cPrev: number; cdot: number; contact: boolean; fz: number; fx: number; fy: number
+  omega: number; angle: number; c: number; cPrev: number; cdot: number; contact: boolean; fz: number; fx: number; fy: number; sink?: number
   kappa: number; alpha: number; steer: number; type: number; tyre: TyreState; brakeT: number; brakeTq: number; driveTq: number
   absF: number; px: number; py: number; pz: number; slipVel: number; groundH: number; sample: SurfaceSample
 }
@@ -50,10 +53,17 @@ export class Vehicle {
   gLat = 0; gLong = 0; speed = 0; downforce = 0; drag = 0
   scrape = 0; scrapePos = [0, 0, 0]; impact = 0; impactPos = [0, 0, 0]; offTrack = false; wheelsOut = 0; flipped = 0
   time = 0; reverseHold = 0; ebCut = 0; shiftEvent = 0; lastShiftDir = 0
+  /** carburant (kg) consommé selon le débit réel ; limiteur des stands ; dégâts (0 = intact, 1 = épave) */
+  fuel: number = W11.fuelQuali; pitLim = false; pitLimCut = 0
+  damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }
+  /** barrières réelles (contours de la géométrie rendue) ; null → anciens murs virtuels (tests sur plan) */
+  barriers: Barriers | null = null; hitKind = 0; damageEvent = 0
+  private bPrev = new Float64Array(64); private bInit = false
   private prevVel = [0, 0, 0]
 
   constructor(surface: Surface) {
     this.surface = surface
+    this.barriers = (surface as { barriers?: Barriers | null }).barriers ?? null
     const b = W11.wheelbase, a = b * (1 - W11.frontMassMin) // distance CG → essieu AV
     this.cg[2] = -b / 2 + a
     const mk = (front: boolean, left: boolean): Wheel => {
@@ -99,7 +109,7 @@ export class Vehicle {
     this.vel = [f[0] * speed, f[1] * speed, f[2] * speed]; this.wb = [0, 0, 0]
     for (const w of this.wheels) { w.omega = speed / w.r; w.c = 0; w.cPrev = 0; w.cdot = 0; w.alpha = 0; w.kappa = 0; w.fx = 0; w.fy = 0 }
     this.gear = speed > 1 ? Math.max(1, GEAR_RATIOS.findIndex(gr => speed / W11.wheelRadiusR * gr * 60 / (2 * Math.PI) < 11500) + 1) : 1
-    this.scrape = 0; this.impact = 0; this.flipped = 0
+    this.scrape = 0; this.impact = 0; this.flipped = 0; this.bInit = false
   }
   updateR() {
     const [x, y, z, w] = this.q, R = this.R
@@ -120,6 +130,7 @@ export class Vehicle {
     this.time += dt
     const S = this.setup, R = this.R
     this.updateR()
+    this.mass = W11.massMin + this.fuel
     const m = this.mass
     const F = [0, 0, 0], Tq = [0, 0, 0] // force et couple (monde)
     const wW = this.toWorld(this.wb[0], this.wb[1], this.wb[2], [0, 0, 0]) // ω monde
@@ -133,7 +144,7 @@ export class Vehicle {
     this.hint = cs.i; this.s = cs.s; this.d = cs.d; this.trackIdx = cs.i
 
     // ---- commandes, aides
-    let steerCmd = Math.max(-1, Math.min(1, ctl.steer))
+    let steerCmd = Math.max(-1, Math.min(1, ctl.steer + (this.damage.suspension[0] - this.damage.suspension[1]) * 0.12))
     const vRef = S.steerAssist >= 2 ? 26 : S.steerAssist >= 1 ? 34 : 1e9
     const lock = W11.steerLock * Math.max(0.11, 1 / (1 + (vF * vF) / (vRef * vRef)))
     // DAS : tiré → pincement AV ≈ 0
@@ -187,6 +198,13 @@ export class Vehicle {
       else this.tcCut = Math.max(0, this.tcCut - dt * 4)
       throttle *= 1 - this.tcCut
     } else this.tcCut = 0
+    // limiteur des stands : régulation douce de l'accélérateur à 80 km/h (bouton PIT du volant)
+    this.pitLim = !!ctl.pitLim
+    if (this.pitLim) {
+      const over = vF - (80 / 3.6 - 0.4)
+      this.pitLimCut = Math.max(0, Math.min(1, this.pitLimCut + (over > 0 ? dt * 8 * over : -dt * 3)))
+      throttle = Math.min(throttle, Math.max(0, 1 - this.pitLimCut - Math.max(0, over) * 0.6))
+    } else this.pitLimCut = 0
     this.throttleApplied = throttle; this.brakeApplied = brake
 
     // ---- moteur / ERS
@@ -201,6 +219,8 @@ export class Vehicle {
     let tCrank: number
     if (throttle > 0.01) {
       let p = icePower(rpm, throttle, S.engineMode)
+      // carburant : débit (kg/h) proportionnel à la puissance demandée → masse qui baisse au fil du tour
+      this.fuel = Math.max(0, this.fuel - p / (W11.fuelLHV * 0.5) * dt)
       p += this.ers.deploy(throttle, rpm, vF, dt)
       tCrank = p / omegaE
     } else { this.ers.deploy(0, rpm, vF, dt); tCrank = engineBrakeTorque(rpm) }
@@ -247,9 +267,11 @@ export class Vehicle {
     // sensibilité hauteur de caisse (E) : plus bas → plus d'appui jusqu'au contact du plancher
     const hF = W11.rideF - cFront, hR = W11.rideR - cRear
     const rh = Math.max(0.75, Math.min(1.12, 1 + 1.6 * (0.03 - hF) * 0.5 + 0.8 * (0.075 - hR) * 0.5)) * (this.scrape > 0 ? 0.92 : 1)
-    const ClA = (W11.ClA + W11.drsClA * this.drsPos) * rh
-    const CdA = W11.CdA + W11.drsCdA * this.drsPos + 0.03 * (1 - this.dasPos) * 0
-    const bal = W11.aeroBalF + 0.5 * (cFront - cRear) - 0.06 * this.drsPos
+    // dégâts : aileron AV → appui AV perdu (sous-virage), aileron AR → appui AR perdu, fond → appui global ; traînée en hausse
+    const Dm = this.damage
+    const ClA = (W11.ClA + W11.drsClA * this.drsPos) * rh * (1 - 0.22 * Dm.frontWing - 0.3 * Dm.rearWing - 0.3 * Dm.floor)
+    const CdA = (W11.CdA + W11.drsCdA * this.drsPos) * (1 + 0.06 * Dm.frontWing + 0.08 * Dm.rearWing)
+    const bal = W11.aeroBalF + 0.5 * (cFront - cRear) - 0.06 * this.drsPos - 0.1 * Dm.frontWing + 0.08 * Dm.rearWing
     const down = qd * ClA, drag = qd * CdA
     this.downforce = down; this.drag = drag
     if (va > 0.1) { for (let k = 0; k < 3; k++) F[k] -= vair[k] / va * drag }
@@ -272,6 +294,9 @@ export class Vehicle {
       w.type = smp.type
       const sf = SURFACE[smp.type] ?? SURFACE[1]
       let gh = smp.h
+      // gravier : la roue s'enfonce progressivement (jusqu’à 4 cm) → garde au sol réduite, le fond racle, freinage fort
+      w.sink = smp.type === 5 ? Math.min(0.04, (w.sink ?? 0) + dt * 0.1) : Math.max(0, (w.sink ?? 0) - dt * 0.4)
+      gh -= w.sink
       if (sf.bump > 0) {
         const s = smp.s, d = smp.d
         gh += smp.type === 2 ? sf.bump * Math.max(0, Math.sin(s * 10.5 + d * 0.5)) : sf.bump * (Math.sin(s * 3.1 + d * 2.3) * Math.sin(s * 1.7 - d * 4.1))
@@ -280,7 +305,10 @@ export class Vehicle {
       if (gh - (hy - w.r) > 0.11 && w.contact) gh = w.groundH
       w.groundH = gh
       const uy = Math.max(0.2, up[1])
-      const c = (gh + w.r / Math.max(0.5, smp.ny) - hy) / uy
+      let c = (gh + w.r / Math.max(0.5, smp.ny) - hy) / uy
+      // anti-catapulte : une marche brutale (talus, bordure haute, retombée) est absorbée par le flanc du pneu et
+      // la structure au lieu d'être vue instantanément par la butée (2,2 MN/m) → plus de voiture « lancée en l'air »
+      if (w.contact && c - w.c > 0.02) c = w.c + 0.02
       w.cPrev = w.c
       const k = w.front ? W11.springF : W11.springR, dmp = w.front ? W11.dampF : W11.dampR
       const Wst = this.mass * G * (w.front ? W11.frontMassMin : 1 - W11.frontMassMin) / 2
@@ -290,7 +318,7 @@ export class Vehicle {
         w.cdot = (c - w.cPrev) / dt
         let f = Wst + k * c + dmp * (w.cdot > 0 ? w.cdot : w.cdot * 0.75)
         if (c > W11.bumpTravel) f += W11.bumpK * (c - W11.bumpTravel) + dmp * 2 * Math.max(0, w.cdot)
-        w.fz = Math.max(0, f)
+        w.fz = Math.max(0, Math.min(f, 26_000)) // plafond ≈ 3,5 g de charge par roue (charge réelle max ≈ 12–15 kN)
       }
       w.px = hx + up[0] * w.c - smp.nx * w.r; w.py = hy + up[1] * w.c - smp.ny * w.r; w.pz = hz + up[2] * w.c - smp.nz * w.r
     }
@@ -367,7 +395,9 @@ export class Vehicle {
       w.kappa = fxy[2]
       let Fx = fxy[0], Fy = fxy[1]
       // résistance au roulement
-      Fx -= Math.sign(vx) * Math.min(Math.abs(vx) * 50, sf.rr * w.fz)
+      // résistance au roulement : gravier et herbe croissent avec la vitesse (labourage du lit de gravier ≈ 0,6–1 g à 200 km/h)
+      const rrv = w.type === 5 ? sf.rr * (1 + Math.abs(vx) / 35) + (w.sink ?? 0) * 4 : w.type === 4 ? sf.rr * (1 + Math.abs(vx) / 60) : sf.rr
+      Fx -= Math.sign(vx) * Math.min(Math.abs(vx) * 50, rrv * w.fz)
       // maintien basse vitesse (évite la dérive à l'arrêt, stable car < 1/2 de l'annulation par pas)
       if (latHold > 0) {
         const mq = this.mass / 4
@@ -419,7 +449,9 @@ export class Vehicle {
         const rx = px - this.pos[0], ry = py - this.pos[1], rz = pz - this.pos[2]
         const vpx = this.vel[0] + wW[1] * rz - wW[2] * ry, vpy = this.vel[1] + wW[2] * rx - wW[0] * rz, vpz = this.vel[2] + wW[0] * ry - wW[1] * rx
         const vn = vpx * smp.nx + vpy * smp.ny + vpz * smp.nz
-        const fn = Math.max(0, 3_000_000 * pen - 40_000 * vn)
+        // plancher : appui raide mais borné (≤ 4 g), sans rebond ; la pénétration est corrigée en position
+        const fn = Math.max(0, Math.min(3_000_000 * pen - 40_000 * vn, this.mass * G * 4))
+        if (pen > 0.02) this.pos[1] += (pen - 0.02) * 0.5
         const tx = vpx - smp.nx * vn, ty = vpy - smp.ny * vn, tz = vpz - smp.nz * vn, tl = Math.hypot(tx, ty, tz) || 1
         const ff = Math.min(0.45 * fn, this.mass * tl / dt * 0.2)
         addForceAt(smp.nx * fn - tx / tl * ff, smp.ny * fn - ty / tl * ff, smp.nz * fn - tz / tl * ff, px, py, pz)
@@ -451,7 +483,12 @@ export class Vehicle {
       const nl = Math.hypot(nx, ny, nz, nw); this.q = [nx / nl, ny / nl, nz / nl, nw / nl]
     }
     this.updateR()
-    this.collideWalls(dt)
+    if (this.barriers) this.collideBarriers(dt); else this.collideWalls(dt)
+    // garde-fou anti-envol : vitesse verticale montante bornée par rapport à celle qu'impose la pente du sol (aucune voiture de F1 ne « décolle » de plus de quelques
+    // dizaines de cm sur un vibreur ou un talus ; les grosses projections réelles viennent de contacts roue-roue)
+    { const g = this.surface.sample(this.pos[0], this.pos[2], this.hint, tmp)
+      const vyS = -(g.nx * this.vel[0] + g.nz * this.vel[2]) / Math.max(0.5, g.ny), ex = this.vel[1] - vyS
+      if (ex > 3) this.vel[1] = vyS + 3 + (ex - 3) * 0.2 }
 
     // ---- télémétrie
     const dvx = (this.vel[0] - this.prevVel[0]) / dt, dvz = (this.vel[2] - this.prevVel[2]) / dt, dvy = (this.vel[1] - this.prevVel[1]) / dt
@@ -467,6 +504,85 @@ export class Vehicle {
     this.flipped = this.R[4] < 0.25 ? this.flipped + dt : 0
   }
 
+  /** collisions contre les barrières réelles : 16 points du contour de la voiture (ailerons, roues, pontons), test
+   *  balayé (pas de traversée à 340 km/h), normale = celle du segment touché, restitution / frottement / absorption selon
+   *  le type (pneus, rail, béton, objet), impulsion avec inertie (lacet), sans couple de roulis parasite. Dégâts. */
+  private collideBarriers(dt: number) {
+    const B = this.barriers!
+    this.impact = Math.max(0, this.impact - dt * 4); this.hitKind = 0; this.damageEvent = 0
+    const I = [W11.inertia.pitch, W11.inertia.yaw, W11.inertia.roll], R = this.R
+    const cg = this.cg, pa = [0, 0, 0], rc = 0.05
+    const P = CAR_PTS
+    for (let k = 0; k < P.length; k++) {
+      const p = P[k]
+      this.toWorld(p[0] - cg[0], 0.3 - cg[1], p[1] - cg[2], pa)
+      let px = this.pos[0] + pa[0], pz = this.pos[2] + pa[2]
+      const ox = this.bInit ? this.bPrev[k * 2] : px, oz = this.bInit ? this.bPrev[k * 2 + 1] : pz
+      const [a, b] = B.cell(px, pz)
+      let pen = 0, nx = 0, nz = 0, kind = 0
+      for (let j = a; j < b; j++) {
+        const si = B.idx[j] * 4, x1 = B.S[si], z1 = B.S[si + 1], x2 = B.S[si + 2], z2 = B.S[si + 3]
+        const ex = x2 - x1, ez = z2 - z1, L2 = ex * ex + ez * ez || 1e-9
+        let t = ((px - x1) * ex + (pz - z1) * ez) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t
+        const qx = x1 + ex * t, qz = z1 + ez * t, dx = px - qx, dz = pz - qz, dist = Math.hypot(dx, dz)
+        // balayé : la trajectoire du point depuis le pas précédent coupe-t-elle le segment ?
+        const mx = px - ox, mz = pz - oz, den = mx * ez - mz * ex
+        let crossed = false
+        if (Math.abs(den) > 1e-9) { const u = ((x1 - ox) * ez - (z1 - oz) * ex) / den, v = ((x1 - ox) * mz - (z1 - oz) * mx) / den; crossed = u > 0 && u <= 1 && v >= 0 && v <= 1 }
+        let pn = 0, cx = 0, cz = 0
+        if (crossed) { const L = Math.sqrt(L2); cx = -ez / L; cz = ex / L; if ((ox - x1) * cx + (oz - z1) * cz < 0) { cx = -cx; cz = -cz } pn = dist + rc }
+        else if (dist < rc) { if (dist > 1e-6) { cx = dx / dist; cz = dz / dist } else { const L = Math.sqrt(L2); cx = -ez / L; cz = ex / L } pn = rc - dist }
+        if (pn > pen) { pen = pn; nx = cx; nz = cz; kind = B.K[B.idx[j]] }
+      }
+      if (pen > 0) {
+        const kd = BARRIER_KIND[kind] ?? BARRIER_KIND[4]
+        this.pos[0] += nx * pen; this.pos[2] += nz * pen; px += nx * pen; pz += nz * pen
+        const wW = this.toWorld(this.wb[0], this.wb[1], this.wb[2], [0, 0, 0])
+        const rx = pa[0], ry = 0, rz = pa[2]
+        const vpx = this.vel[0] + wW[1] * rz - wW[2] * ry, vpz = this.vel[2] + wW[0] * ry - wW[1] * rx
+        const vn = vpx * nx + vpz * nz
+        if (vn < 0) {
+          const rxn = [ry * nz, rz * nx - rx * nz, -ry * nx]
+          const rb = [R[0] * rxn[0] + R[1] * rxn[1] + R[2] * rxn[2], R[3] * rxn[0] + R[4] * rxn[1] + R[5] * rxn[2], R[6] * rxn[0] + R[7] * rxn[1] + R[8] * rxn[2]]
+          const ang = rb[0] * rb[0] / I[0] + rb[1] * rb[1] / I[1] + rb[2] * rb[2] / I[2]
+          const j = -(1 + kd.e) * vn / (1 / this.mass + ang)
+          const tvx = vpx - nx * vn, tvz = vpz - nz * vn, tl = Math.hypot(tvx, tvz) || 1
+          const jt = Math.min(kd.mu * j, this.mass * tl * 0.5)
+          const Jx = nx * j - tvx / tl * jt, Jz = nz * j - tvz / tl * jt
+          this.vel[0] += Jx / this.mass; this.vel[2] += Jz / this.mass
+          // absorption (pneus) : une partie de la vitesse tangentielle est dissipée en plus
+          if (kd.absorb > 0) { const vnn = this.vel[0] * nx + this.vel[2] * nz, f = 0.5 + 0.5 * (1 - kd.absorb * Math.min(1, -vn / 20))
+            this.vel[0] = nx * vnn + (this.vel[0] - nx * vnn) * f; this.vel[2] = nz * vnn + (this.vel[2] - nz * vnn) * f }
+          const tqx = ry * Jz, tqy = rz * Jx - rx * Jz, tqz = -ry * Jx
+          const tbx = R[0] * tqx + R[1] * tqy + R[2] * tqz, tby = R[3] * tqx + R[4] * tqy + R[5] * tqz, tbz = R[6] * tqx + R[7] * tqy + R[8] * tqz
+          this.wb[0] += tbx / I[0] * 0.3; this.wb[1] += tby / I[1]; this.wb[2] += tbz / I[2] * 0.3
+          // la vitesse verticale « de pente » (montée du Raidillon…) disparaît avec la vitesse horizontale arrêtée par le mur :
+          // on la ramène à la valeur cohérente avec le sol, sinon la voiture continuerait de monter → envol irréaliste
+          { const g = this.surface.sample(this.pos[0], this.pos[2], this.hint, tmp)
+            if (this.pos[1] - g.h - this.cg[1] < 0.2) { const vyS = -(g.nx * this.vel[0] + g.nz * this.vel[2]) / Math.max(0.5, g.ny); if (this.vel[1] > vyS) this.vel[1] = vyS } }
+          this.impact = Math.max(this.impact, Math.min(1, -vn / 15)); this.impactPos = [px, this.pos[1], pz]; this.hitKind = kind
+          // dégâts : au-delà de ~3 m/s de vitesse normale, selon la zone touchée
+          const dv = -vn
+          if (dv > 3) {
+            const dmg = Math.min(1, (dv - 3) / 22), D = this.damage, part = p[2]
+            if (part === 1) D.frontWing = Math.min(1, D.frontWing + dmg)
+            else if (part === 2) D.rearWing = Math.min(1, D.rearWing + dmg)
+            else if (part >= 10) { const wi = part - 10; D.suspension[wi] = Math.min(1, D.suspension[wi] + dmg * 0.8) }
+            else D.floor = Math.min(1, D.floor + dmg * 0.5)
+            D.total = Math.min(1, Math.max(D.frontWing * 0.5, D.rearWing * 0.6, D.floor * 0.7, ...D.suspension) + 0.15 * (D.frontWing + D.rearWing + D.floor))
+            this.damageEvent = Math.max(this.damageEvent, dmg)
+          }
+        }
+      }
+      this.bPrev[k * 2] = px; this.bPrev[k * 2 + 1] = pz
+    }
+    this.bInit = true
+    // bord de la grille physique (±44 m) : limite de sécurité là où aucune barrière n'existe
+    const smp = this.surface.sample(this.pos[0], this.pos[2], this.hint, tmp)
+    const lim = 44
+    if (Math.abs(smp.d) > lim) { const c = this.surface.centre(smp.s), sg = smp.d > 0 ? -1 : 1, nx = -c.tz * sg, nz = c.tx * sg, pen = Math.abs(smp.d) - lim
+      this.pos[0] += nx * pen; this.pos[2] += nz * pen; const vn = this.vel[0] * nx + this.vel[2] * nz; if (vn < 0) { this.vel[0] -= nx * vn * 1.2; this.vel[2] -= nz * vn * 1.2 } }
+  }
   private collideWalls(dt: number) {
     this.impact = Math.max(0, this.impact - dt * 4)
     const pts: [number, number, number][] = [[-0.98, 0.25, -2.55], [0.98, 0.25, -2.55], [-1.0, 0.3, 0.1], [1.0, 0.3, 0.1], [-0.55, 0.4, 2.55], [0.55, 0.4, 2.55], [-0.95, 0.3, 1.6], [0.95, 0.3, 1.6]]
@@ -507,6 +623,15 @@ export class Vehicle {
   }
 }
 
+/** contour de la voiture (repère modèle : x, z ; 3e valeur = zone pour les dégâts : 1 aileron AV, 2 aileron AR,
+ *  10–13 roue AVG/AVD/ARG/ARD, 0 coque) — voiture orientée −Z, empattement 3,6 m, voie ≈ 2 m */
+const CAR_PTS: [number, number, number][] = [
+  [0, -2.78, 1], [-0.95, -2.5, 1], [0.95, -2.5, 1], [-0.5, -2.6, 1], [0.5, -2.6, 1],
+  [-1.0, -1.95, 10], [1.0, -1.95, 11], [-1.0, -1.25, 10], [1.0, -1.25, 11],
+  [-0.82, -0.3, 0], [0.82, -0.3, 0], [-0.75, 0.6, 0], [0.75, 0.6, 0],
+  [-1.0, 1.35, 12], [1.0, 1.35, 13], [-1.0, 2.0, 12], [1.0, 2.0, 13],
+  [-0.5, 2.62, 2], [0.5, 2.62, 2], [0, 2.7, 2],
+]
 function quatFromBasis(r: number[], u: number[], b: number[]): number[] {
   // colonnes r, u, b → quaternion [x, y, z, w]
   const m00 = r[0], m10 = r[1], m20 = r[2], m01 = u[0], m11 = u[1], m21 = u[2], m02 = b[0], m12 = b[1], m22 = b[2]
