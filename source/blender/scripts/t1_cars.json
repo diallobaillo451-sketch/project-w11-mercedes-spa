@@ -1,0 +1,335 @@
+{
+ "redbull": {
+  "file": "/workspace/w11-shared/incoming/cars/redbull_rb16_2020.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "ferrari": {
+  "file": "/workspace/w11-shared/incoming/cars/ferrari_sf1000_2020.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "mclaren": {
+  "file": "/workspace/w11-shared/incoming/cars/mclaren_mcl35_2020.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "renault": {
+  "file": "/workspace/w11-shared/incoming/cars/renault_rs20_2020.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "racingpoint": {
+  "file": "/workspace/w11-shared/incoming/cars/racingpoint_rp20_2020.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "alfaromeo": {
+  "file": "/workspace/w11-shared/incoming/cars/alfaromeo_c39_2020.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "haas": {
+  "file": "/workspace/w11-shared/incoming/cars/haas_vf20_2020.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "williams": {
+  "file": "/workspace/w11-shared/incoming/cars/williams_fw42_2019.glb",
+  "mats": {
+   "tyre": "Tyre",
+   "_ext": "PAINT",
+   "chassis": "CARBON",
+   "misc": "DETAIL",
+   "wheel": "wheel_hub",
+   "windows": "GLASS",
+   "lights": "lights",
+   "cab": "cab",
+   "badges": "decals"
+  }
+ },
+ "alphatauri": {
+  "file": "/workspace/w11-shared/incoming/cars/alphatauri_at01_2020.glb",
+  "mats": {
+   "Tyre": "Tyre",
+   "CARBON": "CARBON",
+   "WHEEL_HUB": "wheel_hub",
+   "EXT_Disc|DISCS": "disc",
+   "Caliper": "Caliper",
+   "DETAIL": "DETAIL",
+   "MIRROR": "GLASS"
+  },
+  "scale": 100,
+  "steer": "STEER_HR",
+  "flap_src": "a_rearwingmoving",
+  "livery": "alphatauri",
+  "livery_mats": "PAINT|NUMBER",
+  "hi_decimate": 0.35,
+  "flat": {
+   "CARBON": [
+    0.018,
+    0.018,
+    0.02
+   ]
+  },
+  "wheel_src": {
+   "spin": "^(TYRE_|RIM_|DISC_|disc_|wheel_|g_Disc)",
+   "hub": "^(hub_|g_Caliper)"
+  }
+ },
+ "safetycar": {
+  "file": "/workspace/w11-shared/incoming/cars/mercedes_amg_gt_bs_safety_car.glb",
+  "mats": {},
+  "objmats": [
+   [
+    "tyre",
+    {
+     "name": "Tyre",
+     "rgb": [
+      0.025,
+      0.025,
+      0.025
+     ],
+     "rough": 0.85
+    }
+   ],
+   [
+    "disc_metal|_disc_",
+    {
+     "name": "disc",
+     "rgb": [
+      0.25,
+      0.25,
+      0.26
+     ],
+     "met": 0.9,
+     "rough": 0.4
+    }
+   ],
+   [
+    "caliper",
+    {
+     "name": "Caliper",
+     "rgb": [
+      0.5,
+      0.02,
+      0.02
+     ],
+     "rough": 0.4
+    }
+   ],
+   [
+    "wheel_metal|wheel_color|sp0|wheel_amg|disc_black",
+    {
+     "name": "wheel_hub",
+     "rgb": [
+      0.04,
+      0.04,
+      0.045
+     ],
+     "met": 0.7,
+     "rough": 0.35
+    }
+   ],
+   [
+    "safelight_light",
+    {
+     "name": "SC_lightbar",
+     "rgb": [
+      1.0,
+      0.35,
+      0.0
+     ],
+     "rough": 0.3,
+     "emit": [
+      1.0,
+      0.35,
+      0.0
+     ],
+     "emitS": 0.2
+    }
+   ],
+   [
+    "red_glass|turn_|brake_bulb",
+    {
+     "name": "lights_red",
+     "rgb": [
+      0.5,
+      0.01,
+      0.01
+     ],
+     "rough": 0.1,
+     "emit": [
+      1,
+      0.02,
+      0.01
+     ],
+     "emitS": 0.3
+    }
+   ],
+   [
+    "glass|window|win_|bulb|white_glass",
+    {
+     "name": "GLASS",
+     "rgb": [
+      0.02,
+      0.025,
+      0.03
+     ],
+     "rough": 0.05,
+     "met": 0.0,
+     "alpha": 0.55
+    }
+   ],
+   [
+    "light_chrome|chrome|tianxian_metal|body_metal",
+    {
+     "name": "chrome",
+     "rgb": [
+      0.8,
+      0.8,
+      0.8
+     ],
+     "met": 1.0,
+     "rough": 0.15
+    }
+   ],
+   [
+    "carbon",
+    {
+     "name": "CARBON",
+     "rgb": [
+      0.02,
+      0.02,
+      0.022
+     ],
+     "rough": 0.35,
+     "coat": 0.6
+    }
+   ],
+   [
+    "body_red|mark",
+    {
+     "name": "decals",
+     "rgb": [
+      0.6,
+      0.02,
+      0.02
+     ],
+     "rough": 0.4
+    }
+   ],
+   [
+    "paint_black|body_black|wing_black",
+    {
+     "name": "black",
+     "rgb": [
+      0.012,
+      0.012,
+      0.014
+     ],
+     "rough": 0.3,
+     "coat": 0.8
+    }
+   ],
+   [
+    "car_paint0|paint_backroof|car_paint_",
+    {
+     "name": "PAINT",
+     "rgb": [
+      0.55,
+      0.56,
+      0.58
+     ],
+     "met": 0.85,
+     "rough": 0.32,
+     "coat": 1.0
+    }
+   ],
+   [
+    ".",
+    {
+     "name": "DETAIL",
+     "rgb": [
+      0.02,
+      0.02,
+      0.022
+     ],
+     "rough": 0.55
+    }
+   ]
+  ],
+  "tyre": "tyre",
+  "spin": "tyre|wheel|disc|sp0",
+  "hi_decimate": 0.06,
+  "seat": false,
+  "drs": false,
+  "lod": [
+   0.4,
+   0.12
+  ]
+ }
+}
