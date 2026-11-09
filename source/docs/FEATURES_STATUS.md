@@ -28,3 +28,15 @@ Légende (honnête) : **Non commencé** / **En cours** / **Implémenté** (codé
 | Qualité | Niveaux low/medium/high/ultra ; défaut iPhone = medium + résolution adaptative (min 0,55) | Testé (headless) | `?q=` ; perf iPhone non mesurée |
 | PWA | Manifest plein écran paysage, icônes, service worker | Implémenté | iOS : pas de verrouillage d'orientation garanti, cache limité (~50 Mo par origine selon versions) |
 | Livraison | dist/ 68,5 Mo (HTTPS / GitLab Pages), zip 66,6 Mo, publish/ (CI SHA-256 simulée OK) ; fichier unique non reconstruit (obsolète) | Testé (headless) | |
+
+## Lot 7 (9 nov. 2026)
+- Menu style Apple, avec la vitrine 3D de la voiture et du pilote : ✅
+- Sélection des 20 pilotes de 2020 : ✅
+- Choix du circuit et de la voiture (structure prête ; seuls Spa et la W11 sont disponibles) : ✅
+- Course rapide : feux de départ, N tours, résultats : ✅
+- Week-end complet (EL1–3, Q1–3, course) : ✅
+- Garage avec l'ingénieur (propositions de réglages) : ✅
+- Préparation de la voiture qui consomme le temps de séance : ✅
+- Réglages ailerons, hauteurs de caisse et pressions : ✅
+- Plateau IA : ❌ pas encore fait (points d'accroche : `gridHooks`)
+- Autres circuits et voitures : ❌ en attente des modèles 3D de Baillo

@@ -37,3 +37,16 @@ Aucune spec « exacte » inventée. Chaque valeur est marquée **P** (publiée, 
 
 ## Outils (tous gratuits / open source)
 Blender 5.2 (GPL), glTF-Transform 4.5 (MIT), meshoptimizer/gltfpack (MIT), sharp/libvips (Apache-2.0/LGPL), three.js (MIT), Playwright (Apache-2.0), Python numpy/scipy/OpenCV/Pillow.
+
+## Lot 7 — casques, combinaisons et couleurs des 20 pilotes 2020 (approximations)
+Les textures (`game/public/drivers/<id>/`) ont été peintes de façon procédurale par `tools/drivers_paint.py`, à partir de `game/src/data/drivers2020.json`. Les motifs ont été relevés à l'œil sur des photos publiques ; aucune image n'a été copiée.
+- RaceFans, « Pictures: Every F1 driver's helmet for the 2020 season » : https://www.racefans.net/2020/03/16/pictures-every-f1-drivers-helmet-for-the-2020-season/
+- Motor Sport Magazine, galerie des casques F1 2020 : https://www.motorsportmagazine.com/articles/single-seaters/f1/gallery-2020-formula-1-driver-crash-helmets/
+- f1i.autojournal.fr : galeries photos des présentations 2020.
+- Couleurs d'équipe 2020 : livrées officielles telles que photographiées (valeurs RGB estimées).
+
+Sponsors : uniquement des marques texte ou des formes simples, sans aucun logo officiel copié.
+Hamilton : son casque d'origine est conservé (référence de qualité).
+Écarts connus : motifs fins simplifiés (dégradés, éléments de casque événementiels, numéros stylisés) et couleurs exactes approchées.
+Modèle 3D du pilote : `driver_bell.glb` (CC BY-NC-SA), maillage commun aux 20 pilotes.
+Durées réelles des séances 2020 : EL 90/90/60 min, Q 18/15/12 min. Pneus Pirelli à Spa 2020 : C2/C3/C4, pressions minimales 24,5 / 21,0 psi.
