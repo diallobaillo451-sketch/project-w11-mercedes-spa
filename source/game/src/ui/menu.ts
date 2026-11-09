@@ -1,6 +1,6 @@
 /** Menu principal « style Apple » : panneau de verre + navigation en pile (ressorts), vitrine 3D à droite.
  *  Accueil → Mode → Pilote → Circuit → Voiture → Réglages de session → Départ. */
-import { CARS, CIRCUITS, DRIVERS, TEAMS, driverById, teamAccent } from '../data/drivers.ts'
+import { CARS, CIRCUITS, DRIVERS, TEAMS, driverById, teamAccent, carOfTeam } from '../data/drivers.ts'
 import { BACK, CHEV, alertBox, ctl, ctlCol, footnote, fmtTime, group, h, haptic, header, row, seg, stepper, toggle } from './kit.ts'
 import { REAL_MIN, WK_LABEL, WK_SHORT, type Weather } from '../core/weekend.ts'
 import type { ShowShot } from '../render/showroom.ts'
@@ -14,6 +14,8 @@ export interface MenuHost {
   profile: Profile; weather: Weather; damage: 'off' | 'visual' | 'real'
   save(): void
   setDriver(id: string): void
+  /** voiture affichée/pilotée (id de CARS) */
+  setCar(id: string): void
   shot(s: ShowShot): void
   startQuick(): void
   startWeekend(fresh: boolean): void
@@ -146,7 +148,7 @@ export class Menu {
             b.innerHTML = `<img alt="" loading="lazy" src="./drivers/thumb/${d.id}.webp"><span class="nm"><small>${flagEmoji(d.nat)} ${d.first}</small><b></b></span><span class="no">${d.num}</span>`
             b.querySelector('b')!.textContent = d.last
             b.addEventListener('click', () => {
-              haptic(); P.driver = d.id; save(); H.setDriver(d.id)
+              haptic(); P.driver = d.id; P.car = carOfTeam(d.team); save(); H.setDriver(d.id); H.setCar(P.car)
               el.querySelectorAll('.ap-drv').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); this.updHero(); H.shot('helmet')
               clearTimeout(this.shotT); this.shotT = window.setTimeout(() => { if (this.pages[this.pages.length - 1]?.id === 'driver') H.shot('driver') }, 2600)
             })
@@ -166,8 +168,8 @@ export class Menu {
       }
       case 'car': {
         title(this.flow ? 'Étape 3 sur 4' : 'Garage', 'Voiture', 'Monoplaces 2020')
-        el.append(group(...CARS.map(c => row({ title: c.name, sub: TEAMS[c.team].name, check: c.id === P.car, disabled: !c.available, badge: c.available ? undefined : 'Bientôt', onTap: () => { P.car = c.id; save(); this.refresh() } }))))
-        el.append(footnote('Le pilote choisi garde son casque et sa combinaison quelle que soit la voiture.'))
+        el.append(group(...CARS.map(c => row({ title: c.name, sub: TEAMS[c.team].name, check: c.id === P.car, disabled: !c.available, badge: c.available ? undefined : 'Bientôt', onTap: () => { P.car = c.id; if (driverById(P.driver).team !== c.team) { P.driver = DRIVERS.find(d => d.team === c.team)!.id; H.setDriver(P.driver) } save(); H.setCar(c.id); this.refresh() } }))))
+        el.append(footnote('Choisir un pilote installe la voiture de son équipe, et inversement. Williams : modèle FW42 (2019) utilisé pour la FW43 de 2020. Modèles 3D : crédits dans « À propos ».'))
         return { id, el, title: 'Voiture', shot: 'rear' }
       }
       case 'quick': {

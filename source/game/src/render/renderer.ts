@@ -35,6 +35,13 @@ import type { TrackSurface } from '../track/surface.ts'
 
 export type Progress = (label: string, frac: number) => void
 /** Téléchargement avec progression (fetch + flux), puis analyse glTF (meshopt). */
+/** libère géométries, matériaux et textures d'un sous-arbre (hors pilote W11 déplacé avant l'appel) */
+function disposeTree(root: THREE.Object3D) {
+  const tx = new Set<THREE.Texture>()
+  root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; m.geometry.dispose()
+    for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as unknown as Record<string, unknown>[]) { for (const v of Object.values(mt)) if ((v as THREE.Texture)?.isTexture) tx.add(v as THREE.Texture); (mt as unknown as THREE.Material).dispose() } })
+  for (const t of tx) t.dispose()
+}
 async function loadGLB(url: string, onp: (f: number) => void, ktx: KTX2Loader | null = null): Promise<GLTF> {
   const r = await fetch(url); if (!r.ok) throw new Error(url + ' : HTTP ' + r.status)
   const total = Number(r.headers.get('content-length')) || 0
@@ -277,7 +284,7 @@ export class Renderer {
     this.memLog('piste + voiture analysées')
     this.tilesAtStart = this.tiles.loaded.size
     this.scene.add(this.track)
-    this.rig = new CarRig(cg, an)
+    this.rig = new CarRig(cg, an); this.w11G = cg; this.w11Rig = this.rig
     this.car.add(this.rig.root)
     // reflets réels de l'environnement sur la voiture (sonde cube dynamique), sinon IBL du ciel seul
     const P = new URLSearchParams(location.search)
@@ -470,6 +477,47 @@ export class Renderer {
     return L.loadAsync(url) as Promise<THREE.Texture>
   }
   setDriver(id: string, hasSuit = true) { return this.rig?.setDriver(id, this.loadDriverTex, hasSuit) ?? Promise.resolve() }
+  /** Lot 8 — voiture d'équipe : GLB public/cars/<id>_hi.glb (tools/team_cars_opt.mjs) + pilote W11 greffé (armature DRV_rig,
+   *  volant, clip « steer ») à l'offset du siège mesuré dans Blender (t1_team_car.py → <id>.json). Le pilote n'existe qu'une fois :
+   *  il est déplacé d'une voiture à l'autre (textures pilote conservées). La voiture précédente (hors W11) est libérée du GPU. */
+  carId = 'w11'; private w11G: { scene: THREE.Object3D; animations: THREE.AnimationClip[] } | null = null; private w11Rig: CarRig | null = null
+  private carSeq = 0; private drvHome: { o: THREE.Object3D; parent: THREE.Object3D; p: THREE.Vector3; q: THREE.Quaternion; s: THREE.Vector3 }[] = []
+  onCarChanged: (() => void) | null = null
+  carMeta: Record<string, unknown> | null = null
+  private ktxAny() { return KTX ?? (this.drvKtx ??= new KTX2Loader().setTranscoderPath('./basis/').setWorkerLimit(2).detectSupport(this.r)) }
+  private moveDriver(dst: THREE.Object3D | null, seat: number[]) {
+    const src = this.w11Rig!.root
+    if (!this.drvHome.length) for (const n of ['DRV_rig', 'STEERING_WHEEL']) { const o = src.getObjectByName(n); if (o) this.drvHome.push({ o, parent: o.parent!, p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }) }
+    if (!dst) { for (const h of this.drvHome) { h.parent.add(h.o); h.o.position.copy(h.p); h.o.quaternion.copy(h.q); h.o.scale.copy(h.s) } return }
+    // pose de référence : la pièce remise chez la W11, matrice relative à la racine W11 → même matrice relative au siège
+    for (const h of this.drvHome) { h.parent.add(h.o); h.o.position.copy(h.p); h.o.quaternion.copy(h.q); h.o.scale.copy(h.s) }
+    src.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(src.matrixWorld).invert()
+    const seatG = new THREE.Group(); seatG.name = 'driver_seat'; seatG.position.fromArray(seat); dst.add(seatG)
+    for (const h of this.drvHome) { const m = new THREE.Matrix4().multiplyMatrices(inv, h.o.matrixWorld); seatG.add(h.o); m.decompose(h.o.position, h.o.quaternion, h.o.scale) }
+  }
+  async setCar(id: string) {
+    if (!this.rig || !this.w11Rig || !this.w11G) return
+    if (id === this.carId) return
+    const seq = ++this.carSeq
+    let rig: CarRig
+    if (id === 'w11') { this.moveDriver(null, [0, 0, 0]); rig = this.w11Rig; this.carMeta = null }
+    else {
+      const meta = await (await fetch(`./cars/${id}.json`)).json() as { seat_gltf: number[]; tcam_gltf: number[] }
+      const g = await loadGLB(`./cars/${id}_hi.glb`, () => {}, this.ktxAny())
+      if (seq !== this.carSeq) { disposeTree(g.scene); return }
+      this.moveDriver(g.scene, meta.seat_gltf)
+      rig = new CarRig({ scene: g.scene, animations: this.w11G.animations }, this.an, { tcam: meta.tcam_gltf })
+      this.carMeta = meta
+    }
+    const old = this.rig
+    rig.adoptDriver(old); rig.onPartLost = old.onPartLost
+    this.car.remove(old.root); this.car.add(rig.root); this.rig = rig
+    if (old !== this.w11Rig) disposeTree(old.root)
+    if (this.probe) { const t = this.probe.texture, ei = this.look.env * this.q.envIntensity; rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) if ('envMap' in mt) { mt.envMap = t; mt.envMapIntensity = ei; mt.needsUpdate = true } }) }
+    if (this.show.active) { rig.setCockpit(false); this.show.refit(this.car) }
+    this.carId = id; dlog('voiture : ' + id); this.onCarChanged?.()
+  }
   detail: DetailSet | null = null
   grass: Grass | null = null
   crowd: Crowd | null = null

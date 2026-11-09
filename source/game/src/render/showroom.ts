@@ -60,6 +60,11 @@ export class Showroom {
     this.active = true; this.carParent = car.parent; this.carPos.copy(car.position); this.carQ.copy(car.quaternion)
     this.carRef = car; this.liftY = 0; this.scene.add(car); car.position.set(0, 0, 0); car.quaternion.identity(); car.updateMatrixWorld(true)
     this.scene.environment = env; this.scene.environmentIntensity = this.light ? 0.5 : 0.32; this.floorM.envMap = env; this.floorM.envMapIntensity = this.light ? 0.12 : 0.05
+    this.refit(car)
+  }
+  /** après changement de voiture : casque visé par le plan « casque » et sol replacé sous les pneus */
+  refit(car: THREE.Object3D) {
+    car.updateMatrixWorld(true)
     this.helmet = null; car.traverse(o => { if (!this.helmet && /^Helmet_Base/.test(o.name)) this.helmet = o })
     // sol posé sous les pneus (l'origine du groupe voiture est au centre de gravité)
     let minY = Infinity; const bb = new THREE.Box3()

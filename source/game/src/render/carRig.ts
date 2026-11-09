@@ -54,7 +54,7 @@ export class CarRig {
   }
   headMeshes: THREE.Object3D[] = []
   setCockpit(on: boolean) { for (const o of this.headMeshes) o.visible = !on }
-  constructor(gltf: { scene: THREE.Object3D; animations: THREE.AnimationClip[] }, anisotropy: number) {
+  constructor(gltf: { scene: THREE.Object3D; animations: THREE.AnimationClip[] }, anisotropy: number, opt: { tcam?: number[] } = {}) {
     this.root = gltf.scene
     const byName = (n: string) => this.root.getObjectByName(n) ?? null
     WN.forEach((n, i) => {
@@ -90,7 +90,8 @@ export class CarRig {
     if (vis) { this.root.updateMatrixWorld(true); const v = new THREE.Vector3(); vis.getWorldPosition(v); this.root.worldToLocal(v); this.eye.set(0, v.y - 0.005, v.z + 0.02) }
     // en cockpit on masque seulement la tête (casque, visière, yeux) : bras, gants et volant restent visibles
     this.root.traverse(o => { if ((o as THREE.Mesh).isMesh && /Helmet|VISOR|Visor|Head|Eyes|HANS/i.test(o.name)) this.headMeshes.push(o) })
-    const tv = byName('tvcam'); if (tv) { const b = new THREE.Box3().setFromObject(tv); b.getCenter(this.tcam); this.tcam.y = b.max.y + 0.06 }
+    if (opt.tcam) this.tcam.fromArray(opt.tcam)
+    const tv = byName('tvcam'); if (tv && !opt.tcam) { const b = new THREE.Box3().setFromObject(tv); b.getCenter(this.tcam); this.tcam.y = b.max.y + 0.06 }
     // matériaux : vernis carrosserie, carbone anisotrope, ombres
     const seen = new Set<THREE.Material>()
     this.root.traverse(o => {
@@ -162,6 +163,8 @@ export class CarRig {
   /** Livrée pilote (casque, combinaison, gants) : textures KTX2 du pilote choisi à la place de celles de Hamilton.
    *  Mémoire : les textures d'origine sont libérées du GPU (gardées en RAM pour revenir à Hamilton), celles du pilote
    *  précédent sont détruites → un seul pilote en mémoire GPU, mêmes tailles que l'original (pas de hausse en course). */
+  /** reprise de l'état pilote (textures casque/combinaison) quand le pilote est greffé dans une autre voiture */
+  adoptDriver(o: CarRig) { this.driverId = o.driverId; this.drvOrig = o.drvOrig; this.drvTex = o.drvTex; this.drvSeq = o.drvSeq }
   driverId = 'ham'; private drvOrig = new Map<THREE.MeshStandardMaterial, THREE.Texture>(); private drvTex: THREE.Texture[] = []; private drvSeq = 0
   async setDriver(id: string, load: (url: string) => Promise<THREE.Texture>, hasSuit = true) {
     if (id === this.driverId) return
