@@ -74,7 +74,7 @@ body.gyro #steerZone{display:none}
 body.gyro .aux{right:calc(104px + var(--safe-r))}
 .abtn{width:44px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(10,12,14,.38);color:#fff;font-size:11px;font-weight:700}
 .abtn.on,.abtn.avail{background:var(--green);color:#001}
-body.autogear #bUp,body.autogear #bDown{visibility:hidden}
+body.autogear #bUp,body.autogear #bDown{display:none}
 .perf{position:absolute;left:calc(8px + var(--safe-l));top:calc(46px + var(--safe-t));font:10px ui-monospace,Menlo,monospace;background:rgba(0,0,0,.45);padding:3px 6px;border-radius:6px;white-space:pre}
 #rotate{display:none;background:#000;z-index:50;font-size:15px}
 .phone{width:40px;height:70px;border:3px solid #fff;border-radius:9px;animation:rot 2s ease-in-out infinite}
@@ -86,3 +86,26 @@ body.autogear #bUp,body.autogear #bDown{visibility:hidden}
 #fatal h2{margin:0 0 6px;font-size:18px;color:#ff6b6b}#fatal .frow{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 #fatal pre,.diag pre{white-space:pre-wrap;font:11px/1.35 ui-monospace,Menlo,monospace;background:#ffffff10;padding:8px;border-radius:6px;max-height:40vh;overflow:auto;user-select:text;-webkit-user-select:text}
 .diag table{border-collapse:collapse;width:100%;font-size:13px}.diag td{padding:2px 6px;border-bottom:1px solid #ffffff18}.diag td:first-child{opacity:.7}
+
+/* v2 : HUD Apple redessiné — en cockpit il monte en haut à gauche (le volant affiche ses propres données) */
+.dash{box-shadow:0 8px 30px rgba(0,0,0,.35)}
+body.ck .dash{left:calc(10px + var(--safe-l));top:calc(46px + var(--safe-t));bottom:auto;transform:none;width:212px;padding:4px 10px 5px;border-radius:14px}
+body.ck .dash .spd b{font-size:22px}body.ck .dash .gear{font-size:26px}body.ck .dash .leds i{width:9px;height:4px}
+body.ck .dash .flags{display:none}
+.flagban{z-index:7;position:absolute;top:calc(70px + var(--safe-t));left:50%;transform:translateX(-50%);padding:5px 16px;border-radius:12px;font-weight:800;font-size:13px;letter-spacing:.06em;color:#000;
+  box-shadow:0 6px 24px rgba(0,0,0,.35);animation:fl 1s steps(2) infinite}
+.flagban.green{background:#18d24a}.flagban.yellow,.flagban.double,.flagban.sc,.flagban.vsc{background:#ffd400}.flagban.red{background:#ff2a1f;color:#fff}.flagban.blue{background:#2f7bff;color:#fff}
+.flagban.chequered{background:repeating-conic-gradient(#fff 0 25%,#111 0 50%) 0 0/14px 14px;color:#fff;text-shadow:0 0 4px #000}.flagban.blackwhite{background:linear-gradient(135deg,#111 50%,#fff 50%);color:#fff;text-shadow:0 0 3px #000}
+@keyframes fl{50%{opacity:.72}}
+.deltachip{position:absolute;top:calc(66px + var(--safe-t));left:50%;transform:translateX(-50%) translateY(-6px);font:700 12px -apple-system,system-ui;font-variant-numeric:tabular-nums;padding:2px 9px;border-radius:9px;background:var(--glass);border:1px solid var(--line)}
+.deltachip.neg{color:var(--green)}.deltachip.pos{color:var(--red)}
+.wpad{position:absolute;top:calc(100px + var(--safe-t));right:calc(190px + var(--safe-r));padding:8px 10px;border-radius:16px;display:flex;flex-direction:column;gap:6px;pointer-events:auto;z-index:6}
+.wrow{display:flex;align-items:center;gap:5px}.wl{font-size:9px;font-weight:700;opacity:.65;margin-left:4px}.wrow b{min-width:30px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--teal)}
+.wb{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.1);color:#fff;font-size:16px;font-weight:700}
+.wk{height:30px;padding:0 10px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:800;letter-spacing:.03em}
+.wb:active,.wk:active{transform:scale(.94);background:rgba(255,255,255,.25)}
+.wk.on{background:var(--teal);color:#001614;border-color:transparent}.wk.pit.on{background:#ffd400;color:#000}.wk.ot.on{background:#ff9f0a;color:#000}.wk.drs.on{background:var(--green);color:#000}
+.wk.radio{background:rgba(0,210,190,.18)}
+#bWheel{width:auto;padding:0 10px;font-size:12px;font-weight:600}#bWheel.on{background:var(--teal);color:#001614}
+.abtn.pit.on{background:#ffd400;color:#000}.abtn.ot.on{background:#ff9f0a;color:#000}
+.aux{grid-template-columns:44px 44px}
