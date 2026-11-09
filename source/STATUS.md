@@ -186,7 +186,7 @@ Dernière mise à jour : 2026-11-03 07:35 (heure Canaries, UTC+0) — piste plei
 
 **Lot 6b** — commits 50b89794 [skip ci] + f9f516c6 ; JS `index-DCF6gZIW.js`.
 - Arrachage visible de l'ensemble nez + aileron AV. Tous les maillages sont découpés, plus seulement `Car_wing`. Même traitement pour l'aileron AR au-dessus des roues.
-- Traces de pneus continues : maintien de 0,15 s.
+- Traces de pneus continues : maintien de 0,15 s. **Lot 6c** (574836fd + 2e6f95d9, JS `index-Cb8UmyDF.js`) : le fondu des traces passe sur les bords en largeur au lieu de la longueur, ce qui supprime les pointillés.
 - Ciel couvert plus clair.
 - Décrochage de l'effet de sol limité au sol dur. Avant ce correctif, le test gravier était hors plage : 1,36 g, contre une référence de 0,8 à 1,3 g. Il est maintenant à 1,30 g.
 

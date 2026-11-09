@@ -51,7 +51,7 @@ export class SkidMarks {
         }`,
       fragmentShader: `varying float vA; varying vec3 vC; varying vec2 vUv;
         #include <fog_pars_fragment>
-        void main(){ float e = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x); float str = 0.75 + 0.25 * fract(sin(floor(vUv.x * 9.0) * 91.7) * 437.5);
+        void main(){ float e = smoothstep(0.0, 0.2, vUv.y) * smoothstep(1.0, 0.8, vUv.y); float str = 0.8 + 0.2 * fract(sin(floor(vUv.y * 7.0) * 91.7) * 437.5); // bords doux en travers, rainures de gomme dans la largeur
         gl_FragColor = vec4(vC, vA * e * str);
         #include <fog_fragment>
         }` })
