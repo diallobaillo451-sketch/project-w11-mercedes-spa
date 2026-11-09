@@ -73,6 +73,7 @@ function accelRun(drs: boolean) {
   const buf = readFileSync(new URL('../public/track/surface.bin', import.meta.url))
   const grid = new Uint16Array(buf.buffer, buf.byteOffset, buf.byteLength / 2)
   const track = new TrackSurface(meta, grid)
+  if (!process.env.NOBAR) { const bb = readFileSync(new URL("../public/track/barriers.bin", import.meta.url)); track.barriers = new (await import("../src/track/barriers.ts")).Barriers(bb.buffer.slice(bb.byteOffset, bb.byteOffset + bb.byteLength)) }
   const t0 = Date.now(); const line = buildRacingLine(track, 1600, 1.0); const tl = Date.now() - t0
   const car = new Vehicle(track); car.setup.steerAssist = 0; car.setup.stability = 0
   const ap = new Autopilot(line, Number(process.env.PACE ?? 1.06))
