@@ -3,7 +3,7 @@
  * P = publié (règlement FIA 2020 / Mercedes / Pirelli / F1), M = mesuré sur notre modèle 3D, E = estimation (non publié).
  * Voir docs/RESEARCH_W11.md pour les sources de chaque valeur.
  */
-export type Compound = 'C2' | 'C3' | 'C4'
+export type Compound = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'I' | 'W'
 
 export const W11 = {
   massMin: 746,            // P : masse minimale avec pilote, sans carburant (FIA TR 2020 art. 4.1)
@@ -53,9 +53,11 @@ export const W11 = {
     fz0: 3000, loadSens: 0.09, kPeak: 0.11, aPeak: 0.105, C: 1.45,
     relax: 0.28, heatGain: 0.0105, coolBase: 2.6, coolSpeed: 0.11, heatCap: 1.0,
     frontHeat: 1.35, // E : pneu AV plus étroit (305 mm) → plus de chaleur par unité de surface ; calé pour AV ≈ 90–100 °C en tour de qualif
-    window: { C2: [110, 135], C3: [105, 135], C4: [90, 120] } as Record<Compound, [number, number]>, // P (Pirelli, motorsport.com)
-    gripC: { C2: 0.975, C3: 0.99, C4: 1.0 } as Record<Compound, number>, // E
-    wearC: { C2: 0.6, C3: 0.8, C4: 1.1 } as Record<Compound, number>,   // E
+    // P : fenêtres Pirelli 2020 (motorsport.com, « Pirelli could widen working range ») ; I/W : E (gomme tendre, 45–90 °C)
+    window: { C1: [110, 140], C2: [110, 135], C3: [105, 135], C4: [90, 120], C5: [85, 115], I: [55, 90], W: [45, 80] } as Record<Compound, [number, number]>,
+    gripC: { C1: 0.955, C2: 0.97, C3: 0.985, C4: 1.0, C5: 1.01, I: 1.0, W: 1.0 } as Record<Compound, number>, // E : ≈ 0,4–0,6 s/tour entre composés voisins
+    wearC: { C1: 0.45, C2: 0.6, C3: 0.8, C4: 1.1, C5: 1.5, I: 1.3, W: 1.5 } as Record<Compound, number>,   // E
+    grainC: { C1: 0.6, C2: 0.8, C3: 1.0, C4: 1.2, C5: 1.0, I: 1.5, W: 1.2 } as Record<Compound, number>, // E : C5 grène moins que l'ex-hyper (Pirelli 2019)
     blanketF: 95, blanketR: 80, // E
     pColdF: 24.5, pColdR: 21.0, // P psi : minimums Pirelli Spa 2020 (RESEARCH_W11 S9)
   },

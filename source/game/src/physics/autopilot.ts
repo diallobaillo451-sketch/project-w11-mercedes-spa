@@ -6,6 +6,7 @@ export class Autopilot {
   line: RacingLine; pace: number
   private yawI = 0
   private bScale = 1
+  private gS = 1
   constructor(line: RacingLine, pace = 1) { this.line = line; this.pace = pace }
   control(car: Vehicle): Controls {
     const L = this.line, N = L.N
@@ -41,7 +42,10 @@ export class Autopilot {
     const ia = (i + Math.round((v * 0.2 + 3) / L.ds)) % N
     // écart latéral à la trajectoire → le pilote lève le pied (marge de sécurité)
     const latErr = Math.abs(car.d - L.e[i])
-    const vt = L.v[ia] * this.pace
+    // météo : le pilote adapte ses vitesses de passage à l'adhérence mesurée (v ∝ √μ) et freine plus tôt (regard plus loin)
+    this.gS += (Math.sqrt(Math.min(1.03, car.wetGrip)) * (car.wetGrip < 0.95 ? 0.93 : 1) - this.gS) * 0.01
+    let vt = L.v[ia] * this.pace * this.gS
+    if (this.gS < 0.97) { const far = (i + Math.round((v * v / (2 * 9.81 * 2.2 * this.gS * this.gS) + 5) / L.ds)) % N; vt = Math.min(vt, Math.sqrt(Math.max(0, (L.v[far] * this.pace * this.gS) ** 2 + 2 * 9.81 * 2.4 * this.gS * this.gS * Math.max(0, ((far - ia + N) % N) * L.ds)))) }
     const err = vt - v
     let throttle = 0, brake = 0
     if (err > 0.3) throttle = Math.min(1, 0.55 + err * 0.5)

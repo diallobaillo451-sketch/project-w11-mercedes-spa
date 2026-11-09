@@ -6,7 +6,8 @@
  * Pas fixe (240 Hz par défaut). Aucune dépendance à three.js → testable sous Node.
  */
 import { W11, SURFACE, type Compound } from './params.ts'
-import { mf, muPeak, newTyre, tyreThermal, type TyreState } from './tyre.ts'
+import { mf, muPeak, newTyre, tyreThermal, kindOf, type TyreState } from './tyre.ts'
+import { TrackEnv, type GripSample } from './env.ts'
 import { ERS, GEAR_RATIOS, REVERSE_RATIO, icePower, engineBrakeTorque, type EngineMode } from './powertrain.ts'
 import { newSample, type Surface, type SurfaceSample } from '../track/surface.ts'
 import { BARRIER_KIND, type Barriers } from '../track/barriers.ts'
@@ -34,6 +35,14 @@ export interface Wheel {
 }
 const G = 9.81
 const tmp = newSample()
+const gs: GripSample = { mu: 1, aqua: 0, water: 0, rubber: 0, marbles: 0 }
+export interface Damage { frontWing: number; rearWing: number; floor: number; suspension: number[]; total: number
+  /** dérives d'aileron AV (G/D), déflecteurs latéraux (G/D) */
+  endplate: [number, number]; barge: [number, number]
+  /** roue arrachée (suspension cassée) */
+  wheelOff: [boolean, boolean, boolean, boolean] }
+export const newDamage = (): Damage => ({ frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0, endplate: [0, 0], barge: [0, 0], wheelOff: [false, false, false, false] })
+export interface Debris { part: string; pos: number[]; vel: number[] }
 
 export class Vehicle {
   surface: Surface
@@ -55,10 +64,21 @@ export class Vehicle {
   time = 0; reverseHold = 0; ebCut = 0; shiftEvent = 0; lastShiftDir = 0
   /** carburant (kg) consommé selon le débit réel ; limiteur des stands ; dégâts (0 = intact, 1 = épave) */
   fuel: number = W11.fuelQuali; pitLim = false; pitLimCut = 0
-  damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }
+  damage: Damage = newDamage()
+  /** pièces arrachées à ce pas (consommées par le rendu → débris physiques sur la piste) */
+  debris: Debris[] = []
+  private lost = new Set<string>()
+  /** état de piste / météo (gomme, eau, marbles, vent, densité de l'air) ; null → piste sèche standard (tests) */
+  env: TrackEnv | null = null
+  /** usure du patin (mm, FIA : 1 mm max sur 10 mm) ; températures huile / eau (°C) ; derating moteur si surchauffe */
+  plankWear = 0; oilT = 105; waterT = 95; heatDerate = 0
+  /** voiture devant (aspiration / air sale) : distance (m) et décalage latéral (m) ; null = personne */
+  lead: { gap: number; lat: number } | null = null
+  aqua = 0; wetGrip = 1
+  private wasOff = [false, false, false, false]
   /** off : aucun dégât ; visual : la voiture se casse à l'écran seulement ; real : + effets sur la physique */
   damageMode: 'off' | 'visual' | 'real' = 'real'
-  private static readonly NO_DMG = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }
+  private static readonly NO_DMG: Damage = newDamage()
   /** barrières réelles (contours de la géométrie rendue) ; null → anciens murs virtuels (tests sur plan) */
   barriers: Barriers | null = null; hitKind = 0; damageEvent = 0
   private bPrev = new Float64Array(64); private bInit = false
@@ -80,6 +100,11 @@ export class Vehicle {
     this.wheels = [mk(true, true), mk(true, false), mk(false, true), mk(false, false)]
   }
 
+  /** Monte un train de pneus neufs du composé choisi (couvertures chauffantes réglables, E/P). */
+  fitTyres(c = this.setup.compound, blanketF?: number, blanketR?: number) {
+    this.setup.compound = c
+    for (const w of this.wheels) w.tyre = newTyre(w.front, c, kindOf(c) === 'slick' ? (w.front ? blanketF : blanketR) : undefined)
+  }
   /** Place la voiture sur la ligne centrale à l'abscisse s (m), décalage latéral d, cap = tangente. */
   placeAt(s: number, d = 0, speed = 0) {
     const c = this.surface.centre(s)
@@ -223,8 +248,11 @@ export class Vehicle {
     let tCrank: number
     if (throttle > 0.01) {
       let p = icePower(rpm, throttle, S.engineMode)
-      // carburant : débit (kg/h) proportionnel à la puissance demandée → masse qui baisse au fil du tour
-      this.fuel = Math.max(0, this.fuel - p / (W11.fuelLHV * 0.5) * dt)
+      // densité de l'air : le turbo compense en partie (E : P ∝ (ρ/ρ0)^0,3) ; surchauffe huile/eau → cartographie de protection
+      if (this.env) p *= Math.pow(this.env.rho / W11.rho, 0.3)
+      p *= 1 - 0.12 * this.heatDerate
+      // carburant : débit ∝ puissance (rendement ≈ 50 %), plafonné à 100 kg/h (P : règlement 2020)
+      this.fuel = Math.max(0, this.fuel - Math.min(p / (W11.fuelLHV * 0.5), 100 / 3600) * dt)
       p += this.ers.deploy(throttle, rpm, vF, dt)
       tCrank = p / omegaE
     } else { this.ers.deploy(0, rpm, vF, dt); tCrank = engineBrakeTorque(rpm) }
@@ -264,18 +292,28 @@ export class Vehicle {
     rl.brakeTq = rearFric * bFade(rl.brakeT) * rl.absF + regen; rr.brakeTq = rearFric * bFade(rr.brakeT) * rr.absF + regen
 
     // ---- aéro
+    if (this.env) { this.wind = this.env.wind; this.airT = this.env.airT; this.trackT = this.env.trackT }
     const vair = [this.vel[0] - this.wind[0], this.vel[1] - this.wind[1], this.vel[2] - this.wind[2]]
     const va = Math.hypot(vair[0], vair[1], vair[2])
-    const qd = 0.5 * W11.rho * va * va
+    const rho = this.env ? this.env.rho : W11.rho
+    const qd = 0.5 * rho * va * va
     const cFront = (fl.c + fr.c) / 2, cRear = (rl.c + rr.c) / 2
     // sensibilité hauteur de caisse (E) : plus bas → plus d'appui jusqu'au contact du plancher
     const hF = W11.rideF - cFront, hR = W11.rideR - cRear
-    const rh = Math.max(0.75, Math.min(1.12, 1 + 1.6 * (0.03 - hF) * 0.5 + 0.8 * (0.075 - hR) * 0.5)) * (this.scrape > 0 ? 0.92 : 1)
+    let rh = Math.max(0.75, Math.min(1.12, 1 + 1.6 * (0.03 - hF) * 0.5 + 0.8 * (0.075 - hR) * 0.5)) * (this.scrape > 0 ? 0.92 : 1)
+    // effet de sol : sous ~8 mm à l'AV le flux sous le fond décroche (E) → perte brutale jusqu'à 15 %
+    rh *= 1 - 0.15 * Math.max(0, Math.min(1, (0.008 - hF) / 0.008))
+    // aileron AR aéroélastique : il fléchit avec la pression dynamique → moins de traînée (et un peu moins d'appui) à haute vitesse (E)
+    const flex = Math.max(0, Math.min(1, (va - 55) / 30)); const flexS = flex * flex * (3 - 2 * flex)
+    // aspiration / air sale derrière une voiture (E : −30 % de traînée à 1 longueur, appui −20 % à 10 m, sur ±1,5 m latéraux)
+    let tow = 0, dirty = 0
+    if (this.lead && this.lead.gap > 0) { const lat = Math.exp(-((this.lead.lat / 1.5) ** 2)); tow = 0.3 * Math.exp(-this.lead.gap / 30) * lat; dirty = 0.2 * Math.exp(-this.lead.gap / 18) * lat }
     // dégâts : aileron AV → appui AV perdu (sous-virage), aileron AR → appui AR perdu, fond → appui global ; traînée en hausse
     const Dm = this.damageMode === 'real' ? this.damage : Vehicle.NO_DMG
-    const ClA = (W11.ClA + W11.drsClA * this.drsPos) * rh * (1 - 0.22 * Dm.frontWing - 0.3 * Dm.rearWing - 0.3 * Dm.floor)
-    const CdA = (W11.CdA + W11.drsCdA * this.drsPos) * (1 + 0.06 * Dm.frontWing + 0.08 * Dm.rearWing)
-    const bal = W11.aeroBalF + 0.5 * (cFront - cRear) - 0.06 * this.drsPos - 0.1 * Dm.frontWing + 0.08 * Dm.rearWing
+    const epL = Dm.endplate[0], epR = Dm.endplate[1], bgL = Dm.barge[0], bgR = Dm.barge[1]
+    const ClA = (W11.ClA + W11.drsClA * this.drsPos) * rh * (1 - 0.22 * Dm.frontWing - 0.3 * Dm.rearWing - 0.3 * Dm.floor - 0.05 * (epL + epR) - 0.04 * (bgL + bgR)) * (1 - 0.015 * flexS) * (1 - dirty)
+    const CdA = (W11.CdA + W11.drsCdA * this.drsPos) * (1 + 0.06 * Dm.frontWing + 0.08 * Dm.rearWing + 0.015 * (epL + epR + bgL + bgR)) * (1 - 0.025 * flexS) * (1 - tow)
+    const bal = W11.aeroBalF + 0.5 * (cFront - cRear) - 0.06 * this.drsPos - 0.1 * Dm.frontWing + 0.08 * Dm.rearWing - 0.03 * (epL + epR) - 0.08 * dirty
     const down = qd * ClA, drag = qd * CdA
     this.downforce = down; this.drag = drag
     if (va > 0.1) { for (let k = 0; k < 3; k++) F[k] -= vair[k] / va * drag }
@@ -286,7 +324,13 @@ export class Vehicle {
       Tq[0] += ry * fz - rz * fy; Tq[1] += rz * fx - rx * fz; Tq[2] += rx * fy - ry * fx
     }
     const pa = [0, 0, 0]
-    this.toWorld(0, 0, fl.hub[2], pa); addForceAt(-up[0] * dF, -up[1] * dF, -up[2] * dF, this.pos[0] + pa[0], this.pos[1] + pa[1], this.pos[2] + pa[2])
+    // appui AV réparti G/D : une dérive cassée déséquilibre l'avant (la voiture tire du côté intact)
+    const aF = Math.max(-0.2, Math.min(0.2, 0.12 * (epR - epL)))
+    this.toWorld(fl.hub[0] * 0.6, 0, fl.hub[2], pa); addForceAt(-up[0] * dF * (0.5 + aF), -up[1] * dF * (0.5 + aF), -up[2] * dF * (0.5 + aF), this.pos[0] + pa[0], this.pos[1] + pa[1], this.pos[2] + pa[2])
+    this.toWorld(fr.hub[0] * 0.6, 0, fr.hub[2], pa); addForceAt(-up[0] * dF * (0.5 - aF), -up[1] * dF * (0.5 - aF), -up[2] * dF * (0.5 - aF), this.pos[0] + pa[0], this.pos[1] + pa[1], this.pos[2] + pa[2])
+    // vent de travers : force latérale au centre de poussée (0,35 m derrière le CG, E : CyA ≈ 1,6 m²)
+    { const right = [R[0], R[1], R[2]], vl = vair[0] * right[0] + vair[1] * right[1] + vair[2] * right[2], fy = -0.5 * rho * 1.6 * vl * Math.abs(vl)
+      this.toWorld(0, 0, 0.35, pa); addForceAt(right[0] * fy, right[1] * fy, right[2] * fy, this.pos[0] + pa[0], this.pos[1] + pa[1], this.pos[2] + pa[2]) }
     this.toWorld(0, 0, rl.hub[2], pa); addForceAt(-up[0] * dR, -up[1] * dR, -up[2] * dR, this.pos[0] + pa[0], this.pos[1] + pa[1], this.pos[2] + pa[2])
 
     // ---- suspensions
@@ -309,7 +353,10 @@ export class Vehicle {
       if (gh - (hy - w.r) > 0.11 && w.contact) gh = w.groundH
       w.groundH = gh
       const uy = Math.max(0.2, up[1])
-      let c = (gh + w.r / Math.max(0.5, smp.ny) - hy) / uy
+      const wi = this.wheels.indexOf(w)
+      if (Dq.wheelOff[wi]) { w.contact = false; w.c = -W11.droop; w.fz = 0; w.cdot = 0; w.px = hx; w.py = hy - w.r; w.pz = hz; continue }
+      const rEff = w.r - 0.045 * w.tyre.puncture // pneu crevé : la jante descend vers le sol
+      let c = (gh + rEff / Math.max(0.5, smp.ny) - hy) / uy
       // anti-catapulte : une marche brutale (talus, bordure haute, retombée) est absorbée par le flanc du pneu et
       // la structure au lieu d'être vue instantanément par la butée (2,2 MN/m) → plus de voiture « lancée en l'air »
       if (w.contact && c - w.c > 0.02) c = w.c + 0.02
@@ -324,7 +371,7 @@ export class Vehicle {
         if (c > W11.bumpTravel) f += W11.bumpK * (c - W11.bumpTravel) + dmp * 2 * Math.max(0, w.cdot)
         w.fz = Math.max(0, Math.min(f, 26_000)) // plafond ≈ 3,5 g de charge par roue (charge réelle max ≈ 12–15 kN)
       }
-      w.px = hx + up[0] * w.c - smp.nx * w.r; w.py = hy + up[1] * w.c - smp.ny * w.r; w.pz = hz + up[2] * w.c - smp.nz * w.r
+      w.px = hx + up[0] * w.c - smp.nx * rEff; w.py = hy + up[1] * w.c - smp.ny * rEff; w.pz = hz + up[2] * w.c - smp.nz * rEff
     }
     // barres antiroulis
     for (const [a, b, karb] of [[fl, fr, W11.arbF], [rl, rr, W11.arbR]] as [Wheel, Wheel, number][]) {
@@ -365,7 +412,18 @@ export class Vehicle {
       const vx = vcx * fw[0] + vcy * fw[1] + vcz * fw[2]
       const vy = vcx * rw[0] + vcy * rw[1] + vcz * rw[2]
       const sf = SURFACE[w.type] ?? SURFACE[1]
-      const mu = muPeak(w.fz, w.tyre, S.compound, w.front) * sf.mu
+      let mu = muPeak(w.fz, w.tyre, S.compound, w.front) * sf.mu
+      let wet = 0
+      if (this.env) {
+        const g = this.env.grip(w.sample.s, w.sample.d, Math.abs(vx), w.tyre.kind, w.front ? W11.tyreWidthF : W11.tyreWidthR, gs)
+        // herbe / gravier : l'eau aggrave l'adhérence déjà faible ; la gomme et les marbles ne concernent que la piste
+        mu *= w.type <= 3 ? g.mu : Math.max(0.55, 1 - 0.6 * Math.min(1, g.water))
+        wet = g.water
+        if (w.front) { this.aqua = Math.max(this.aqua * 0.98, g.aqua); this.wetGrip = g.mu }
+        if (g.marbles > 0.2 && Math.abs(vx) > 5) w.tyre.pickup = Math.min(1, w.tyre.pickup + g.marbles * 0.12 * dt)
+      }
+      if (w.type === 4 || w.type === 5) { w.tyre.dirt = Math.min(1, w.tyre.dirt + dt * 0.35 * Math.min(1, Math.abs(vx) / 15)); this.wasOff[this.wheels.indexOf(w)] = true }
+      else if (this.wasOff[this.wheels.indexOf(w)]) { this.wasOff[this.wheels.indexOf(w)] = false; if (this.env && Math.abs(vx) > 8) this.env.dropDirt(w.sample.s, w.sample.d, 0.5) }
       const fzE = Math.min(w.fz, 14000)
       const Dmax = mu * fzE
       // dérive avec longueur de relaxation
@@ -422,7 +480,11 @@ export class Vehicle {
       addForceAt(fxw, fyw, fzw, w.px, w.py, w.pz)
       // thermique pneus & freins
       const slipP = Math.abs(Fx * (w.omega * w.r - vx)) + Math.abs(Fy * vy)
-      tyreThermal(w.tyre, slipP, speed, this.airT, this.trackT, dt, S.compound, w.front, w.fz * Math.abs(vx) * 0.002)
+      const locked = brake > 0.2 && Math.abs(w.omega) < 0.5 && Math.abs(vx) > 8
+      tyreThermal(w.tyre, slipP, speed, this.airT, this.trackT, dt, S.compound, w.front, w.fz * Math.abs(vx) * 0.002, (w.left ? -1 : 1) * Fy, w.front ? -0.06 : -0.035, locked, wet)
+      if (this.env) this.env.pass(w.sample.s, w.sample.d, slipP, Math.abs(vx), dt, w.tyre.wear)
+      // crevaison en cours : la pression chute en ~4 s
+      if (w.tyre.puncture > 0 && w.tyre.puncture < 1) w.tyre.puncture = Math.min(1, w.tyre.puncture + dt * 0.25)
     }
     // différentiel autobloquant (embrayages + précharge) — couplage implicite des roues AR
     {
@@ -438,12 +500,14 @@ export class Vehicle {
     for (const w of this.wheels) {
       w.angle += w.omega * dt
       const pB = w.brakeTq * Math.abs(w.omega) * (w.front ? 1 : 0.6)
-      w.brakeT += (pB - W11.brakeCool * (0.3 + speed / 15) * (w.brakeT - this.airT)) * dt / W11.brakeHeatCap
+      // disques carbone : refroidis par l'air (×1,6 sous la pluie, E), oxydation au-delà de 1000 °C (usure)
+      w.brakeT += (pB - W11.brakeCool * (0.3 + speed / 15) * (1 + 0.6 * Math.min(1, this.env?.wetness ?? 0)) * (w.brakeT - this.airT)) * dt / W11.brakeHeatCap
     }
 
     // ---- contact plancher / patin (étincelles)
     this.scrape = 0
     const plank: [number, number, number][] = [[0, 0.012 - this.cg[1] + 0.022, -1.25 - this.cg[2]], [0, 0.012 - this.cg[1] + 0.045, 0.2 - this.cg[2]], [0, 0.012 - this.cg[1] + 0.07, 1.5 - this.cg[2]], [-0.6, 0.06 - this.cg[1], -0.2 - this.cg[2]], [0.6, 0.06 - this.cg[1], -0.2 - this.cg[2]]]
+    for (let i = 0; i < 4; i++) if (Dq.wheelOff[i]) { const w = this.wheels[i]; plank.push([w.hub[0] * 0.85, 0.03 - this.cg[1], w.hub[2]]) }
     for (const p of plank) {
       this.toWorld(p[0], p[1], p[2], pa)
       const px = this.pos[0] + pa[0], py = this.pos[1] + pa[1], pz = this.pos[2] + pa[2]
@@ -460,6 +524,8 @@ export class Vehicle {
         const ff = Math.min(0.45 * fn, this.mass * tl / dt * 0.2)
         addForceAt(smp.nx * fn - tx / tl * ff, smp.ny * fn - ty / tl * ff, smp.nz * fn - tz / tl * ff, px, py, pz)
         if (tl > 3) { this.scrape = Math.max(this.scrape, Math.min(1, fn / 8000)); this.scrapePos = [px, py, pz] }
+        // usure du patin (bois/composite + patins titane) : ∝ effort normal × glissement (E : ~0,3 mm/tour sur un fond très bas)
+        this.plankWear += fn * tl * dt * 4e-9
       }
     }
 
@@ -506,6 +572,11 @@ export class Vehicle {
     }
     this.wheelsOut = out; this.offTrack = out === 4
     this.flipped = this.R[4] < 0.25 ? this.flipped + dt : 0
+    // températures huile / eau : chaleur ∝ puissance, refroidissement ∝ débit d'air dans les pontons (vitesse, aspiration = air chaud)
+    { const pw = this.throttleApplied * (this.rpm / 12000), cool = (0.25 + speed / 40) * (1 - 0.35 * (this.lead ? Math.exp(-this.lead.gap / 20) : 0))
+      this.waterT += (pw * 1.6 - cool * (this.waterT - this.airT - 55) * 0.03) * dt
+      this.oilT += ((this.waterT + 12 - this.oilT) * 0.08) * dt
+      this.heatDerate = Math.max(0, Math.min(1, (this.waterT - 125) / 10)) }
   }
 
   /** collisions contre les barrières réelles : 16 points du contour de la voiture (ailerons, roues, pontons), test
@@ -570,10 +641,16 @@ export class Vehicle {
           if (dv > 3 && this.damageMode !== 'off') {
             const dmg = Math.min(1, (dv - 3) / 22), D = this.damage, part = p[2]
             if (part === 1) D.frontWing = Math.min(1, D.frontWing + dmg)
+            else if (part === 5 || part === 6) { const k = part - 5; D.endplate[k] = Math.min(1, D.endplate[k] + dmg * 1.4); D.frontWing = Math.min(1, D.frontWing + dmg * 0.5) }
+            else if (part === 7 || part === 8) { const k = part - 7; D.barge[k] = Math.min(1, D.barge[k] + dmg * 1.2); D.floor = Math.min(1, D.floor + dmg * 0.3) }
             else if (part === 2) D.rearWing = Math.min(1, D.rearWing + dmg)
-            else if (part >= 10) { const wi = part - 10; D.suspension[wi] = Math.min(1, D.suspension[wi] + dmg * 0.8) }
+            else if (part >= 10) { const wi = part - 10, w = this.wheels[wi]; D.suspension[wi] = Math.min(1, D.suspension[wi] + dmg * 0.8)
+              // crevaison : la jante/le flanc touche à plus de 5 m/s (E) ; roue arrachée si la suspension casse (choc > ~12 m/s)
+              if (dv > 5 && this.damageMode === 'real' && w.tyre.puncture === 0 && Math.random() < 0.15 + dmg) w.tyre.puncture = 0.02
+              if (D.suspension[wi] > 0.85 && dv > 11) D.wheelOff[wi] = true }
             else D.floor = Math.min(1, D.floor + dmg * 0.5)
-            D.total = Math.min(1, Math.max(D.frontWing * 0.5, D.rearWing * 0.6, D.floor * 0.7, ...D.suspension) + 0.15 * (D.frontWing + D.rearWing + D.floor))
+            D.total = Math.min(1, Math.max(D.frontWing * 0.5, D.rearWing * 0.6, D.floor * 0.7, ...D.suspension, ...D.wheelOff.map(o => o ? 1 : 0)) + 0.15 * (D.frontWing + D.rearWing + D.floor) + 0.05 * (D.endplate[0] + D.endplate[1] + D.barge[0] + D.barge[1]))
+            this.emitDebris(pa)
             this.damageEvent = Math.max(this.damageEvent, dmg)
           }
         }
@@ -587,6 +664,21 @@ export class Vehicle {
     if (Math.abs(smp.d) > lim) { const c = this.surface.centre(smp.s), sg = smp.d > 0 ? -1 : 1, nx = -c.tz * sg, nz = c.tx * sg, pen = Math.abs(smp.d) - lim
       this.pos[0] += nx * pen; this.pos[2] += nz * pen; const vn = this.vel[0] * nx + this.vel[2] * nz; if (vn < 0) { this.vel[0] -= nx * vn * 1.2; this.vel[2] -= nz * vn * 1.2 } }
   }
+  /** pièces qui se détachent (une seule fois chacune) → débris (pos/vitesse monde) pour le rendu et la piste */
+  private emitDebris(pa: number[]) {
+    const D = this.damage, v = this.vel
+    const add = (part: string, cond: boolean, lx: number, lz: number) => {
+      if (!cond || this.lost.has(part)) return; this.lost.add(part)
+      const p = this.toWorld(lx - this.cg[0], 0.15 - this.cg[1], lz - this.cg[2], [0, 0, 0])
+      this.debris.push({ part, pos: [this.pos[0] + p[0], this.pos[1] + p[1], this.pos[2] + p[2]], vel: [v[0] * 0.8 + (Math.random() - 0.5) * 6, 2 + Math.random() * 4, v[2] * 0.8 + (Math.random() - 0.5) * 6] })
+    }
+    void pa
+    add('frontWing', D.frontWing > 0.7, 0, -2.6); add('endplateL', D.endplate[0] > 0.7, -0.95, -2.5); add('endplateR', D.endplate[1] > 0.7, 0.95, -2.5)
+    add('rearWing', D.rearWing > 0.65, 0, 2.55); add('bargeL', D.barge[0] > 0.6, -0.82, -0.3); add('bargeR', D.barge[1] > 0.6, 0.82, -0.3)
+    for (let i = 0; i < 4; i++) { const w = this.wheels[i]; add('wheel' + i, D.wheelOff[i], w.hub[0] + this.cg[0], w.hub[2] + this.cg[2]) }
+  }
+  /** réparation complète (stand / redémarrage) : pièces neuves */
+  repair() { this.damage = newDamage(); this.lost.clear(); this.plankWear = 0 }
   private collideWalls(dt: number) {
     this.impact = Math.max(0, this.impact - dt * 4)
     const pts: [number, number, number][] = [[-0.98, 0.25, -2.55], [0.98, 0.25, -2.55], [-1.0, 0.3, 0.1], [1.0, 0.3, 0.1], [-0.55, 0.4, 2.55], [0.55, 0.4, 2.55], [-0.95, 0.3, 1.6], [0.95, 0.3, 1.6]]
@@ -627,12 +719,12 @@ export class Vehicle {
   }
 }
 
-/** contour de la voiture (repère modèle : x, z ; 3e valeur = zone pour les dégâts : 1 aileron AV, 2 aileron AR,
- *  10–13 roue AVG/AVD/ARG/ARD, 0 coque) — voiture orientée −Z, empattement 3,6 m, voie ≈ 2 m */
+/** contour de la voiture (repère modèle : x, z ; 3e valeur = zone pour les dégâts : 1 aileron AV, 5/6 dérive AV G/D,
+ *  7/8 déflecteur latéral G/D, 2 aileron AR, 10–13 roue AVG/AVD/ARG/ARD, 0 coque) — voiture orientée −Z */
 const CAR_PTS: [number, number, number][] = [
-  [0, -2.78, 1], [-0.95, -2.5, 1], [0.95, -2.5, 1], [-0.5, -2.6, 1], [0.5, -2.6, 1],
+  [0, -2.78, 1], [-0.95, -2.5, 5], [0.95, -2.5, 6], [-0.5, -2.6, 1], [0.5, -2.6, 1],
   [-1.0, -1.95, 10], [1.0, -1.95, 11], [-1.0, -1.25, 10], [1.0, -1.25, 11],
-  [-0.82, -0.3, 0], [0.82, -0.3, 0], [-0.75, 0.6, 0], [0.75, 0.6, 0],
+  [-0.82, -0.3, 7], [0.82, -0.3, 8], [-0.75, 0.6, 0], [0.75, 0.6, 0],
   [-1.0, 1.35, 12], [1.0, 1.35, 13], [-1.0, 2.0, 12], [1.0, 2.0, 13],
   [-0.5, 2.62, 2], [0.5, 2.62, 2], [0, 2.7, 2],
 ]
