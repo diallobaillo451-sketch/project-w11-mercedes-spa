@@ -12,6 +12,8 @@ Dossier partagé entre NewBot et Opi. Ne touche pas au code du jeu sur `main`.
 | `spa_osm_geometry.json` | Géométrie Spa dérivée d’OpenStreetMap — licence **ODbL**, à créditer. |
 | `downloads/` | Textures, HDRI et sons **CC0 / libres** (Poly Haven, ambientCG, etc.). Licences détaillées dans `downloads/LICENCES.txt`. |
 | `assets/` | Sortie du pipeline NewBot pour nouveaux circuits/voitures (vide pour l’instant). |
+| `archives/` | ZIP de `radio/` et `downloads/` (limite API). Voir `archives/README_UNPACK.md`. |
+| `incoming/` | Fichiers bruts envoyés par Baillo (ex. voitures GLB Sketchfab) avant pipeline. |
 
 ## Notes
 
