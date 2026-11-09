@@ -2,15 +2,19 @@
 import './ui/style.css'
 import * as THREE from 'three'
 import { TrackSurface } from './track/surface.ts'
+import { Barriers } from './track/barriers.ts'
+import { Pitlane, type PitlaneData } from './track/pitlane.ts'
 import { Game } from './core/game.ts'
 import { Renderer } from './render/renderer.ts'
 import { CAM_LABEL, CAM_ORDER, type CamMode } from './render/cameras.ts'
 import { Input } from './controls/input.ts'
-import { AudioEngine } from './audio/audio.ts'
+import { AudioEngine, type AudioFrame } from './audio/audio.ts'
 import { AdaptiveResolution } from './quality/quality.ts'
 import { loadSettings, saveSettings } from './ui/settings.ts'
 import { aboutPanel, optionsPanel, setupPanel } from './ui/panels.ts'
 import { Hud } from './ui/hud.ts'
+import { WheelDisplay } from './ui/wheel.ts'
+import { FLAG_LABEL } from './core/session.ts'
 import { fmt } from './timing/timing.ts'
 import { diag, dlog, derr, decideSafe, watchdog, bootDone, fatal, reloadSafe, gpuLost } from './diag.ts'
 import { diagPanel } from './ui/diagPanel.ts'
@@ -24,6 +28,8 @@ const input = new Input(settings.input)
 const audio = new AudioEngine()
 const adapt = new AdaptiveResolution()
 let hud: Hud
+let wheel: WheelDisplay | null = null
+const ws = { pitLim: false, ot: false, otT: 0, prevErs: 'hotlap' as string }
 type Screen = 'boot' | 'menu' | 'drive' | 'pause'
 let screen: Screen = 'boot'
 let mode: SessionKind | 'demo' = 'demo'
@@ -35,10 +41,14 @@ function bootProgress(label: string, f: number) {
   diag.lastProgress = performance.now(); if (label !== lastLabel) { lastLabel = label; dlog(label) }
   $('bootText').textContent = label + (diag.safe ? ' · mode sans échec' : ''); ($('bootBar') as HTMLElement).style.width = Math.round(f * 100) + '%' }
 
+let pitData: PitlaneData | null = null
 async function loadTrack(): Promise<TrackSurface> {
   bootProgress('Surface de piste…', 0.02)
-  const [meta, bin] = await Promise.all([fetch('./track/surface.json').then(r => r.json()), fetch('./track/surface.bin').then(r => r.arrayBuffer())])
-  return new TrackSurface(meta, new Uint16Array(bin))
+  const [meta, bin, bar] = await Promise.all([fetch('./track/surface.json').then(r => r.json()), fetch('./track/surface.bin').then(r => r.arrayBuffer()),
+    fetch('./track/barriers.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)])
+  const t = new TrackSurface(meta, new Uint16Array(bin)); if (bar) t.barriers = new Barriers(bar)
+  pitData = await fetch('./track/pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null)
+  return t
 }
 function applySettings() {
   Object.assign(game.car.setup, settings.setup)
@@ -102,6 +112,13 @@ function closePanel() {
   if (panelQ && settings.quality !== panelQ) { saveSettings(settings); location.reload() }
 }
 
+function syncWheelPad() {
+  const S = settings.setup, c = game.car
+  $('wBB').textContent = (S.brakeBias * 100).toFixed(1).replace('.', ','); $('wDin').textContent = String(Math.round(S.diffOff * 10)); $('wDout').textContent = String(Math.round(S.diffOn * 10)); $('wTC').textContent = String(S.tc)
+  $('wStrat').textContent = S.engineMode === 'quali' ? 'STRAT 1' : S.engineMode === 'race' ? 'STRAT 5' : 'STRAT 9'; $('wErs').textContent = 'ERS ' + ({ hotlap: 'HOT', balanced: 'BAL', charge: 'CHG', overtake: 'OT' } as Record<string, string>)[c.ers.mode]
+  for (const [id, on] of [['wPit', ws.pitLim], ['wOt', ws.ot], ['bPit', ws.pitLim], ['bOt', ws.ot]] as [string, boolean][]) $(id).classList.toggle('on', on)
+  $('bPit').classList.add('pit'); $('bOt').classList.add('ot')
+}
 function wireUi() {
   document.querySelectorAll<HTMLElement>('[data-act]').forEach(b => b.addEventListener('click', () => {
     const a = b.dataset.act!
@@ -120,6 +137,34 @@ function wireUi() {
   input.bindTap($('bUp'), () => { input.st.shiftUp = true }); input.bindTap($('bDown'), () => { input.st.shiftDown = true })
   input.bindTap($('bDrs'), () => { input.st.drs = true })
   input.bindHold($('bDas'), v => { input.st.das = v })
+  // ---- volant : boutons et rotatifs (reliés à la physique)
+  const RADIO = ['Bono : « Rythme cible 1:41,5, pneus dans la fenêtre »', 'Bono : « Batterie OK pour le tour »', 'Bono : « Attention au vent dans Kemmel »', 'Bono : « Mode Strat 1 autorisé »', 'Bono : « Freins AV un peu chauds, BB +0,5 »', 'Bono : « Le gravier sort à Raidillon, reste propre »']
+  const wAct = (a: string) => {
+    const c = game.car, S = settings.setup, cl = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
+    switch (a) {
+      case 'bb-': S.brakeBias = cl(+(S.brakeBias - 0.005).toFixed(3), 0.5, 0.65); wheel?.say('BBAL ' + (S.brakeBias * 100).toFixed(1)); break
+      case 'bb+': S.brakeBias = cl(+(S.brakeBias + 0.005).toFixed(3), 0.5, 0.65); wheel?.say('BBAL ' + (S.brakeBias * 100).toFixed(1)); break
+      case 'din-': S.diffOff = cl(+(S.diffOff - 0.1).toFixed(2), 0, 1); wheel?.say('DIFF ENTRÉE ' + Math.round(S.diffOff * 10)); break
+      case 'din+': S.diffOff = cl(+(S.diffOff + 0.1).toFixed(2), 0, 1); wheel?.say('DIFF ENTRÉE ' + Math.round(S.diffOff * 10)); break
+      case 'dout-': S.diffOn = cl(+(S.diffOn - 0.1).toFixed(2), 0, 1); wheel?.say('DIFF SORTIE ' + Math.round(S.diffOn * 10)); break
+      case 'dout+': S.diffOn = cl(+(S.diffOn + 0.1).toFixed(2), 0, 1); wheel?.say('DIFF SORTIE ' + Math.round(S.diffOn * 10)); break
+      case 'tc-': S.tc = cl(S.tc - 1, 0, 2); wheel?.say('TC ' + S.tc); break
+      case 'tc+': S.tc = cl(S.tc + 1, 0, 2); wheel?.say('TC ' + S.tc); break
+      case 'strat': { const M = ['quali', 'race', 'save'] as const; S.engineMode = M[(M.indexOf(S.engineMode as typeof M[number]) + 1) % 3]; wheel?.say(S.engineMode === 'quali' ? 'STRAT 1 QUALI' : S.engineMode === 'race' ? 'STRAT 5 COURSE' : 'STRAT 9 ÉCO'); break }
+      case 'ers': { const E = ['hotlap', 'balanced', 'charge'] as const; settings.ersMode = E[(E.indexOf(settings.ersMode as typeof E[number]) + 1) % 3]; if (!ws.ot) c.ers.mode = settings.ersMode; wheel?.say('ERS ' + settings.ersMode.toUpperCase()); break }
+      case 'page': if (wheel) { wheel.page = (wheel.page + 1) % wheel.pages; wheel.say(['COURSE', 'PNEUS / FREINS', 'RÉGLAGES'][wheel.page], 1) } break
+      case 'drs': input.st.drs = true; break
+      case 'pit': ws.pitLim = !ws.pitLim; wheel?.say(ws.pitLim ? 'LIMITEUR 80 km/h' : 'LIMITEUR OFF'); audio.beep(ws.pitLim ? 1320 : 880); break
+      case 'ot': ws.ot = !ws.ot; if (ws.ot) { ws.prevErs = settings.ersMode; c.ers.mode = 'overtake'; ws.otT = 8 } else c.ers.mode = settings.ersMode; wheel?.say(ws.ot ? 'OVERTAKE' : 'OT OFF'); break
+      case 'n': if (c.speed < 2) { c.gear = 0; wheel?.say('NEUTRE') } else wheel?.say('N : à l’arrêt seulement'); break
+      case 'radio': { const m = RADIO[Math.floor(Math.random() * RADIO.length)]; hud.toast(m, 3200); wheel?.say('RADIO'); audio.radio(); break }
+      case 'ack': game.session.setFlag('none', 0); wheel?.say('OK'); break
+    }
+    applySettings(); syncWheelPad()
+  }
+  document.querySelectorAll<HTMLElement>('[data-w]').forEach(b => input.bindTap(b, () => wAct(b.dataset.w!)))
+  input.bindTap($('bPit'), () => wAct('pit')); input.bindTap($('bOt'), () => wAct('ot'))
+  $('bWheel').addEventListener('click', () => { const p = $('wheelPad'); p.hidden = !p.hidden; $('bWheel').classList.toggle('on', !p.hidden); syncWheelPad() })
   addEventListener('keydown', e => {
     if (screen === 'boot') return
     if (e.code === 'Escape' || e.code === 'KeyP') setScreen(screen === 'pause' ? 'drive' : screen === 'drive' ? 'pause' : screen)
@@ -144,11 +189,17 @@ function wireUi() {
 }
 
 // ---------- boucle
+const camF = new THREE.Vector3(), camU = new THREE.Vector3(), carF = new THREE.Vector3()
+const aFrame: AudioFrame = { rpm: 0, throttle: 0, speed: 0, slip: 0, kerb: 0, gravel: 0, scrape: 0, impact: 0, shift: 0, gear: 0, limiter: false, ers: 0, inside: false, pan: 0, dist: 1, radialV: 0,
+  grass: 0, cam: 'chase', src: [0, 0, 0], fwd: [0, 0, -1], lis: [0, 0, 0], lisF: [0, 0, -1], lisU: [0, 1, 0] }
 const rightV = new THREE.Vector3(), camPrev = new THREE.Vector3(), carW = new THREE.Vector3(), tmp = new THREE.Vector3()
 let last = performance.now(), fpsAcc = 0, fpsN = 0, prevDist = 0
+let skipAcc = 0
 function frame(now: number) {
   requestAnimationFrame(frame)
-  const dtMs = now - last; last = now
+  // 2K · 30 i/s : une image sur deux sur un écran 60 Hz (cadence régulière, sans à-coups)
+  if (ren.q.fps <= 30 && !(window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt) { skipAcc += now - last; if (skipAcc < 30) { last = now; return } }
+  const dtMs = ren.q.fps <= 30 ? skipAcc + 0 : now - last; skipAcc = 0; last = now
   // tests : pas d'image imposé (rendu logiciel lent → simulation en temps « image par image »)
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
@@ -162,11 +213,16 @@ function frame(now: number) {
   else game.ctl.drs = c.drsOpen // reste ouvert jusqu'au freinage (logique dans la physique)
   st.drs = false
   game.ctl.das = settings.setup.dasEnabled && st.das
+  game.ctl.pitLim = ws.pitLim
+  if (ws.ot) { ws.otT -= dt; if (ws.otT <= 0 || c.ers.soc < 0.3e6) { ws.ot = false; c.ers.mode = settings.ersMode; syncWheelPad() } }
   game.advance(screen === 'drive' || screen === 'menu' ? dt : 0)
   const ev = game.events
   if (ev.lap) hud.toast((ev.lap.best ? 'Meilleur tour ! ' : 'Tour ') + fmt(ev.lap.time) + (ev.lap.valid ? '' : ' (invalide)'), 3200)
   else if (ev.invalid && !game.autopilot) hud.toast('Tour invalidé · limites de piste', 2000)
   else if (ev.reset) hud.toast('Remise en piste')
+  if (ev.pitEntry && !game.autopilot) { hud.toast('Voie des stands · limiteur 80 km/h', 2400); wheel?.say('PIT LIMITER'); audio.beep(1320) }
+  if (ev.pitExit && !game.autopilot) { hud.toast('Sortie des stands', 1800); wheel?.say('PIT EXIT'); audio.beep(880) }
+  if (ev.pitSpeeding) { hud.toast(`Excès de vitesse dans les stands (${ev.pitSpeeding} km/h) · pénalité +5 s`, 3600); wheel?.say('PENALITE +5 s') }
   // tremblement caméra : vibreurs, herbe, gravier, chocs
   let kerb = 0, gravel = 0, slip = 0
   for (const w of c.wheels) { if (!w.contact) continue; if (w.type === 2) kerb += 0.25; if (w.type >= 4) gravel += 0.25; slip = Math.max(slip, Math.abs(w.slipVel ?? 0)) }
@@ -181,13 +237,25 @@ function frame(now: number) {
   tmp.copy(carW).sub(cam.position).normalize()
   const right = rightV.set(1, 0, 0).applyQuaternion(cam.quaternion)
   const inside = ren.cams.mode === 'cockpit' || ren.cams.mode === 'tcam'
-  audio.update({
-    rpm: c.rpmVis, throttle: c.throttleApplied ?? st.throttle, speed: spd, slip, kerb, gravel, scrape: game.maxScrape, impact: game.maxImpact,
-    shift: game.shifts, gear: c.gear, limiter: c.limiter, ers: (c.ers.kPower ?? 0) / 120_000, inside, pan: inside ? 0 : THREE.MathUtils.clamp(tmp.dot(right), -1, 1),
-    dist: inside ? 1 : dist, radialV: inside ? 0 : radialV,
-  }, dt)
+  let grassA = 0, gravelA = 0
+  for (const w of c.wheels) { if (!w.contact) continue; if (w.type === 4) grassA += 0.25; else if (w.type === 5) gravelA += 0.25 }
+  camF.set(0, 0, -1).applyQuaternion(cam.quaternion); camU.set(0, 1, 0).applyQuaternion(cam.quaternion); carF.set(0, 0, -1).applyQuaternion(ren.car.quaternion)
+  aFrame.rpm = c.rpmVis; aFrame.throttle = c.throttleApplied ?? st.throttle; aFrame.speed = spd; aFrame.slip = slip; aFrame.kerb = kerb; aFrame.gravel = gravelA; aFrame.grass = grassA
+  aFrame.scrape = game.maxScrape; aFrame.impact = game.maxImpact; if (c.hitKind) aFrame.hitKind = c.hitKind; aFrame.shift = game.shifts; aFrame.gear = c.gear; aFrame.limiter = c.limiter; aFrame.ers = (c.ers.kPower ?? 0) / 120_000
+  aFrame.inside = inside; aFrame.pan = inside ? 0 : THREE.MathUtils.clamp(tmp.dot(right), -1, 1); aFrame.dist = inside ? 1 : dist; aFrame.radialV = inside ? 0 : radialV; aFrame.cam = ren.cams.mode
+  aFrame.src![0] = carW.x; aFrame.src![1] = carW.y + 0.5; aFrame.src![2] = carW.z; aFrame.fwd![0] = carF.x; aFrame.fwd![1] = carF.y; aFrame.fwd![2] = carF.z
+  aFrame.lis![0] = cam.position.x; aFrame.lis![1] = cam.position.y; aFrame.lis![2] = cam.position.z
+  aFrame.lisF![0] = camF.x; aFrame.lisF![1] = camF.y; aFrame.lisF![2] = camF.z; aFrame.lisU![0] = camU.x; aFrame.lisU![1] = camU.y; aFrame.lisU![2] = camU.z
+  audio.update(aFrame, dt)
   camPrev.copy(cam.position)
   hud.update(game)
+  const ckMode = ren.cams.mode === 'cockpit'
+  if (ckMode !== document.body.classList.contains('ck')) document.body.classList.toggle('ck', ckMode)
+  wheel?.update(game, dt, ckMode || ren.cams.mode === 'free')
+  const fl = game.session.flag, fe = $('hFlag')
+  if (fe.dataset.f !== fl) { fe.dataset.f = fl; fe.hidden = fl === 'none' || fl === 'green' && game.autopilot; fe.className = 'flagban ' + fl; fe.textContent = FLAG_LABEL[fl] }
+  const dl = game.session.timing.delta, de = $('hDelta'), dtxt = isNaN(dl) || game.autopilot ? '' : (dl >= 0 ? '+' : '−') + Math.abs(dl).toFixed(2)
+  if (de.textContent !== dtxt) { de.textContent = dtxt; de.hidden = !dtxt || !fe.hidden; de.className = 'deltachip ' + (dl <= 0 ? 'neg' : 'pos') }
   if (settings.adaptive && adapt.sample(dtMs)) { if (ren.scale !== adapt.scale) ren.setScale(adapt.scale); ren.setFx(adapt.fx) }
   fpsAcc += dtMs; fpsN++
   if (fpsN >= 30) { diag.fps = 1000 * fpsN / fpsAcc; if (settings.perf) $('perf').textContent = `${(1000 * fpsN / fpsAcc).toFixed(0)} i/s · ${ren.r.info.render.calls} appels · éch. ${adapt.scale.toFixed(2)} · fx ${adapt.fx} · piste ${ren.tiles?.loaded.size ?? 0}/${ren.tiles?.total ?? 0}`; fpsAcc = 0; fpsN = 0 }
@@ -202,6 +270,7 @@ async function main() {
     bootProgress('Trajectoire…', 0.05)
     await new Promise(r => setTimeout(r, 0))
     game = new Game(track, 'timetrial')
+    if (pitData) game.pit = new Pitlane(pitData, { limitFromS: 6790, limitToS: 200 })
     game.autopilot = true
     const QL = ['low', 'medium', 'high', 'ultra'] as const, q0 = (params.get('q') as typeof settings.quality) || settings.quality
     const qn = (params.has('q') ? q0 : QL[Math.max(0, QL.indexOf(q0 as typeof QL[number]) - diag.drop)]) as typeof settings.quality
@@ -213,11 +282,12 @@ async function main() {
     await ren.load(game, track, bootProgress)
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
     hud = new Hud()
+    if (ren.rig) wheel = new WheelDisplay(ren.rig.root)
     applySettings()
-    wireUi()
+    wireUi(); syncWheelPad()
     setCam('tv')
     // mobile : départ sans GTAO et à 90 % de résolution ; l'adaptation remonte si l'iPhone tient 60 i/s
-    if (diag.mobile && !diag.safe && settings.adaptive) { adapt.step = 2; ren.setScale(adapt.scale); ren.setFx(adapt.fx) }
+    adapt.targetMs = 1000 / ren.q.fps
     bootProgress('Prêt', 1)
     bootDone()
     $('bootGo').hidden = false
@@ -231,13 +301,13 @@ async function main() {
       const gp = settings.input.steerMode === 'gyro' ? input.enableGyro() : null
       setScreen('menu')
       // iPhone : démarrage léger, puis montée en qualité si aucune perte de contexte après 12 s
-      if (diag.mobile && !diag.safe) setTimeout(() => { void ren.upgrade().then(() => { if (settings.adaptive) { adapt.reset(); ren.setScale(adapt.scale); ren.setFx(adapt.fx) } dlog('qualité maximale atteinte (l’adaptation ne baisse que si les images chutent)') }) }, 12000)
+      if (diag.mobile && !diag.safe) setTimeout(() => { void ren.upgrade().then(() => { if (settings.adaptive) { adapt.reset(); ren.setScale(adapt.scale); ren.setFx(adapt.fx) } dlog('qualité maximale atteinte (l’adaptation ne baisse que si les images chutent)') }) }, 2500)
       if (gp && !(await gp)) { settings.input.steerMode = 'touch'; applySettings() }
     }
     $('bootGo').addEventListener('click', go)
     last = performance.now(); requestAnimationFrame(frame)
     if (params.has('auto')) { await go(); const k = params.get('auto') as SessionKind | 'demo'; if (k) startSession(k) }
-    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine }
+    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
     ;(window as unknown as { __w11diag: unknown }).__w11diag = diag
   } catch (e) {
     console.error(e)

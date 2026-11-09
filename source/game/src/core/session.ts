@@ -9,9 +9,15 @@ export function drsZones(length: number): [number, number][] {
   return [[1380 * k, 2230 * k], [6790 * k, length], [0, 190 * k]]
 }
 export type SessionKind = 'practice' | 'qualifying' | 'timetrial'
+/** drapeaux FIA affichés sur le volant (LEDs latérales + écran) et dans le HUD */
+export type Flag = 'none' | 'green' | 'yellow' | 'double' | 'red' | 'blue' | 'chequered' | 'blackwhite' | 'sc' | 'vsc'
+export const FLAG_LABEL: Record<Flag, string> = { none: '', green: 'PISTE LIBRE', yellow: 'DRAPEAU JAUNE', double: 'DOUBLE JAUNE', red: 'DRAPEAU ROUGE', blue: 'DRAPEAU BLEU', chequered: 'DAMIER', blackwhite: 'AVERTISSEMENT LIMITES', sc: 'SAFETY CAR', vsc: 'VSC' }
 export class Session {
   timing: Timing; zones: [number, number][]; kind: SessionKind
   inDrsZone = false; trackLimitTime = 0; warnings = 0
+  flag: Flag = 'green'; private flagT = 4; private stopT = 0
+  /** force un drapeau pendant `sec` secondes (démonstration, tests) */
+  setFlag(f: Flag, sec = 6) { this.flag = f; this.flagT = sec }
   constructor(length: number, kind: SessionKind = 'timetrial') {
     this.timing = new Timing(length); this.zones = drsZones(length); this.kind = kind
   }
@@ -29,6 +35,14 @@ export class Session {
     // limites de piste : 4 roues hors (types herbe/gravier/eau) plus de 0,25 s → tour invalidé
     const off = car.wheels.every(w => w.type >= 4 || w.type === 0)
     this.trackLimitTime = off ? this.trackLimitTime + dt : 0
-    if (this.trackLimitTime > 0.25 && this.timing.valid) { this.timing.invalidate(); this.warnings++ }
+    if (this.trackLimitTime > 0.25 && this.timing.valid) { this.timing.invalidate(); this.warnings++; if (this.warnings >= 3) this.setFlag('blackwhite', 6) }
+    // drapeaux : choc violent → double jaune ; voiture arrêtée / en tête-à-queue hors piste → jaune ; épave → rouge
+    const dmg = (car as unknown as { damage?: { total: number } }).damage?.total ?? 0
+    if (dmg > 0.85 && this.flag !== 'red') this.setFlag('red', 10)
+    else if (car.impact > 0.55 && this.flag !== 'red') this.setFlag('double', 8)
+    this.stopT = (car.speed < 8 && off) ? this.stopT + dt : 0
+    if (this.stopT > 1.5 && this.flag !== 'red' && this.flag !== 'double') this.setFlag('yellow', 5)
+    if (this.timing.events.includes('lap')) this.setFlag(this.kind === 'timetrial' ? 'chequered' : 'green', 3)
+    if (this.flagT > 0) { this.flagT -= dt; if (this.flagT <= 0) this.flag = 'none' }
   }
 }

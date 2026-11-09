@@ -5,12 +5,14 @@ import { TrackSurface } from '../track/surface.ts'
 import { buildRacingLine, type RacingLine } from '../track/racingLine.ts'
 import { Autopilot } from '../physics/autopilot.ts'
 import { Session, type SessionKind } from './session.ts'
+import { EventBus } from './events.ts'
+import type { Pitlane } from '../track/pitlane.ts'
 
 export const DT = 1 / 240
 const MAX_STEPS = 12 // au-delà : ralenti plutôt que spirale de la mort
 
 export interface Pose { pos: number[]; q: number[] }
-export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean }
+export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean; pitEntry?: boolean; pitExit?: boolean; pitSpeeding?: number }
 
 export class Game {
   track: TrackSurface; line: RacingLine; car: Vehicle; session: Session
@@ -25,6 +27,11 @@ export class Game {
   storedBest: number | null = null
   private stuckT = 0
   shifts = 0; maxScrape = 0; maxImpact = 0
+  /** bus d'événements de course (radio, HUD, volant ; plus tard tout le plateau) */
+  bus = new EventBus()
+  /** voie des stands (limiteur automatique 80 km/h, pénalité d'excès de vitesse) */
+  pit: Pitlane | null = null; inPit = false; pitSpeedT = 0; pitPenalised = false; penalties = 0
+  private lastFlag = ''; private lastDmg = 0
   constructor(track: TrackSurface, kind: SessionKind = 'timetrial') {
     this.track = track
     this.line = buildRacingLine(track, 1600, 1.0)
@@ -41,6 +48,7 @@ export class Game {
     if (kind === 'timetrial') { const s0 = L - 200; this.car.placeAt(s0, this.lineOffset(s0), 55) }
     else this.car.placeAt(L - 120, this.lineOffset(L - 120), 0)
     this.car.ers.soc = 4.0e6
+    this.car.fuel = 12; this.car.damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }
     this.snapshot(); this.acc = 0
   }
   lineOffset(s: number) { const i = Math.floor(((s % this.track.length) + this.track.length) % this.track.length / this.line.ds) % this.line.N; return this.line.e[i] }
@@ -48,7 +56,7 @@ export class Game {
   resetCar() {
     const s = this.car.s
     this.car.placeAt(s, this.lineOffset(s), 8)
-    this.session.timing.invalidate(); this.events.reset = true
+    this.session.timing.invalidate(); this.events.reset = true; this.bus.emit({ t: 'reset', car: 0 })
     this.snapshot()
   }
   snapshot() {
@@ -66,6 +74,7 @@ export class Game {
     while (this.acc >= DT && n < MAX_STEPS) {
       this.snapshot()
       const ctl = this.autopilot ? this.auto.control(this.car) : this.ctl
+      if (this.inPit) ctl.pitLim = true
       this.car.step(DT, ctl)
       if (this.car.shiftEvent) { this.shifts++; this.ctl.shiftUp = false; this.ctl.shiftDown = false }
       this.maxScrape = Math.max(this.maxScrape, this.car.scrape); this.maxImpact = Math.max(this.maxImpact, this.car.impact)
@@ -83,12 +92,37 @@ export class Game {
       this.acc -= DT; n++
     }
     if (n === MAX_STEPS) this.acc = 0
+    this.updatePit(realDt)
+    const c0 = this.car, ses = this.session
+    if (ses.flag !== this.lastFlag) { this.lastFlag = ses.flag; this.bus.emit({ t: 'flag', car: 0, flag: ses.flag }) }
+    if (this.maxImpact > 0.3) this.bus.emit({ t: 'impact', car: 0, k: this.maxImpact, kind: c0.hitKind })
+    if (c0.damage.total > this.lastDmg + 0.05) { this.lastDmg = c0.damage.total; this.bus.emit({ t: 'damage', car: 0, total: c0.damage.total }) }
+    if (this.events.lap) this.bus.emit({ t: 'lap', car: 0, ...this.events.lap })
+    if (this.events.sector) this.bus.emit({ t: 'sector', car: 0, n: this.events.sector })
+    if (this.events.invalid) this.bus.emit({ t: 'invalid', car: 0, warnings: ses.warnings })
     this.alpha = Math.min(1, this.acc / DT)
     // voiture retournée ou immobilisée hors piste plus de 3 s → remise en piste automatique
     const c = this.car
     if (c.flipped > 1 || (c.offTrack && c.speed < 1 && this.ctl.throttle > 0.5)) this.stuckT += realDt; else this.stuckT = 0
     if (this.stuckT > 3) { this.stuckT = 0; this.resetCar() }
     this.steerVis += ((this.autopilot ? 0 : this.ctl.steer) - this.steerVis) * Math.min(1, realDt * 20)
+  }
+  /** Voie des stands : entrée/sortie, limiteur forcé dans la zone, pénalité si > 80 km/h plus de 0,5 s
+   *  (après 2 s de tolérance pour freiner à la ligne). */
+  private updatePit(dt: number) {
+    if (!this.pit) return
+    const c = this.car, z = this.pit.inLimitZone(c.pos[0], c.pos[2])
+    if (z && !this.inPit) { this.inPit = true; this.pitSpeedT = -2; this.pitPenalised = false; this.events.pitEntry = true; this.bus.emit({ t: 'pitEntry', car: 0 }) }
+    else if (!z && this.inPit) { this.inPit = false; this.events.pitExit = true; this.bus.emit({ t: 'pitExit', car: 0 }) }
+    if (this.inPit) {
+      const kmh = c.speed * 3.6
+      this.pitSpeedT = kmh > 80.5 ? this.pitSpeedT + dt : Math.min(this.pitSpeedT + dt, 0)
+      if (this.pitSpeedT > 0.5 && !this.pitPenalised) {
+        this.pitPenalised = true; this.penalties += 5; this.events.pitSpeeding = Math.round(kmh)
+        this.bus.emit({ t: 'pitSpeeding', car: 0, kmh, penalty: 5 })
+        if (this.session.kind === 'timetrial') this.session.timing.invalidate()
+      }
+    }
   }
   /** Pose interpolée (position du CG + quaternion) pour le rendu. */
   pose(out: Pose): Pose {

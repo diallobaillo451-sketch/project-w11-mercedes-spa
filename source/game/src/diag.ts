@@ -21,17 +21,31 @@ const ls = { get: (k: string) => { try { return localStorage.getItem(k) } catch 
 export const isMobile = () => /iPhone|iPad|iPod|Android/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && navigator.maxTouchPoints > 1)
 /** Décide du mode sans échec AVANT de créer le rendu : ?safe=1 forcé, ?safe=0 désactivé, sinon session précédente
  *  morte alors que la page était visible (onglet tué par manque de mémoire iOS) ou choix enregistré. */
+/** version des heuristiques : une nouvelle version efface les baisses de qualité mémorisées par les anciennes
+ *  (qui comptaient la simple fermeture de Safari comme un plantage → qualité réduite à tort, de façon permanente). */
+const VER = 'w11.ver', CUR = '2026-11-09'
+function crashedEarly() {
+  // fermer l'onglet / tuer Safari ne déclenche pas toujours « pagehide » sur iOS : seule une mort PEU après le
+  // démarrage (dernier battement < 45 s après le boot) est comptée comme un plantage mémoire.
+  const a = Number(ls.get(ALIVE) || 0), hb = Number(ls.get(HB) || 0)
+  return a > 1 && hb >= a && hb - a < 45000
+}
+const HB = 'w11.hb'
 export function decideSafe(params: URLSearchParams) {
   diag.mobile = isMobile()
+  if (ls.get(VER) !== CUR) { for (const k of [SAFE, DROP, DROP + '.why', ALIVE, HB]) ls.del(k); ls.set(VER, CUR); dlog('nouvelle version : baisses de qualité mémorisées effacées') }
   if (params.get('safe') === '0') { ls.del(SAFE); diag.safe = false }
   else if (params.get('safe') === '1') { diag.safe = true; diag.safeReason = 'demandé (?safe=1)' }
-  else if (ls.get(ALIVE) === '1') { bumpDrop('la session précédente s’est arrêtée brutalement (mémoire ?)') }
+  else if (ls.get(ALIVE) && crashedEarly()) { bumpDrop('la session précédente s’est arrêtée brutalement < 45 s après le démarrage (mémoire ?)') }
   else if (ls.get(SAFE) === '1') { diag.safe = true; diag.safeReason = 'mode sans échec conservé (plantage antérieur)' }
   diag.drop = Math.min(3, Number(ls.get(DROP) || 0) | 0)
   if (diag.drop >= 3 && !diag.safe && params.get('safe') !== '0') { diag.safe = true; diag.safeReason = diag.safeReason || 'plusieurs plantages GPU' }
   if (diag.drop) dlog('qualité réduite de ' + diag.drop + ' cran(s) après plantage · ' + (ls.get(DROP + '.why') || ''))
-  ls.set(ALIVE, '1')
-  const off = () => ls.del(ALIVE), on = () => ls.set(ALIVE, '1')
+  const boot = Date.now(); ls.set(ALIVE, String(boot)); ls.set(HB, String(boot))
+  const off = () => ls.del(ALIVE), on = () => { ls.set(ALIVE, String(boot)); ls.set(HB, String(Date.now())) }
+  // battement de cœur + récupération : 2 min stables → la baisse mémorisée diminue d'un cran (retour à la qualité max)
+  setInterval(() => { if (document.hidden) return; ls.set(HB, String(Date.now()))
+    if (Date.now() - boot > 120000 && Number(ls.get(DROP) || 0) > 0 && !diag.safe) { const n = Number(ls.get(DROP)) - 1; if (n > 0) ls.set(DROP, String(n)); else ls.del(DROP); dlog('session stable : baisse mémorisée → ' + n) } }, 5000)
   addEventListener('pagehide', off)
   document.addEventListener('visibilitychange', () => document.hidden ? off() : on())
   addEventListener('error', e => derr(e.error ?? e.message, 'erreur'))
@@ -43,7 +57,10 @@ export function setSafe(on: boolean) { if (on) ls.set(SAFE, '1'); else { ls.del(
 function bumpDrop(why: string) { const n = Math.min(3, (Number(ls.get(DROP) || 0) | 0) + 1); ls.set(DROP, String(n)); ls.set(DROP + '.why', why + ' · ' + new Date().toISOString()); dlog('plantage → qualité −1 cran (' + n + ') : ' + why) }
 /** contexte WebGL perdu : journal, −1 cran, rechargement automatique */
 export function gpuLost() {
-  dlog('contexte WebGL perdu → rechargement avec un cran de qualité en moins'); bumpDrop('contexte WebGL perdu · ' + diag.log.slice(-3).join(' | '))
+  // 1re perte : rechargement à la MÊME qualité (souvent un pic passager) ; 2e perte en moins de 10 min : −1 cran
+  const prev = Number(ls.get('w11.lost') || 0), now = Date.now(); ls.set('w11.lost', String(now))
+  if (now - prev < 600000) { dlog('contexte WebGL perdu (2e fois) → un cran de qualité en moins'); bumpDrop('contexte WebGL perdu · ' + diag.log.slice(-3).join(' | ')) }
+  else dlog('contexte WebGL perdu → rechargement à la même qualité')
   ls.del(ALIVE); setTimeout(() => location.reload(), 600)
 }
 export function reloadSafe(on: boolean) {
