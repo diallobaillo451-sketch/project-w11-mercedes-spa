@@ -1,0 +1,7 @@
+Licences des fichiers de ce dossier (recherche New Bot, 2026-11-09)
+- polyhaven_*        : Poly Haven, CC0 1.0 (https://polyhaven.com/license)
+- ambientcg_*        : ambientCG, CC0 1.0 (https://docs.ambientcg.com/license/)
+- mobile_tevy/*      : tevy.dev, CC0 1.0 déclaré par le site (https://tevy.dev/llms.txt) — site récent (assets datés 2026-10), provenance à garder en tête
+- sons/*/oga_*       : OpenGameArt.org, CC0 (licence vérifiée sur chaque page, voir RESEARCH_NEWBOT.md)
+- vibreurs/genere_cc0: généré par New Bot (procédural, Python/PIL) — aucun droit tiers, à traiter comme CC0
+Aucune attribution n'est obligatoire ; créditer Poly Haven / ambientCG / auteurs OGA reste apprécié.
