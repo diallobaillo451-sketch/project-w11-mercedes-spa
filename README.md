@@ -7,6 +7,7 @@ Jeu de pilotage 3D pour iPhone (Safari), **à jouer en mode paysage**. Touchez �
 Piste en **pleine qualité pour tous les niveaux** (1,18 M triangles, textures natives jusqu'à 8192×1024, AO précalculée), chargée par tuiles, les plus proches d'abord. Téléchargement total ≈ 68 Mo (mis en cache hors ligne après la première session).
 
 ## Contenu du dépôt
+- `source/` : **code source** (TypeScript, three.js, Vite, scripts assets/Blender, docs). Voir `source/README.md` pour construire. Archive complète : `source/archive/w11-source.tar.gz`.
 - `public/` : build de production (Vite, chemins relatifs), chaque fichier encodé en base64.
 - `parts/` : fichiers > 5 Mo découpés (base64), réassemblés par la CI.
 - `SHA256SUMS` : empreintes des fichiers d'origine, vérifiées par la CI.
