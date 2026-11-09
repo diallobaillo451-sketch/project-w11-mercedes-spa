@@ -40,11 +40,14 @@ export class Radio {
     return p
   }
   /** message de la bibliothèque (variante au hasard, jamais la même deux fois de suite) ; cool = délai anti-répétition (s) */
+  driver = 'ham'
   say(id: string, cool = 20) {
     const m = this.bank?.messages[id]; if (!m || !this.enabled) return
     const now = performance.now() / 1000; if (now - (this.lastAt.get(id) ?? -1e9) < cool) return
     this.lastAt.set(id, now)
-    let i = Math.floor(Math.random() * m.v.length); if (m.v.length > 1 && i === this.lastVar.get(id)) i = (i + 1) % m.v.length
+    // la banque est enregistrée pour Lewis : avec un autre pilote, on écarte les variantes qui l'appellent par son prénom
+    const ok = m.v.map((v, j) => this.driver === 'ham' || !/Lewis/.test(v.t) ? j : -1).filter(j => j >= 0); if (!ok.length) return
+    let i = ok[Math.floor(Math.random() * ok.length)]; if (ok.length > 1 && i === this.lastVar.get(id)) i = ok[(ok.indexOf(i) + 1) % ok.length]
     this.lastVar.set(id, i)
     this.push({ parts: [{ r: m.v[i].r, t: m.v[i].t }], text: m.v[i].t, p: m.p, key: id })
   }
