@@ -23,6 +23,8 @@ export interface WeekendPlan {
 export interface SessionResult {
   id: WkSessionId; best: number | null; sectors: number[] | null; bestSectors: number[]; laps: number; valid: number; vmax: number; total?: number
   lapTimes: number[]; penalties: number; dnf?: boolean; pos: number
+  /** lot 8 C : classement complet de la séance (plateau IA) ; pénalités de grille ; pneus du meilleur tour de Q2 */
+  cls?: { id: string; best: number | null; total?: number | null; laps?: number; out?: string | null; pen?: number }[]; gridPen?: Record<string, number>; q2tyre?: string; simulated?: boolean
 }
 export interface Telemetry {
   n: number; tF: number; tR: number; tMaxF: number; tMaxR: number; vmax: number; lockups: number; scrapeT: number; snapRear: number; pushFront: number

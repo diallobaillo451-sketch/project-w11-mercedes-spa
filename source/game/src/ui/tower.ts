@@ -7,6 +7,7 @@ const f3 = (t: number) => { if (!isFinite(t)) return ''; const m = Math.floor(t 
 export class Tower {
   el: HTMLElement; msgEl: HTMLElement; private acc = 0; open = false; private rows: HTMLElement[] = []; private msgT = 0; private q: Msg[] = []
   sim: RaceSim | null = null
+  private lastNow = 0
   constructor() {
     this.el = document.createElement('div'); this.el.id = 'tower'; this.el.hidden = true
     this.el.addEventListener('pointerdown', e => { e.stopPropagation(); this.open = !this.open; this.acc = 1 })
@@ -22,7 +23,9 @@ export class Tower {
   update(dt: number) {
     const S = this.sim; if (!S) return
     // messages : un à la fois, 4 s chacun (pénalités et drapeaux prioritaires)
-    this.msgT -= dt
+    // horloge murale (une image lente ne fige pas le bandeau) ; messages trop anciens (> 12 s de séance) ignorés
+    const now = performance.now() / 1000; this.msgT -= Math.max(dt, now - this.lastNow); this.lastNow = now
+    while (this.q.length && S.t - this.q[0].t > 12) this.q.shift()
     if (this.msgT <= 0) { const m = this.q.shift(); if (m) { this.msgEl.textContent = m.text; this.msgEl.className = 'rc ' + m.kind; this.msgEl.hidden = false; this.msgT = m.kind === 'pen' || m.kind === 'flag' ? 4.5 : 3.5 } else this.msgEl.hidden = true }
     this.acc += dt; if (this.acc < 0.25) return; this.acc = 0
     const A = S.ordered(), race = S.kind === 'race', p = S.player, pk = A.indexOf(p)

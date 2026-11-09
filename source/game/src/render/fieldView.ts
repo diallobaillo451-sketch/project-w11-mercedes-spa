@@ -1,5 +1,5 @@
 /** Lot 8 C — rendu du plateau IA (19 voitures + safety car) et des panneaux lumineux des commissaires.
- *  Budget iPhone : chaque voiture IA = THREE.LOD (LOD1 ≈ 20 k tris < 60 m, LOD2 ≈ 6 k tris < 380 m, rien au-delà).
+ *  Budget iPhone : chaque voiture IA = THREE.LOD (LOD1 ≈ 20 k tris < 28 m, LOD2 ≈ 6 k tris < 450 m, rien au-delà).
  *  Les LOD n'ont pas de textures : on charge une fois la version haute de chaque équipe, on lui prend ses textures
  *  en retirant le niveau de mip le plus grand (÷4 en mémoire GPU : une voiture IA n'est jamais vue en plein écran),
  *  puis on jette sa géométrie (jamais envoyée au GPU). Mercedes : textures de la W11 du joueur, partagées telles quelles. */
@@ -12,7 +12,7 @@ import { dlog } from '../diag.ts'
 type Mat = THREE.MeshStandardMaterial
 interface CarView { r: Racer; obj: THREE.LOD; wheels: { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean }[]; blob: THREE.Mesh }
 const TEAMS = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
-const LOD1 = 60, LOD2 = 380
+const LOD1 = 28, LOD2 = 450
 const m4 = new THREE.Matrix4(), vx = new THREE.Vector3(), vy = new THREE.Vector3(), vz = new THREE.Vector3()
 
 function blobTex() {
@@ -36,6 +36,7 @@ export class FieldView {
   private lampState = new Map<number, string>()
   private protos = new Map<string, { l1: THREE.Object3D; l2: THREE.Object3D }>()
   ready = false
+  private ang = new Map<Racer, number>()
   /** matériaux empruntés à la voiture du joueur : jamais libérés ici */
   private shared = new Set<THREE.Material>()
   stats = { tris1: 0, tris2: 0, texMB: 0 }
@@ -74,7 +75,8 @@ export class FieldView {
     this.protos.set(team, { l1: g1.scene, l2: g2.scene })
   }
   async load(sim: RaceSim) {
-    const t0 = performance.now(), teams = TEAMS.filter(t => sim.cars.some(r => !r.player && r.team === t))
+    const t0 = performance.now(), teams = TEAMS.filter(t => !this.protos.has(t) && sim.cars.some(r => !r.player && r.team === t))
+    for (const v of this.views) { v.obj.removeFromParent(); v.blob.removeFromParent() } this.views = []; this.ang.clear()
     // 2 équipes à la fois (pic mémoire de décodage limité)
     for (let i = 0; i < teams.length; i += 2) await Promise.all(teams.slice(i, i + 2).map(t => this.proto(t).catch(e => dlog('IA ' + t + ' : ' + (e as Error).message))))
     const bt = blobTex(), bm = new THREE.MeshBasicMaterial({ map: bt, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }), bg = new THREE.PlaneGeometry(2.3, 5.6).rotateX(-Math.PI / 2)
@@ -90,13 +92,13 @@ export class FieldView {
       this.root.add(lod, blob); this.views.push({ r, obj: lod, wheels, blob })
     }
     // safety car
-    try { const g = await loadGLB('./cars/safetycar_lod1.glb', () => {}); const sc = new THREE.Group(); sc.add(g.scene); sc.matrixAutoUpdate = false
+    if (!this.sc) try { const g = await loadGLB('./cars/safetycar_lod1.glb', () => {}); const sc = new THREE.Group(); sc.add(g.scene); sc.matrixAutoUpdate = false
       const lm = [0xff8a00, 0xffb000].map(c => new THREE.MeshBasicMaterial({ color: c })), lg = new THREE.BoxGeometry(0.42, 0.07, 0.16)
       for (let k = 0; k < 2; k++) { const m = new THREE.Mesh(lg, lm[k]); m.position.set(k ? 0.24 : -0.24, 1.3, 0.25); sc.add(m); this.scBar.push(m) }
       const bar = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 0.22), new THREE.MeshStandardMaterial({ color: 0x222222 })); bar.position.set(0, 1.26, 0.25); sc.add(bar)
       sc.visible = false; this.root.add(sc); this.sc = sc } catch (e) { dlog('safety car : ' + (e as Error).message) }
     this.ready = true
-    dlog(`plateau IA : ${this.views.length} voitures, ${this.protos.size} équipes en ${Math.round(performance.now() - t0)} ms · LOD1 ${this.stats.tris1 | 0} tris, LOD2 ${this.stats.tris2 | 0} tris`)
+    const gb = this.gpuBytes(); dlog(`plateau IA : ${this.views.length} voitures, ${this.protos.size} équipes en ${Math.round(performance.now() - t0)} ms · LOD1 ${this.stats.tris1 | 0} tris, LOD2 ${this.stats.tris2 | 0} tris · GPU propre ≈ ${(gb.tex / 1048576).toFixed(1)} Mo tex + ${(gb.geo / 1048576).toFixed(1)} Mo géo`)
   }
   /** panneaux lumineux des commissaires (marshal_lamps.glb de New Bot, 16 postes) ; sinon panneaux provisoires */
   async loadLamps(url: string, sim: RaceSim) {
@@ -118,7 +120,6 @@ export class FieldView {
         mt.emissive.setRGB(c[0], c[1], c[2]); mt.emissiveIntensity = ex.w11_on_intensity ?? 6 }
     }
   }
-  private ang = new Map<Racer, number>()
   update(sim: RaceSim, dt: number, cam: THREE.Camera) {
     if (!this.ready) return
     const t = performance.now() / 1000
@@ -144,6 +145,15 @@ export class FieldView {
       const key = col + (blink ? 1 : 0)
       if (this.lampState.get(p.n) !== key) { this.lampState.set(p.n, key); this.setLamp(p.n, col, !!col && blink) }
     }
+  }
+  /** mémoire GPU propre au plateau (textures non partagées + géométries), en octets (E : ASTC/ETC2 ≈ 1 o/px, mips +33 %) */
+  gpuBytes() {
+    const geos = new Set<THREE.BufferGeometry>(), src = new Set<unknown>(); let tex = 0, geo = 0
+    this.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      if (!geos.has(m.geometry)) { geos.add(m.geometry); for (const a of Object.values(m.geometry.attributes)) geo += (a as THREE.BufferAttribute).array?.byteLength ?? 0; geo += m.geometry.index?.array.byteLength ?? 0 }
+      for (const mt of [m.material].flat()) { if (this.shared.has(mt)) continue; for (const v of Object.values(mt)) { const t = v as THREE.Texture; if (!t?.isTexture || src.has(t.source)) continue; src.add(t.source)
+        const im = t.image as { width?: number; height?: number } | undefined; tex += (im?.width ?? 0) * (im?.height ?? 0) * ((t as THREE.CompressedTexture).isCompressedTexture ? 1 : 4) * 1.33 } } })
+    return { tex, geo }
   }
   dispose() {
     const geos = new Set<THREE.BufferGeometry>(), mats = new Set<THREE.Material>(), tx = new Set<THREE.Texture>()

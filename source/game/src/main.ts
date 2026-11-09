@@ -27,6 +27,11 @@ import { driverById, carOfTeam } from './data/drivers.ts'
 import { applyCarPhysics } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
+import { FieldView } from './render/fieldView.ts'
+import { Tower } from './ui/tower.ts'
+import { Session } from './core/session.ts'
+import { excludedFor, approxSession, startingGrid } from './core/quali.ts'
+import { fmtT } from './race/control.ts'
 
 const $ = (id: string) => document.getElementById(id)!
 const show = (id: string, on: boolean) => { $(id).hidden = !on }
@@ -36,6 +41,8 @@ const input = new Input(settings.input)
 const audio = new AudioEngine()
 const adapt = new AdaptiveResolution()
 let hud: Hud
+/** lot 8 C : plateau IA (rendu), tour de chronométrage, postes des commissaires (marshals.json de New Bot) */
+let fview: FieldView | null = null, tower: Tower | null = null, marshals: unknown = null, ffPending = 0
 let wheel: WheelDisplay | null = null
 const ws = { pitLim: false, ot: false, otT: 0, prevErs: 'hotlap' as string }
 type Screen = 'boot' | 'menu' | 'drive' | 'pause' | 'garage' | 'results'
@@ -81,11 +88,50 @@ function applySettings() {
 }
 const CAM_SHORT: Record<CamMode, string> = { chase: 'Poursuite', close: 'Proche', tcam: 'T-cam', cockpit: 'Cockpit', tv: 'TV', free: 'Libre' }
 function setCam(m: CamMode) { ren.cams.setMode(m); $('bCam').textContent = CAM_SHORT[m]; $('bCam').title = CAM_LABEL[m] }
+/** lot 8 C : plateau de 19 IA + direction de course pour la séance (course rapide, séances du week-end) */
+function setupField(k: SessionKind | 'demo') {
+  game.field = null; tower?.bind(null); show('bSkipF', false)
+  if (!run || k === 'demo' || k === 'timetrial') { if (fview) fview.root.visible = false; return }
+  const kind = k as SessionKind, player = settings.profile.driver
+  let grid: string[] | undefined, exclude: string[] | undefined
+  if (run.kind === 'weekend' && wk) {
+    if (kind === 'race') { const g = startingGrid(wk, player); if (g.length) grid = g }
+    if (run.id === 'Q2' || run.id === 'Q3') exclude = excludedFor(wk, run.id)
+  }
+  const F = game.startField({ kind, laps: run.laps, player, grid, exclude, sessionLen: kind === 'race' ? undefined : run.remaining, posts: marshals })
+  if (kind === 'race') {
+    F.ctrl.startFormation()
+    // règle 2020 : le top 10 part avec les pneus du meilleur tour de Q2
+    const q2t = wk?.result('Q2')?.q2tyre
+    if (q2t && run.kind === 'weekend' && F.player.slot < 10) { settings.setup.compound = q2t as typeof settings.setup.compound; hud.toast('Top 10 : départ avec les pneus de Q2 (' + q2t + ')', 2600) }
+  }
+  tower?.bind(F)
+  fview ??= new FieldView(ren); fview.root.visible = true
+  const fv = fview
+  void fv.load(F).then(() => { if (!fv.lamps.size) void fv.loadLamps('./assets/spa_pits/marshal_lamps.glb', F); ren.memLog('plateau IA chargé') }).catch(e => dlog('plateau IA : ' + (e as Error).message))
+}
+function skipFormation() { const F = game.field; if (!F) return; F.ctrl.skipFormation(); hud.toast('Tour de formation passé · tout le monde en grille', 2000) }
+/** classement complet (plateau IA) pour l'écran de résultats */
+function fieldTable(race: boolean) {
+  const F = game.field!, C = F.ctrl, A = F.ordered()
+  const extra = run ? game.penalties - run.pen0 : 0
+  const tot = (x: typeof A[number]) => x.finished ? x.finishT - C.goT + x.pen + (x.player ? extra : 0) : null
+  let rows = A.slice()
+  if (race) { // temps de pénalité ajoutés au temps de course (art. 38.3) : reclassement des voitures dans le même tour
+    rows.sort((a, b) => (a.out ? 1 : 0) - (b.out ? 1 : 0) || b.laps - a.laps || ((tot(a) ?? 1e9) - (tot(b) ?? 1e9)) || b.dist - a.dist) }
+  const t0 = race ? tot(rows[0]) : null
+  return rows.map((x, k) => {
+    const d = driverById(x.id), tt = tot(x)
+    const time = x.out ? (x.out === 'Éliminé' ? '—' : x.out) : race ? (k === 0 && tt != null ? fmtT(tt) : x.laps < rows[0].laps ? `+${rows[0].laps - x.laps} tour${rows[0].laps - x.laps > 1 ? 's' : ''}` : tt != null && t0 != null ? '+' + (tt - t0).toFixed(3) + ' s' : '—') : fmtT(x.best)
+    return { pos: x.out ? (x.out === 'Éliminé' ? x.pos : 'AB') : k + 1, code: x.code, name: d.last.toUpperCase(), team: x.team, time, laps: x.laps, me: x.player, pen: x.pen + x.penServed + (x.player ? extra : 0) }
+  })
+}
 function startSession(k: SessionKind | 'demo', keepRun = false) {
   if (!keepRun) run = null
   mode = k
   game.autopilot = k === 'demo'
   game.start(k === 'demo' ? 'timetrial' : k)
+  setupField(k)
   appliedTyres = ''
   game.paused = false
   applySettings()
@@ -104,7 +150,7 @@ function setScreen(s: Screen) {
   if (studio && !ren.show.active) ren.enterShowroom(); else if (!studio && s !== 'boot' && ren.show.active) ren.exitShowroom()
   if (s !== 'boot') audio.setMuted(studio || settings.muted)
   show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause'); show('garage', s === 'garage'); show('results', s === 'results')
-  show('lights', s === 'drive' && !!run && run.kind !== 'legacy' && sessionKindOf(run) === 'race' && !run.lightsDone)
+  show('lights', s === 'drive' && !!run && run.kind !== 'legacy' && sessionKindOf(run) === 'race' && !run.lightsDone && (!game.field || game.field.ctrl.phase === 'lights'))
   const wkDrive = !!run && run.kind === 'weekend' && run.id !== 'RACE'
   show('pGarage', wkDrive); show('pRestart', !run || run.kind === 'quick'); $('pMenu').textContent = run?.kind === 'weekend' ? 'Quitter' : 'Menu'
   show('hud', s === 'drive' || s === 'pause')
@@ -240,7 +286,7 @@ function frame(now: number) {
   // tests : pas d'image imposé (rendu logiciel lent → simulation en temps « image par image »)
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
-  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); return }
+  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); return }
   const st = input.poll(dt, settings.setup.autoGear)
   const c = game.car
   game.ctl.throttle = st.throttle; game.ctl.brake = st.brake; game.ctl.steer = st.steer
@@ -270,6 +316,8 @@ function frame(now: number) {
   const spd = c.speed
   const shake = Math.min(1, kerb * Math.min(1, spd / 30) * 0.8 + gravel * Math.min(1, spd / 20) + game.maxImpact * 0.3)
   ren.frame(game, dt, shake)
+  if (fview && game.field) fview.update(game.field, dt, ren.cams.cam)
+  tower?.update(dt)
   // audio : position de la voiture relative à la caméra
   const cam = ren.cams.cam
   carW.copy(ren.car.position)
@@ -333,7 +381,18 @@ function startWeekend(fresh: boolean) {
   newSessionRun(); if (wk.st.rem != null) run!.remaining = wk.st.rem
   openGarage()
 }
+/** joueur éliminé en Q1 / Q2 : les séances suivantes sont simulées (résultats approchés), on passe directement à la suite */
+function skipEliminated(): boolean {
+  if (!wk) return false
+  let skipped = false
+  while (!wk.done && (wk.cur === 'Q2' || wk.cur === 'Q3') && excludedFor(wk, wk.cur).includes(wk.st.plan.driver)) {
+    const id = wk.cur, cls = approxSession(excludedFor(wk, id), Date.now() & 0xffff)
+    wk.finish({ id, best: null, sectors: null, bestSectors: [Infinity, Infinity, Infinity], laps: 0, valid: 0, vmax: 0, lapTimes: [], penalties: 0, pos: 0, cls, simulated: true }); skipped = true
+  }
+  return skipped
+}
 function newSessionRun() {
+  if (skipEliminated()) hud.toast('Éliminé : la suite des qualifications est simulée', 2600)
   const id = wk!.cur, laps = id === 'RACE' ? wk!.st.plan.raceLaps : 0
   const prevTel = run?.tel
   run = newRun('weekend', laps, sessionMinutes(wk!.st.plan, id), id === 'RACE' ? raceFuel(laps) : id.startsWith('Q') ? 8 : wk!.st.fuel)
@@ -352,7 +411,7 @@ function makeGarage() {
     wk: wk!, setup: settings.setup, weather: settings.weather,
     fuel: () => run!.fuel, setFuel: kg => { run!.fuel = kg; if (run!.id?.startsWith('FP')) wk!.st.fuel = kg; if (run!.started) game.car.fuel = kg },
     telemetry: () => run!.tel, laps: () => run!.started ? game.session.timing.laps : [], best: () => run!.started ? game.session.timing.best?.time ?? null : null,
-    remaining: () => run!.remaining, spend: sec => { run!.remaining = Math.max(0, run!.remaining - sec) }, started: () => run!.started,
+    remaining: () => run!.remaining, spend: sec => { run!.remaining = Math.max(0, run!.remaining - sec); if (run!.started) ffPending += sec }, started: () => run!.started,
     goOut: () => {
       if (run!.id !== 'RACE' && run!.remaining <= 0) { endSession(); return }
       if (!run!.started) { startSession(sessionKind(run!.id!), true) } else { applySettings(); game.car.fitTyres(settings.setup.compound, settings.blanketF, settings.blanketR); setScreen('drive') }
@@ -362,7 +421,9 @@ function makeGarage() {
     shot: s => ren.show.setShot(s), lift: on => { ren.show.lift = on ? 1 : 0 }, say: () => {},
   })
 }
-function garageTick() { if (screen === 'garage' && garage && Math.random() < 0.1) garage.tick() }
+function garageTick() { if (screen === 'garage' && garage && Math.random() < 0.1) garage.tick()
+  // travail des mécaniciens : le reste du plateau continue de rouler pendant ce temps (avance rapide par tranches de 10 s)
+  if (ffPending > 0 && game.field) { const k = Math.min(10, ffPending); ffPending -= k; game.field.advance(k) } }
 /** fin de séance : résultat enregistré, écran de résultats */
 function endSession() {
   if (!run || run.ended) return
@@ -372,15 +433,31 @@ function endSession() {
   const r: SessionResult = { id: run.id ?? 'RACE', best, sectors: T.best?.sectors ?? null, bestSectors: run.started ? [...T.bestSectors] : [Infinity, Infinity, Infinity], laps: laps.length, valid: laps.filter(l => l.valid).length,
     vmax: run.tel.vmax, lapTimes: laps.map(l => l.valid ? l.time : -l.time), penalties: pen, pos: 1 }
   if (sessionKindOf(run) === 'race') { r.total = laps.length >= run.laps ? T.lapStart - (run.goT ?? 0) + pen : undefined; r.dnf = laps.length < run.laps }
+  let table: ReturnType<typeof fieldTable> | undefined
+  const F = game.field
+  if (F) {
+    // qualif : on laisse le plateau finir ses tours lancés (avance rapide jusqu'au drapeau + 100 s)
+    if (F.kind === 'qualifying') { let guard = 0; while (F.t < F.sessionLen + 100 && guard++ < 2000) F.advance(1) }
+    const race = F.kind === 'race'
+    table = fieldTable(race)
+    const me = table.find(x => x.me)!; r.pos = typeof me.pos === 'number' ? me.pos : table.length
+    if (race) { const p = F.player; r.dnf = !p.finished; r.total = p.finished ? p.finishT - F.ctrl.goT + p.pen + pen : undefined }
+    r.cls = F.ordered().map(x => ({ id: x.id, best: isFinite(x.best) ? x.best : null, laps: x.laps, out: x.out === 'Éliminé' ? null : x.out, pen: x.pen }))
+    if (run.id === 'Q2' || run.id === 'Q3' || run.id === 'Q1') r.cls = r.cls.filter(x => !(excludedFor(wk!, run!.id!).includes(x.id)))
+    const gp: Record<string, number> = {}; for (const x of F.cars) if (x.gridPen) gp[x.id] = x.gridPen; r.gridPen = gp
+    if (run.id === 'Q2') r.q2tyre = settings.setup.compound
+  }
   game.paused = true; audio.setMuted(true)
   if (run.kind === 'quick') {
-    showResults($('results'), { title: 'Course rapide', eyebrow: `Spa-Francorchamps · ${run.laps} tour${run.laps > 1 ? 's' : ''}`, r, driver: settings.profile.driver, race: true,
+    showResults($('results'), { title: 'Course rapide', eyebrow: `Spa-Francorchamps · ${run.laps} tour${run.laps > 1 ? 's' : ''}`, r, driver: settings.profile.driver, race: true, table,
       actions: [{ label: 'Rejouer', on: () => startQuick() }, { label: 'Menu', sec: true, on: () => { run = null; menu.reset(); setScreen('menu') } }] })
   } else if (run.kind === 'weekend' && wk) {
     const id = run.id!; wk.finish(r); wk.st.rem = undefined; wk.save()
     const nx = wk.done ? null : wk.cur
-    const note = id.startsWith('Q') ? (id === 'Q3' ? 'Pole position (seul en piste) — le plateau IA viendra compléter la grille.' : 'Qualifié pour la phase suivante (seul en piste : pas d’élimination sans plateau IA).') : undefined
-    showResults($('results'), { title: WK_LABEL[id], eyebrow: `Résultats · Grand Prix de Belgique`, r, driver: wk.st.plan.driver, race: id === 'RACE', note,
+    const out = id === 'Q1' ? r.pos > 15 : id === 'Q2' ? r.pos > 10 : false
+    const note = id === 'Q1' || id === 'Q2' ? (out ? `Éliminé en ${id} (P${r.pos}) — tu pars ${r.pos}e sur la grille (hors pénalités).` : `Qualifié pour ${id === 'Q1' ? 'Q2 (15 premiers)' : 'Q3 (10 premiers)'} · P${r.pos}.`) + (id === 'Q2' && !out ? ' Règle 2020 : départ avec les pneus de ton meilleur tour de Q2.' : '')
+      : id === 'Q3' ? (r.pos === 1 ? 'POLE POSITION !' : `P${r.pos} sur la grille (hors pénalités).`) : undefined
+    showResults($('results'), { title: WK_LABEL[id], eyebrow: `Résultats · Grand Prix de Belgique`, r, driver: wk.st.plan.driver, race: id === 'RACE', note, table,
       summary: nx ? undefined : wk.st.results,
       actions: nx ? [{ label: `Continuer · ${WK_LABEL[nx]}`, on: () => { newSessionRun(); openGarage() } }, { label: 'Menu', sec: true, on: () => { run = null; menu.reset(); setScreen('menu') } }]
         : [{ label: 'Terminer le week-end', on: () => { Weekend.clear(); wk = null; run = null; menu.reset(); setScreen('menu') } }] })
@@ -390,6 +467,23 @@ function endSession() {
 /** avant la physique : feux de départ (frein tenu jusqu'à l'extinction) */
 function runPre(dt: number) {
   const r = run!
+  const F = game.field
+  if (sessionKindOf(r) === 'race' && !r.lightsDone && F) {
+    const C = F.ctrl
+    // joueur immobile au départ du tour de formation : le plateau ne peut pas le doubler → formation passée (E)
+    if (C.phase === 'formation' && F.t > 12 && F.player.dist < (F.player as unknown as { _f0?: number })._f0! + 5) skipFormation()
+    if (C.placePlayerRequest) { C.placePlayerRequest = false; const g = F.gridPos(F.player.slot); game.car.placeAt(g.s, g.d, 0); game.snapshot(); F.syncPlayer(game.car); C.jumpRef = { s: game.car.s, ok: C.phase === 'lights' } }
+    show('bSkipF', C.phase === 'formation' || C.phase === 'gridding')
+    $('lights').hidden = C.phase !== 'lights'
+    if (C.phase === 'lights' && C.lightsN !== r.lightsN) { r.lightsN = C.lightsN; document.querySelectorAll('#lights i').forEach((e, i) => e.classList.toggle('on', i < C.lightsN)); if (C.lightsN > 0) audio.beep(660) }
+    if (C.phase === 'racing') {
+      r.lightsDone = true; document.querySelectorAll('#lights i').forEach(e => e.classList.remove('on')); $('lights').hidden = true; show('bSkipF', false); hud.toast('Extinction des feux !', 1600)
+      r.raceT = 0; r.goT = game.time
+      // chronométrage du joueur remis à zéro à l'extinction des feux (le tour de formation ne compte pas)
+      const fl = game.session.flag; game.session = new Session(game.track.length, 'race'); game.session.setFlag(fl === 'none' ? 'green' : fl, 2)
+    }
+    return
+  }
   if (sessionKindOf(r) === 'race' && !r.lightsDone) {
     r.lightsT += dt; const n = Math.min(5, Math.floor(r.lightsT))
     if (n !== r.lightsN) { r.lightsN = n; document.querySelectorAll('#lights i').forEach((e, i) => e.classList.toggle('on', i < n)); if (n > 0) audio.beep(660) }
@@ -407,7 +501,13 @@ function runPost(dt: number) {
     alphaF: (w[0].alpha + w[1].alpha) / 2, alphaR: (w[2].alpha + w[3].alpha) / 2, steer: game.ctl.steer, dt }, r.lockPrev)
   r.lockPrev = locking
   const sc = $('hSess')
-  if (k === 'race') {
+  if (k === 'race' && game.field) {
+    const F = game.field, p = F.player
+    if (r.lightsDone) r.raceT += dt
+    const txt = !r.lightsDone ? 'Tour de formation' : `P${p.pos} · Tour ${Math.min(p.laps + 1, r.laps)}/${r.laps}`; if (sc.textContent !== txt) sc.textContent = txt; sc.hidden = false
+    if (p.laps !== r.lapsSeen) { r.lapsSeen = p.laps; if (p.laps === r.laps - 1 && r.laps > 1 && !F.chequered) hud.toast('Dernier tour !', 2000) }
+    if (F.chequered && !r.chequered && (p.finished || p.laps >= r.laps)) { r.chequered = true; game.session.setFlag('chequered', 999); hud.toast(`Drapeau à damier · P${p.pos}`, 3000); setTimeout(endSession, 2600) }
+  } else if (k === 'race') {
     if (r.lightsDone) r.raceT += dt
     const done = game.session.timing.laps.length
     const txt = `Tour ${Math.min(done + 1, r.laps)}/${r.laps}`; if (sc.textContent !== txt) sc.textContent = txt; sc.hidden = false
@@ -484,6 +584,9 @@ async function main() {
     await ren.load(game, track, bootProgress)
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
     hud = new Hud()
+    tower = new Tower()
+    marshals = await fetch('./assets/spa_pits/marshals.json').then(r => r.ok ? r.json() : null).catch(() => null)
+    $('bSkipF').addEventListener('click', () => skipFormation())
     void radio.load().then(() => dlog('radio : banque chargée')).catch(e => dlog('radio indisponible : ' + (e as Error).message))
     wireRadio()
     if (ren.rig) wheel = new WheelDisplay(ren.rig.root)
@@ -528,7 +631,7 @@ async function main() {
     $('bootGo').addEventListener('click', go)
     last = performance.now(); requestAnimationFrame(frame)
     if (params.has('auto')) { await go(); const k = params.get('auto') as SessionKind | 'demo'; if (k) startSession(k) }
-    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, menu, startQuick, startWeekend, endSession, openGarage, get run() { return run }, get wk() { return wk }, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
+    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, menu, startQuick, startWeekend, endSession, openGarage, get run() { return run }, get wk() { return wk }, get fview() { return fview }, get tower() { return tower }, skipFormation, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
     ;(window as unknown as { __w11diag: unknown }).__w11diag = diag
   } catch (e) {
     console.error(e)
