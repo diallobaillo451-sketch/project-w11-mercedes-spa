@@ -15,7 +15,21 @@ Conséquence : à cause du pilote (NC-SA), le jeu doit rester **gratuit et non c
 - **Approximations assumées** : les textes de sponsors (MONSTER ENERGY, PETRONAS, EPSON, « 44 ») sont redessinés dans une police libre (pas de logos officiels) ; positions et tailles approximatives. Couleurs de base (violet/blanc/jaune-vert) issues de la photo de référence, non calibrées.
 - Combinaison et gants : teinte « Mercedes 2020 » (noir + touches pétrole) dérivée des textures d'origine du pilote — **approximation**, pas une reproduction de la vraie combinaison.
 
-## Audio
+## Textures de détail du sol (CC0)
+| Usage | Fichiers jeu | Source | Licence |
+|---|---|---|---|
+| Gravier des bacs (couleur × AO, normale), détail de près | `game/public/assets/detail/gravel_*` | ambientCG « Gravel023 » — https://ambientcg.com/view?id=Gravel023 | CC0 1.0 |
+| Herbe (couleur × AO, normale), détail de près | `game/public/assets/detail/grass_*` | ambientCG « Grass001 » — https://ambientcg.com/view?id=Grass001 | CC0 1.0 |
+
+Conversion : `game/tools/make_detail.mjs` (1024², KTX2 UASTC + WebP de secours). Aucune attribution exigée (CC0) ; crédit donné par courtoisie.
+
+## Ciel (CC0)
+| Usage | Fichiers jeu | Source | Licence |
+|---|---|---|---|
+| Ciel photographique HDRI (nuages, IBL des reflets) | `game/public/assets/sky/sky_4k.webp`, `sky_2k.webp` (mobile), `sky.json` | Poly Haven « Kloofendal 48d Partly Cloudy (Pure Sky) », Greg Zaal & Jarod Guest — https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky | CC0 1.0 |
+
+Conversion : `tools/make_sky.py` (hémisphère haut, disque solaire retiré, encodage HDR x/(1+x)). Choix : ciel partiellement nuageux avec soleil (cohérent avec les ombres nettes du jeu) plutôt que « Stuttgart Hillside » (couvert, horizon avec arbres nus et tour qui apparaîtraient derrière la forêt de Spa).
+
 - `engine_new.mp3` (320 kb/s, 44,1 kHz stéréo, 2 min 17 s) fourni par le propriétaire. **Droits d'auteur inconnus** — à mentionner dans le README ; à remplacer par un son libre avant toute diffusion large si l'origine ne peut pas être établie.
 
 ## Spécifications W11
