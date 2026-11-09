@@ -14,8 +14,10 @@ export function loadSettings(): Settings {
     volume: 0.8, muted: false, camera: 'chase', perf: false, autoDrs: false, haptics: true }
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null') as Partial<Settings> | null
-    if (s) return { ...d, ...s, setup: { ...d.setup, ...(s.setup ?? {}) }, input: { ...d.input, ...(s.input ?? {}) } }
+    // v2 (9 nov.) : la qualité enregistrée par les versions précédentes (souvent abaissée après un faux plantage) repart au maximum
+    if (s && !(s as { v?: number }).v) { s.quality = d.quality; s.adaptive = true }
+    if (s) return { ...d, ...s, v: 2, setup: { ...d.setup, ...(s.setup ?? {}) }, input: { ...d.input, ...(s.input ?? {}) } } as Settings
   } catch { /* stockage indisponible */ }
   return d
 }
-export function saveSettings(s: Settings) { try { localStorage.setItem(KEY, JSON.stringify(s)) } catch { /* mode privé */ } }
+export function saveSettings(s: Settings) { try { localStorage.setItem(KEY, JSON.stringify({ ...s, v: 2 })) } catch { /* mode privé */ } }

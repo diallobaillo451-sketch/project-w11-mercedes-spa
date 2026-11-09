@@ -19,6 +19,8 @@ export class TrackSurface implements Surface {
   grid: Uint16Array; H: Float32Array; T: Uint8Array
   /** largeur exploitable par la trajectoire (asphalte + vibreurs contigus depuis le centre, bornée par les murs) */
   wlR: Float32Array; wrR: Float32Array
+  /** barrières réelles (facultatif) : la voiture les reçoit à sa création */
+  barriers: import('./barriers.ts').Barriers | null = null
   constructor(meta: SurfaceMeta, grid: Uint16Array) {
     this.N = meta.N; this.ND = meta.ND; this.D0 = meta.D0; this.DS = meta.DSTEP; this.ds = meta.ds; this.length = meta.length
     this.cx = Float64Array.from(meta.cx); this.cy = Float64Array.from(meta.cy); this.cz = Float64Array.from(meta.cz)
@@ -78,6 +80,13 @@ export class TrackSurface implements Surface {
       if (d < bd) { bd = d; best = i }
     }
     if (hint < 0) return this.project(x, z, best)
+    // loin de la ligne centrale (voie des stands, route de sortie autour de La Source) : la recherche locale peut rester
+    // sur un minimum local (épingle) → recherche globale grossière puis locale
+    if (bd > 625 && span === 12) {
+      let g = -1, gd = Infinity
+      for (let i = 0; i < N; i += 3) { const dx = x - this.cx[i], dz = z - this.cz[i], d = dx * dx + dz * dz; if (d < gd) { gd = d; g = i } }
+      if (gd < bd - 4) return this.project(x, z, g)
+    }
     // projection sur les segments voisins
     const i0 = best, im = (i0 - 1 + N) % N, ip = (i0 + 1) % N
     const proj = (a: number, b: number) => {
