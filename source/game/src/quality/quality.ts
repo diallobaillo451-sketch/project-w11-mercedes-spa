@@ -14,9 +14,9 @@ export interface QualityPreset {
 }
 export const QUALITY: Record<QualityName, QualityPreset> = {
   low:    { name: 'low', label: 'Basse', dprMax: 1.0, car: 'high', shadowMap: 1024, shadowRange: 22, softShadows: false, bloom: false, gtao: false, gtaoScale: 0.5, msaa: false, anisotropy: 2, envIntensity: 0.9, particles: 120, drawDistance: 1400, probe: 0, probeEvery: 1, pxBudget: 0.9e6, fps: 60 },
-  medium: { name: 'medium', label: 'Moyenne', dprMax: 1.5, car: 'high', shadowMap: 2048, shadowRange: 30, softShadows: true, bloom: true, gtao: false, gtaoScale: 0.5, msaa: true, anisotropy: 4, envIntensity: 1.0, particles: 300, drawDistance: 2200, probe: 64, probeEvery: 2, pxBudget: 1.4e6, fps: 60 },
-  high:   { name: 'high', label: '1080p · 60 i/s', dprMax: 3.0, car: 'high', shadowMap: 2048, shadowRange: 34, softShadows: true, bloom: true, gtao: true, gtaoScale: 0.5, msaa: true, anisotropy: 16, envIntensity: 1.0, particles: 600, drawDistance: 3500, probe: 128, probeEvery: 1, pxBudget: 2.08e6, fps: 60 },
-  ultra:  { name: 'ultra', label: '2K · 30 i/s', dprMax: 3.0, car: 'high', shadowMap: 4096, shadowRange: 40, softShadows: true, bloom: true, gtao: true, gtaoScale: 1.0, msaa: true, anisotropy: 16, envIntensity: 1.05, particles: 1000, drawDistance: 5000, probe: 256, probeEvery: 1, pxBudget: 3.7e6, fps: 30 },
+  medium: { name: 'medium', label: 'Moyenne', dprMax: 1.5, car: 'high', shadowMap: 2048, shadowRange: 30, softShadows: true, bloom: false, gtao: false, gtaoScale: 0.5, msaa: true, anisotropy: 4, envIntensity: 1.0, particles: 300, drawDistance: 2200, probe: 64, probeEvery: 2, pxBudget: 1.4e6, fps: 60 },
+  high:   { name: 'high', label: '1080p · 60 i/s', dprMax: 3.0, car: 'high', shadowMap: 2048, shadowRange: 34, softShadows: true, bloom: false, gtao: true, gtaoScale: 0.5, msaa: true, anisotropy: 16, envIntensity: 1.0, particles: 600, drawDistance: 3500, probe: 128, probeEvery: 1, pxBudget: 2.08e6, fps: 60 },
+  ultra:  { name: 'ultra', label: '2K · 30 i/s', dprMax: 3.0, car: 'high', shadowMap: 4096, shadowRange: 40, softShadows: true, bloom: false, gtao: true, gtaoScale: 1.0, msaa: true, anisotropy: 16, envIntensity: 1.05, particles: 1000, drawDistance: 5000, probe: 256, probeEvery: 1, pxBudget: 3.7e6, fps: 30 },
 }
 /** Choix initial : Haute partout (piste pleine qualité) ; l'adaptation dynamique réduit les effets si besoin. */
 export function defaultQuality(): QualityName {
