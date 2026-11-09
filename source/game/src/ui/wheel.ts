@@ -82,27 +82,38 @@ export class WheelDisplay {
       g.fillStyle = '#000'; g.font = '700 16px -apple-system,Helvetica,Arial'; g.textAlign = 'left'; g.fillText('ERS ' + (ERS_L[c.ers.mode] ?? ''), 10, H - 18)
       g.textAlign = 'right'; g.fillStyle = '#fff'; g.fillText((c.drsOpen ? 'DRS OUVERT' : c.drsAvailable ? 'DRS DISPO' : '') + (c.pitLim ? '  PIT LIM' : ''), W - 10, H - 18)
     } else if (this.page === 1) {
-      // page PNEUS / FREINS : surface / cœur °C, pression, usure ; disques
-      const wn = ['AVG', 'AVD', 'ARG', 'ARD']
+      // page PNEUS : 3 zones de surface (int/mil/ext), carcasse, pression à chaud, usure, état (grainage, cloques, plat,
+      // gommes ramassées, saleté, crevaison), disques ; bas d'écran : piste (eau, gomme, °C piste)
+      const wn = ['AVG', 'AVD', 'ARG', 'ARD'], cmp = c.setup.compound, ccol: Record<string, string> = { C1: '#f2f2f2', C2: '#f2f2f2', C3: '#ffd23f', C4: '#ff3b30', C5: '#ff3b30', I: '#19e04f', W: '#2f7bff' }
+      const tc = (T: number) => T < 75 ? '#3a8bff' : T < 95 ? '#4fc3ff' : T < 120 ? '#19e04f' : T < 135 ? '#ffd23f' : '#ff3b30'
+      const hh = (H - top - 40) / 2
       c.wheels.forEach((w, i) => {
-        const x = (i % 2) * 256 + 4, y = top + Math.floor(i / 2) * ((H - top - 34) / 2), h = (H - top - 40) / 2
-        const T = w.tyre.temp, col = T < 75 ? '#3a8bff' : T < 95 ? '#4fc3ff' : T < 120 ? '#19e04f' : T < 135 ? '#ffd23f' : '#ff3b30'
-        g.fillStyle = col; g.fillRect(x, y, 10, h)
-        g.fillStyle = '#7f93a3'; g.font = '600 15px -apple-system,Helvetica,Arial'; g.textAlign = 'left'; g.fillText(wn[i] + ' · ' + c.setup.compound, x + 18, y + 14)
-        g.fillStyle = '#fff'; g.font = '700 30px -apple-system,Helvetica,Arial'; g.fillText(Math.round(T) + '°', x + 18, y + 46)
-        const ty = w.tyre as unknown as { core?: number; wear?: number; pressure?: number }
-        g.font = '600 16px -apple-system,Helvetica,Arial'; g.fillStyle = '#cfe'
-        g.fillText('cœur ' + Math.round(ty.core ?? T) + '°  usure ' + Math.round((ty.wear ?? 0) * 100) + '%', x + 100, y + 30)
-        g.fillStyle = w.brakeT > 900 ? '#ff9f0a' : '#cfe'; g.fillText('frein ' + Math.round(w.brakeT) + '°C', x + 100, y + 52)
+        const t = w.tyre, x = (i % 2) * 256 + 4, y = top + Math.floor(i / 2) * (hh + 4)
+        // 3 zones (intérieur côté châssis) : à gauche de la case pour les roues gauches, inversé pour les roues droites
+        const z = w.left ? [t.zones[2], t.zones[1], t.zones[0]] : t.zones
+        z.forEach((T, k) => { g.fillStyle = tc(T); g.fillRect(x + k * 9, y, 8, hh) })
+        g.fillStyle = ccol[cmp] ?? '#fff'; g.font = '700 15px -apple-system,Helvetica,Arial'; g.textAlign = 'left'; g.fillText(wn[i] + ' ' + cmp, x + 32, y + 12)
+        g.fillStyle = '#fff'; g.font = '700 28px -apple-system,Helvetica,Arial'; g.fillText(Math.round(t.temp) + '°', x + 32, y + 40)
+        g.font = '600 14px -apple-system,Helvetica,Arial'; g.fillStyle = '#cfe'
+        g.fillText('carc. ' + Math.round(t.core) + '°  ' + t.pressure.toFixed(1) + ' psi', x + 100, y + 14)
+        g.fillText('usure ' + Math.round(t.wear * 100) + '%  frein ' + Math.round(w.brakeT) + '°', x + 100, y + 32)
+        const st: string[] = []
+        if (t.puncture > 0) st.push('CREVÉ'); if (t.graining > 0.03) st.push('grain ' + Math.round(t.graining * 100)); if (t.blister > 0.03) st.push('cloq ' + Math.round(t.blister * 100))
+        if (t.flatSpot > 0.02) st.push('plat ' + Math.round(t.flatSpot * 100)); if (t.pickup > 0.1) st.push('pick-up'); if (t.dirt > 0.1) st.push('sale'); if (t.thermalDeg > 0.03) st.push('surch.')
+        g.fillStyle = t.puncture > 0 ? '#ff3b30' : st.length ? '#ff9f0a' : '#7f93a3'; g.fillText(st.length ? st.join(' · ') : 'état OK', x + 100, y + 50)
       })
-      g.fillStyle = '#7f93a3'; g.font = '600 16px -apple-system,Helvetica,Arial'; g.textAlign = 'center'; g.fillText('PAGE PNEUS · FREINS', W / 2, H - 14)
+      const e = gm.env; g.fillStyle = '#7f93a3'; g.font = '600 15px -apple-system,Helvetica,Arial'; g.textAlign = 'center'
+      g.fillText(`PISTE ${Math.round(e.trackT)}°C · AIR ${Math.round(e.airT)}°C · EAU ${e.wetness.toFixed(1)} mm · ADH. ×${c.wetGrip.toFixed(2)}${c.aqua > 0.2 ? ' · AQUAPLANING' : ''}`, W / 2, H - 14)
     } else {
       // page RÉGLAGES : diff, mode moteur, ERS, aides
       box(4, top, 250, 56, 'DIFF ENTRÉE', String(Math.round(c.setup.diffOff * 10))); box(258, top, 250, 56, 'DIFF SORTIE', String(Math.round(c.setup.diffOn * 10)))
       box(4, top + 60, 250, 56, 'MOTEUR', ENG_L[c.setup.engineMode] ?? c.setup.engineMode, '#fff', 20); box(258, top + 60, 250, 56, 'ERS', ERS_L[c.ers.mode] ?? '', '#ffd23f', 22)
       box(4, top + 120, 250, 56, 'TC', String(c.setup.tc)); box(258, top + 120, 250, 56, 'BBAL', (c.setup.brakeBias * 100).toFixed(1))
       const dm = c.damage; g.fillStyle = dm.total > 0.05 ? '#ff9f0a' : '#7f93a3'; g.font = '600 18px -apple-system,Helvetica,Arial'; g.textAlign = 'center'
-      g.fillText(dm.total > 0.05 ? `DÉGÂTS  aileron AV ${Math.round(dm.frontWing * 100)}% · AR ${Math.round(dm.rearWing * 100)}% · fond ${Math.round(dm.floor * 100)}%` : 'AUCUN DÉGÂT', W / 2, H - 16)
+      const pn = c.wheels.map((w, i) => w.tyre.puncture > 0 ? ['AVG', 'AVD', 'ARG', 'ARD'][i] : '').filter(Boolean), wo = dm.wheelOff.map((o, i) => o ? ['AVG', 'AVD', 'ARG', 'ARD'][i] : '').filter(Boolean)
+      g.font = '600 15px -apple-system,Helvetica,Arial'
+      g.fillText(dm.total > 0.05 || pn.length ? `AV ${Math.round(dm.frontWing * 100)}% dérives ${Math.round(dm.endplate[0] * 100)}/${Math.round(dm.endplate[1] * 100)} · AR ${Math.round(dm.rearWing * 100)}% · fond ${Math.round(dm.floor * 100)}% · défl. ${Math.round(dm.barge[0] * 100)}/${Math.round(dm.barge[1] * 100)}` : 'AUCUN DÉGÂT', W / 2, H - 34)
+      g.fillText(`${wo.length ? 'ROUE PERDUE ' + wo.join(' ') + ' · ' : ''}${pn.length ? 'CREVAISON ' + pn.join(' ') + ' · ' : ''}patin ${c.plankWear.toFixed(1)} mm · eau ${Math.round(c.waterT)}°`, W / 2, H - 14)
     }
     if (this.msgT > 0) { g.fillStyle = 'rgba(0,0,0,.82)'; g.fillRect(40, H / 2 - 34, W - 80, 68); g.strokeStyle = '#00d2be'; g.lineWidth = 3; g.strokeRect(40, H / 2 - 34, W - 80, 68)
       g.fillStyle = '#00d2be'; g.font = '700 30px -apple-system,Helvetica,Arial'; g.textAlign = 'center'; g.fillText(this.msg, W / 2, H / 2 + 2) }
