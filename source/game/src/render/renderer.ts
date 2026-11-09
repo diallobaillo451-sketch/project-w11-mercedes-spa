@@ -25,6 +25,7 @@ import { SkyDome, loadSky } from './skydome.ts'
 import { loadDetail, applyDetail, type DetailSet } from './detail.ts'
 import { applyBakedAO, stripBakedAO, BAKED_AO_DEFAULT } from './bakedAO.ts'
 import { ReflectionProbe } from './probe.ts'
+import { TREE_RE, prepTreeGeometry, prepTreeMaterial, treeUniforms } from './trees.ts'
 import type { Game, Pose } from '../core/game.ts'
 import type { TrackSurface } from '../track/surface.ts'
 
@@ -127,6 +128,15 @@ function tileLoader(): GLTFLoader {
   } } as never })
   return l
 }
+// Garde-fous NaN dans les shaders (WebKit : points noirs sur la carrosserie) : normale nulle/dégénérée → normalize(0) = NaN
+// sur les GPU qui suivent strictement la norme (Metal sur iPhone aussi). On remplace par une normale valide.
+{ const C = THREE.ShaderChunk as unknown as Record<string, string>
+  if (!C.normal_fragment_begin.includes('w11nan')) {
+    C.normal_fragment_begin = C.normal_fragment_begin.replace('vec3 nonPerturbedNormal = normal;', '/*w11nan*/ if (any(isnan(normal)) || dot(normal, normal) < 1e-8) normal = vec3(0.0, 0.0, 1.0);\nvec3 nonPerturbedNormal = normal;')
+    C.normal_fragment_maps += '\nif (any(isnan(normal)) || dot(normal, normal) < 1e-8) normal = nonPerturbedNormal;'
+    C.clearcoat_normal_fragment_maps += '\n#ifdef USE_CLEARCOAT\nif (any(isnan(clearcoatNormal)) || dot(clearcoatNormal, clearcoatNormal) < 1e-8) clearcoatNormal = nonPerturbedNormal;\n#endif'
+  } }
+const P0trees = () => new URLSearchParams(location.search).get('trees') !== '0'
 export class Renderer {
   canvas: HTMLCanvasElement; r: THREE.WebGLRenderer; scene = new THREE.Scene()
   q: QualityPreset; sun = new THREE.DirectionalLight(0xfff1e0, 3.1); hemi = new THREE.HemisphereLight(0xbfd6ff, 0x4a4632, 0.25)
@@ -161,11 +171,11 @@ export class Renderer {
     const post = this.q.bloom || this.q.gtao
     this.r = new THREE.WebGLRenderer({ canvas, antialias: this.q.msaa && !post, powerPreference: 'high-performance', alpha: false, stencil: false })
     this.mobile = !!opt.mobile
-    LAZY = !!opt.mobile
+    LAZY = false // plus de textures grises provisoires : une tuile n'entre dans la scène qu'avec ses vraies textures
     onLazyReady = () => { if (this.track) this.swapPlaceholders(this.track) }
     canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); dlog('contexte WebGL perdu'); opt.onLost?.() })
     if (opt.ktx) {
-      try { KTX = new KTX2Loader().setTranscoderPath('./basis/').setWorkerLimit(opt.mobile ? 1 : 2); KTX.detectSupport(this.r) } catch (e) { KTX = null; dlog('KTX2 indisponible : ' + (e as Error).message) }
+      try { KTX = new KTX2Loader().setTranscoderPath('./basis/').setWorkerLimit(opt.mobile ? 3 : 4); KTX.detectSupport(this.r) } catch (e) { KTX = null; dlog('KTX2 indisponible : ' + (e as Error).message) }
     }
     this.r.outputColorSpace = THREE.SRGBColorSpace
     this.r.info.autoReset = false // compteurs sur l'image complète (toutes les passes), remis à zéro dans frame()
@@ -176,7 +186,7 @@ export class Renderer {
     this.r.toneMappingExposure = this.look.exp
     this.sun.intensity = this.look.sun; this.hemi.intensity = this.look.hemi
     this.r.shadowMap.enabled = true
-    this.r.shadowMap.type = this.q.softShadows ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap
+    this.r.shadowMap.type = THREE.PCFShadowMap // r18x : PCF filtré (radius) ; PCFSoft n'existe plus
     this.scene.add(this.hemi, this.sun, this.sun.target, this.car)
   }
   /** Ciel physique (Preetham) + IBL préfiltrée (PMREM) — soleil réaliste ~38° de haut, après-midi à Spa. */
@@ -213,7 +223,7 @@ export class Renderer {
     let skyOk = false
     if (P0.get('sky') !== '0') {
       try {
-        const { tex, meta } = await loadSky('./assets/sky/', this.mobile, Math.min(this.r.capabilities.getMaxAnisotropy(), 4))
+        const { tex, meta } = await loadSky('./assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4))
         this.dome = new SkyDome(tex, meta, 215, n0('skyI', 3.2))
         this.sunDir.copy(this.dome.sunDir)
         this.scene.add(this.dome.mesh)
@@ -233,7 +243,7 @@ export class Renderer {
     this.tiles = { man, loaded: new Set(), total: man.tiles.length, bytes: 0 }
     if (KTX) { try { KTX_LIST = await (await fetch(TRACK_DIR + 'tex/ktx2.json')).json(); diag.ktx = true; dlog('KTX2 actif (' + Object.keys(KTX_LIST).length + ' textures)') } catch { KTX = null; dlog('ktx2.json absent → WebP') } }
     const pos = game.pose(this.pose).pos, d = (t: TileInfo) => t.id === 'base' ? -1e9 : Math.hypot(t.cx - pos[0], t.cz - pos[2]) - t.r
-    const srt = [...man.tiles].sort((a, b) => d(a) - d(b)), first = srt.filter((t, i) => this.mobile ? i < 2 : (i < 4 || d(t) < NEAR_M)) /* mobile : décor + tuile du départ seulement → démarrage plus rapide, le reste en flux */, w = (t: TileInfo) => t.geoBytes + t.tex.reduce((a, u) => a + (man.texSizes[u] ?? 0), 0)
+    const srt = [...man.tiles].sort((a, b) => d(a) - d(b)), first = srt.filter((t, i) => this.mobile ? i < 3 : (i < 4 || d(t) < NEAR_M)) /* mobile : décor + tuile du départ seulement → démarrage plus rapide, le reste en flux */, w = (t: TileInfo) => t.geoBytes + t.tex.reduce((a, u) => a + (man.texSizes[u] ?? 0), 0)
     const W = first.reduce((a, t) => a + w(t), 0) * 1.15
     let ft = 0, fc = 0
     const upd = () => prog('Chargement de la piste', Math.min(1, ft / W) * 0.88 + fc * 0.12)
@@ -254,18 +264,17 @@ export class Renderer {
     this.car.add(this.rig.root)
     // reflets réels de l'environnement sur la voiture (sonde cube dynamique), sinon IBL du ciel seul
     const P = new URLSearchParams(location.search)
-    const ps = P.has('probe') ? Number(P.get('probe')) : q.probe
+    // WebKit (Safari, donc tout navigateur iPhone) : la sonde cube filtrée PMREM rend la carrosserie NOIRE (vu dans
+    // Playwright WebKit, cause interne non trouvée) → reflets de l'IBL du ciel HDRI, propres. ?probe=128 pour forcer.
+    const webkit = /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Firefox|Edg\//.test(navigator.userAgent)
+    const ps = P.has('probe') ? Number(P.get('probe')) : webkit ? 0 : q.probe
     this.probeSize = ps
-    if (ps > 0 && !this.mobile) {
-      this.probe = new ReflectionProbe(ps, q.probeEvery)
-      const ei = this.look.env * q.envIntensity
-      this.rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
-        for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) if ('envMap' in mt) { mt.envMap = this.probe!.texture; mt.envMapIntensity = ei; mt.needsUpdate = true } })
-    }
+
     this.cgOff.set(game.car.cg[0], game.car.cg[1], game.car.cg[2])
     this.r.setPixelRatio(this.basePR())
     this.cams = new CameraRig(innerWidth / innerHeight, q.drawDistance, track)
     this.fx = new Effects(q.particles); this.scene.add(this.fx.group)
+    this.rig.onPartLost = (_w, p) => { for (let i = 0; i < 4; i++) this.fx.spark([p.x, p.y, p.z], game.car.vel, 2) }
     // herbe 3D en bord de piste (pas en qualité basse ; ?grass=0 pour comparer)
     if (q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
       const gm = await fetch('./track/grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
@@ -278,14 +287,16 @@ export class Renderer {
       if (cb) { this.crowd = new Crowd(cb); this.scene.add(this.crowd.group); dlog(`public : ${this.crowd.chunks.length} blocs`) }
     }
     // mobile : démarrage SANS composeur (cibles HalfFloat MSAA), sans sonde cube, ombre 1024 → upgrade() après stabilité
-    if (this.mobile) { const s = this.sun.shadow, sm = Math.min(1024, q.shadowMap); s.mapSize.set(sm, sm) } else this.setupPost()
+    // qualité complète dès le départ, mobile compris (composeur MSAA, ombre pleine, sonde) : le « démarrage léger »
+    // rendait sans anticrénelage ni effets sur iPhone. La mémoire reste ≈ 200 Mo grâce aux textures ASTC.
+    this.setupPost(); this.upgraded = true
     this.resize()
     // compile tous les shaders avant la première image (évite les saccades au premier virage)
     prog('Compilation des shaders', 1)
     this.syncCar(game, 0)
     this.cams.update(this.car, this.rig.eye, this.rig.tcam, 0, 0.016, 0, 0)
     await this.r.compileAsync(this.scene, this.cams.cam)
-    this.probe?.update(this.r, this.scene, this.car.position, [this.car, this.fx.group], true)
+    if (ps > 0) this.attachProbe(ps)
     this.memLog('shaders compilés')
   }
   /** mobile : montée en qualité progressive une fois le jeu démarré et stable (composeur → ombre → sonde). */
@@ -297,12 +308,21 @@ export class Renderer {
     if (q.bloom || q.gtao) { this.setupPost(); this.resize(); const f = this.fxLevel; this.fxLevel = -1; this.setFx(f); this.memLog('qualité ↑ effets (composeur)'); await wait(1500) }
     const s = this.sun.shadow; if (s.mapSize.x !== q.shadowMap && this.fxLevel < 3) { s.mapSize.set(q.shadowMap, q.shadowMap); s.map?.dispose(); s.map = null; this.memLog('qualité ↑ ombre ' + q.shadowMap); await wait(1500) }
     if (this.probeSize > 0 && this.rig && !this.probe) {
-      this.probe = new ReflectionProbe(this.probeSize, q.probeEvery)
-      const ei = this.look.env * q.envIntensity
-      this.rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
-        for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) if ('envMap' in mt) { mt.envMap = this.probe!.texture; mt.envMapIntensity = ei; mt.needsUpdate = true } })
+      this.attachProbe(this.probeSize)
       this.memLog('qualité ↑ reflets sonde ' + this.probeSize)
     }
+  }
+  /** sonde de reflets : rendu complet + PMREM vérifié AVANT de l'appliquer ; si la sortie est noire/NaN (vu sur WebKit),
+   *  la voiture garde l'IBL du ciel (jamais de carrosserie noire). */
+  attachProbe(size: number) {
+    if (!this.rig) return
+    const pr = new ReflectionProbe(size, this.q.probeEvery), ei = this.look.env * this.q.envIntensity
+    const setEnv = (t: THREE.Texture | null, i: number) => this.rig!.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) if ('envMap' in mt) { mt.envMap = t; mt.envMapIntensity = i; mt.needsUpdate = true } })
+    pr.onFail = () => { dlog('sonde de reflets invalide ' + JSON.stringify(pr.check) + ' → reflets du ciel'); this.probe = null; setEnv(null, 1) }
+    this.probe = pr
+    pr.update(this.r, this.scene, this.car.position, [this.car, this.fx.group], true)
+    if (this.probe) setEnv(pr.texture, ei)
   }
   /** estimation mémoire GPU des objets dans la scène (textures uniques par source, géométries, cibles, ombre). */
   gpuEstimate() {
@@ -338,6 +358,11 @@ export class Renderer {
         if (fix && !s.userData.fixed) { s.userData.fixed = true; s.color.multiplyScalar(fix[0]); if ('specularIntensity' in s) s.specularIntensity = Math.min(s.specularIntensity ?? 1, fix[1]) }
       }
     })
+    // arbres : normales sphériques, alpha-to-coverage affûté, vent, translucidité (src/render/trees.ts) ; ?trees=0 pour comparer
+    if (P0trees()) root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      const nm = (m.name || '') + ' ' + (o.parent?.name || ''), mt = m.material as THREE.MeshStandardMaterial
+      if (!TREE_RE.test(mt.name || '') && !TREE_RE.test(nm)) return
+      prepTreeGeometry(m.geometry, /bush/i.test(mt.name)); prepTreeMaterial(mt, this.q.msaa) })
     // AO précalculée Cycles (COLOR_0) → éclairage indirect ; ?bao=0 pour comparer sans
     const P = new URLSearchParams(location.search), n = (k: string, d: number) => P.has(k) ? Number(P.get(k)) : d
     if (P.get('bao') !== '0') {
@@ -385,12 +410,23 @@ export class Renderer {
       } })
   }
   get texturesPending() { return PH_WAIT.size }
+  /** après « Prêt » : toutes les textures KTX2 de la piste téléchargées en arrière-plan (3 à la fois) dans le cache HTTP /
+   *  service worker → les tuiles suivantes arrivent complètes sans attendre le réseau. Aucun envoi au GPU ici. */
+  prefetched = 0
+  private async prefetchTextures() {
+    if (!KTX) return
+    const ids = Object.keys(KTX_LIST); let i = 0
+    const one = async () => { while (i < ids.length) { const id = ids[i++]; try { const r = await fetch(TRACK_DIR + 'tex/' + id + '.ktx2'); await r.arrayBuffer(); this.prefetched++ } catch { /* réessayé au chargement de la tuile */ } } }
+    await Promise.all([one(), one(), one()])
+    dlog('textures piste en cache : ' + this.prefetched + '/' + ids.length)
+  }
   /** tuiles restantes en arrière-plan, la plus proche de la voiture d'abord (recalculé à chaque tuile). */
   async streamTiles(game: Game) {
     if (this.streaming || !this.tiles) return
     this.streaming = true
     lazyGo()
     const T = this.tiles
+    void this.prefetchTextures()
     if (this.mobile) return this.streamNear(game)
     for (;;) {
       const left = T.man.tiles.filter(t => !T.loaded.has(t.id)); if (!left.length) break
@@ -476,9 +512,10 @@ export class Renderer {
     // garde-fou HDR : NaN/Inf (spéculaires extrêmes, soleil) → sinon le flou du bloom contamine tout l'écran
     this.composer.addPass(new ShaderPass({
       uniforms: { tDiffuse: { value: null }, sat: { value: this.look.sat }, con: { value: this.look.con } },
+      // NaN/Inf : remplacé par la moyenne des voisins valides (et non du noir) → aucun point noir (vu sous WebKit sur la carrosserie)
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
 // + étalonnage léger en linéaire HDR, avant ACES (même passe → coût nul) : saturation et contraste autour d'un gris moyen
-      fragmentShader: 'uniform sampler2D tDiffuse; uniform float sat, con; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); bvec3 bad = isnan(c.rgb); if (bad.x || bad.y || bad.z || any(isinf(c.rgb))) c.rgb = vec3(0.0); c.rgb = clamp(c.rgb, 0.0, 48.0); float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722)); c.rgb = max(mix(vec3(l), c.rgb, sat), 0.0); c.rgb = 0.22 * pow(c.rgb / 0.22, vec3(con)); gl_FragColor = vec4(min(c.rgb, 48.0), 1.0); }',
+      fragmentShader: 'uniform sampler2D tDiffuse; uniform float sat, con; varying vec2 vUv; bool bad3(vec3 v){ return any(isnan(v)) || any(isinf(v)); } void main(){ vec4 c = texture2D(tDiffuse, vUv); if (bad3(c.rgb)) { vec2 px = 1.0 / vec2(textureSize(tDiffuse, 0)); vec3 acc = vec3(0.0); float n = 0.0; for (int i = 0; i < 12; i++) { float a = float(i) * 0.5236; vec3 v = texture2D(tDiffuse, vUv + vec2(cos(a), sin(a)) * px * (i < 4 ? 1.0 : i < 8 ? 2.5 : 5.0)).rgb; if (!bad3(v)) { acc += min(v, vec3(48.0)); n += 1.0; } } c.rgb = n > 0.0 ? acc / n : vec3(0.0); } c.rgb = clamp(c.rgb, 0.0, 48.0); float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722)); c.rgb = max(mix(vec3(l), c.rgb, sat), 0.0); c.rgb = 0.22 * pow(c.rgb / 0.22, vec3(con)); gl_FragColor = vec4(min(c.rgb, 48.0), 1.0); }',
     }))
     if (q.bloom) { this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.12, 0.3, 24.0); this.composer.addPass(this.bloom) }
     this.composer.addPass(new OutputPass())
@@ -523,6 +560,7 @@ export class Renderer {
       else if (w.type >= 4 && w.type <= 5 && c.speed > 4) this.fx.offroad(w.px, w.py, w.pz, c.vel, c.speed, w.type)
     }
     this.fx.update(dt)
+    treeUniforms.uTime.value = performance.now() / 1000
     this.cams.shake = shake
     this.cams.update(this.car, this.rig.eye, this.rig.tcam, c.speed, dt, c.gLat, c.gLong)
     this.crowd?.update(this.cams.cam.position)
@@ -536,6 +574,7 @@ export class Renderer {
     this.sun.target.position.set(lx, this.car.position.y, lz)
     this.sun.position.set(lx + this.sunDir.x * 150, this.car.position.y + this.sunDir.y * 150, lz + this.sunDir.z * 150)
     this.sun.target.updateMatrixWorld()
+    treeUniforms.uSunV.value.copy(this.sunDir).transformDirection(this.cams.cam.matrixWorldInverse)
     this.probe?.update(this.r, this.scene, this.car.position, [this.car, this.fx.group])
     if (this.composer) this.composer.render(dt)
     else this.r.render(this.scene, this.cams.cam)

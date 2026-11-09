@@ -18,7 +18,15 @@ export class CarRig {
   eye = new THREE.Vector3(0, 0.93, -0.12) // œil pilote (repère modèle), ajusté au chargement
   tcam = new THREE.Vector3(0, 1.2, 0.15)
   private q = new THREE.Quaternion(); private e = new THREE.Euler()
-  private headLook = 0
+  private headLook = 0; private hRoll = 0; private hPitch = 0
+  /** tête au repos (repère de la voiture) : le clip « steer » faisait monter/descendre la tête avec les épaules ;
+   *  avec le HANS la tête reste quasi fixe → position imposée, seules de petites rotations amorties sont ajoutées */
+  private headRestP = new THREE.Vector3(); private headRestQ = new THREE.Quaternion(); private headOk = false
+  private hv = new THREE.Vector3(); private hq2 = new THREE.Quaternion(); private hq3 = new THREE.Quaternion()
+  /** dégâts visibles : aileron AV / AR séparés du maillage Car_wing au chargement */
+  dmgFront: THREE.Object3D | null = null; dmgRear: THREE.Object3D | null = null
+  private dmgFrontP = new THREE.Vector3(); private dmgRearP = new THREE.Vector3(); private wingLost = [false, false]
+  onPartLost: ((which: 'front' | 'rear', worldPos: THREE.Vector3) => void) | null = null
   /** gants : main tournée de 18° vers l'extérieur autour de l'axe du volant, doigts enroulés derrière la poignée
    *  (direction mesurée, repère voiture Blender) au lieu de traverser la face du volant */
   grip: { h: THREE.Object3D; f: THREE.Object3D; sg: number }[] = []
@@ -70,6 +78,9 @@ export class CarRig {
     // prise du volant corrigée (point 9) : réglage mesuré dans Blender (blender/scripts/d7_grip_check.py, captures out/blender/mains_*)
     for (const k of ['R', 'L']) { const h = byName('hand.' + k), f = byName('fingers.' + k); if (h && f) this.grip.push({ h, f, sg: k === 'R' ? 1 : -1 }) }
     if (this.sw) { this.root.updateMatrixWorld(true); const rq = this.root.getWorldQuaternion(new THREE.Quaternion()); this.swRel0.copy(rq.invert().multiply(this.sw.getWorldQuaternion(new THREE.Quaternion()))) }
+    if (this.head) { this.root.updateMatrixWorld(true); this.head.getWorldPosition(this.headRestP); this.root.worldToLocal(this.headRestP)
+      this.head.getWorldQuaternion(this.headRestQ); this.headRestQ.premultiply(this.root.getWorldQuaternion(new THREE.Quaternion()).invert()); this.headOk = true }
+    this.splitWings(byName('Car_wing') as THREE.Mesh | null, byName('W_FL'), byName('W_RL'))
     // œil du pilote : derrière la visière (centre de la fente), mesuré sur le casque → caméra cockpit réaliste
     const vis = byName('Helmet_Visor_Helmet_Visor_0')
     if (vis) { this.root.updateMatrixWorld(true); const v = new THREE.Vector3(); vis.getWorldPosition(v); this.root.worldToLocal(v); this.eye.set(0, v.y - 0.005, v.z + 0.02) }
@@ -93,10 +104,41 @@ export class CarRig {
       }
     })
   }
+  /** sépare l'aileron avant et l'aileron arrière du maillage commun (triangles devant l'essieu AV / derrière l'essieu AR) */
+  private splitWings(wing: THREE.Mesh | null, fl: THREE.Object3D | null, rl: THREE.Object3D | null) {
+    if (!wing || !fl || !rl || !wing.geometry.index) return
+    this.root.updateMatrixWorld(true)
+    const inv = new THREE.Matrix4().copy(wing.matrixWorld).invert()
+    const F = fl.getWorldPosition(new THREE.Vector3()).applyMatrix4(inv), R = rl.getWorldPosition(new THREE.Vector3()).applyMatrix4(inv)
+    const ax = F.clone().sub(R), L = ax.length(); ax.normalize()
+    const g = wing.geometry, pos = g.getAttribute('position'), idx = g.index!.array, fr: number[] = [], rr: number[] = [], rest: number[] = []
+    const c = new THREE.Vector3(), v = new THREE.Vector3()
+    for (let t = 0; t < idx.length; t += 3) {
+      c.set(0, 0, 0); for (let k = 0; k < 3; k++) c.add(v.fromBufferAttribute(pos, idx[t + k]))
+      c.multiplyScalar(1 / 3); const d = c.sub(R).dot(ax) / L // 0 = essieu AR, 1 = essieu AV
+      ;(d > 1.08 ? fr : d < -0.12 ? rr : rest).push(idx[t], idx[t + 1], idx[t + 2])
+    }
+    if (fr.length < 30 || rr.length < 30) return
+    const mk = (ix: number[]) => { const ng = new THREE.BufferGeometry(); for (const [k, a] of Object.entries(g.attributes)) ng.setAttribute(k, a); ng.setIndex(ix); ng.computeBoundingSphere(); return ng }
+    wing.geometry = mk(rest)
+    const part = (ix: number[], name: string) => { const m = new THREE.Mesh(mk(ix), wing.material); m.name = name; m.castShadow = m.receiveShadow = true
+      const piv = new THREE.Group(); piv.name = name + '_pivot'; wing.add(piv); piv.add(m); return piv }
+    this.dmgFront = part(fr, 'dmg_front_wing'); this.dmgRear = part(rr, 'dmg_rear_wing')
+  }
   private setSteer(theta: number) { // theta en degrés, + = droite, borné ±90 (plage du clip)
     if (!this.mixer || !this.action) return
     const t = (Math.max(-90, Math.min(90, theta)) / 90 + 1) / 2 * this.clipDur
     this.action.time = Math.min(this.clipDur - 1e-4, Math.max(0, t)); this.mixer.update(0)
+  }
+  /** dégâts visibles : aileron AV qui s'affaisse puis se détache, aileron AR arraché, roue au carrossage faussé.
+   *  Rien ne se répare tant que la physique ne remet pas les dégâts à zéro (arrêt aux stands / nouvelle session). */
+  applyDamage(D: { frontWing: number; rearWing: number; suspension: number[] }) {
+    const f = this.dmgFront, r = this.dmgRear
+    if (f) { const lost = D.frontWing > 0.7; f.visible = !lost; f.rotation.set(Math.min(0.5, D.frontWing) * 0.35, D.frontWing * 0.12, D.frontWing * 0.08); f.position.y = -D.frontWing * 0.04
+      if (lost && !this.wingLost[0]) { this.wingLost[0] = true; this.onPartLost?.('front', f.getWorldPosition(this.dmgFrontP)) } if (!lost) this.wingLost[0] = false }
+    if (r) { const lost = D.rearWing > 0.65; r.visible = !lost; r.rotation.set(-D.rearWing * 0.3, 0, D.rearWing * 0.15)
+      if (lost && !this.wingLost[1]) { this.wingLost[1] = true; this.onPartLost?.('rear', r.getWorldPosition(this.dmgRearP)) } if (!lost) this.wingLost[1] = false }
+    for (let i = 0; i < 4; i++) { const s = D.suspension[i] ?? 0; if (s > 0.05) this.hubs[i].rotation.z = (i % 2 ? -1 : 1) * s * 0.18 }
   }
   /** wheels : états interpolés (compression, angle, braquage). */
   update(car: Vehicle, wheels: { c: number; angle: number; steer: number }[], dt: number) {
@@ -126,11 +168,19 @@ export class CarRig {
     // DRS : le volet pivote autour de son bord de fuite (car.drsPos lissé ~0,1 s dans la physique)
     if (this.drs) this.drs.rotation.x = car.drsPos * this.drsDeg * Math.PI / 180
     // tête : regard vers la corde + inclinaison sous G latéral / longitudinal (après le clip)
-    if (this.head) {
-      this.headLook += (-theta / 90 * 0.28 - this.headLook) * Math.min(1, dt * 6)
-      const roll = Math.max(-0.22, Math.min(0.22, car.gLat * 0.035)), pitch = Math.max(-0.15, Math.min(0.15, car.gLong * 0.02))
-      this.e.set(pitch, this.headLook, roll, 'YXZ'); this.q.setFromEuler(this.e)
-      this.head.quaternion.multiply(this.q)
+    // tête (HANS) : position FIXE dans la coque ; regard ≤ 9° vers la corde, inclinaison ≤ 4° vers l'intérieur du virage
+    // sous G latéral, ≤ 4° vers l'avant au freinage ; filtrage amorti (~0,25 s), aucun mouvement vertical
+    if (this.head && this.headOk) {
+      const k = Math.min(1, dt * 4)
+      this.headLook += (-theta / 90 * 0.16 - this.headLook) * k
+      this.hRoll += (Math.max(-0.07, Math.min(0.07, -car.gLat * 0.014)) - this.hRoll) * k
+      this.hPitch += (Math.max(-0.07, Math.min(0.02, car.gLong * 0.014)) - this.hPitch) * k
+      this.e.set(this.hPitch, this.headLook, this.hRoll, 'YXZ'); this.q.setFromEuler(this.e)
+      const hp = this.head.parent!; hp.updateWorldMatrix(true, false)
+      this.hv.copy(this.headRestP); this.root.localToWorld(this.hv); hp.worldToLocal(this.hv); this.head.position.copy(this.hv)
+      this.root.getWorldQuaternion(this.hq2).multiply(this.headRestQ).multiply(this.q) // rotation voulue (monde)
+      hp.getWorldQuaternion(this.hq3).invert(); this.head.quaternion.copy(this.hq3.multiply(this.hq2))
     }
+    this.applyDamage(car.damage)
   }
 }
