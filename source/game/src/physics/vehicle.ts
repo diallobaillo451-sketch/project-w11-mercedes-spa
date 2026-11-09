@@ -23,9 +23,11 @@ export interface Setup {
   brakeBias: number; diffOn: number; diffOff: number; engineMode: EngineMode; compound: Compound
   autoGear: boolean; tc: number; abs: boolean; steerAssist: number; stability: number
   drsAllowed: boolean; dasEnabled: boolean
+  /** garage : ailerons 1–11 (5 = réglage Spa de référence), hauteurs de caisse (mm, par rapport à la référence), pressions à froid (+psi au-dessus du minimum Pirelli) */
+  wingF: number; wingR: number; rideF: number; rideR: number; pressF: number; pressR: number
 }
 export const defaultSetup = (): Setup => ({ brakeBias: W11.brakeBias, diffOn: 0.45, diffOff: 0.25, engineMode: 'quali', compound: 'C4', // P : pole Spa 2020 en tendre C4
-  autoGear: true, tc: 1, abs: true, steerAssist: 1, stability: 0.3, drsAllowed: true, dasEnabled: true })
+  autoGear: true, tc: 1, abs: true, steerAssist: 1, stability: 0.3, drsAllowed: true, dasEnabled: true, wingF: 5, wingR: 5, rideF: 0, rideR: 0, pressF: 0, pressR: 0 })
 
 export interface Wheel {
   front: boolean; left: boolean; hub: [number, number, number]; r: number; I: number
@@ -104,6 +106,7 @@ export class Vehicle {
   fitTyres(c = this.setup.compound, blanketF?: number, blanketR?: number) {
     this.setup.compound = c
     for (const w of this.wheels) w.tyre = newTyre(w.front, c, kindOf(c) === 'slick' ? (w.front ? blanketF : blanketR) : undefined)
+    for (const w of this.wheels) { const po = (w.front ? this.setup.pressF : this.setup.pressR) ?? 0; w.tyre.pOff = po; w.tyre.pressure += po }
   }
   /** Place la voiture sur la ligne centrale à l'abscisse s (m), décalage latéral d, cap = tangente. */
   placeAt(s: number, d = 0, speed = 0) {
@@ -299,11 +302,13 @@ export class Vehicle {
     const qd = 0.5 * rho * va * va
     const cFront = (fl.c + fr.c) / 2, cRear = (rl.c + rr.c) / 2
     // sensibilité hauteur de caisse (E) : plus bas → plus d'appui jusqu'au contact du plancher
-    const hF = W11.rideF - cFront, hR = W11.rideR - cRear
+    const S0 = this.setup, hF = W11.rideF + (S0.rideF ?? 0) / 1000 - cFront, hR = W11.rideR + (S0.rideR ?? 0) / 1000 - cRear
     let rh = Math.max(0.75, Math.min(1.12, 1 + 1.6 * (0.03 - hF) * 0.5 + 0.8 * (0.075 - hR) * 0.5)) * (this.scrape > 0 ? 0.92 : 1)
     // effet de sol : sous ~8 mm à l'AV le flux sous le fond décroche (E) → perte brutale jusqu'à 15 %
     // (seulement sur sol dur : dans le gravier la voiture s'enfonce, la hauteur mesurée n'a plus de sens aéro)
     if (this.wheels[0].type <= 3 && this.wheels[1].type <= 3) rh *= 1 - 0.15 * Math.max(0, Math.min(1, (0.008 - hF) / 0.008))
+    // garage : hauteur de caisse réglée (E : ≈ 0,5 % d'appui par mm, la plate-forme basse travaille mieux ; le butoir 1,12 ci-dessus sature à haute vitesse)
+    rh *= 1 - 0.005 * Math.max(-4, Math.min(10, 0.5 * (S0.rideF ?? 0) + 0.5 * (S0.rideR ?? 0)))
     // aileron AR aéroélastique : il fléchit avec la pression dynamique → moins de traînée (et un peu moins d'appui) à haute vitesse (E)
     const flex = Math.max(0, Math.min(1, (va - 55) / 30)); const flexS = flex * flex * (3 - 2 * flex)
     // aspiration / air sale derrière une voiture (E : −30 % de traînée à 1 longueur, appui −20 % à 10 m, sur ±1,5 m latéraux)
@@ -312,9 +317,11 @@ export class Vehicle {
     // dégâts : aileron AV → appui AV perdu (sous-virage), aileron AR → appui AR perdu, fond → appui global ; traînée en hausse
     const Dm = this.damageMode === 'real' ? this.damage : Vehicle.NO_DMG
     const epL = Dm.endplate[0], epR = Dm.endplate[1], bgL = Dm.barge[0], bgR = Dm.barge[1]
-    const ClA = (W11.ClA + W11.drsClA * this.drsPos) * rh * (1 - 0.22 * Dm.frontWing - 0.3 * Dm.rearWing - 0.3 * Dm.floor - 0.05 * (epL + epR) - 0.04 * (bgL + bgR)) * (1 - 0.015 * flexS) * (1 - dirty)
-    const CdA = (W11.CdA + W11.drsCdA * this.drsPos) * (1 + 0.06 * Dm.frontWing + 0.08 * Dm.rearWing + 0.015 * (epL + epR + bgL + bgR)) * (1 - 0.025 * flexS) * (1 - tow)
-    const bal = W11.aeroBalF + 0.5 * (cFront - cRear) - 0.06 * this.drsPos - 0.1 * Dm.frontWing + 0.08 * Dm.rearWing - 0.03 * (epL + epR) - 0.08 * dirty
+    // ailerons (E) : ±1 cran ≈ ±1,1 % d'appui ; l'AR coûte plus de traînée (Spa : réglage bas pour Kemmel)
+    const wF = (S0.wingF ?? 5) - 5, wR = (S0.wingR ?? 5) - 5, wingCl = 1 + 0.009 * wF + 0.013 * wR, wingCd = 1 + 0.004 * wF + 0.014 * wR
+    const ClA = (W11.ClA + W11.drsClA * this.drsPos) * wingCl * rh * (1 - 0.22 * Dm.frontWing - 0.3 * Dm.rearWing - 0.3 * Dm.floor - 0.05 * (epL + epR) - 0.04 * (bgL + bgR)) * (1 - 0.015 * flexS) * (1 - dirty)
+    const CdA = (W11.CdA + W11.drsCdA * this.drsPos) * wingCd * (1 + 0.06 * Dm.frontWing + 0.08 * Dm.rearWing + 0.015 * (epL + epR + bgL + bgR)) * (1 - 0.025 * flexS) * (1 - tow)
+    const bal = W11.aeroBalF + 0.006 * (wF - wR) + 0.5 * (cFront - cRear) - 0.06 * this.drsPos - 0.1 * Dm.frontWing + 0.08 * Dm.rearWing - 0.03 * (epL + epR) - 0.08 * dirty
     const down = qd * ClA, drag = qd * CdA
     this.downforce = down; this.drag = drag
     if (va > 0.1) { for (let k = 0; k < 3; k++) F[k] -= vair[k] / va * drag }

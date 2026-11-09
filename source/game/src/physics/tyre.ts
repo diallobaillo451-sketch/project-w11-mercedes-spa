@@ -18,6 +18,8 @@ export function mf(s: number): number { return Math.sin(T.C * Math.atan(B * s)) 
 
 export interface TyreState {
   temp: number; core: number; wear: number; pressure: number; slipPower: number
+  /** garage : pression à froid au-dessus du minimum Pirelli (psi) */
+  pOff?: number
   /** températures de surface intérieur / milieu / extérieur (°C) */
   zones: [number, number, number]
   thermalDeg: number; graining: number; blister: number; flatSpot: number; pickup: number; dirt: number
@@ -41,8 +43,9 @@ export function tempFactor(temp: number, c: Compound): number {
 export function muPeak(fz: number, ty: TyreState, c: Compound, front: boolean): number {
   const load = Math.max(0.6, 1 - T.loadSens * (fz / (front ? T.fz0 : T.fz0 * 1.25) - 1)) // pneu AR plus large (405 vs 305 mm)
   const wearF = 1 - 0.18 * Math.min(1, ty.wear)
-  const pOpt = front ? T.pColdF * 1.12 : T.pColdR * 1.12
-  const pF = 1 - 0.012 * Math.abs(ty.pressure - pOpt)
+  const po = ty.pOff ?? 0, pOpt = (front ? T.pColdF : T.pColdR) * 1.12 + po * 1.12
+  // (E) +1 psi : bande de roulement plus bombée → empreinte plus petite, ≈ −0,7 % d'adhérence (mais carcasse plus froide)
+  const pF = (1 - 0.012 * Math.abs(ty.pressure - pOpt)) * (1 - 0.007 * po)
   const state = (1 - 0.06 * ty.thermalDeg) * (1 - 0.08 * ty.graining) * (1 - 0.1 * ty.blister) * (1 - 0.02 * ty.flatSpot) * (1 - 0.05 * ty.pickup) * (1 - 0.2 * ty.dirt)
   const punct = 1 - 0.72 * ty.puncture
   return T.mu0 * load * tempFactor(ty.temp, c) * T.gripC[c] * wearF * pF * state * punct
@@ -55,7 +58,7 @@ export function tyreThermal(ty: TyreState, slipPower: number, speed: number, air
   const kind = ty.kind
   // l'eau refroidit fortement la bande de roulement (évaporation) : pneus pluie gardés au chaud par leur gomme tendre (E)
   const wetCool = wet > 0.05 ? (2.5 + 6 * Math.min(1, wet)) * (kind === 'slick' ? 1.3 : kind === 'inter' ? 0.75 : 0.5) : 0
-  const heat = (slipPower * T.heatGain * 0.001 + rolling * 0.0009) * (front ? T.frontHeat : 1) * (kind === 'slick' ? 1 : 1.35)
+  const heat = (slipPower * T.heatGain * 0.001 + rolling * 0.0009) * (front ? T.frontHeat : 1) * (kind === 'slick' ? 1 : 1.35) * (1 - 0.035 * (ty.pOff ?? 0))
   const cool = (T.coolBase + T.coolSpeed * speed + wetCool) * (ty.temp - (airT * 0.6 + trackT * 0.4)) * 0.01
   ty.temp += (heat * 6 - cool - (ty.temp - ty.core) * 0.15) * dt / T.heatCap
   ty.core += (ty.temp - ty.core) * 0.06 * dt
@@ -79,7 +82,7 @@ export function tyreThermal(ty: TyreState, slipPower: number, speed: number, air
   ty.pickup = Math.max(0, ty.pickup - dt * (0.004 + slipPower * 3e-8))
   ty.dirt = Math.max(0, ty.dirt - dt * speed * 0.0009)
   // crevaison : la pression tombe en quelques secondes
-  const cold = front ? T.pColdF : T.pColdR
+  const cold = (front ? T.pColdF : T.pColdR) + (ty.pOff ?? 0)
   const tRef = front ? T.blanketF : T.blanketR
   ty.pressure = cold * (ty.core + 273) / (tRef + 273) * (1 - ty.puncture)
 }

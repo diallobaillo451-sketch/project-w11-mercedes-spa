@@ -13,7 +13,7 @@ export const DT = 1 / 240
 const MAX_STEPS = 12 // au-delà : ralenti plutôt que spirale de la mort
 
 export interface Pose { pos: number[]; q: number[] }
-export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean; pitEntry?: boolean; pitExit?: boolean; pitSpeeding?: number; repair?: boolean }
+export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean; pitEntry?: boolean; pitExit?: boolean; pitSpeeding?: number; repair?: boolean; pitStop?: boolean }
 
 export class Game {
   track: TrackSurface; line: RacingLine; car: Vehicle; session: Session
@@ -54,11 +54,13 @@ export class Game {
     this.session = new Session(this.track.length, kind)
     const L = this.track.length
     if (kind === 'timetrial') { const s0 = L - 200; this.car.placeAt(s0, this.lineOffset(s0), 55) }
+    // course : pole position, sur la grille (E : ~25 m avant la ligne, côté gauche à Spa), à l'arrêt
+    else if (kind === 'race') this.car.placeAt(L - 25, -2.2, 0)
     else this.car.placeAt(L - 120, this.lineOffset(L - 120), 0)
     this.car.ers.soc = 4.0e6
     this.car.fuel = 12; this.car.repair(); this.car.fitTyres(); this.lastDmg = 0; this.debris = []
     // piste de la session : contre-la-montre = piste déjà gommée (fin de qualif), essais = piste plus verte qui évolue
-    this.env?.setEvolution(kind === 'timetrial' ? 0.75 : 0.35); this.env?.setWeather(this.env.weather)
+    this.env?.setEvolution(kind === 'timetrial' || kind === 'race' ? 0.75 : kind === 'qualifying' ? 0.6 : 0.35); this.env?.setWeather(this.env.weather)
     this.snapshot(); this.acc = 0
   }
   lineOffset(s: number) { const i = Math.floor(((s % this.track.length) + this.track.length) % this.track.length / this.line.ds) % this.line.N; return this.line.e[i] }
@@ -132,7 +134,7 @@ export class Game {
       // réparation UNIQUEMENT à l'arrêt dans la voie des stands (2 s immobile) : une voiture cassée ne se répare jamais seule
       this.pitStopT = c.speed < 0.6 ? this.pitStopT + dt : 0
       if (this.pitStopT > 2 && !this.pitServed) { this.pitServed = true; const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
-        c.repair(); c.fitTyres(); this.lastDmg = 0 // arrêt : pièces réparées + train de pneus neufs
+        this.events.pitStop = true; c.repair(); c.fitTyres(); this.lastDmg = 0 // arrêt : pièces réparées + train de pneus neufs
         if (dmg) { this.events.repair = true; this.bus.emit({ t: 'repair', car: 0 }) } }
       if (c.speed > 2) this.pitServed = false
       const kmh = c.speed * 3.6

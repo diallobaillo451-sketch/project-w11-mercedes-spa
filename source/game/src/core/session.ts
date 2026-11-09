@@ -8,7 +8,7 @@ export function drsZones(length: number): [number, number][] {
   const k = length / 7001.7
   return [[1380 * k, 2230 * k], [6790 * k, length], [0, 190 * k]]
 }
-export type SessionKind = 'practice' | 'qualifying' | 'timetrial'
+export type SessionKind = 'practice' | 'qualifying' | 'timetrial' | 'race'
 /** drapeaux FIA affichés sur le volant (LEDs latérales + écran) et dans le HUD */
 export type Flag = 'none' | 'green' | 'yellow' | 'double' | 'red' | 'blue' | 'chequered' | 'blackwhite' | 'sc' | 'vsc'
 export const FLAG_LABEL: Record<Flag, string> = { none: '', green: 'PISTE LIBRE', yellow: 'DRAPEAU JAUNE', double: 'DOUBLE JAUNE', red: 'DRAPEAU ROUGE', blue: 'DRAPEAU BLEU', chequered: 'DAMIER', blackwhite: 'AVERTISSEMENT LIMITES', sc: 'SAFETY CAR', vsc: 'VSC' }
@@ -27,11 +27,12 @@ export class Session {
     if (this.timing.events.includes('lap') || this.timing.events.includes('start')) {
       car.ers.newLap()
       // contre-la-montre : batterie considérée rechargée pendant le tour de sortie (simplification documentée)
-      if (this.kind !== 'practice') car.ers.soc = Math.max(car.ers.soc, 3.6e6)
+      if (this.kind === 'qualifying' || this.kind === 'timetrial') car.ers.soc = Math.max(car.ers.soc, 3.6e6)
     }
     this.inDrsZone = this.zones.some(([a, b]) => s >= a && s <= b)
     // qualif / contre-la-montre : DRS libre dans les zones (règlement 2020, hors pluie)
-    car.drsAvailable = this.inDrsZone && car.setup.drsAllowed !== false && (car.env?.wetness ?? 0) < 0.3 // piste mouillée : la direction de course désactive le DRS (règl. sportif F1 2020)
+    // course : DRS activé à partir du 3e tour (règl. sportif 2020, art. 22.2 ; seul en piste : pas de critère « 1 s »)
+    car.drsAvailable = this.inDrsZone && (this.kind !== 'race' || this.timing.laps.length >= 2) && car.setup.drsAllowed !== false && (car.env?.wetness ?? 0) < 0.3 // piste mouillée : la direction de course désactive le DRS (règl. sportif F1 2020)
     // limites de piste : 4 roues hors (types herbe/gravier/eau) plus de 0,25 s → tour invalidé
     const off = car.wheels.every(w => w.type >= 4 || w.type === 0)
     this.trackLimitTime = off ? this.trackLimitTime + dt : 0
@@ -42,7 +43,7 @@ export class Session {
     else if (car.impact > 0.55 && this.flag !== 'red') this.setFlag('double', 8)
     this.stopT = (car.speed < 8 && off) ? this.stopT + dt : 0
     if (this.stopT > 1.5 && this.flag !== 'red' && this.flag !== 'double') this.setFlag('yellow', 5)
-    if (this.timing.events.includes('lap')) this.setFlag(this.kind === 'timetrial' ? 'chequered' : 'green', 3)
+    if (this.timing.events.includes('lap')) this.setFlag(this.kind === 'timetrial' ? 'chequered' : this.kind === 'race' ? 'none' : 'green', 3)
     if (this.flagT > 0) { this.flagT -= dt; if (this.flagT <= 0) this.flag = 'none' }
   }
 }
