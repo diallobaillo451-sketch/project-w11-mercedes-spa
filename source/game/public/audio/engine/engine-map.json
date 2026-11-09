@@ -1,0 +1,164 @@
+{
+ "version": 1,
+ "method": "varispeed à hauteur constante depuis les enregistrements fournis, fondu de boucle 120 ms",
+ "rpm_model": "rpm = 120 × f0 (composante d'ordre 0,5 ; allumage V6 = 6 × f0) — hypothèse",
+ "sources": {
+  "new": "assets-raw/engine_new.mp3 (md5 ea8a375b…, droits inconnus)",
+  "old": "f1sg assets-raw/user/01M6EWATXJ34G8CKJXT65G1CC9.mp3 (droits inconnus)"
+ },
+ "samples": [
+  {
+   "id": "on_07000",
+   "load": "on",
+   "source": "old",
+   "rpm_target": 7000,
+   "rpm_measured": 7004,
+   "file": "on_07000.wav",
+   "duration_s": 1.6,
+   "grain_switches": 7,
+   "seam": 0.0468
+  },
+  {
+   "id": "on_08000",
+   "load": "on",
+   "source": "old",
+   "rpm_target": 8000,
+   "rpm_measured": 8004,
+   "file": "on_08000.wav",
+   "duration_s": 1.6,
+   "grain_switches": 22,
+   "seam": 0.1053
+  },
+  {
+   "id": "on_09000",
+   "load": "on",
+   "source": "old",
+   "rpm_target": 9000,
+   "rpm_measured": 8997,
+   "file": "on_09000.wav",
+   "duration_s": 1.6,
+   "grain_switches": 8,
+   "seam": 0.0678
+  },
+  {
+   "id": "on_09500",
+   "load": "on",
+   "source": "old",
+   "rpm_target": 9500,
+   "rpm_measured": 9497,
+   "file": "on_09500.wav",
+   "duration_s": 1.6,
+   "grain_switches": 1,
+   "seam": 0.1228
+  },
+  {
+   "id": "on_10000",
+   "load": "on",
+   "source": "new",
+   "rpm_target": 10000,
+   "rpm_measured": 9986,
+   "file": "on_10000.wav",
+   "duration_s": 1.6,
+   "grain_switches": 26,
+   "seam": 0.0817
+  },
+  {
+   "id": "on_10500",
+   "load": "on",
+   "source": "new",
+   "rpm_target": 10500,
+   "rpm_measured": 10491,
+   "file": "on_10500.wav",
+   "duration_s": 1.6,
+   "grain_switches": 3,
+   "seam": 0.0706
+  },
+  {
+   "id": "on_11000",
+   "load": "on",
+   "source": "new",
+   "rpm_target": 11000,
+   "rpm_measured": 11004,
+   "file": "on_11000.wav",
+   "duration_s": 1.6,
+   "grain_switches": 0,
+   "seam": 0.0794
+  },
+  {
+   "id": "on_11500",
+   "load": "on",
+   "source": "new",
+   "rpm_target": 11500,
+   "rpm_measured": 11493,
+   "file": "on_11500.wav",
+   "duration_s": 1.6,
+   "grain_switches": 1,
+   "seam": 0.0649
+  },
+  {
+   "id": "on_12000",
+   "load": "on",
+   "source": "new",
+   "rpm_target": 12000,
+   "rpm_measured": 11987,
+   "file": "on_12000.wav",
+   "duration_s": 1.6,
+   "grain_switches": 7,
+   "seam": 0.0078
+  },
+  {
+   "id": "on_12500",
+   "load": "on",
+   "source": "new",
+   "rpm_target": 12500,
+   "rpm_measured": 12503,
+   "file": "on_12500.wav",
+   "duration_s": 1.6,
+   "grain_switches": 0,
+   "seam": 0.0258
+  },
+  {
+   "id": "off_07500",
+   "load": "off",
+   "source": "new",
+   "rpm_target": 7500,
+   "rpm_measured": 7503,
+   "file": "off_07500.wav",
+   "duration_s": 1.6,
+   "grain_switches": 4,
+   "seam": 0.0134
+  },
+  {
+   "id": "off_09500",
+   "load": "off",
+   "source": "new",
+   "rpm_target": 9500,
+   "rpm_measured": 9496,
+   "file": "off_09500.wav",
+   "duration_s": 1.6,
+   "grain_switches": 3,
+   "seam": 0.0452
+  },
+  {
+   "id": "off_10500",
+   "load": "off",
+   "source": "new",
+   "rpm_target": 10500,
+   "rpm_measured": 10489,
+   "file": "off_10500.wav",
+   "duration_s": 1.6,
+   "grain_switches": 8,
+   "seam": 0.1022
+  }
+ ],
+ "rejected": [
+  {
+   "id": "off_06500",
+   "reason": "f0 mesuré 4851 ≠ 6500 (pitch instable en lever de pied)"
+  },
+  {
+   "id": "off_08500",
+   "reason": "f0 mesuré 7221 ≠ 8500"
+  }
+ ]
+}
