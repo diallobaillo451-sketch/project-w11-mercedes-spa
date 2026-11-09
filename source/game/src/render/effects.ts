@@ -19,6 +19,13 @@ void main(){ vec2 p = gl_PointCoord*2.0-1.0; float r = dot(p,p); if (r>1.0) disc
   float a = (1.0-r)*(1.0-r) * clamp(vLife,0.0,1.0) * 0.35;
   gl_FragColor = vec4(vec3(0.82,0.82,0.84), a); }`
 
+// poussière de gravier / terre (beige, opaque doux) et projections (cailloux, mottes d'herbe) — couleur par pool
+const FS_TINT = /* glsl */`
+varying float vLife; uniform vec3 uColor; uniform float uAlpha; uniform float uHard;
+void main(){ vec2 p = gl_PointCoord*2.0-1.0; float r = dot(p,p); if (r>1.0) discard;
+  float a = mix((1.0-r)*(1.0-r), step(r,0.8), uHard) * clamp(vLife*1.5,0.0,1.0) * uAlpha;
+  gl_FragColor = vec4(uColor, a); }`
+
 class Pool {
   n: number; pos: Float32Array; vel: Float32Array; life: Float32Array; size: Float32Array; grow: number
   geo = new THREE.BufferGeometry(); points: THREE.Points; next = 0; drag: number; grav: number; decay: number
@@ -29,7 +36,8 @@ class Pool {
     this.geo.setAttribute('aLife', new THREE.BufferAttribute(this.life, 1).setUsage(THREE.DynamicDrawUsage))
     this.geo.setAttribute('aSize', new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage))
     const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: fs, transparent: true, depthWrite: false,
-      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, uniforms: { uScale: { value: 300 } } })
+      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+      uniforms: { uScale: { value: 300 }, uColor: { value: new THREE.Color(0.6, 0.53, 0.43) }, uAlpha: { value: 0.4 }, uHard: { value: 0 } } })
     this.points = new THREE.Points(this.geo, mat); this.points.frustumCulled = false; this.points.renderOrder = 5
   }
   emit(x: number, y: number, z: number, vx: number, vy: number, vz: number, size: number, life = 1) {
@@ -54,14 +62,31 @@ class Pool {
 }
 
 export class Effects {
-  sparks: Pool; smoke: Pool; group = new THREE.Group()
+  sparks: Pool; smoke: Pool; dust: Pool; stones: Pool; group = new THREE.Group()
   private rnd = Math.random
   constructor(budget: number) {
     this.sparks = new Pool(Math.max(64, budget), FS_SPARK, true, 9.8, 1.2, 2.4, 0)
     this.smoke = new Pool(Math.max(48, budget >> 1), FS_SMOKE, false, -0.4, 1.6, 0.45, 2.2)
-    this.group.add(this.sparks.points, this.smoke.points)
+    // poussière : monte peu, freinée par l'air, grossit, vit ~2 s ; cailloux : balistiques, petits, durs
+    this.dust = new Pool(Math.max(64, budget), FS_TINT, false, -0.15, 2.2, 0.5, 2.6)
+    this.stones = new Pool(Math.max(64, budget), FS_TINT, false, 9.8, 0.4, 1.6, 0)
+    const sm = this.stones.points.material as THREE.ShaderMaterial
+    sm.uniforms.uColor.value.setRGB(0.36, 0.33, 0.3); sm.uniforms.uAlpha.value = 1; sm.uniforms.uHard.value = 1
+    this.group.add(this.sparks.points, this.smoke.points, this.dust.points, this.stones.points)
   }
-  setScale(h: number) { for (const p of [this.sparks, this.smoke]) (p.points.material as THREE.ShaderMaterial).uniforms.uScale.value = h * 0.9 }
+  /** surface sous la roue : 5 gravier (poussière beige + cailloux), 4 herbe (terre sombre + mottes vertes) */
+  offroad(x: number, y: number, z: number, v: number[], speed: number, type: number) {
+    const k = Math.min(1, speed / 40), grav = type === 5
+    const dm = this.dust.points.material as THREE.ShaderMaterial, sm = this.stones.points.material as THREE.ShaderMaterial
+    if (grav) { dm.uniforms.uColor.value.setRGB(0.62, 0.56, 0.47); sm.uniforms.uColor.value.setRGB(0.42, 0.39, 0.35) }
+    else { dm.uniforms.uColor.value.setRGB(0.34, 0.3, 0.22); sm.uniforms.uColor.value.setRGB(0.2, 0.3, 0.12) }
+    if (this.rnd() < (grav ? 0.7 : 0.35) * k) this.dust.emit(x + (this.rnd() - 0.5) * 0.4, y + 0.1, z + (this.rnd() - 0.5) * 0.4,
+      v[0] * 0.25 + (this.rnd() - 0.5) * 2, 0.4 + this.rnd() * 0.8, v[2] * 0.25 + (this.rnd() - 0.5) * 2, 0.6 + this.rnd() * 0.5, 1)
+    const n = Math.floor((grav ? 3 : 1.5) * k + this.rnd())
+    for (let i = 0; i < n; i++) this.stones.emit(x, y + 0.05, z, v[0] * (0.2 + this.rnd() * 0.5) + (this.rnd() - 0.5) * 4, 1 + this.rnd() * 4,
+      v[2] * (0.2 + this.rnd() * 0.5) + (this.rnd() - 0.5) * 4, 0.025 + this.rnd() * 0.03, 0.6 + this.rnd() * 0.4)
+  }
+  setScale(h: number) { for (const p of [this.sparks, this.smoke, this.dust, this.stones]) (p.points.material as THREE.ShaderMaterial).uniforms.uScale.value = h * 0.9 }
   /** Étincelles au point de contact (monde), avec la vitesse du véhicule. */
   spark(p: number[], v: number[], amount: number) {
     const n = Math.min(12, Math.floor(amount * 6 + this.rnd()))
@@ -75,5 +100,5 @@ export class Effects {
     if (this.rnd() > amount) return
     this.smoke.emit(x, y + 0.15, z, v[0] * 0.3 + (this.rnd() - 0.5), 0.6 + this.rnd() * 0.6, v[2] * 0.3 + (this.rnd() - 0.5), 0.5 + this.rnd() * 0.4, 1)
   }
-  update(dt: number) { this.sparks.update(dt); this.smoke.update(dt) }
+  update(dt: number) { this.sparks.update(dt); this.smoke.update(dt); this.dust.update(dt); this.stones.update(dt) }
 }
