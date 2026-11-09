@@ -23,7 +23,8 @@ import { diagPanel } from './ui/diagPanel.ts'
 import type { SessionKind } from './core/session.ts'
 import { Menu } from './ui/menu.ts'
 import { Garage, showResults } from './ui/garage.ts'
-import { driverById } from './data/drivers.ts'
+import { driverById, carOfTeam } from './data/drivers.ts'
+import { applyCarPhysics } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
 
@@ -490,11 +491,16 @@ async function main() {
     wireUi(); syncWheelPad()
     // menu Apple (vitrine 3D) : pilote choisi appliqué dès le démarrage
     if (settings.profile.driver !== 'ham') applyDriver(settings.profile.driver); else radio.driver = 'ham'
+    // lot 8 : la voiture suit l'équipe du pilote ; le volant affiché (écran) est recréé à chaque changement de voiture
+    ren.onCarChanged = () => { wheel = ren.rig ? new WheelDisplay(ren.rig.root) : null }
+    settings.profile.car = carOfTeam(driverById(settings.profile.driver).team); saveSettings(settings)
+    applyCarPhysics(settings.profile.car)
+    if (settings.profile.car !== 'w11') void ren.setCar(settings.profile.car).catch(e => dlog('voiture ' + settings.profile.car + ' : ' + (e as Error).message))
     wk = Weekend.load()
     const S = settings
     menu = new Menu($('menu'), {
       profile: S.profile, get weather() { return S.weather }, set weather(v) { S.weather = v }, get damage() { return S.damage }, set damage(v) { S.damage = v },
-      save: () => saveSettings(S), setDriver: id => applyDriver(id), shot: sh => ren.show.setShot(sh),
+      save: () => saveSettings(S), setDriver: id => applyDriver(id), setCar: id => { applyCarPhysics(id); void ren.setCar(id).catch(e => dlog('voiture ' + id + ' : ' + (e as Error).message)) }, shot: sh => ren.show.setShot(sh),
       startQuick: () => startQuick(), startWeekend: fresh => startWeekend(fresh),
       weekendInProgress: () => wk && !wk.done ? `${WK_SHORT[wk.cur]} · ${WK_LABEL[wk.cur]}` : null,
       startLegacy: k => startSession(k), openPanel: w => openPanel(w), bestLap: () => game.storedBest,
