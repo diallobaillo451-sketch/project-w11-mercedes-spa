@@ -199,3 +199,32 @@ Dernière mise à jour : 2026-11-03 07:35 (heure Canaries, UTC+0) — piste plei
 - Ensemble nez + aileron AV absent après le choc.
 - Piste mouillée sombre, ciel couvert.
 - Note de test : faire avancer la simulation sans rendu téléporte la voiture plus loin que les tuiles chargées. On voit alors un sol blanc sans texture. C'est un artefact du test : une fois les tuiles chargées, le rendu est correct.
+
+## 2026-11-09 ~20:30 (heure Canaries) — Lot 7 en cours : 20 pilotes 2020 + menu style Apple + week-end complet
+**Fait (commit local 48c6077)**
+- 20 pilotes 2020 : casque, combinaison et gants par pilote (KTX2 : `game/public/drivers/<id>/`, 9 Mo au total), vignettes de casque en WebP (200 Ko). Un seul maillage partagé. En course, seul le pilote choisi est chargé : les textures d'origine sont libérées du GPU. Livrées approximatives, sponsors en simples marques texte.
+- Vitrine 3D du menu (`render/showroom.ts`) : la voiture du jeu dans un studio (environnement RoomEnvironment libéré avant la course, sol laqué, ombre de contact), plateau tournant, caméra à ressort (voiture / pilote / casque), glisser pour tourner, thème clair ou sombre.
+- Menu Apple (`ui/menu.ts`, `ui/kit.ts`, `ui/apple.css`) :
+  - Accueil → Pilote → Circuit (Spa ; les autres « Bientôt ») → Voiture (W11 ; les autres « Bientôt ») → Session → Départ ;
+  - modes historiques conservés ;
+  - choix enregistrés dans `settings.profile`.
+- Week-end (`core/weekend.ts`) : EL1, EL2 et EL3 chronométrés (durée réglable, option « week-end court »), Q1, Q2 et Q3, puis course au nombre de tours réglable. Le programme est sauvegardé et peut être repris.
+- Garage (`ui/garage.ts`) :
+  - l'ingénieur analyse la télémétrie (équilibre, Vmax, frottements, températures des pneus, blocages) et propose des réglages ;
+  - réglages modifiables : ailerons, hauteurs, différentiel, répartition, pressions, pneus, carburant ;
+  - « Préparer la voiture » consomme le temps de séance ;
+  - un arrêt de 2 s au stand pendant les essais ou les qualifs ramène au garage.
+- Course rapide : départ arrêté depuis la pole avec 5 feux rouges, drapeau à damier, écran de résultats.
+- Physique : nouveaux réglages ailerons 1–11, hauteur de caisse en mm et pressions à froid en psi (tests `tests/weekend.test.ts`).
+
+**Tests (9 nov. ~20:50, heure Canaries)**
+- tsc OK ; tests physics, crash, pitlane, env, surface, gyro et weekend OK ; app.mjs (Chromium) : tous les tests OK.
+- WebKit, émulation iPhone 13, sur le site public (`tests/lot7_wk.mjs`, captures `out/wk/pub7_*.png`) : 0 erreur ; course rapide 1 tour → résultats ; week-end EL3 → garage → propositions → préparation → résultats.
+- Mémoire GPU en course : ≈ 281 Mo (lot 6 : 260–281 Mo). Le pilote choisi remplace les textures d'origine, qui sont libérées.
+
+**Publié (GitLab, pipeline Pages 3046897353 au vert)** : JS `index-ziZQnud4.js`, 75 fichiers pilotes, `source/` mis à jour.
+
+**Reste**
+- ⚠ Plateau IA absent : courses et classements en solo. Points d'accroche : `gridHooks` (`classify`, `startingGrid`) dans `core/weekend.ts`.
+- Autres circuits et voitures : en attente des assets de Baillo (structures `CIRCUITS` et `CARS` prêtes).
+- Livrées des 19 autres pilotes : approximatives (voir `docs/SOURCES.md`).
