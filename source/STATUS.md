@@ -247,3 +247,13 @@ drapeau rouge, tour de formation, erreurs IA rares et plausibles). New Bot livre
 - Publié GitLab (commit 6df828e3, JS index-BwQbJ_-m.js).
 **Suite** : C course IA (19 IA, règles FIA 2020, commissaires/pénalités, SC/VSC/drapeau rouge, tour de formation, panneaux
 marshals placeholders) · D stands (assets New Bot `spa_pits` apparus dans w11-shared/assets) · Monza (public conservé).
+- 22:55 (Canaries) — C en cours d'intégration : src/race/{data,sim,control}.ts (19 IA, règles 2020, SC/VSC/rouge, formation,
+  commissaires/pénalités), tests/race_sim.test.ts (6 courses 44 tours : 0–2 tête-à-queue, 0–1 SC/VSC, 1 arrêt/voiture, ~1:47 en course),
+  render/fieldView.ts (LOD1 < 28 m, LOD2 < 450 m, textures hi d'équipe −1 mip : plateau ≈ 9,6 Mo tex + 12,6 Mo géo),
+  ui/tower.ts (tour de chrono + bandeau direction de course), core/quali.ts (Q1/Q2/Q3, grille, pneus Q2), panneaux marshal_lamps
+  de New Bot (16 postes) branchés ; fix physique : la voiture ne recule plus à l'arrêt (frein moteur sous ralenti) ni ne passe la
+  marche arrière sur la grille. Source WIP poussé (98954fe4, 12dac1d6).
+**File d'attente** : finir C (captures pub8_c, publication) → D stands (spa_pits New Bot : garage_player, garages_lod, muret,
+  feux sortie, PNJ, commissaires animés) → Monza → **Carrière / Championnat 2020** (en tête du menu : 17 manches dans l'ordre réel,
+  circuits non livrés « bientôt », week-end complet ou court, barème 25-18-15-12-10-8-6-4-2-1 + meilleur tour dans le top 10,
+  classements pilotes/constructeurs, résultats IA simulés, sauvegarde/reprise, écran de fin de saison).
