@@ -10,13 +10,13 @@ await p.evaluate(() => document.getElementById('bootGo').click()); await p.waitF
 await p.evaluate(() => window.__w11.startSession('practice')).catch(() => {})
 const shot = async n => { await p.evaluate(() => { for (const e of document.querySelectorAll('#controls,.toast')) e.style.visibility = 'hidden' }); await p.screenshot({ path: `/workspace/w11/out/wk/${pre}_${n}.png` }); await p.evaluate(() => { for (const e of document.querySelectorAll('#controls,.toast')) e.style.visibility = '' }) }
 const M = {}
-const sim = (sec) => p.evaluate(n => { const g = window.__w11.game; for (let i = 0; i < n; i++) g.advance(1 / 120) }, Math.round(sec * 120))
+const sim = (sec) => p.evaluate(n => { const w = window.__w11, g = w.game; for (let i = 0; i < n; i++) { g.advance(1 / 120); if (i % 2) w.ren.weatherFrame(g, 1 / 60) } }, Math.round(sec * 120))
 // 1) sec : freinage bloqué -> traces
-await p.evaluate(() => { const w = window.__w11; w.__w11 = 1; w.game.car.placeAt(6600, 0, 0); w.game.snapshot(); w.game.autopilot = true; w.setCam('chase') })
-await sim(10)
-await p.evaluate(() => { const w = window.__w11; w.game.autopilot = false; w.game.ctl.throttle = 0; w.game.ctl.brake = 1; w.game.ctl.steer = 0.25; w.game.car.setup.abs = false })
-await sim(3)
-await p.evaluate(() => { const w = window.__w11; w.setCam('free'); const c = w.ren.cams; c.orbitYaw = 3.0; c.orbitPitch = 0.3; c.orbitDist = 14 })
+await p.evaluate(() => { const w = window.__w11; w.__w11 = 1; w.game.car.placeAt(6720, 0, 62); w.game.snapshot(); w.game.autopilot = false; w.setCam('chase') })
+await sim(0.3)
+await p.evaluate(() => { const w = window.__w11; w.game.autopilot = false; w.game.ctl.throttle = 0; w.game.ctl.brake = 1; w.game.ctl.steer = 0.12; w.game.car.setup.abs = false })
+await sim(3.5); await p.waitForTimeout(8000)
+await p.evaluate(() => { const w = window.__w11; w.setCam('free'); const c = w.ren.cams; c.orbitYaw = 0.25; c.orbitPitch = 0.35; c.orbitDist = 16 })
 await p.waitForTimeout(3000); await shot('traces_sec')
 M.sec = await p.evaluate(() => { const g = window.__w11.game; return { kmh: Math.round(g.car.speed * 3.6), flat: g.car.wheels.map(w => +w.tyre.flatSpot.toFixed(2)) } })
 // 2) pluie forte, pneus pluie, roulage autopilote
@@ -28,8 +28,8 @@ M.pluie = await p.evaluate(() => { const g = window.__w11.game, e = g.env, c = g
 await p.evaluate(() => { const w = window.__w11; w.game.setWeather('dry'); w.game.car.fitTyres('C3', 100, 80); const car = w.game.car; car.placeAt(300, 0, 85); const yaw = 0.42, cy = Math.cos(yaw / 2), sy = Math.sin(yaw / 2), [qx, qy, qz, qw] = car.q; car.q = [cy * qx + sy * qz, cy * qy + sy * qw, cy * qz - sy * qx, cy * qw - sy * qy]; const c = Math.cos(yaw), sn = Math.sin(yaw), vx = car.vel[0], vz = car.vel[2]; car.vel[0] = c * vx + sn * vz; car.vel[2] = -sn * vx + c * vz; w.game.snapshot(); w.game.autopilot = false; w.game.ctl.throttle = 0.6; w.game.ctl.brake = 0; w.game.ctl.steer = 0; w.setCam('chase') })
 await sim(4)
 await p.evaluate(() => { const g = window.__w11.game, d = g.car.damage; window.__dmgReal = JSON.stringify(d); if (d.total < 0.5) { d.frontWing = 1; d.endplate[0] = 1; d.barge[0] = 0.7; d.rearWing = 0.4; d.wheelOff[0] = true; d.total = 1; g.car.emitDebris([]) } g.ctl.throttle = 0; g.ctl.brake = 1; g.ctl.steer = 0 })
-await sim(2)
-await p.evaluate(() => { const w = window.__w11; w.setCam('free'); const c = w.ren.cams; c.orbitYaw = 2.2; c.orbitPitch = 0.25; c.orbitDist = 9 })
+await sim(2); await p.waitForTimeout(12000)
+await p.evaluate(() => { const w = window.__w11; w.setCam('free'); const c = w.ren.cams; c.orbitYaw = -0.9; c.orbitPitch = 0.3; c.orbitDist = 8 })
 await p.waitForTimeout(3000); await shot('degats')
 M.choc = await p.evaluate(() => { const g = window.__w11.game, d = g.car.damage; return { reel: window.__dmgReal, total: +d.total.toFixed(2), fw: +d.frontWing.toFixed(2), ep: d.endplate.map(x => +x.toFixed(2)), rw: +d.rearWing.toFixed(2), off: d.wheelOff, punct: g.car.wheels.map(w => +w.tyre.puncture.toFixed(2)), debris: g.debris.length } })
 await p.evaluate(() => { const w = window.__w11; w.setCam('cockpit'); if (w.wheel) w.wheel.page = 2 }); await p.waitForTimeout(2500); await shot('volant_degats')
