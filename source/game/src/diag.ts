@@ -23,7 +23,7 @@ export const isMobile = () => /iPhone|iPad|iPod|Android/.test(navigator.userAgen
  *  morte alors que la page était visible (onglet tué par manque de mémoire iOS) ou choix enregistré. */
 /** version des heuristiques : une nouvelle version efface les baisses de qualité mémorisées par les anciennes
  *  (qui comptaient la simple fermeture de Safari comme un plantage → qualité réduite à tort, de façon permanente). */
-const VER = 'w11.ver', CUR = '2026-11-09'
+const VER = 'w11.ver', CUR = '2026-11-09b'
 function crashedEarly() {
   // fermer l'onglet / tuer Safari ne déclenche pas toujours « pagehide » sur iOS : seule une mort PEU après le
   // démarrage (dernier battement < 45 s après le boot) est comptée comme un plantage mémoire.
@@ -89,9 +89,10 @@ export function watchdog(stallS = 30, maxS = 120) {
     if (now - diag.lastProgress > stallS * 1000 || now - T0 > maxS * 1000) {
       clearInterval(id)
       dlog('chien de garde : démarrage bloqué')
-      if (!diag.safe) reloadSafe(true)
+      // réseau lent ≠ plantage : on réessaie UNE fois à la même qualité (le cache garde ce qui est arrivé), puis écran d'erreur
+      if (!sessionStorage.getItem('w11.wd')) { sessionStorage.setItem('w11.wd', '1'); ls.del(ALIVE); location.reload() }
       else fatal('Le démarrage est bloqué', 'Aucun progrès depuis ' + stallS + ' s. Vérifie la connexion puis réessaie.')
     }
   }, 2000)
 }
-export function bootDone() { diag.ready = true; diag.bootMs = Math.round(performance.now() - T0); dlog('prêt en ' + (diag.bootMs / 1000).toFixed(1) + ' s') }
+export function bootDone() { diag.ready = true; try { sessionStorage.removeItem('w11.wd') } catch { /* */ } diag.bootMs = Math.round(performance.now() - T0); dlog('prêt en ' + (diag.bootMs / 1000).toFixed(1) + ' s') }

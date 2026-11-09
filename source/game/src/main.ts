@@ -16,6 +16,7 @@ import { Hud } from './ui/hud.ts'
 import { WheelDisplay } from './ui/wheel.ts'
 import { FLAG_LABEL } from './core/session.ts'
 import { fmt } from './timing/timing.ts'
+import { Radio } from './audio/radio.ts'
 import { diag, dlog, derr, decideSafe, watchdog, bootDone, fatal, reloadSafe, gpuLost } from './diag.ts'
 import { diagPanel } from './ui/diagPanel.ts'
 import type { SessionKind } from './core/session.ts'
@@ -52,6 +53,7 @@ async function loadTrack(): Promise<TrackSurface> {
 }
 function applySettings() {
   Object.assign(game.car.setup, settings.setup)
+  game.car.damageMode = settings.damage
   game.car.ers.mode = settings.ersMode
   input.set = settings.input
   document.body.classList.toggle('gyro', settings.input.steerMode === 'gyro')
@@ -61,6 +63,7 @@ function applySettings() {
   adapt.enabled = settings.adaptive
   if (!settings.adaptive && adapt.step !== 0) { adapt.reset(); ren.setScale(1); ren.setFx(0) }
   audio.setVolume(settings.volume)
+  radio.enabled = settings.radio; radio.setVolume(settings.radioVol)
   saveSettings(settings)
 }
 const CAM_SHORT: Record<CamMode, string> = { chase: 'Poursuite', close: 'Proche', tcam: 'T-cam', cockpit: 'Cockpit', tv: 'TV', free: 'Libre' }
@@ -73,6 +76,7 @@ function startSession(k: SessionKind | 'demo') {
   applySettings()
   setScreen('drive')
   setCam(k === 'demo' ? 'tv' : settings.camera)
+  lapsDone = 0; if (k === 'timetrial') { radio.say('radio_check', 0); radio.say('tour_lance_go', 0) } else if (k === 'practice') { radio.say('radio_check', 0); radio.say('sortie_garage', 0) }
   hud.toast(k === 'timetrial' ? 'Contre-la-montre · tour lancé' : k === 'practice' ? 'Essais libres · départ des stands' : 'Démo : pilote automatique')
 }
 function setScreen(s: Screen) {
@@ -198,8 +202,9 @@ let skipAcc = 0
 function frame(now: number) {
   requestAnimationFrame(frame)
   // 2K · 30 i/s : une image sur deux sur un écran 60 Hz (cadence régulière, sans à-coups)
-  if (ren.q.fps <= 30 && !(window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt) { skipAcc += now - last; if (skipAcc < 30) { last = now; return } }
-  const dtMs = ren.q.fps <= 30 ? skipAcc + 0 : now - last; skipAcc = 0; last = now
+  const fps30 = ren.q.fps <= 30 || adapt.lock30
+  if (fps30 && !(window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt) { skipAcc += now - last; if (skipAcc < 30) { last = now; return } }
+  const dtMs = fps30 ? skipAcc + 0 : now - last; skipAcc = 0; last = now
   // tests : pas d'image imposé (rendu logiciel lent → simulation en temps « image par image »)
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
@@ -222,6 +227,7 @@ function frame(now: number) {
   else if (ev.reset) hud.toast('Remise en piste')
   if (ev.pitEntry && !game.autopilot) { hud.toast('Voie des stands · limiteur 80 km/h', 2400); wheel?.say('PIT LIMITER'); audio.beep(1320) }
   if (ev.pitExit && !game.autopilot) { hud.toast('Sortie des stands', 1800); wheel?.say('PIT EXIT'); audio.beep(880) }
+  if (ev.repair) { hud.toast('Réparations effectuées au stand', 2400); wheel?.say('REPARE') }
   if (ev.pitSpeeding) { hud.toast(`Excès de vitesse dans les stands (${ev.pitSpeeding} km/h) · pénalité +5 s`, 3600); wheel?.say('PENALITE +5 s') }
   // tremblement caméra : vibreurs, herbe, gravier, chocs
   let kerb = 0, gravel = 0, slip = 0
@@ -247,6 +253,7 @@ function frame(now: number) {
   aFrame.lis![0] = cam.position.x; aFrame.lis![1] = cam.position.y; aFrame.lis![2] = cam.position.z
   aFrame.lisF![0] = camF.x; aFrame.lisF![1] = camF.y; aFrame.lisF![2] = camF.z; aFrame.lisU![0] = camU.x; aFrame.lisU![1] = camU.y; aFrame.lisU![2] = camU.z
   audio.update(aFrame, dt)
+  radioTelemetry(dt)
   camPrev.copy(cam.position)
   hud.update(game)
   const ckMode = ren.cams.mode === 'cockpit'
@@ -262,8 +269,42 @@ function frame(now: number) {
   const ka = $('steerKnob'); ka.style.setProperty('--s', String(st.steer))
 }
 
+// ---------- radio de l'ingénieur : branchée sur le bus d'événements (src/core/events.ts) + télémétrie
+const radio = new Radio()
+let radioPoll = 0, lapsDone = 0
+function wireRadio() {
+  const b = game.bus, live = () => screen === 'drive' && !game.autopilot
+  b.on('lap', e => { if (e.t !== 'lap' || !live()) return; lapsDone++
+    if (!e.valid) { radio.say('tour_annule_limites', 5); return }
+    if (e.best) { radio.say('meilleur_perso', 5); radio.sayClips(['seg_temps_au_tour', ...radio.timeClips(e.time)], 1, 'laptime') }
+    else { radio.sayClips(['seg_temps_au_tour', ...radio.timeClips(e.time)], 1, 'laptime'); const dl = e.time - (game.storedBest ?? e.time); if (dl > 1.5) radio.say('pousser', 60); else if (dl < 0.6) radio.say('rythme_bon', 60) } })
+  b.on('sector', e => { if (e.t !== 'sector' || !live() || e.n === 3) return; const dl = game.session.timing.delta
+    if (!isNaN(dl) && dl < -0.15) radio.sayClips(['seg_secteur', 'num_' + e.n, 'seg_violet'], 1, 'sector')
+    else if (!isNaN(dl) && dl > 0.6) radio.say('perte_temps_secteur', 90) })
+  b.on('invalid', e => { if (e.t === 'invalid' && live()) radio.say('limites_piste', 15) })
+  b.on('flag', e => { if (e.t !== 'flag' || !live()) return; const f = e.flag
+    radio.say(f === 'yellow' ? 'drapeau_jaune' : f === 'double' ? 'double_jaune' : f === 'blackwhite' ? 'avertissement' : f === 'red' ? 'drapeau_rouge' : f === 'green' ? 'drapeau_vert' : '', 8) })
+  b.on('impact', e => { if (e.t === 'impact' && live() && e.k > 0.6) radio.say('contact', 30) })
+  b.on('damage', e => { if (e.t !== 'damage' || !live() || settings.damage === 'off') return; const d = game.car.damage
+    radio.say(d.frontWing > 0.4 ? 'degats_aileron' : d.floor > 0.4 ? 'degats_fond' : 'degats_mineurs', 25) })
+  b.on('pitEntry', () => { if (live()) radio.say('limiteur', 30) })
+  b.on('pitExit', () => { if (live()) radio.say('sortie_stands', 30) })
+  b.on('pitSpeeding', () => { if (live()) radio.say('exces_vitesse_stands', 30) })
+  b.on('repair', () => { if (live()) radio.say('arret_ok', 30) })
+  b.on('reset', () => { if (live()) radio.say('calme', 120) })
+}
+/** télémétrie lue toutes les 2 s : pneus hors fenêtre, freins, ERS vide, blocage de roue */
+function radioTelemetry(dt: number) {
+  radioPoll += dt; if (radioPoll < 2 || screen !== 'drive' || game.autopilot) return; radioPoll = 0
+  const c = game.car, w = c.wheels, T = w.reduce((a, x) => a + x.tyre.temp, 0) / 4
+  if (T > 118) radio.say('pneus_temp_haute', 120); else if (T < 62 && c.speed > 40 && lapsDone >= 1) radio.say('pneus_temp_basse', 120)
+  if (w.some(x => x.brakeT > 1050)) radio.say('freins_temp', 120)
+  if (c.ers.soc < 0.4e6 && c.speed > 50) radio.say('recharge_ers', 150)
+  if (w.some(x => x.contact && x.omega * x.r < c.speed * 0.4 && c.speed > 25 && game.ctl.brake > 0.5)) radio.say('blocage', 45)
+}
+
 async function main() {
-  watchdog(30, 150)
+  watchdog(60, 300)
   dlog(`démarrage · ${navigator.userAgent} · écran ${innerWidth}×${innerHeight} @${devicePixelRatio}`)
   try {
     const track = await loadTrack()
@@ -282,12 +323,16 @@ async function main() {
     await ren.load(game, track, bootProgress)
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
     hud = new Hud()
+    void radio.load().then(() => dlog('radio : banque chargée')).catch(e => dlog('radio indisponible : ' + (e as Error).message))
+    wireRadio()
     if (ren.rig) wheel = new WheelDisplay(ren.rig.root)
     applySettings()
     wireUi(); syncWheelPad()
     setCam('tv')
     // mobile : départ sans GTAO et à 90 % de résolution ; l'adaptation remonte si l'iPhone tient 60 i/s
-    adapt.targetMs = 1000 / ren.q.fps
+    adapt.baseMs = adapt.targetMs = 1000 / ren.q.fps
+    // qualité réduite (mode sans échec / plantage antérieur) : TOUJOURS visible à l'écran, avec la raison
+    if (diag.safe || diag.drop > 0) { const b = document.createElement('div'); b.className = 'qwarn'; b.textContent = 'Qualité réduite : ' + (diag.safeReason || 'plantage GPU précédent') + ' · Options → Diagnostic'; document.body.appendChild(b) }
     bootProgress('Prêt', 1)
     bootDone()
     $('bootGo').hidden = false
@@ -297,11 +342,10 @@ async function main() {
       // dans le geste, SANS attendre : déverrouillage audio iOS puis autorisation gyroscope (les deux appels partent
       // synchrones dans le toucher). Le menu s'affiche tout de suite ; le son arrive quand il est décodé.
       dlog('toucher pour démarrer')
-      void audio.init().then(() => { audio.setVolume(settings.volume); dlog('audio prêt') }).catch(e => derr(e, 'audio'))
+      void audio.init().then(() => { audio.setVolume(settings.volume); dlog('audio prêt'); if (audio.ctx && audio.radioIn) { radio.attach(audio.ctx, audio.radioIn); radio.setVolume(settings.radioVol) } }).catch(e => derr(e, 'audio'))
       const gp = settings.input.steerMode === 'gyro' ? input.enableGyro() : null
       setScreen('menu')
       // iPhone : démarrage léger, puis montée en qualité si aucune perte de contexte après 12 s
-      if (diag.mobile && !diag.safe) setTimeout(() => { void ren.upgrade().then(() => { if (settings.adaptive) { adapt.reset(); ren.setScale(adapt.scale); ren.setFx(adapt.fx) } dlog('qualité maximale atteinte (l’adaptation ne baisse que si les images chutent)') }) }, 2500)
       if (gp && !(await gp)) { settings.input.steerMode = 'touch'; applySettings() }
     }
     $('bootGo').addEventListener('click', go)

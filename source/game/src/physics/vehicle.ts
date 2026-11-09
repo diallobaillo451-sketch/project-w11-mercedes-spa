@@ -56,6 +56,9 @@ export class Vehicle {
   /** carburant (kg) consommé selon le débit réel ; limiteur des stands ; dégâts (0 = intact, 1 = épave) */
   fuel: number = W11.fuelQuali; pitLim = false; pitLimCut = 0
   damage = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }
+  /** off : aucun dégât ; visual : la voiture se casse à l'écran seulement ; real : + effets sur la physique */
+  damageMode: 'off' | 'visual' | 'real' = 'real'
+  private static readonly NO_DMG = { frontWing: 0, rearWing: 0, floor: 0, suspension: [0, 0, 0, 0], total: 0 }
   /** barrières réelles (contours de la géométrie rendue) ; null → anciens murs virtuels (tests sur plan) */
   barriers: Barriers | null = null; hitKind = 0; damageEvent = 0
   private bPrev = new Float64Array(64); private bInit = false
@@ -144,7 +147,8 @@ export class Vehicle {
     this.hint = cs.i; this.s = cs.s; this.d = cs.d; this.trackIdx = cs.i
 
     // ---- commandes, aides
-    let steerCmd = Math.max(-1, Math.min(1, ctl.steer + (this.damage.suspension[0] - this.damage.suspension[1]) * 0.12))
+    const Dq = this.damageMode === 'real' ? this.damage : Vehicle.NO_DMG
+    let steerCmd = Math.max(-1, Math.min(1, ctl.steer + (Dq.suspension[0] - Dq.suspension[1]) * 0.12))
     const vRef = S.steerAssist >= 2 ? 26 : S.steerAssist >= 1 ? 34 : 1e9
     const lock = W11.steerLock * Math.max(0.11, 1 / (1 + (vF * vF) / (vRef * vRef)))
     // DAS : tiré → pincement AV ≈ 0
@@ -268,7 +272,7 @@ export class Vehicle {
     const hF = W11.rideF - cFront, hR = W11.rideR - cRear
     const rh = Math.max(0.75, Math.min(1.12, 1 + 1.6 * (0.03 - hF) * 0.5 + 0.8 * (0.075 - hR) * 0.5)) * (this.scrape > 0 ? 0.92 : 1)
     // dégâts : aileron AV → appui AV perdu (sous-virage), aileron AR → appui AR perdu, fond → appui global ; traînée en hausse
-    const Dm = this.damage
+    const Dm = this.damageMode === 'real' ? this.damage : Vehicle.NO_DMG
     const ClA = (W11.ClA + W11.drsClA * this.drsPos) * rh * (1 - 0.22 * Dm.frontWing - 0.3 * Dm.rearWing - 0.3 * Dm.floor)
     const CdA = (W11.CdA + W11.drsCdA * this.drsPos) * (1 + 0.06 * Dm.frontWing + 0.08 * Dm.rearWing)
     const bal = W11.aeroBalF + 0.5 * (cFront - cRear) - 0.06 * this.drsPos - 0.1 * Dm.frontWing + 0.08 * Dm.rearWing
@@ -563,7 +567,7 @@ export class Vehicle {
           this.impact = Math.max(this.impact, Math.min(1, -vn / 15)); this.impactPos = [px, this.pos[1], pz]; this.hitKind = kind
           // dégâts : au-delà de ~3 m/s de vitesse normale, selon la zone touchée
           const dv = -vn
-          if (dv > 3) {
+          if (dv > 3 && this.damageMode !== 'off') {
             const dmg = Math.min(1, (dv - 3) / 22), D = this.damage, part = p[2]
             if (part === 1) D.frontWing = Math.min(1, D.frontWing + dmg)
             else if (part === 2) D.rearWing = Math.min(1, D.rearWing + dmg)
