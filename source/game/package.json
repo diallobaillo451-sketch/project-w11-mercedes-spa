@@ -1,0 +1,25 @@
+{
+  "name": "project-w11",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --mode single --outDir dist-single && node tools/inline-single.mjs",
+    "test:physics": "node tests/physics.test.ts",
+    "test:app": "node tests/app.mjs",
+    "zip": "node tools/zip-dist.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/three": "^0.187.0",
+    "meshoptimizer": "^1.3.0",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.5"
+  }
+}

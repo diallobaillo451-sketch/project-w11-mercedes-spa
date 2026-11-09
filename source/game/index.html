@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="W11" />
+<meta name="theme-color" content="#000000" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./icons/icon-180.png" />
+<link rel="icon" href="./icons/icon-192.png" />
+<title>PROJECT W11 — Spa-Francorchamps</title>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="boot" class="screen">
+  <div class="brand"><div class="logo">W11</div><div class="sub">Mercedes-AMG F1 W11 EQ Performance · Spa-Francorchamps</div></div>
+  <div class="bar"><i id="bootBar"></i></div>
+  <div id="bootText" class="hint">Chargement…</div>
+  <button id="bootGo" class="btn primary" hidden>Toucher pour démarrer</button>
+  <div class="fine">Projet de fan non officiel · aucune affiliation</div>
+</div>
+
+<div id="menu" class="screen" hidden>
+  <div class="glass card">
+    <div class="logo small">W11</div>
+    <div class="sub">Spa-Francorchamps · 7,004 km</div>
+    <div id="menuBest" class="best"></div>
+    <button class="btn primary" data-act="timetrial">Contre-la-montre</button>
+    <button class="btn" data-act="practice">Essais libres</button>
+    <button class="btn" data-act="demo">Tour de démonstration</button>
+    <div class="row">
+      <button class="btn ghost" data-act="setup">Réglages voiture</button>
+      <button class="btn ghost" data-act="options">Options</button>
+      <button class="btn ghost" data-act="about">À propos</button>
+    </div>
+  </div>
+</div>
+
+<div id="panel" class="screen" hidden>
+  <div class="glass card wide">
+    <div class="phead"><span id="panelTitle"></span><button class="btn small" id="panelClose">OK</button></div>
+    <div id="panelBody" class="pbody"></div>
+  </div>
+</div>
+
+<div id="hud" hidden>
+  <div class="top">
+    <div class="pill" id="hLap">Tour —</div>
+    <div class="timebox glass">
+      <div id="hTime" class="time">--:--.---</div>
+      <div class="secs"><i id="s0"></i><i id="s1"></i><i id="s2"></i></div>
+      <div class="sub2"><span id="hLast">Dernier —</span> · <span id="hBest">Meilleur —</span></div>
+    </div>
+    <div class="tbtn"><button id="bCam" class="ico">◉</button><button id="bPause" class="ico">❚❚</button></div>
+  </div>
+  <div id="toast" class="toast"></div>
+  <div class="dash glass">
+    <div class="leds" id="leds"></div>
+    <div class="dmain">
+      <div class="tyres"><i id="t0"></i><i id="t1"></i><i id="t2"></i><i id="t3"></i></div>
+      <div class="spd"><b id="hSpd">0</b><small>km/h</small></div>
+      <div class="gear" id="hGear">N</div>
+      <div class="ers"><div class="ersbar"><i id="hErs"></i></div><small id="hErsMode">ERS</small></div>
+    </div>
+    <div class="flags"><span id="hDrs" class="tag">DRS</span><span id="hBias" class="tag">BB 57,5</span><span id="hMode" class="tag">QUALI</span></div>
+  </div>
+  <div id="controls">
+    <div id="steerZone"><div id="steerKnob"></div></div>
+    <div id="pBrake" class="pedal brake"><span>FREIN</span><div class="fill"></div></div>
+    <div id="pThrottle" class="pedal thr"><span>GAZ</span><div class="fill"></div></div>
+    <div class="aux">
+      <button id="bDrs" class="abtn">DRS</button>
+      <button id="bDas" class="abtn">DAS</button>
+      <button id="bDown" class="abtn">−</button>
+      <button id="bUp" class="abtn">+</button>
+    </div>
+  </div>
+  <div id="perf" class="perf" hidden></div>
+</div>
+
+<div id="pause" class="screen" hidden>
+  <div class="glass card">
+    <div class="ptitle">Pause</div>
+    <button class="btn primary" data-act="resume">Reprendre</button>
+    <button class="btn" data-act="restart">Recommencer</button>
+    <button class="btn" data-act="reset">Remettre en piste</button>
+    <div class="row">
+      <button class="btn ghost" data-act="setup">Réglages</button>
+      <button class="btn ghost" data-act="options">Options</button>
+      <button class="btn ghost" data-act="menu">Menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="rotate" class="screen"><div class="phone"></div><div>Tourne l’iPhone en mode paysage</div></div>
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>
