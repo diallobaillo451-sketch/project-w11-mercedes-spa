@@ -159,6 +159,35 @@ export class CarRig {
       m.geometry = mk(rest)
     }
   }
+  /** Livrée pilote (casque, combinaison, gants) : textures KTX2 du pilote choisi à la place de celles de Hamilton.
+   *  Mémoire : les textures d'origine sont libérées du GPU (gardées en RAM pour revenir à Hamilton), celles du pilote
+   *  précédent sont détruites → un seul pilote en mémoire GPU, mêmes tailles que l'original (pas de hausse en course). */
+  driverId = 'ham'; private drvOrig = new Map<THREE.MeshStandardMaterial, THREE.Texture>(); private drvTex: THREE.Texture[] = []; private drvSeq = 0
+  async setDriver(id: string, load: (url: string) => Promise<THREE.Texture>, hasSuit = true) {
+    if (id === this.driverId) return
+    const seq = ++this.drvSeq
+    const mats: { m: THREE.MeshStandardMaterial; k: 'helmet' | 'suit' | 'gloves' }[] = []
+    const seen = new Set<THREE.Material>()
+    this.root.traverse(o => { const me = o as THREE.Mesh; if (!me.isMesh) return
+      for (const m of (Array.isArray(me.material) ? me.material : [me.material]) as THREE.MeshStandardMaterial[]) { if (seen.has(m) || !m.map) continue; seen.add(m)
+        const k = /^Helmet_Base|^Helmet_Visor_Strip/.test(m.name) ? 'helmet' : m.name === 'Driver_Suit' ? 'suit' : m.name === 'Driver_Gloves' ? 'gloves' : null
+        if (k) { if (!this.drvOrig.has(m)) this.drvOrig.set(m, m.map); mats.push({ m, k }) } } })
+    const want: Record<string, Promise<THREE.Texture> | null> = { helmet: null, suit: null, gloves: null }
+    if (id !== 'ham') { const base = `./drivers/${id}/`; want.helmet = load(base + 'helmet.ktx2'); if (hasSuit) { want.suit = load(base + 'suit.ktx2'); want.gloves = load(base + 'gloves.ktx2') } }
+    const got: Record<string, THREE.Texture | null> = {}
+    for (const k of Object.keys(want)) got[k] = want[k] ? await want[k]!.catch(() => null) : null
+    if (seq !== this.drvSeq) { for (const t of Object.values(got)) t?.dispose(); return } // choix plus récent entre-temps
+    const old = this.drvTex; this.drvTex = []
+    for (const { m, k } of mats) {
+      const o = this.drvOrig.get(m)!, t = got[k]
+      if (t) { t.colorSpace = o.colorSpace; t.flipY = o.flipY; t.channel = o.channel; t.anisotropy = o.anisotropy; t.wrapS = o.wrapS; t.wrapT = o.wrapT; t.needsUpdate = true; m.map = t; if (!this.drvTex.includes(t)) this.drvTex.push(t) }
+      else m.map = o
+      m.needsUpdate = true
+    }
+    for (const [m, o] of this.drvOrig) if (m.map !== o) o.dispose() // original hors GPU (rechargé si on revient à Hamilton)
+    for (const t of old) if (!this.drvTex.includes(t)) t.dispose()
+    this.driverId = id
+  }
   private setSteer(theta: number) { // theta en degrés, + = droite, borné ±90 (plage du clip)
     if (!this.mixer || !this.action) return
     const t = (Math.max(-90, Math.min(90, theta)) / 90 + 1) / 2 * this.clipDur

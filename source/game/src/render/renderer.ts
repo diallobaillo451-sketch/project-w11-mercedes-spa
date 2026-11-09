@@ -16,6 +16,8 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { QUALITY, type QualityName, type QualityPreset } from '../quality/quality.ts'
 import { CarRig } from './carRig.ts'
+import { Showroom } from './showroom.ts'
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { CameraRig } from './cameras.ts'
 import { Effects } from './effects.ts'
 import { Grass } from './grass.ts'
@@ -444,6 +446,30 @@ export class Renderer {
     X.nDeb = game.debris.length
     this.debrisV.update(game)
   }
+  show = new Showroom(); showPanel = 0.46
+  private studioEnv: THREE.WebGLRenderTarget | null = null
+  /** studio : environnement « boîtes à lumière » (RoomEnvironment → PMREM, ~3 Mo) créé à l'entrée du menu, libéré avant la course */
+  enterShowroom() {
+    if (!this.rig) return
+    if (!this.studioEnv) { const pm = new THREE.PMREMGenerator(this.r); const room = new RoomEnvironment(); this.studioEnv = pm.fromScene(room, 0.04); pm.dispose(); room.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose() } }) }
+    this.show.enter(this.car, this.studioEnv.texture); this.rig.setCockpit(false); this.ckPrev = false
+  }
+  exitShowroom() { this.show.exit(this.car); this.studioEnv?.dispose(); this.studioEnv = null }
+  /** image du menu : studio seul (la piste n'est pas dessinée), même chaîne de rendu que la course */
+  showroomFrame(dt: number) {
+    const S = this.show; S.update(dt, innerWidth / innerHeight, this.showPanel)
+    this.r.info.reset()
+    if (this.composer) { const C = this.composer, rp = C.passes[0] as unknown as { scene: THREE.Scene; camera: THREE.Camera }
+      const s0 = rp.scene, c0 = rp.camera; rp.scene = S.scene; rp.camera = S.cam; C.readBuffer = C.renderTarget1; C.writeBuffer = C.renderTarget2; C.render(dt); rp.scene = s0; rp.camera = c0 }
+    else this.r.render(S.scene, S.cam)
+  }
+  private drvKtx: KTX2Loader | null = null
+  /** textures pilote (KTX2 dans tous les cas : les fichiers PNG ne sont pas publiés) */
+  loadDriverTex = (url: string): Promise<THREE.Texture> => {
+    const L = KTX ?? (this.drvKtx ??= new KTX2Loader().setTranscoderPath('./basis/').setWorkerLimit(2).detectSupport(this.r))
+    return L.loadAsync(url) as Promise<THREE.Texture>
+  }
+  setDriver(id: string, hasSuit = true) { return this.rig?.setDriver(id, this.loadDriverTex, hasSuit) ?? Promise.resolve() }
   detail: DetailSet | null = null
   grass: Grass | null = null
   crowd: Crowd | null = null

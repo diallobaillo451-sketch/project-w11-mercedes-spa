@@ -1,5 +1,6 @@
 /** Point d'entrée : chargement, menus, boucle de jeu (physique 240 Hz → rendu interpolé → audio). */
 import './ui/style.css'
+import './ui/apple.css'
 import * as THREE from 'three'
 import { TrackSurface } from './track/surface.ts'
 import { Barriers } from './track/barriers.ts'
@@ -20,6 +21,11 @@ import { Radio } from './audio/radio.ts'
 import { diag, dlog, derr, decideSafe, watchdog, bootDone, fatal, reloadSafe, gpuLost } from './diag.ts'
 import { diagPanel } from './ui/diagPanel.ts'
 import type { SessionKind } from './core/session.ts'
+import { Menu } from './ui/menu.ts'
+import { Garage, showResults } from './ui/garage.ts'
+import { driverById } from './data/drivers.ts'
+import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
+import { fmtClock } from './ui/kit.ts'
 
 const $ = (id: string) => document.getElementById(id)!
 const show = (id: string, on: boolean) => { $(id).hidden = !on }
@@ -31,7 +37,7 @@ const adapt = new AdaptiveResolution()
 let hud: Hud
 let wheel: WheelDisplay | null = null
 const ws = { pitLim: false, ot: false, otT: 0, prevErs: 'hotlap' as string }
-type Screen = 'boot' | 'menu' | 'drive' | 'pause'
+type Screen = 'boot' | 'menu' | 'drive' | 'pause' | 'garage' | 'results'
 let screen: Screen = 'boot'
 let mode: SessionKind | 'demo' = 'demo'
 const params = new URLSearchParams(location.search)
@@ -74,7 +80,8 @@ function applySettings() {
 }
 const CAM_SHORT: Record<CamMode, string> = { chase: 'Poursuite', close: 'Proche', tcam: 'T-cam', cockpit: 'Cockpit', tv: 'TV', free: 'Libre' }
 function setCam(m: CamMode) { ren.cams.setMode(m); $('bCam').textContent = CAM_SHORT[m]; $('bCam').title = CAM_LABEL[m] }
-function startSession(k: SessionKind | 'demo') {
+function startSession(k: SessionKind | 'demo', keepRun = false) {
+  if (!keepRun) run = null
   mode = k
   game.autopilot = k === 'demo'
   game.start(k === 'demo' ? 'timetrial' : k)
@@ -83,17 +90,27 @@ function startSession(k: SessionKind | 'demo') {
   applySettings()
   setScreen('drive')
   setCam(k === 'demo' ? 'tv' : settings.camera)
+  $('hSess').hidden = !run
+  if (run) { game.car.fuel = run.fuel; run.started = true; run.goT = game.time; run.pen0 = game.penalties; run.tel = newTelemetry() }
   lapsDone = 0; if (k === 'timetrial') { radio.say('radio_check', 0); radio.say('tour_lance_go', 0) } else if (k === 'practice') { radio.say('radio_check', 0); radio.say('sortie_garage', 0) }
-  hud.toast(k === 'timetrial' ? 'Contre-la-montre · tour lancé' : k === 'practice' ? 'Essais libres · départ des stands' : 'Démo : pilote automatique')
+  if (k === 'race') { radio.say('radio_check', 0); hud.toast('Course · tour de formation terminé, place aux feux', 2600) }
+  else if (k === 'qualifying') { radio.say('radio_check', 0); radio.say('sortie_garage', 0); hud.toast((run?.id ? WK_LABEL[run.id] : 'Qualifications') + ' · départ des stands') }
+  else hud.toast(k === 'timetrial' ? 'Contre-la-montre · tour lancé' : k === 'practice' ? (run?.id ? WK_LABEL[run.id] : 'Essais libres') + ' · départ des stands' : 'Démo : pilote automatique')
 }
 function setScreen(s: Screen) {
   screen = s
-  show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause')
+  const studio = s === 'menu' || s === 'garage' || s === 'results'
+  if (studio && !ren.show.active) ren.enterShowroom(); else if (!studio && s !== 'boot' && ren.show.active) ren.exitShowroom()
+  if (s !== 'boot') audio.setMuted(studio || settings.muted)
+  show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause'); show('garage', s === 'garage'); show('results', s === 'results')
+  show('lights', s === 'drive' && !!run && run.kind !== 'legacy' && sessionKindOf(run) === 'race' && !run.lightsDone)
+  const wkDrive = !!run && run.kind === 'weekend' && run.id !== 'RACE'
+  show('pGarage', wkDrive); show('pRestart', !run || run.kind === 'quick'); $('pMenu').textContent = run?.kind === 'weekend' ? 'Quitter' : 'Menu'
   show('hud', s === 'drive' || s === 'pause')
   show('controls', s === 'drive' && !game?.autopilot)
   show('panel', false)
-  if (s === 'menu') { $('menuBest').textContent = game.storedBest ? 'Meilleur tour : ' + fmt(game.storedBest) : 'Aucun tour enregistré' }
-  if (game) game.paused = s === 'pause'
+  if (s === 'menu') menu?.refresh()
+  if (game) game.paused = s !== 'drive'
 }
 let panelBack: Screen = 'menu', panelQ = ''
 function openPanel(which: 'setup' | 'options' | 'about' | 'diag') {
@@ -134,11 +151,12 @@ function wireUi() {
   document.querySelectorAll<HTMLElement>('[data-act]').forEach(b => b.addEventListener('click', () => {
     const a = b.dataset.act!
     if (a === 'timetrial' || a === 'practice' || a === 'demo') startSession(a)
+    else if (a === 'garage') openGarage()
     else if (a === 'setup' || a === 'options' || a === 'about') openPanel(a)
     else if (a === 'resume') setScreen('drive')
-    else if (a === 'restart') startSession(mode)
+    else if (a === 'restart') { if (run?.kind === 'quick') startQuick(); else startSession(mode) }
     else if (a === 'reset') { game.resetCar(); setScreen('drive') }
-    else if (a === 'menu') { game.autopilot = true; setCam('tv'); setScreen('menu'); game.paused = false }
+    else if (a === 'menu') { if (run?.kind === 'weekend') saveRun(); run = null; game.autopilot = true; setCam('tv'); menu.reset(); setScreen('menu') }
   }))
   $('panelClose').addEventListener('click', closePanel)
   $('bPause').addEventListener('click', () => setScreen(screen === 'pause' ? 'drive' : 'pause'))
@@ -196,7 +214,13 @@ function wireUi() {
   })
   // iOS : empêcher le zoom / défilement par geste
   document.addEventListener('gesturestart', e => e.preventDefault())
-  document.addEventListener('touchmove', e => { if (!(e.target as HTMLElement).closest('#panelBody')) e.preventDefault() }, { passive: false })
+  document.addEventListener('touchmove', e => { if (!(e.target as HTMLElement).closest('#panelBody, .ap-page')) e.preventDefault() }, { passive: false })
+  // vitrine 3D : glisser pour tourner autour de la voiture
+  let sd: { x: number; y: number } | null = null
+  document.addEventListener('pointerdown', e => { if ((e.target as HTMLElement).closest?.('.ap-drag')) sd = { x: e.clientX, y: e.clientY } })
+  addEventListener('pointermove', e => { if (!sd) return; ren.show.drag(e.clientX - sd.x, e.clientY - sd.y); sd = { x: e.clientX, y: e.clientY } })
+  addEventListener('pointerup', () => { if (sd) ren.show.release(); sd = null }); addEventListener('pointercancel', () => { if (sd) ren.show.release(); sd = null })
+  matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', e => ren.show.setTheme(e.matches))
 }
 
 // ---------- boucle
@@ -215,6 +239,7 @@ function frame(now: number) {
   // tests : pas d'image imposé (rendu logiciel lent → simulation en temps « image par image »)
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
+  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); return }
   const st = input.poll(dt, settings.setup.autoGear)
   const c = game.car
   game.ctl.throttle = st.throttle; game.ctl.brake = st.brake; game.ctl.steer = st.steer
@@ -227,8 +252,10 @@ function frame(now: number) {
   game.ctl.das = settings.setup.dasEnabled && st.das
   game.ctl.pitLim = ws.pitLim
   if (ws.ot) { ws.otT -= dt; if (ws.otT <= 0 || c.ers.soc < 0.3e6) { ws.ot = false; c.ers.mode = settings.ersMode; syncWheelPad() } }
-  game.advance(screen === 'drive' || screen === 'menu' ? dt : 0)
+  if (run && screen === 'drive') runPre(dt)
+  game.advance(screen === 'drive' ? dt : 0)
   const ev = game.events
+  if (run && screen === 'drive') runPost(dt)
   if (ev.lap) hud.toast((ev.lap.best ? 'Meilleur tour ! ' : 'Tour ') + fmt(ev.lap.time) + (ev.lap.valid ? '' : ' (invalide)'), 3200)
   else if (ev.invalid && !game.autopilot) hud.toast('Tour invalidé · limites de piste', 2000)
   else if (ev.reset) hud.toast('Remise en piste')
@@ -278,6 +305,125 @@ function frame(now: number) {
   const ka = $('steerKnob'); ka.style.setProperty('--s', String(st.steer))
 }
 
+
+// ---------- lot 7 : menu Apple, course rapide, week-end de GP (séances chronométrées, garage, résultats)
+/** séance en cours : course rapide, séance d'un week-end, ou mode historique (contre-la-montre / essais / démo) */
+interface Run { kind: 'quick' | 'weekend' | 'legacy'; id?: WkSessionId; laps: number; remaining: number; chequered: boolean; tel: Telemetry; lockPrev: boolean
+  raceT: number; lightsT: number; lightsN: number; lightsHold: number; lightsDone: boolean; started: boolean; ended: boolean; ending?: boolean; lapsSeen?: number; lineSeen?: number; goT?: number; pen0: number; fuel: number }
+let run: Run | null = null, menu!: Menu, garage: Garage | null = null, wk: Weekend | null = null
+const sessionKindOf = (r: Run): SessionKind => r.kind === 'quick' ? 'race' : r.id ? sessionKind(r.id) : mode === 'demo' ? 'timetrial' : mode
+const newRun = (kind: Run['kind'], laps: number, minutes: number, fuel: number): Run => ({ kind, laps, remaining: minutes * 60, chequered: false, tel: newTelemetry(), lockPrev: false,
+  raceT: 0, lightsT: 0, lightsN: 0, lightsHold: 0.4 + Math.random() * 2.4, lightsDone: false, started: false, ended: false, pen0: 0, fuel })
+const raceFuel = (laps: number) => Math.min(110, 2.45 * laps + 2) // E : ≈ 2,45 kg/tour à Spa (110 kg pour 44 tours)
+function applyDriver(id: string) { const d = driverById(id); void ren.setDriver(id, d.team !== 'mercedes'); radio.driver = id }
+function startQuick() {
+  const P = settings.profile; run = newRun('quick', P.laps, 0, raceFuel(P.laps))
+  settings.damage = settings.damage ?? 'real'; startSession('race', true); setScreen('drive')
+}
+function startWeekend(fresh: boolean) {
+  const P = settings.profile
+  if (fresh || !wk) {
+    const plan: WeekendPlan = { circuit: P.circuit, car: P.car, driver: P.driver, fpMin: [...P.fpMin] as [number, number, number], qMin: [...P.qMin] as [number, number, number], raceLaps: P.raceLaps,
+      weather: settings.weather, damage: settings.damage, skip: P.shortWeekend ? ['FP1', 'FP2'] : [] }
+    wk = Weekend.create(plan); wk.st.fuel = 30
+  }
+  if (wk.st.plan.driver !== P.driver) { P.driver = wk.st.plan.driver; applyDriver(P.driver); saveSettings(settings) }
+  settings.weather = wk.st.plan.weather as typeof settings.weather; settings.damage = wk.st.plan.damage
+  newSessionRun(); if (wk.st.rem != null) run!.remaining = wk.st.rem
+  openGarage()
+}
+function newSessionRun() {
+  const id = wk!.cur, laps = id === 'RACE' ? wk!.st.plan.raceLaps : 0
+  const prevTel = run?.tel
+  run = newRun('weekend', laps, sessionMinutes(wk!.st.plan, id), id === 'RACE' ? raceFuel(laps) : id.startsWith('Q') ? 8 : wk!.st.fuel)
+  run.id = id; if (prevTel) run.tel = prevTel // l'ingénieur s'appuie sur la séance précédente tant qu'on n'est pas ressorti
+}
+function saveRun() { if (wk && run?.kind === 'weekend') { wk.st.rem = run.remaining; wk.st.fuel = run.id && run.id.startsWith('FP') ? run.fuel : wk.st.fuel; wk.save() } }
+function openGarage() {
+  if (!wk || !run) return
+  if (run.id === 'RACE') { // pas de garage pendant la course : préparation sur la grille puis départ
+    if (!run.started) { garage = makeGarage(); setScreen('garage'); garage.open(); return }
+  }
+  game.paused = true; garage = makeGarage(); setScreen('garage'); garage.open(); saveRun()
+}
+function makeGarage() {
+  return new Garage($('garage'), {
+    wk: wk!, setup: settings.setup, weather: settings.weather,
+    fuel: () => run!.fuel, setFuel: kg => { run!.fuel = kg; if (run!.id?.startsWith('FP')) wk!.st.fuel = kg; if (run!.started) game.car.fuel = kg },
+    telemetry: () => run!.tel, laps: () => run!.started ? game.session.timing.laps : [], best: () => run!.started ? game.session.timing.best?.time ?? null : null,
+    remaining: () => run!.remaining, spend: sec => { run!.remaining = Math.max(0, run!.remaining - sec) }, started: () => run!.started,
+    goOut: () => {
+      if (run!.id !== 'RACE' && run!.remaining <= 0) { endSession(); return }
+      if (!run!.started) { startSession(sessionKind(run!.id!), true) } else { applySettings(); game.car.fitTyres(settings.setup.compound, settings.blanketF, settings.blanketR); setScreen('drive') }
+      run!.tel = newTelemetry(); saveRun()
+    },
+    endSession: () => endSession(), menu: () => { saveRun(); run = null; menu.reset(); setScreen('menu') }, save: () => { applySettings(); saveRun() },
+    shot: s => ren.show.setShot(s), lift: on => { ren.show.lift = on ? 1 : 0 }, say: () => {},
+  })
+}
+function garageTick() { if (screen === 'garage' && garage && Math.random() < 0.1) garage.tick() }
+/** fin de séance : résultat enregistré, écran de résultats */
+function endSession() {
+  if (!run || run.ended) return
+  run.ended = true
+  const T = game.session.timing, laps = run.started ? T.laps : [], best = laps.filter(l => l.valid).reduce<number | null>((a, l) => a == null || l.time < a ? l.time : a, null)
+  const pen = game.penalties - run.pen0
+  const r: SessionResult = { id: run.id ?? 'RACE', best, sectors: T.best?.sectors ?? null, bestSectors: run.started ? [...T.bestSectors] : [Infinity, Infinity, Infinity], laps: laps.length, valid: laps.filter(l => l.valid).length,
+    vmax: run.tel.vmax, lapTimes: laps.map(l => l.valid ? l.time : -l.time), penalties: pen, pos: 1 }
+  if (sessionKindOf(run) === 'race') { r.total = laps.length >= run.laps ? T.lapStart - (run.goT ?? 0) + pen : undefined; r.dnf = laps.length < run.laps }
+  game.paused = true; audio.setMuted(true)
+  if (run.kind === 'quick') {
+    showResults($('results'), { title: 'Course rapide', eyebrow: `Spa-Francorchamps · ${run.laps} tour${run.laps > 1 ? 's' : ''}`, r, driver: settings.profile.driver, race: true,
+      actions: [{ label: 'Rejouer', on: () => startQuick() }, { label: 'Menu', sec: true, on: () => { run = null; menu.reset(); setScreen('menu') } }] })
+  } else if (run.kind === 'weekend' && wk) {
+    const id = run.id!; wk.finish(r); wk.st.rem = undefined; wk.save()
+    const nx = wk.done ? null : wk.cur
+    const note = id.startsWith('Q') ? (id === 'Q3' ? 'Pole position (seul en piste) — le plateau IA viendra compléter la grille.' : 'Qualifié pour la phase suivante (seul en piste : pas d’élimination sans plateau IA).') : undefined
+    showResults($('results'), { title: WK_LABEL[id], eyebrow: `Résultats · Grand Prix de Belgique`, r, driver: wk.st.plan.driver, race: id === 'RACE', note,
+      summary: nx ? undefined : wk.st.results,
+      actions: nx ? [{ label: `Continuer · ${WK_LABEL[nx]}`, on: () => { newSessionRun(); openGarage() } }, { label: 'Menu', sec: true, on: () => { run = null; menu.reset(); setScreen('menu') } }]
+        : [{ label: 'Terminer le week-end', on: () => { Weekend.clear(); wk = null; run = null; menu.reset(); setScreen('menu') } }] })
+  }
+  setScreen('results'); ren.show.setShot('hero')
+}
+/** avant la physique : feux de départ (frein tenu jusqu'à l'extinction) */
+function runPre(dt: number) {
+  const r = run!
+  if (sessionKindOf(r) === 'race' && !r.lightsDone) {
+    r.lightsT += dt; const n = Math.min(5, Math.floor(r.lightsT))
+    if (n !== r.lightsN) { r.lightsN = n; document.querySelectorAll('#lights i').forEach((e, i) => e.classList.toggle('on', i < n)); if (n > 0) audio.beep(660) }
+    game.ctl.brake = 1
+    if (r.lightsT >= 5 + r.lightsHold) { r.lightsDone = true; document.querySelectorAll('#lights i').forEach(e => e.classList.remove('on')); setTimeout(() => show('lights', false), 900); hud.toast('Extinction des feux !', 1600); r.raceT = 0; r.goT = game.time }
+  }
+}
+/** après la physique : chrono de séance, drapeau à damier, télémétrie, arrêt au stand → garage */
+function runPost(dt: number) {
+  const r = run!, ev = game.events, c = game.car, k = sessionKindOf(r)
+  if (r.ended) return
+  const w = c.wheels
+  const locking = c.brakeApplied > 0.1 && c.speed > 12 && w.some(x => x.contact && Math.abs(x.omega * x.r) < c.speed * 0.5)
+  sampleTelemetry(r.tel, { speed: c.speed, tyreT: [w[0].tyre.temp, w[1].tyre.temp, w[2].tyre.temp, w[3].tyre.temp], brakeT: Math.max(...w.map(x => x.brakeT)), locking, scrape: game.maxScrape,
+    alphaF: (w[0].alpha + w[1].alpha) / 2, alphaR: (w[2].alpha + w[3].alpha) / 2, steer: game.ctl.steer, dt }, r.lockPrev)
+  r.lockPrev = locking
+  const sc = $('hSess')
+  if (k === 'race') {
+    if (r.lightsDone) r.raceT += dt
+    const done = game.session.timing.laps.length
+    const txt = `Tour ${Math.min(done + 1, r.laps)}/${r.laps}`; if (sc.textContent !== txt) sc.textContent = txt; sc.hidden = false
+    if (done !== r.lapsSeen) { r.lapsSeen = done; if (done === r.laps - 1 && r.laps > 1) hud.toast('Dernier tour !', 2000) }
+    if (done >= r.laps && !r.chequered) { game.session.setFlag('chequered', 999); r.chequered = true; hud.toast('Drapeau à damier · P1', 3000); setTimeout(endSession, 2600) }
+  } else if (r.kind === 'weekend') {
+    r.remaining = Math.max(0, r.remaining - dt)
+    const txt = `${WK_SHORT[r.id!]} · ${fmtClock(r.remaining)}`; if (sc.textContent !== txt) sc.textContent = txt; sc.hidden = false
+    if (r.remaining <= 0 && !r.chequered) { r.chequered = true; game.session.setFlag('chequered', 999); radio.say('fin_session_rentre', 0); hud.toast('Drapeau à damier · termine ton tour', 3200) }
+    // franchissement de la ligne (tour bouclé ou tour de sortie) après le damier, ou entrée aux stands → fin de séance
+    const line = game.session.timing.laps.length + (game.session.timing.lapStart >= 0 ? 1 : 0)
+    if (r.lineSeen == null || !r.chequered) r.lineSeen = line
+    if (r.chequered && !r.ending && (line !== r.lineSeen || ev.pitEntry || game.inPit)) { r.ending = true; setTimeout(endSession, 1500) }
+    if (ev.pitEntry && !r.chequered) hud.toast('Arrête-toi devant ton garage (2 s) pour voir l’ingénieur', 3000)
+    if (ev.pitStop && !r.chequered && !r.ending) setTimeout(() => { if (screen === 'drive' && run === r) openGarage() }, 400)
+  }
+}
 // ---------- radio de l'ingénieur : branchée sur le bus d'événements (src/core/events.ts) + télémétrie
 const radio = new Radio()
 let radioPoll = 0, lapsDone = 0
@@ -342,6 +488,17 @@ async function main() {
     if (ren.rig) wheel = new WheelDisplay(ren.rig.root)
     applySettings()
     wireUi(); syncWheelPad()
+    // menu Apple (vitrine 3D) : pilote choisi appliqué dès le démarrage
+    if (settings.profile.driver !== 'ham') applyDriver(settings.profile.driver); else radio.driver = 'ham'
+    wk = Weekend.load()
+    const S = settings
+    menu = new Menu($('menu'), {
+      profile: S.profile, get weather() { return S.weather }, set weather(v) { S.weather = v }, get damage() { return S.damage }, set damage(v) { S.damage = v },
+      save: () => saveSettings(S), setDriver: id => applyDriver(id), shot: sh => ren.show.setShot(sh),
+      startQuick: () => startQuick(), startWeekend: fresh => startWeekend(fresh),
+      weekendInProgress: () => wk && !wk.done ? `${WK_SHORT[wk.cur]} · ${WK_LABEL[wk.cur]}` : null,
+      startLegacy: k => startSession(k), openPanel: w => openPanel(w), bestLap: () => game.storedBest,
+    })
     setCam('tv')
     // mobile : départ sans GTAO et à 90 % de résolution ; l'adaptation remonte si l'iPhone tient 60 i/s
     adapt.baseMs = adapt.targetMs = 1000 / ren.q.fps
@@ -365,7 +522,7 @@ async function main() {
     $('bootGo').addEventListener('click', go)
     last = performance.now(); requestAnimationFrame(frame)
     if (params.has('auto')) { await go(); const k = params.get('auto') as SessionKind | 'demo'; if (k) startSession(k) }
-    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
+    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, menu, startQuick, startWeekend, endSession, openGarage, get run() { return run }, get wk() { return wk }, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
     ;(window as unknown as { __w11diag: unknown }).__w11diag = diag
   } catch (e) {
     console.error(e)
