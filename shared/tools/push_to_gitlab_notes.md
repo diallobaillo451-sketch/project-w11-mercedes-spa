@@ -91,3 +91,11 @@ Practical packing: **exactly 4 files per commit**, all via `$file:` (base64 or t
 Payloads of **4 × ~4 MiB base64 (~16 MiB)** have been verified to work on GitLab.com via this MCP.
 
 Do **not** fire parallel `add_commit` calls on `newbot-shared` (HEAD race).
+
+## Important: MCP stores base64 literally
+
+Even with `encoding: "base64"`, the GitLab MCP `add_commit` path used here leaves the
+**base64 text** as the blob content (same as earlier `shared/incoming/cars/` pushes).
+Consumers must `base64 -d` non-text files. For split files, decode **each part**, then
+concatenate (see `reassemble.sh`). Spot-check: fetch parts via raw API, decode each,
+concat, compare sha256 to `REASSEMBLE.md`.
