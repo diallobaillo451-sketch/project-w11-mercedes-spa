@@ -1,7 +1,9 @@
 # REASSEMBLE — assets/monza_2020
 
-Certains fichiers dépassent ~3 Mo et ont été découpés en parts `.part001`, `.part002`, …
-Pas de Git LFS : reconstitution locale obligatoire.
+Les binaires poussés via MCP `add_commit` sont stockés en **base64 littéral**
+(même format que `shared/incoming/cars/`). Il faut décoder.
+
+Fichiers > ~3 Mo : découpés en `.part001`, `.part002`, … — décoder **chaque** part, puis concaténer.
 
 ## Fichiers découpés
 
@@ -25,7 +27,7 @@ Pas de Git LFS : reconstitution locale obligatoire.
 | `scene/tex/f8a51fc5824d79e7.ktx2` | 3393531 | 2 | `5ba90cdfc5a09e37192894012e434c18ea781f87b6cc261dd76d500e6f1acbc6` |
 | `track/surface.bin` | 4177492 | 2 | `98c2141bef78f663940982cc17200d5fb234269bfc0b95bd6ab74f9159c17079` |
 
-## Tous les fichiers (sha256)
+## Tous les fichiers (sha256 du binaire original)
 
 | Path | Size | SHA256 | Split |
 |---|---:|---|---|
@@ -225,6 +227,14 @@ Pas de Git LFS : reconstitution locale obligatoire.
 
 ```bash
 bash reassemble.sh
+```
+
+Pour un binaire **non découpé** stocké en base64 :
+
+```bash
+base64 -d fichier.glb.b64 > fichier.glb   # si tu as renommé
+# ou, si le fichier GitLab EST le base64 :
+base64 -d fichier.glb > fichier.decoded && mv fichier.decoded fichier.glb
 ```
 
 ## Windows (PowerShell)

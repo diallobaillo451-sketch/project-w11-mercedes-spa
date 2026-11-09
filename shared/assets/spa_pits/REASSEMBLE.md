@@ -1,7 +1,9 @@
 # REASSEMBLE — assets/spa_pits
 
-Certains fichiers dépassent ~3 Mo et ont été découpés en parts `.part001`, `.part002`, …
-Pas de Git LFS : reconstitution locale obligatoire.
+Les binaires poussés via MCP `add_commit` sont stockés en **base64 littéral**
+(même format que `shared/incoming/cars/`). Il faut décoder.
+
+Fichiers > ~3 Mo : découpés en `.part001`, `.part002`, … — décoder **chaque** part, puis concaténer.
 
 ## Fichiers découpés
 
@@ -9,7 +11,7 @@ Pas de Git LFS : reconstitution locale obligatoire.
 |---|---:|---:|---|
 | `garage_player.glb` | 11140772 | 4 | `426dca21e567b2de58c692c3ec0d2282321b56b942f3834406f77871f1df0914` |
 
-## Tous les fichiers (sha256)
+## Tous les fichiers (sha256 du binaire original)
 
 | Path | Size | SHA256 | Split |
 |---|---:|---|---|
@@ -124,6 +126,14 @@ Pas de Git LFS : reconstitution locale obligatoire.
 
 ```bash
 bash reassemble.sh
+```
+
+Pour un binaire **non découpé** stocké en base64 :
+
+```bash
+base64 -d fichier.glb.b64 > fichier.glb   # si tu as renommé
+# ou, si le fichier GitLab EST le base64 :
+base64 -d fichier.glb > fichier.decoded && mv fichier.decoded fichier.glb
 ```
 
 ## Windows (PowerShell)
