@@ -1,0 +1,51 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}canvas{display:block}#l{position:fixed;left:8px;top:6px;color:#fff;font:600 13px -apple-system,Helvetica;text-shadow:0 1px 2px #000}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body><div id="l"></div><script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+const q=new URLSearchParams(location.search);
+const R=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+R.setPixelRatio(devicePixelRatio);R.setSize(innerWidth,innerHeight);R.toneMapping=THREE.AgXToneMapping;R.toneMappingExposure=1.0;
+R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFShadowMap;document.body.appendChild(R.domElement);
+const S=new THREE.Scene();const C=new THREE.PerspectiveCamera(+(q.get('fov')||55),innerWidth/innerHeight,0.1,3000);
+const sky=new Sky();sky.scale.setScalar(2800);S.add(sky);const su=sky.material.uniforms;su.turbidity.value=4;su.rayleigh.value=1.2;su.mieCoefficient.value=0.004;su.mieDirectionalG.value=0.85;
+const sunDir=new THREE.Vector3().setFromSphericalCoords(1,THREE.MathUtils.degToRad(50),THREE.MathUtils.degToRad(210));su.sunPosition.value.copy(sunDir);
+S.fog=new THREE.Fog(0xb8c8d8,350,2600);
+S.add(new THREE.HemisphereLight(0xcfe3ff,0x4a5a3a,1.1));
+const sun=new THREE.DirectionalLight(0xfff1dc,3.0);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);const sc=sun.shadow.camera;sc.left=sc.bottom=-120;sc.right=sc.top=120;sc.near=1;sc.far=800;sun.shadow.bias=-0.0004;sun.shadow.normalBias=0.03;S.add(sun);S.add(sun.target);
+const pm=new THREE.PMREMGenerator(R);const envS=new THREE.Scene();envS.add(sky.clone());S.environment=pm.fromScene(envS,0,1,3000).texture;S.environmentIntensity=0.5;
+const L=new GLTFLoader();L.setMeshoptDecoder(MeshoptDecoder);
+const cl=await (await fetch('/assets-work/spa_centerline.json')).json();
+const P=cl.points;window.__cl=cl;
+const g=await L.loadAsync(q.get('glb')||'/assets-work/spa_opt_2048.glb');
+const stats={meshes:0,tris:0,layers:{}};
+g.scene.traverse(o=>{ if(!o.isMesh) return; stats.meshes++; stats.tris+=o.geometry.index?o.geometry.index.count/3:0;
+  const m=o.material; const lay=m.userData.w11_layer;
+  for(const t of [m.map,m.normalMap,m.roughnessMap]) if(t) t.anisotropy=R.capabilities.getMaxAnisotropy();
+  if(lay!==undefined){ stats.layers[lay]=(stats.layers[lay]||0)+1; m.polygonOffset=true; m.polygonOffsetFactor=-0.6*lay; m.polygonOffsetUnits=-3*lay; o.renderOrder=lay; o.castShadow=false; o.receiveShadow=true;
+    if(m.transparent){ m.depthWrite=false; o.renderOrder=20+lay; } }
+  else { o.castShadow=!m.transparent; o.receiveShadow=true; }
+  if(m.alphaTest>0){ m.side=THREE.DoubleSide; }
+});
+S.add(g.scene); window.__stats=stats;
+function at(s){ const n=P.length; let i=Math.round(((s%cl.length)+cl.length)%cl.length)%n; return P[i]; }
+window.shot=(s,mode='chase',label='')=>{ const a=at(s), b=at(s+(mode==='far'?120:35)), z=at(s-(mode==='low'?3:22));
+  const up=mode==='low'?0.9:mode==='high'?40:3.2; const back=mode==='high'?at(s-80):z;
+  C.position.set(back[0],back[1]+up,back[2]); C.lookAt(b[0],b[1]+(mode==='high'?0:1.0),b[2]);
+  sun.position.set(a[0]+sunDir.x*400,a[1]+sunDir.y*400,a[2]+sunDir.z*400); sun.target.position.set(a[0],a[1],a[2]); sun.target.updateMatrixWorld();
+  document.getElementById('l').textContent=label; R.render(S,C); };
+window.overview=()=>{C.position.set(0,1700,300);C.lookAt(0,0,0);C.far=4000;C.updateProjectionMatrix();R.render(S,C);};
+let car=null, mixer=null;
+if(q.get('car')){ const cg=await L.loadAsync(q.get('car')); car=cg.scene; car.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}}); S.add(car);
+  if(cg.animations.length){ mixer=new THREE.AnimationMixer(car); const a=mixer.clipAction(cg.animations[0]); a.play(); a.paused=true; window.__steer=(u)=>{a.time=(u*0.5+0.5)*cg.animations[0].duration; mixer.update(0);} ; __steer(0);} }
+window.placeCar=(s,lat=0)=>{ if(!car) return; const a=at(s), b=at(s+2); const dx=b[0]-a[0], dz=b[2]-a[2], l=Math.hypot(dx,dz);
+  car.position.set(a[0]+(-dz/l)*lat, a[1]+0.02, a[2]+(dx/l)*lat); car.rotation.set(0,Math.atan2(-dx,-dz),0); };
+window.carCam=(s,mode)=>{ const a=at(s); const p=car.position; const f=new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);
+  if(mode==='tv'){C.position.set(p.x+f.z*6-f.x*2,p.y+1.6,p.z-f.x*6-f.z*2);} else if(mode==='front'){C.position.copy(p).addScaledVector(f,7).add(new THREE.Vector3(-f.z*2.5,1.2,f.x*2.5));} else {C.position.copy(p).addScaledVector(f,-6.5).add(new THREE.Vector3(0,1.9,0));}
+  C.lookAt(p.x,p.y+0.6,p.z); sun.position.set(a[0]+sunDir.x*400,a[1]+sunDir.y*400,a[2]+sunDir.z*400); sun.target.position.set(a[0],a[1],a[2]); sun.target.updateMatrixWorld(); R.render(S,C); };
+window.__ready=true; shot(+(q.get('s')||0),'chase','');
+function loop(){R.render(S,C);requestAnimationFrame(loop)} if(q.get('loop')) loop();
+</script></body></html>
