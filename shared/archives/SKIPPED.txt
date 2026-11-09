@@ -1,0 +1,23 @@
+Fichiers non poussés (trop lourds pour l’API GitLab du connecteur):
+
+asphalte/polyhaven_asphalt_pit_lane/asphalt_pit_lane_diff_2k.jpg (4187951 bytes)
+asphalte/polyhaven_asphalt_pit_lane/asphalt_pit_lane_nor_gl_2k.jpg (4348614 bytes)
+asphalte/polyhaven_asphalt_track/asphalt_track_diff_2k.jpg (3779263 bytes)
+asphalte/polyhaven_asphalt_track/asphalt_track_nor_gl_2k.jpg (3694762 bytes)
+beton_murs/ambientcg_Concrete034_2K-JPG/Concrete034_2K-JPG_NormalGL.jpg (3325261 bytes)
+gravier_bac/ambientcg_Gravel023_2K-JPG/Gravel023_2K-JPG_Color.jpg (4284822 bytes)
+gravier_bac/ambientcg_Gravel023_2K-JPG/Gravel023_2K-JPG_NormalGL.jpg (9206492 bytes)
+hdri/polyhaven_hausdorf_meadow/hausdorf_meadow_2k.hdr (6589582 bytes)
+hdri/polyhaven_stuttgart_hillside/stuttgart_hillside_2k.hdr (6824728 bytes)
+hdri/polyhaven_stuttgart_hillside/stuttgart_hillside_4k.hdr (27386232 bytes)
+herbe/ambientcg_Grass001_2K-JPG/Grass001_2K-JPG_AmbientOcclusion.jpg (3644975 bytes)
+herbe/ambientcg_Grass001_2K-JPG/Grass001_2K-JPG_Color.jpg (6953345 bytes)
+herbe/ambientcg_Grass001_2K-JPG/Grass001_2K-JPG_Displacement.jpg (3460522 bytes)
+herbe/ambientcg_Grass001_2K-JPG/Grass001_2K-JPG_NormalGL.jpg (9979388 bytes)
+herbe/ambientcg_Grass001_2K-JPG/Grass001_2K-JPG_Roughness.jpg (3286058 bytes)
+herbe/polyhaven_grass_medium_01/textures/grass_medium_01_nor_gl_2k.jpg (3530394 bytes)
+sons/vent/oga_park_ambience_wind.wav (73960096 bytes)
+sons/vent/oga_wind_background_noise_2.wav (15708766 bytes)
+terre/polyhaven_dirt/dirt_nor_gl_2k.jpg (4914156 bytes)
+
+Toujours disponibles sur /workspace/w11-shared/downloads/
