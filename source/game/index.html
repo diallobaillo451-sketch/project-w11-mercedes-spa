@@ -55,10 +55,21 @@
       <div class="secs"><i id="s0"></i><i id="s1"></i><i id="s2"></i></div>
       <div class="sub2"><span id="hLast">Dernier —</span> · <span id="hBest">Meilleur —</span></div>
     </div>
-    <div class="tbtn"><button id="bCam" class="ico">◉</button><button id="bPause" class="ico">❚❚</button></div>
+    <div class="tbtn"><button id="bWheel" class="ico" title="Volant : réglages">◎ Volant</button><button id="bCam" class="ico">◉</button><button id="bPause" class="ico">❚❚</button></div>
+  </div>
+  <div id="hFlag" class="flagban" hidden></div>
+  <div id="hDelta" class="deltachip" hidden></div>
+  <div id="wheelPad" class="glass wpad" hidden>
+    <div class="wrow"><span class="wl">BBAL</span><button class="wb" data-w="bb-">−</button><b id="wBB">57,5</b><button class="wb" data-w="bb+">+</button>
+      <span class="wl">DIFF IN</span><button class="wb" data-w="din-">−</button><b id="wDin">3</b><button class="wb" data-w="din+">+</button>
+      <span class="wl">DIFF OUT</span><button class="wb" data-w="dout-">−</button><b id="wDout">5</b><button class="wb" data-w="dout+">+</button></div>
+    <div class="wrow"><span class="wl">TC</span><button class="wb" data-w="tc-">−</button><b id="wTC">1</b><button class="wb" data-w="tc+">+</button>
+      <button class="wk" data-w="strat" id="wStrat">STRAT</button><button class="wk ers" data-w="ers" id="wErs">ERS</button><button class="wk" data-w="page">PAGE</button></div>
+    <div class="wrow"><button class="wk drs" data-w="drs">DRS</button><button class="wk pit" data-w="pit" id="wPit">PIT 80</button><button class="wk ot" data-w="ot" id="wOt">OT</button>
+      <button class="wk" data-w="n">N</button><button class="wk radio" data-w="radio">RADIO</button><button class="wk" data-w="ack">ACK</button></div>
   </div>
   <div id="toast" class="toast"></div>
-  <div class="dash glass">
+  <div id="dash" class="dash glass">
     <div class="leds" id="leds"></div>
     <div class="dmain">
       <div class="tyres"><i id="t0"></i><i id="t1"></i><i id="t2"></i><i id="t3"></i></div>
@@ -77,6 +88,8 @@
       <button id="bDas" class="abtn">DAS</button>
       <button id="bDown" class="abtn">−</button>
       <button id="bUp" class="abtn">+</button>
+      <button id="bPit" class="abtn">PIT</button>
+      <button id="bOt" class="abtn">OT</button>
     </div>
   </div>
   <div id="perf" class="perf" hidden></div>
