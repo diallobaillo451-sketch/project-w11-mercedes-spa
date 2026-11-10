@@ -178,6 +178,7 @@ function setScreen(s: Screen) {
   const studio = s === 'menu' || s === 'results' || (s === 'garage' && !g3d)
   if (studio && !ren.show.active) ren.enterShowroom(); else if (!studio && s !== 'boot' && ren.show.active) ren.exitShowroom()
   if (g3d) { game.parkInGarage(); setCam('garage') }
+  else if (s === 'drive' && ren.cams.mode === 'garage' && !game.garageExit) setCam(settings.camera)
   if (s !== 'boot') audio.setMuted(studio || g3d || settings.muted)
   menuMusic.setInMenu(s === 'menu') // musique : menu principal uniquement (ni garage, ni résultats, ni course)
   show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause'); show('garage', s === 'garage'); show('results', s === 'results')
