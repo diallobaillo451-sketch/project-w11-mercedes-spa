@@ -74,6 +74,20 @@ export class TrackEnv {
     // la pluie lave la gomme et disperse les marbles
     if (w === 'wet' || w === 'rain') for (let k = 0; k < this.rubber.length; k++) { this.rubber[k] *= 0.6; this.marbles[k] *= 0.3 }
   }
+  /** la pluie arrive ou s'en va : le film d'eau rejoint la cible sans saut (k ≈ 0,02 à 0,08 par pas de 0,1 s) */
+  approach(target: Weather, k: number) {
+    const W = WEATHER[target]
+    this.weather = target
+    this.rainRate += (W.rain - this.rainRate) * k
+    this.cloud += (W.cloud - this.cloud) * k
+    this.airT += (W.air - this.airT) * k
+    this.trackTTarget += (W.track - this.trackTTarget) * k
+    for (let i = 0; i < this.water.length; i++) {
+      const dest = W.water > 0 ? W.water * this.puddle[i] : 0
+      this.water[i] += (dest - this.water[i]) * k
+    }
+    if ((target === 'wet' || target === 'rain') && k > 0.2) for (let i = 0; i < this.rubber.length; i++) { this.rubber[i] *= 1 - 0.02 * k; this.marbles[i] *= 1 - 0.04 * k }
+  }
   /** film d'eau moyen à la trajectoire (pour l'affichage, l'audio, les gerbes) */
   wetness = 0
   /** densité de l'air (kg/m³) : gaz parfait avec vapeur d'eau (formule de Tetens), P/(R·T) */

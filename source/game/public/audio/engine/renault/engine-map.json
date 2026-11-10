@@ -1,0 +1,135 @@
+{
+ "version": 1,
+ "pu": "renault",
+ "method": "autocorrélation, varispeed ±10 %, fondu de boucle 120 ms, RMS 0,12",
+ "rpm_model": "rpm = 120 × f0 (ordre 0,5 ; allumage V6 = 6 × f0) — même hypothèse que Mercedes, revalidée par l'octave médiane",
+ "rights": "enregistrement fourni par l'auteur du projet, droits à confirmer",
+ "samples": [
+  {
+   "id": "on_07000",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 7000,
+   "rpm_measured": 7000,
+   "file": "on_07000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0316,
+   "frames": 19,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_09000",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 9000,
+   "rpm_measured": 9000,
+   "file": "on_09000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0254,
+   "frames": 9,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_09500",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 9500,
+   "rpm_measured": 9460,
+   "file": "on_09500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0613,
+   "frames": 14,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_10000",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 10000,
+   "rpm_measured": 10000,
+   "file": "on_10000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0543,
+   "frames": 20,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_10500",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 10500,
+   "rpm_measured": 10405,
+   "file": "on_10500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0081,
+   "frames": 20,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_11000",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 11000,
+   "rpm_measured": 11000,
+   "file": "on_11000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.069,
+   "frames": 24,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_11500",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 11500,
+   "rpm_measured": 11500,
+   "file": "on_11500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0375,
+   "frames": 24,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_12000",
+   "load": "on",
+   "source": "renault_pu.mp3",
+   "rpm_target": 12000,
+   "rpm_measured": 12000,
+   "file": "on_12000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0748,
+   "frames": 21,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "off_09500",
+   "load": "off",
+   "source": "renault_pu.mp3",
+   "rpm_target": 9500,
+   "rpm_measured": 9500,
+   "file": "off_09500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.147,
+   "frames": 10,
+   "codec": "aac-64k"
+  }
+ ],
+ "rejected": [
+  {
+   "id": "on_08000",
+   "reason": "pas assez de matière stable à ce régime"
+  },
+  {
+   "id": "on_12500",
+   "reason": "pas assez de matière stable à ce régime"
+  },
+  {
+   "id": "off_07500",
+   "reason": "pas assez de matière stable à ce régime"
+  },
+  {
+   "id": "off_10500",
+   "reason": "pas assez de matière stable à ce régime"
+  }
+ ]
+}

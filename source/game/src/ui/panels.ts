@@ -77,7 +77,9 @@ export function optionsPanel(body: HTMLElement, s: Settings, onChange: () => voi
     { kind: 'seg', label: 'Dégâts', hint: 'Une voiture cassée le reste : réparée seulement à l’arrêt aux stands ou en relançant la session', opts: [['off', 'Désactivés'], ['visual', 'Visuels'], ['real', 'Réalistes']], get: () => s.damage, set: v => { s.damage = v as typeof s.damage } },
     { kind: 'seg', label: 'Radio de l’ingénieur', opts: yesNo, get: () => s.radio ? '1' : '0', set: v => { s.radio = v === '1' } },
     { kind: 'range', label: 'Volume radio', min: 0, max: 1, step: 0.05, fmt: v => Math.round(v * 100) + ' %', get: () => s.radioVol, set: v => { s.radioVol = v } },
-    { kind: 'range', label: 'Volume', min: 0, max: 1, step: 0.05, fmt: v => Math.round(v * 100) + ' %', get: () => s.volume, set: v => { s.volume = v } },
+    { kind: 'range', label: 'Volume moteur', min: 0, max: 1, step: 0.05, fmt: v => Math.round(v * 100) + ' %', get: () => s.volume, set: v => { s.volume = v } },
+    { kind: 'seg', label: 'Musique du menu', opts: yesNo, get: () => s.music ? '1' : '0', set: v => { s.music = v === '1' } },
+    { kind: 'range', label: 'Volume musique', min: 0, max: 1, step: 0.05, fmt: v => Math.round(v * 100) + ' %', get: () => s.musicVol, set: v => { s.musicVol = v } },
     { kind: 'seg', label: 'Compteur de performances', opts: yesNo, get: () => s.perf ? '1' : '0', set: v => { s.perf = v === '1' } },
     { kind: 'button', label: 'Diagnostic', hint: 'i/s, mémoire estimée, préréglage, dernière erreur', text: 'Ouvrir', act: () => h.diag() },
   ], onChange)
@@ -88,6 +90,6 @@ export function aboutPanel(body: HTMLElement) {
 <b>Commandes</b> : pédale droite = gaz, pédale gauche = frein (plus le doigt est haut, plus l’appui est fort). Direction : glisser à gauche de l’écran, ou gyroscope (Options). DRS dans les zones (voyant vert), DAS = maintenir. Ordinateur : flèches/WASD, Espace frein, E/Q rapports, F DRS, C caméra, R remise en piste, Échap pause.<br>
 <b>Physique</b> : modèle maison (pas fixe 240 Hz, pneus type Pacejka avec température/usure/pression, suspension, aéro + DRS, hybride ERS 4 MJ/tour). Valeurs W11 marquées P (publiées) ou E (estimées) dans RESEARCH_W11.md — les spécifications exactes de la W11 ne sont pas publiques.<br>
 <b>Éclairage</b> : hybride raster temps réel + éclairage précalculé (ciel physique préfiltré, ombres douces, occlusion ambiante écran). <u>Ce n’est pas du ray tracing temps réel.</u><br>
-<b>Son</b> : boucles moteur dérivées d’enregistrements fournis par l’utilisateur — <u>droits d’auteur inconnus</u>. Les autres sons sont synthétisés.<br>
+<b>Son</b> : boucles moteur et musique de menu dérivées d’enregistrements fournis par l’utilisateur — <u>droits d’auteur à confirmer</u>. Les autres sons sont synthétisés. La musique ne se lance qu’après le premier toucher, et se tait en piste.<br>
 <b>iPhone</b> : Safari ne permet pas de verrouiller l’orientation ; pour le plein écran, « Partager → Sur l’écran d’accueil ». Le bouton silencieux de l’iPhone coupe le son Web Audio. Le gyroscope demande une autorisation.` }], () => {})
 }

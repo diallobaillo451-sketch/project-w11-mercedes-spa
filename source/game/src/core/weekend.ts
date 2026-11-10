@@ -1,6 +1,5 @@
-/** Week-end de Grand Prix (solo) : programme EL1-EL3 / Q1-Q3 / course, chronos de session, télémétrie de séance,
- *  propositions de l'ingénieur, résultats, sauvegarde locale. Sans DOM ni rendu (testable sous Node).
- *  ⚠ Plateau IA non implémenté : `GridHooks` est le point d'entrée prévu (voir STATUS.md). */
+/** Week-end de Grand Prix : EL1–EL3 / Q1–Q3 / course, avec le plateau IA (19 voitures).
+ *  Télémétrie, propositions de l'ingénieur, résultats, sauvegarde locale. */
 import type { Setup } from '../physics/vehicle.ts'
 import type { Compound } from '../physics/params.ts'
 import type { SessionKind } from './session.ts'
@@ -100,7 +99,7 @@ export function applyProposal(S: Setup, p: Proposal, setFuel: (kg: number) => vo
 export const sessionKind = (id: WkSessionId): SessionKind => id === 'RACE' ? 'race' : id.startsWith('Q') ? 'qualifying' : 'practice'
 export const sessionMinutes = (P: WeekendPlan, id: WkSessionId) => id.startsWith('FP') ? P.fpMin[+id[2] - 1] : id.startsWith('Q') ? P.qMin[+id[1] - 1] : 0
 
-/** points d'accroche du futur plateau IA (19 adversaires) : non branchés dans ce lot */
+/** points d'accroche historique du plateau (le classement réel est dans RaceSim) */
 export interface GridHooks {
   /** classement d'une séance chronométrée (le joueur seul aujourd'hui) */
   classify?: (id: WkSessionId, player: SessionResult) => { driver: string; best: number | null; gap: number | null }[]
