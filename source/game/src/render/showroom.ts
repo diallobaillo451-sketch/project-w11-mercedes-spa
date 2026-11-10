@@ -15,7 +15,7 @@ export class Showroom {
   scene = new THREE.Scene(); cam = new THREE.PerspectiveCamera(28, 1, 0.05, 200); active = false
   private key = new THREE.DirectionalLight(0xfff4e8, 1.8); private rim = new THREE.DirectionalLight(0xbfd8ff, 2.2); private fill = new THREE.DirectionalLight(0xffffff, 0.6)
   private hemi = new THREE.HemisphereLight(0xdfe8ff, 0x1a1a1f, 0.35)
-  floor: THREE.Mesh; private bg: THREE.Mesh; private bgU = { cTop: { value: new THREE.Color() }, cBot: { value: new THREE.Color() }, cGlow: { value: new THREE.Color() } }
+  floor: THREE.Mesh; private bg: THREE.Mesh
   private floorM: THREE.MeshPhysicalMaterial
   private yaw = 0.75; private pitch = 0.16; private dist = 8.2; private tgt = new THREE.Vector3(0, 0.45, -0.2); private fov = 28
   private vYaw = 0; private vPitch = 0; private vDist = 0; private vTgt = new THREE.Vector3(); private vFov = 0
@@ -39,11 +39,8 @@ export class Showroom {
     const blob = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 6.8).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cs), transparent: true, depthWrite: false, opacity: 0.9 }))
     blob.position.y = 0.003; blob.renderOrder = 0; this.floor.add(blob)
     const sg = new THREE.SphereGeometry(60, 48, 24)
-    this.bg = new THREE.Mesh(sg, new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, uniforms: this.bgU,
-      vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: `uniform vec3 cTop, cBot, cGlow; varying vec3 vP;
-        void main(){ float h = vP.y; vec3 c = mix(cBot, cTop, smoothstep(-0.05, 0.6, h)); c += cGlow * exp(-pow((h - 0.02) * 9.0, 2.0)) * 0.6;
-          float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453); gl_FragColor = vec4(c + (n - 0.5) / 255.0, 1.0); }` }))
+    this.bg = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ side: THREE.BackSide, depthWrite: false }))
+    this.paintStudio(false)
     this.key.position.set(5, 8, 4); this.key.castShadow = true
     const S = this.key.shadow; S.mapSize.set(1024, 1024); S.camera.left = S.camera.bottom = -4; S.camera.right = S.camera.top = 4; S.camera.near = 1; S.camera.far = 25; S.radius = 6; S.bias = -0.0004; S.normalBias = 0.02
     this.rim.position.set(-6, 4, -6); this.fill.position.set(-5, 2, 6)
@@ -52,14 +49,34 @@ export class Showroom {
   }
   setTheme(light: boolean) {
     this.light = light
-    if (light) { this.bgU.cTop.value.set(0xeef1f6); this.bgU.cBot.value.set(0xc9ced6); this.bgU.cGlow.value.set(0xffffff); this.floorM.color.set(0xd8dce2); this.hemi.intensity = 0.7 }
-    else { this.bgU.cTop.value.set(0x07080b); this.bgU.cBot.value.set(0x15171c); this.bgU.cGlow.value.set(0x223348); this.floorM.color.set(0x0c0d10); this.hemi.intensity = 0.3 }
+    this.paintStudio(light)
+    this.hemi.intensity = light ? 0.45 : 0.28
+  }
+  /** Cyclorama de studio (dégradé filtré), pas le blob blanc de l'IBL basse résolution. */
+  private paintStudio(light: boolean) {
+    const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 512
+    const x = cv.getContext('2d')!
+    const gr = x.createLinearGradient(0, 0, 0, 512)
+    if (light) { gr.addColorStop(0, '#b7c0cc'); gr.addColorStop(0.46, '#7d868f'); gr.addColorStop(1, '#3e444c') }
+    else { gr.addColorStop(0, '#1c2430'); gr.addColorStop(0.42, '#10141a'); gr.addColorStop(1, '#07080c') }
+    x.fillStyle = gr; x.fillRect(0, 0, 1024, 512)
+    const glow = x.createRadialGradient(512, 300, 10, 512, 320, 380)
+    glow.addColorStop(0, light ? 'rgba(255,255,255,0.28)' : 'rgba(90,130,170,0.22)')
+    glow.addColorStop(1, 'rgba(0,0,0,0)')
+    x.fillStyle = glow; x.fillRect(0, 0, 1024, 512)
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.mapping = THREE.EquirectangularReflectionMapping
+    const prev = (this.bg.material as THREE.MeshBasicMaterial).map
+    ;(this.bg.material as THREE.MeshBasicMaterial).map = tex; (this.bg.material as THREE.MeshBasicMaterial).needsUpdate = true
+    prev?.dispose()
+    this.scene.background = tex
+    this.floorM.color.set(light ? 0x8e949c : 0x12141a)
+    this.floorM.roughness = light ? 0.55 : 0.45
   }
   enter(car: THREE.Object3D, env: THREE.Texture | null) {
     if (this.active) return
     this.active = true; this.carParent = car.parent; this.carPos.copy(car.position); this.carQ.copy(car.quaternion)
     this.carRef = car; this.liftY = 0; this.scene.add(car); car.position.set(0, 0, 0); car.quaternion.identity(); car.updateMatrixWorld(true)
-    this.scene.environment = env; this.scene.environmentIntensity = this.light ? 0.5 : 0.32; this.floorM.envMap = env; this.floorM.envMapIntensity = this.light ? 0.12 : 0.05
+    this.scene.environment = env; this.scene.environmentIntensity = this.light ? 0.22 : 0.28; this.floorM.envMap = env; this.floorM.envMapIntensity = 0.04
     this.refit(car)
   }
   /** après changement de voiture : casque visé par le plan « casque » et sol replacé sous les pneus */

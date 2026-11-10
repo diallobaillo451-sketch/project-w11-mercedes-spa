@@ -177,6 +177,7 @@ export class Renderer {
   probe: ReflectionProbe | null = null
   bakedAO: { meshes: number; materials: number } | null = null
   look: { tm: string; exp: number; sun: number; env: number; hemi: number; sat: number; con: number }
+  camFollow: THREE.Object3D | null = null
   private pose: Pose = { pos: [0, 0, 0], q: [0, 0, 0, 1] }
   private cgOff = new THREE.Vector3(); private v3 = new THREE.Vector3()
   private ckPrev = false
@@ -481,7 +482,10 @@ export class Renderer {
    *  volant, clip « steer ») à l'offset du siège mesuré dans Blender (t1_team_car.py → <id>.json). Le pilote n'existe qu'une fois :
    *  il est déplacé d'une voiture à l'autre (textures pilote conservées). La voiture précédente (hors W11) est libérée du GPU. */
   carId = 'w11'; private w11G: { scene: THREE.Object3D; animations: THREE.AnimationClip[] } | null = null; private w11Rig: CarRig | null = null
-  private carSeq = 0; private drvHome: { o: THREE.Object3D; parent: THREE.Object3D; p: THREE.Vector3; q: THREE.Quaternion; s: THREE.Vector3 }[] = []
+  private carSeq = 0; private inflight: string | null = null
+  /** rigs déjà décodés (2 max) : le retour sur une voiture déjà vue est instantané, et un chargement périmé ne s'affiche pas */
+  private park = new Map<string, { rig: CarRig; seat: number[] }>()
+  private drvHome: { o: THREE.Object3D; parent: THREE.Object3D; p: THREE.Vector3; q: THREE.Quaternion; s: THREE.Vector3 }[] = []
   onCarChanged: (() => void) | null = null
   carMeta: Record<string, unknown> | null = null
   ktxAny() { return KTX ?? (this.drvKtx ??= new KTX2Loader().setTranscoderPath('./basis/').setWorkerLimit(2).detectSupport(this.r)) }
@@ -497,27 +501,44 @@ export class Renderer {
   }
   async setCar(id: string) {
     if (!this.rig || !this.w11Rig || !this.w11G) return
-    if (id === this.carId) return
+    if (id === this.carId && this.inflight === null) return
     const seq = ++this.carSeq
+    this.inflight = id
+    const prevId = this.carId
+    const prevSeat = [ ...(((this.carMeta as { seat_gltf?: number[] } | null)?.seat_gltf) ?? [0, 0, 0]) ]
     let rig: CarRig
+    let seat: number[] = [0, 0, 0]
     if (id === 'w11') { this.moveDriver(null, [0, 0, 0]); rig = this.w11Rig; this.carMeta = null }
-    else {
+    else if (this.park.has(id)) {
+      const hit = this.park.get(id)!; this.park.delete(id)
+      seat = hit.seat; this.moveDriver(hit.rig.root, seat); rig = hit.rig
+    } else {
       const meta = await (await fetch(`./cars/${id}.json`)).json() as { seat_gltf: number[]; tcam_gltf: number[] }
       const g = await loadGLB(`./cars/${id}_hi.glb`, () => {}, this.ktxAny())
-      if (seq !== this.carSeq) { disposeTree(g.scene); return }
+      seat = meta.seat_gltf
+      if (seq !== this.carSeq) { this.stash(id, new CarRig({ scene: g.scene, animations: this.w11G.animations }, this.an, { tcam: meta.tcam_gltf }), seat); return }
       this.moveDriver(g.scene, meta.seat_gltf)
       rig = new CarRig({ scene: g.scene, animations: this.w11G.animations }, this.an, { tcam: meta.tcam_gltf })
       this.carMeta = meta
     }
+    if (seq !== this.carSeq) { if (id !== 'w11') this.stash(id, rig!, seat); return }
     const old = this.rig
-    rig.adoptDriver(old); rig.onPartLost = old.onPartLost
-    this.car.remove(old.root); this.car.add(rig.root); this.rig = rig
-    if (old !== this.w11Rig) disposeTree(old.root)
-    if (this.probe) { const t = this.probe.texture, ei = this.look.env * this.q.envIntensity; rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+    if (old !== this.w11Rig && old !== rig!) { if (prevId !== 'w11' && prevId !== id) this.stash(prevId, old, prevSeat) }
+    rig!.adoptDriver(old); rig!.onPartLost = old.onPartLost
+    this.car.remove(old.root); this.car.add(rig!.root); this.rig = rig!
+    if (this.probe) { const t = this.probe.texture, ei = this.look.env * this.q.envIntensity; rig!.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
       for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) if ('envMap' in mt) { mt.envMap = t; mt.envMapIntensity = ei; mt.needsUpdate = true } }) }
-    if (this.show.active) { rig.setCockpit(false); this.show.refit(this.car) }
-    this.carId = id; dlog('voiture : ' + id); this.onCarChanged?.()
+    if (this.show.active) { rig!.setCockpit(false); this.show.refit(this.car) }
+    this.carId = id; this.inflight = this.inflight === id ? null : this.inflight
+    dlog('voiture : ' + id); this.onCarChanged?.()
   }
+  private stash(id: string, rig: CarRig, seat: number[]) {
+    if (this.park.has(id)) return
+    this.park.set(id, { rig, seat })
+    while (this.park.size > 2) { const k = this.park.keys().next().value!; const old = this.park.get(k)!; this.park.delete(k); disposeTree(old.rig.root) }
+  }
+  /** libère les voitures en cache au départ en course (mémoire iPhone) */
+  releaseCarCache() { for (const [, v] of this.park) disposeTree(v.rig.root); this.park.clear() }
   detail: DetailSet | null = null
   grass: Grass | null = null
   crowd: Crowd | null = null
@@ -556,30 +577,18 @@ export class Renderer {
     if (this.streaming || !this.tiles) return
     this.streaming = true
     lazyGo()
-    const T = this.tiles
     void this.prefetchTextures()
-    if (this.mobile) return this.streamNear(game)
-    for (;;) {
-      const left = T.man.tiles.filter(t => !T.loaded.has(t.id)); if (!left.length) break
-      const p = game.pose(this.pose).pos
-      left.sort((a, b) => (Math.hypot(a.cx - p[0], a.cz - p[2]) - a.r) - (Math.hypot(b.cx - p[0], b.cz - p[2]) - b.r))
-      try { await this.loadTile(left[0]) } catch (e) { console.warn('tuile', left[0].id, e); await new Promise(r => setTimeout(r, 3000)) }
-    }
-    this.streaming = false
-    while (PH_WAIT.size) await new Promise(r => setTimeout(r, 1000)) // textures provisoires encore en route
-    if (this.track) this.swapPlaceholders(this.track)
-    // toute la piste est chargée : envoi au GPU des textures compressées puis libération de leur copie CPU
-    // (aucune nouvelle tuile ne les clonera plus ; elles ne sont jamais ré-envoyées)
-    let freed = 0
-    for (const t of this.ctex) { try { this.r.initTexture(t); freed += texBytes(t); t.mipmaps = [] } catch (e) { dlog('libération texture : ' + (e as Error).message) } }
-    this.ctex.clear(); dlog('piste complète · ' + (freed / 1048576).toFixed(0) + ' Mo de copies CPU libérées')
+    // toutes les plateformes : tuiles proches en pleine qualité, le lointain en LOD (le frustum ne charge pas 1,3 M de triangles)
+    return this.streamNear(game)
   }
   /** mobile : seules les tuiles à moins de NEAR_MOB m de la voiture sont dans la scène (au GPU) ; au-delà de FAR_MOB elles
    *  sont retirées et leurs tampons GPU libérés (géométrie gardée en mémoire JS → ré-ajout sans nouveau téléchargement).
    *  Une seule opération par pas (≥ 250 ms) → envois au GPU étalés sur plusieurs images. Le décor « base » reste. */
   private async streamNear(game: Game) {
     // pleine qualité < FULL m ; LOD (géométrie simplifiée, mêmes textures) jusqu'à AHEAD m devant / BEHIND m derrière ; au-delà retirée
-    const T = this.tiles!, FULL = 600, AHEAD = 1500, BEHIND = 800, HYST = 200, wait = (ms: number) => new Promise(r => setTimeout(r, ms))
+    const mobile = this.mobile
+    const FULL = mobile ? 600 : 850, AHEAD = mobile ? 1500 : 2000, BEHIND = mobile ? 800 : 1100, HYST = 200
+    const T = this.tiles!, wait = (ms: number) => new Promise(r => setTimeout(r, ms))
     let prev: number[] | null = null, fx = 0, fz = 1
     const drop = (root: THREE.Object3D) => { this.track!.remove(root); root.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose() }) }
     for (;;) {
@@ -673,7 +682,7 @@ export class Renderer {
     const p = game.pose(this.pose)
     this.car.quaternion.set(p.q[0], p.q[1], p.q[2], p.q[3])
     this.v3.copy(this.cgOff).applyQuaternion(this.car.quaternion)
-    this.car.position.set(p.pos[0] - this.v3.x, p.pos[1] - this.v3.y, p.pos[2] - this.v3.z)
+    this.car.position.set(p.pos[0] - this.v3.x, p.pos[1] - this.v3.y + (game.pitShow?.lift ?? 0), p.pos[2] - this.v3.z)
     this.car.updateMatrixWorld(true)
   }
   frame(game: Game, dt: number, shake: number) {
@@ -698,17 +707,18 @@ export class Renderer {
     this.fx.update(dt)
     treeUniforms.uTime.value = performance.now() / 1000
     this.cams.shake = shake
-    this.cams.update(this.car, this.rig.eye, this.rig.tcam, c.speed, dt, c.gLat, c.gLong)
+    const follow = this.camFollow ?? this.car
+    this.cams.update(follow, this.rig.eye, this.rig.tcam, c.speed, dt, c.gLat, c.gLong)
     this.crowd?.update(this.cams.cam.position)
     this.grass?.update(this.cams.cam.position, Math.max(0, this.grass.lastI), performance.now() / 1000)
     // pilote masqué en cockpit (la caméra est dans sa tête)
     const ck = this.cams.mode === 'cockpit'; if (ck !== this.ckPrev) { this.ckPrev = ck; this.rig.setCockpit(ck) }
     // ombres : la caméra d'ombre suit la voiture, recalée sur la grille de texels (pas de scintillement)
     const R = this.q.shadowRange, tex = (2 * R) / this.sun.shadow.mapSize.x
-    const cx = this.car.position.x, cz = this.car.position.z
+    const cx = follow.position.x, cz = follow.position.z
     const lx = Math.round(cx / tex) * tex, lz = Math.round(cz / tex) * tex
-    this.sun.target.position.set(lx, this.car.position.y, lz)
-    this.sun.position.set(lx + this.sunDir.x * 150, this.car.position.y + this.sunDir.y * 150, lz + this.sunDir.z * 150)
+    this.sun.target.position.set(lx, follow.position.y, lz)
+    this.sun.position.set(lx + this.sunDir.x * 150, follow.position.y + this.sunDir.y * 150, lz + this.sunDir.z * 150)
     this.sun.target.updateMatrixWorld()
     treeUniforms.uSunV.value.copy(this.sunDir).transformDirection(this.cams.cam.matrixWorldInverse)
     this.probe?.update(this.r, this.scene, this.car.position, [this.car, this.fx.group])
