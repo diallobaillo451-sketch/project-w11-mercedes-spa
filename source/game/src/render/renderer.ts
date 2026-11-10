@@ -189,7 +189,13 @@ export class Renderer {
     // mode sans échec : préréglage le plus léger. Mobile : densité de pixels plafonnée à 1,5 (écran 3× → 2,25× moins de pixels)
     this.q = opt.safe ? { ...QUALITY.low, dprMax: 1 } : { ...QUALITY[quality] }
     // mobile : le GTAO écran (coûteux en pixels) n'est gardé qu'en 2K/30 i/s ; l'AO Cycles précalculée reste partout
-    if (opt.mobile && !opt.safe && this.q.name !== 'ultra') this.q.gtao = false
+    if (opt.mobile && !opt.safe && this.q.name !== 'ultra') {
+      this.q.gtao = false
+      this.q.dprMax = Math.min(this.q.dprMax, 2)
+      this.q.pxBudget = Math.min(this.q.pxBudget, 1.05e6)
+      this.q.shadowMap = Math.min(this.q.shadowMap, 1024)
+      this.q.probe = 0
+    }
     // MSAA du canevas inutile quand le rendu passe par le composeur (sa cible a son propre MSAA) → mémoire économisée
     const post = this.q.bloom || this.q.gtao
     this.r = new THREE.WebGLRenderer({ canvas, antialias: this.q.msaa && !post, depth: !post, powerPreference: 'high-performance', alpha: false, stencil: false })

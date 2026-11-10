@@ -12,7 +12,11 @@ import { collectAnchors, type Anchor } from './anchors.ts'
 
 type Mat = THREE.MeshStandardMaterial
 interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean; spin0: number; steer0: number }
-interface CarView { r: Racer; obj: THREE.LOD; wheels: WheelRef[]; blob: THREE.Mesh; pitch: number; roll: number; spin: number }
+interface CarView {
+  r: Racer; obj: THREE.Object3D; tiers: THREE.Object3D[]; wheelsBy: WheelRef[][]; wheels: WheelRef[]
+  glows: Mat[]; blob: THREE.Mesh; pitch: number; roll: number; spin: number
+  tier: number; hold: number; sx: number; sy: number; sz: number; shx: number; shz: number
+}
 const TEAMS = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
 const LOD1 = 28, LOD2 = 450
 /** Modèle SC remplaçable (Mercedes-AMG GT Black Series optimisé, plus tard sous shared/assets/safety_car/). */
@@ -196,12 +200,74 @@ export class FieldView {
     }
   }
   private lampState = new Map<number, string>()
-  private protos = new Map<string, { l1: THREE.Object3D; l2: THREE.Object3D }>()
+  private protos = new Map<string, { hi: THREE.Object3D; l1: THREE.Object3D; l2: THREE.Object3D }>()
   ready = false
+  /** nombre de voitures en modèle HD : 4 sur iPhone, monte ou descend avec le temps d'image */
+  private hiN = 4
+  private rankT = 0
+  private ftAcc = 0
+  private ftN = 0
+  private readonly frust = new THREE.Frustum()
+  private readonly frM = new THREE.Matrix4()
+  private readonly camFwd = new THREE.Vector3()
   private ren: Renderer
   private shared = new Set<THREE.Material>()
   stats = { tris1: 0, tris2: 0, texMB: 0 }
-  constructor(ren: Renderer) { this.ren = ren; this.root.name = 'field'; ren.scene.add(this.root) }
+  constructor(ren: Renderer) { this.ren = ren; this.hiN = ren.mobile ? 4 : 6; this.root.name = 'field'; ren.scene.add(this.root) }
+  /** toutes les 0,25 s : les voitures utiles (près, devant, à côté, dans le champ) passent en HD */
+  private hiPool = new Map<string, THREE.Object3D[]>()
+  private takeHi(team: string) {
+    const src = this.protos.get(team)?.hi; if (!src) return null
+    const pool = this.hiPool.get(team) ?? []
+    const o = pool.pop() ?? src.clone()
+    o.name = 'lod0'; this.hiPool.set(team, pool); return o
+  }
+  private giveHi(team: string, o: THREE.Object3D) {
+    o.removeFromParent(); const pool = this.hiPool.get(team) ?? []; pool.push(o); this.hiPool.set(team, pool)
+  }
+  private rankCars(sim: RaceSim, cam: THREE.Camera, dt: number) {
+    this.ftAcc += dt; this.ftN++; this.rankT += dt
+    if (this.rankT < 0.25) return
+    const ft = this.ftAcc / Math.max(1, this.ftN)
+    this.ftAcc = 0; this.ftN = 0; this.rankT = 0
+    if (ft > 0.022 && this.hiN > 2) this.hiN--
+    else if (ft < 0.014 && this.hiN < (this.ren.mobile ? 5 : 8)) this.hiN++
+    this.frM.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)
+    this.frust.setFromProjectionMatrix(this.frM)
+    cam.getWorldDirection(this.camFwd)
+    const me = sim.player
+    const scored = this.views.map(v => {
+      const dx = v.r.wx - cam.position.x, dy = v.r.wy - cam.position.y, dz = v.r.wz - cam.position.z
+      const dist = Math.hypot(dx, dy, dz) || 1
+      const gap = sim.road(me.s, v.r.s)
+      let score = 80 / dist
+      if (gap > 0 && gap < Math.max(25, me.v * 2)) score += 3
+      if (Math.abs(gap) < 14 && Math.abs(v.r.d - me.d) < 3.5) score += 4
+      if ((dx * this.camFwd.x + dy * this.camFwd.y + dz * this.camFwd.z) / dist > 0.15) score += 1.5
+      if (!this.frust.containsPoint(cam.position.clone().set(v.r.wx, v.r.wy + 0.5, v.r.wz)) && dist > 35) score -= 4
+      return { v, score, dist }
+    })
+    scored.sort((a, b) => b.score - a.score)
+    const hi = this.hiN, mid = hi + (this.ren.mobile ? 4 : 6)
+    for (let i = 0; i < scored.length; i++) {
+      const s = scored[i]
+      let want = s.dist > 200 ? 2 : i < hi ? 0 : i < mid ? 1 : 2
+      if (s.v.hold > 0 && want !== s.v.tier) { s.v.hold -= 0.25; continue }
+      if (want === s.v.tier) continue
+      if (s.v.tiers[0].name === 'lod0' && want !== 0) { this.giveHi(s.v.r.team, s.v.tiers[0]); const ph = new THREE.Group(); s.v.obj.add(ph); s.v.tiers[0] = ph; s.v.glows = [] }
+      if (want === 0 && s.v.tiers[0].name !== 'lod0') {
+        const hi = this.takeHi(s.v.r.team)
+        if (hi) {
+          s.v.obj.remove(s.v.tiers[0]); hi.visible = true; s.v.obj.add(hi); s.v.tiers[0] = hi
+          s.v.wheelsBy[0] = collectWheels(hi); s.v.glows = []
+          hi.traverse((o: THREE.Object3D) => { const m = o as THREE.Mesh; if (!m.isMesh) return; const mt = m.material as Mat; if (mt?.emissive && /disc/i.test(mt.name || '')) s.v.glows.push(mt) })
+        }
+      }
+      if (want === 0 && s.v.tiers[0].name !== 'lod0') want = 1
+      s.v.tier = want; s.v.hold = 0.75; s.v.wheels = s.v.wheelsBy[want] ?? s.v.wheelsBy[1]
+      s.v.tiers.forEach((o, k) => { o.visible = k === want })
+    }
+  }
 
   /** modèle HD au repos (pas la voiture du joueur, qui a déjà bougé) : sert d'atlas d'UV puis sa géométrie est jetée */
   private async teamHi(team: string): Promise<THREE.Object3D> {
@@ -227,7 +293,7 @@ export class FieldView {
       g.scene.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; m.frustumCulled = true; m.castShadow = false; m.receiveShadow = false })
       if (r.hit === 0) dlog(`livrée ${team} : aucun matériau relié (${r.miss} manqués)`)
     }
-    hi.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose() })
+    hi.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) { m.frustumCulled = true; m.castShadow = false } })
     let seat = [0, 0, 0]
     if (id !== 'mercedes') { try { const meta = await (await fetch(`./cars/${id}.json`)).json() as { seat_gltf?: number[] }; seat = meta.seat_gltf ?? seat } catch { /* casque au défaut */ } }
     const hm = new THREE.MeshStandardMaterial({ color: teamAccent(team), roughness: 0.35, metalness: 0.1 })
@@ -235,9 +301,9 @@ export class FieldView {
       const h = new THREE.Mesh(new THREE.SphereGeometry(0.14, g === g1 ? 10 : 6, g === g1 ? 8 : 4), hm)
       h.scale.set(1, 0.92, 1.12); h.position.set(seat[0], 0.83 + seat[1], -0.2 + seat[2]); h.name = 'helmet'; h.castShadow = false; g.scene.add(h)
     }
-    const tri = (o: THREE.Object3D) => { let n = 0; o.traverse(x => { const m = x as THREE.Mesh; if (m.isMesh) n += (m.geometry.index?.count ?? m.geometry.attributes.position.count) / 3 }); return n }
+    const tri = (o: THREE.Object3D) => { let n = 0; o.traverse(x => { const m = x as THREE.Mesh; if (m.isMesh && m.visible) n += (m.geometry.index?.count ?? m.geometry.attributes.position.count) / 3 }); return n }
     this.stats.tris1 = Math.max(this.stats.tris1, tri(g1.scene)); this.stats.tris2 = Math.max(this.stats.tris2, tri(g2.scene))
-    this.protos.set(team, { l1: g1.scene, l2: g2.scene })
+    this.protos.set(team, { hi, l1: g1.scene, l2: g2.scene })
   }
   /** pendant l'écran de chargement : toutes les équipes, avant les feux */
   async preload(on?: (done: number, total: number, team: string) => void) {
@@ -267,12 +333,14 @@ export class FieldView {
     for (const r of sim.cars) {
       if (r.player) continue
       const p = this.protos.get(r.team); if (!p) continue
-      const lod = new THREE.LOD(), a = p.l1.clone(), b = p.l2.clone()
-      lod.addLevel(a, 0); lod.addLevel(b, LOD1); lod.addLevel(new THREE.Object3D(), LOD2)
-      lod.matrixAutoUpdate = false; lod.name = 'ai_' + r.id
-      const wheels = [...collectWheels(a), ...collectWheels(b)]
+      const g = new THREE.Group()
+      const tiers = [new THREE.Group(), p.l1.clone(), p.l2.clone()]
+      tiers.forEach((o, i) => { o.visible = i === 1; g.add(o) })
+      g.matrixAutoUpdate = false; g.name = 'ai_' + r.id
+      const wheelsBy = [[], collectWheels(tiers[1]), collectWheels(tiers[2])]
       const blob = new THREE.Mesh(bg, bm); blob.matrixAutoUpdate = false; blob.renderOrder = 1
-      this.root.add(lod, blob); this.views.push({ r, obj: lod, wheels, blob, pitch: 0, roll: 0, spin: 0 })
+      this.root.add(g, blob)
+      this.views.push({ r, obj: g, tiers, wheelsBy, wheels: wheelsBy[1], glows: [], blob, pitch: 0, roll: 0, spin: 0, tier: 1, hold: 0, sx: NaN, sy: 0, sz: 0, shx: 0, shz: -1 })
     }
   }
   /** Remplace le modèle de safety car (GLB affiché + GLB haute définition pour les matériaux). */
@@ -329,6 +397,7 @@ export class FieldView {
   update(sim: RaceSim, dt: number, cam: THREE.Camera) {
     if (!this.ready) return
     const t = performance.now() / 1000
+    this.rankCars(sim, cam, dt)
     for (const v of this.views) {
       const r = v.r
       const goneAt = (r as Racer & { _goneAt?: number })._goneAt
@@ -338,6 +407,9 @@ export class FieldView {
       if (hide) continue
       const phase = (r as Racer & { pitPhase?: string }).pitPhase ?? ''
       const jacked = phase === 'jack' || phase === 'guns' || phase === 'off' || phase === 'on' || phase === 'drop'
+      const k = Math.min(1, dt * 14)
+      if (!isFinite(v.sx)) { v.sx = r.wx; v.sy = r.wy; v.sz = r.wz; v.shx = r.hx; v.shz = r.hz }
+      else { v.sx += (r.wx - v.sx) * k; v.sy += (r.wy - v.sy) * k; v.sz += (r.wz - v.sz) * k; v.shx += (r.hx - v.shx) * k; v.shz += (r.hz - v.shz) * k }
       if (r.q) {
         qT.set(r.q[0], r.q[1], r.q[2], r.q[3]); m4.makeRotationFromQuaternion(qT)
       } else {
@@ -348,14 +420,15 @@ export class FieldView {
         const rollT = Math.max(-0.07, Math.min(0.07, -r.lat * 0.01 - (r.steer ?? 0) * 0.045))
         v.pitch += (pitchT - v.pitch) * Math.min(1, dt * 6)
         v.roll += (rollT - v.roll) * Math.min(1, dt * 6)
-        vy.set(r.nx, r.ny, r.nz); vz.set(-r.hx, 0, -r.hz); vz.addScaledVector(vy, -vz.dot(vy)).normalize(); vx.crossVectors(vy, vz)
+        const hn = Math.hypot(v.shx, v.shz) || 1
+        vy.set(r.nx, r.ny, r.nz); vz.set(-v.shx / hn, 0, -v.shz / hn); vz.addScaledVector(vy, -vz.dot(vy)).normalize(); vx.crossVectors(vy, vz)
         m4.makeBasis(vx, vy, vz)
         eT.set(v.pitch, 0, v.roll); mR.makeRotationFromEuler(eT); m4.multiply(mR)
+        if (v.tier === 0) { const glow = ax < -6 ? Math.min(2.2, -ax * 0.12) : 0; for (const mt of v.glows) mt.emissiveIntensity = glow }
       }
-      m4.setPosition(r.wx, r.wy + (jacked ? 0.09 : 0), r.wz)
+      m4.setPosition(v.sx, v.sy + (jacked ? 0.09 : 0), v.sz)
       v.obj.matrix.copy(m4); v.obj.matrixWorldNeedsUpdate = true
-      v.blob.matrix.copy(m4); v.blob.matrix.elements[13] = r.wy + 0.03; v.blob.matrixWorldNeedsUpdate = true
-      v.obj.update(cam)
+      v.blob.matrix.copy(m4); v.blob.matrix.elements[13] = v.sy + 0.03; v.blob.matrixWorldNeedsUpdate = true
       v.spin -= r.v / 0.33 * dt
       const steer = Math.max(-0.42, Math.min(0.42, r.steer ?? 0))
       const wheelsOff = phase === 'off'
