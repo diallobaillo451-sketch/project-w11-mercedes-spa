@@ -7,9 +7,10 @@ import { buildRacingLine, type RacingLine } from '../track/racingLine.ts'
 import { Autopilot } from '../physics/autopilot.ts'
 import { Session, type SessionKind, type Flag } from './session.ts'
 import { EventBus } from './events.ts'
-import type { Pitlane } from '../track/pitlane.ts'
+import type { Pitlane, PitAnchors } from '../track/pitlane.ts'
 import { RaceSim } from '../race/sim.ts'
 import { PIT_CREW } from '../race/data.ts'
+import type { SurfaceSample } from '../track/surface.ts'
 
 export const DT = 1 / 240
 const MAX_STEPS = 12 // au-delà : ralenti plutôt que spirale de la mort
@@ -49,6 +50,25 @@ export class Game {
   spectate: string | null = null
   spectateT = 0
   spectateHide = false
+  /** a franchi la ligne d'entrée et pas encore la ligne de sortie */
+  pitCommit = false
+  private pitMark = 0
+  private pitNear = false
+  /** ancres Ty (pit_entry, pit_speed_*, pit_exit, pitlane_path). Sans rien d'exploitable, le pitlane.json reste en place. */
+  adoptPitAnchors(a: PitAnchors) {
+    const path = a.pitlane_path
+    const useful = !!(a.pit_entry || a.pit_speed_start || a.pit_speed_end || a.pit_exit || a.pit_exit_light || (path && path.x.length > 4))
+    if (!this.pit || !useful) return false
+    const scratch: SurfaceSample = { h: 0, nx: 0, ny: 1, nz: 0, type: 0, s: 0, d: 0, i: 0 }
+    let hint = -1
+    this.pit.applyAnchors(a, (x, z) => {
+      this.track.sample(x, z, hint, scratch)
+      hint = scratch.i
+      return { s: scratch.s, d: scratch.d }
+    })
+    this.field?.rebindPit()
+    return true
+  }
   /** météo vers laquelle le film d'eau converge (carrière, averse) ; null = figée */
   weatherTarget: Weather | null = null
   startField(o: { kind: SessionKind; laps: number; player: string; grid?: string[]; sessionLen?: number; seed?: number; posts?: unknown; exclude?: string[] }) {
@@ -167,30 +187,56 @@ export class Game {
    *  (après 2 s de tolérance pour freiner à la ligne). */
   private updatePit(dt: number) {
     if (!this.pit) return
-    const c = this.car, z = this.pit.inLimitZone(c.pos[0], c.pos[2])
-    if (z && !this.inPit) { this.inPit = true; this.pitSpeedT = -2; this.pitPenalised = false; this.events.pitEntry = true; this.bus.emit({ t: 'pitEntry', car: 0 }); this.field?.ctrl.pitEvent(this.field.player, 'in') }
-    else if (!z && this.inPit) { this.inPit = false; this.events.pitExit = true; this.bus.emit({ t: 'pitExit', car: 0 }) }
-    if (this.inPit) {
-      // réparation UNIQUEMENT à l'arrêt dans la voie des stands (2 s immobile) : une voiture cassée ne se répare jamais seule
-      this.pitStopT = c.speed < 0.6 ? this.pitStopT + dt : 0
+    const c = this.car
+    const q = this.pit.probe(c.pos[0], c.pos[2])
+    const P = this.pit
+    const entryP = P.cum[P.iEntry], exitP = P.cum[P.iExit]
+    const near = q.dist < 7 && q.p >= entryP - 4 && q.p <= exitP + 6
+    const limited = this.pit.inSpeedZone(c.pos[0], c.pos[2])
+    if (near) {
+      if (!this.pitNear) this.pitMark = q.p
+      this.pitNear = true
+      if (!this.pitCommit && q.p >= entryP && q.p < exitP - 1) {
+        this.pitCommit = true; this.events.pitEntry = true; this.bus.emit({ t: 'pitEntry', car: 0 }); this.field?.ctrl.pitEvent(this.field.player, 'in')
+      }
+      if (this.pitCommit && this.pitMark < exitP && q.p >= exitP) {
+        if (this.field && !this.field.ctrl.pitExitGreen()) this.field.ctrl.pitLine(this.field.player, 'sortie')
+        this.events.pitExit = true; this.bus.emit({ t: 'pitExit', car: 0 }); this.pitCommit = false
+      }
+      this.pitMark = q.p
+    } else {
+      this.pitNear = false
+      if (this.pitCommit && q.dist > 8 && this.pitMark < exitP - 8) {
+        this.field?.ctrl.pitLine(this.field.player, 'sortie'); this.pitCommit = false
+      }
+    }
+    const was = this.inPit
+    this.inPit = limited
+    if (limited && !was) { this.pitSpeedT = -2; this.pitPenalised = false }
+    if (this.inPit || (this.pitCommit && near)) {
+      const boxP = this.field ? this.field.boxOf(this.field.player.team) : NaN
+      const atBox = Number.isFinite(boxP) && Math.abs(q.p - boxP) < 3.4 && q.lane === 'work'
+      this.pitStopT = atBox && c.speed < 0.6 ? this.pitStopT + dt : (this.field ? 0 : (c.speed < 0.6 && this.inPit ? this.pitStopT + dt : 0))
       const crew = PIT_CREW[this.field?.player.team ?? 'mercedes'] ?? 2.6
       const u = crew > 0 ? this.pitStopT / (crew + Math.max(0, this.holdT)) : 0
       this.pitShow.lift = u > 0.12 && u < 0.88 ? 0.085 : 0
       if (this.field) { const ph = u < 0.12 ? 'stop' : u < 0.28 ? 'jack' : u < 0.4 ? 'guns' : u < 0.62 ? 'off' : u < 0.84 ? 'on' : u < 0.94 ? 'drop' : 'go'; this.field.player.pitPhase = this.pitStopT > 0.15 ? ph : '' }
       if (this.pitStopT > 0.4 && !this.pitServed && this.field) { const p = this.field.player, C = this.field.ctrl
-        // pénalités purgées à l'arrêt : temps (5 / 10 s) puis stop-and-go (10 s) — aucun travail pendant ce temps (règl. 2020, art. 38)
         const hold = p.pen + (p.sgPend > 0 ? 10 : 0)
         if (hold > 0 && this.session.kind === 'race') { this.holdT = hold; C.msg(`${p.code} purge ${p.sgPend > 0 ? 'son stop-and-go' : 'sa pénalité de ' + p.pen + ' s'}`, 'pen'); p.penServed += p.pen; p.pen = 0; if (p.sgPend > 0) p.sgPend-- } }
-      if (this.pitStopT > crew + this.holdT && !this.pitServed) { this.pitServed = true; this.holdT = 0; this.pitShow.lift = 0; if (this.field) this.field.player.pitPhase = 'go'; const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
-        this.events.pitStop = true; c.repair(); c.fitTyres(); this.lastDmg = 0 // arrêt : pièces réparées + train de pneus neufs
+      if (this.pitStopT > crew + this.holdT && !this.pitServed) { this.pitServed = true; this.holdT = 0; this.pitShow.lift = 0; if (this.field) { this.field.player.pitPhase = 'go'; this.field.ctrl.boxLight = 'green'; this.field.ctrl.release(this.field.player) } const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
+        this.events.pitStop = true; c.repair(); c.fitTyres(); this.lastDmg = 0
         if (dmg) { this.events.repair = true; this.bus.emit({ t: 'repair', car: 0 }) } }
       if (c.speed > 2) this.pitServed = false
-      const kmh = c.speed * 3.6
-      this.pitSpeedT = kmh > 80.5 ? this.pitSpeedT + dt : Math.min(this.pitSpeedT + dt, 0)
-      if (this.pitSpeedT > 0.5 && !this.pitPenalised) {
-        this.pitPenalised = true; this.penalties += 5; this.events.pitSpeeding = Math.round(kmh)
-        this.bus.emit({ t: 'pitSpeeding', car: 0, kmh, penalty: 5 })
-        if (this.session.kind === 'timetrial') this.session.timing.invalidate()
+      if (limited) {
+        const kmh = c.speed * 3.6
+        this.pitSpeedT = kmh > 80.5 ? this.pitSpeedT + dt : Math.min(this.pitSpeedT + dt, 0)
+        if (this.pitSpeedT > 0.5 && !this.pitPenalised) {
+          this.pitPenalised = true; this.events.pitSpeeding = Math.round(kmh)
+          this.bus.emit({ t: 'pitSpeeding', car: 0, kmh, penalty: 5 })
+          if (this.field) this.field.ctrl.pitSpeeding(this.field.player, c.speed)
+          else { this.penalties += 5; if (this.session.kind === 'timetrial') this.session.timing.invalidate() }
+        }
       }
     } else { this.pitShow.lift = 0; if (this.field && this.field.player.pitPhase) this.field.player.pitPhase = '' }
   }

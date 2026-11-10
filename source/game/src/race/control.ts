@@ -384,7 +384,14 @@ export class RaceControl {
     if (r.warnings === 3) r.bw = true
     if (r.warnings >= 4) { this.caseNew(r, null, 'limites de piste répétées', '5s', 'non-respect répété des limites de piste', 6); r.warnings = 2 }
   }
-  pitSpeeding(r: Racer, v: number) { const k = r as Racer & { _ps?: number }; if ((k._ps ?? 0) > this.sim.t - 20) return; k._ps = this.sim.t; this.caseNew(r, null, `excès de vitesse dans la voie des stands (${Math.round(v * 3.6)} km/h)`, this.sim.kind === 'race' ? '5s' : 'warn', 'limitation 80 km/h', 4) }
+  pitSpeeding(r: Racer, v: number) { const k = r as Racer & { _ps?: number }; if (k._ps !== undefined && k._ps > this.sim.t - 20) return; k._ps = this.sim.t; this.caseNew(r, null, `excès de vitesse dans la voie des stands (${Math.round(v * 3.6)} km/h)`, this.sim.kind === 'race' ? '5s' : 'warn', 'limitation 80 km/h', 4) }
+  /** ligne d'entrée ou de sortie coupée, ou feu de sortie grillé */
+  pitLine(r: Racer, which: 'entrée' | 'sortie') {
+    const k = r as Racer & { _pline?: number }
+    if (k._pline !== undefined && k._pline > this.sim.t - 25) return
+    k._pline = this.sim.t
+    this.caseNew(r, null, `ligne de ${which} des stands`, this.sim.kind === 'race' ? '5s' : 'warn', which === 'sortie' && !this.pitExitGreen() ? 'feu de sortie rouge' : 'ligne coupée', 6)
+  }
   /** libération du box : dangereuse si une voiture arrive dans la voie à moins de ~15 m */
   release(r: Racer) {
     this.boxLight = 'green'; this.boxGreenUntil = this.sim.t + 3

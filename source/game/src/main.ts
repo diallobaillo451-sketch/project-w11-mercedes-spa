@@ -29,6 +29,7 @@ import { applyCarPhysics, CARS2020 } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
+import { readPitAnchors } from './render/anchors.ts'
 import { PitScreens } from './render/pitScreens.ts'
 import { Engineer } from './race/engineer.ts'
 import { award, careerCalendar, loadCareer, newCareer, playerPos, rollEvents, rollWeather, saveCareer, simulateRound, Rng as CareerRng, type CareerState } from './core/career.ts'
@@ -665,17 +666,25 @@ async function main() {
     await new Promise(r => setTimeout(r, 0))
     game = new Game(track, 'timetrial')
     if (pitData) game.pit = new Pitlane(pitData, { limitFromS: 6790, limitToS: 200 })
+    const bindPit = (root: THREE.Object3D) => {
+      if (!game.pit) return
+      const a = readPitAnchors(root)
+      if (game.adoptPitAnchors(a)) dlog('voie des stands : ancres du circuit (' + (game.pit.anchored ? 'chemin ' + game.pit.n + ' pts' : '') + ')')
+      fview?.adoptScene(root)
+    }
     game.autopilot = true
     const QL = ['low', 'medium', 'high', 'ultra'] as const, q0 = (params.get('q') as typeof settings.quality) || settings.quality
     const qn = (params.has('q') ? q0 : QL[Math.max(0, QL.indexOf(q0 as typeof QL[number]) - diag.drop)]) as typeof settings.quality
     // KTX2 (textures compressées GPU) sur mobile, ou forcé par ?ktx=1 ; ?ktx=0 pour le désactiver
     const ktx = params.has('ktx') ? params.get('ktx') !== '0' : diag.mobile
     ren = new Renderer($('gl') as HTMLCanvasElement, qn, { safe: diag.safe, mobile: diag.mobile, ktx, onLost: () => gpuLost() })
+    ren.onTile = root => bindPit(root)
     diag.preset = (diag.safe ? 'sans échec (' + ren.q.name + ')' : ren.q.name) + ' · DPR max ' + ren.q.dprMax + (ktx ? ' · KTX2' : ' · WebP')
     dlog('préréglage ' + diag.preset)
     await ren.load(game, track, bootProgress)
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
     fview = new FieldView(ren)
+    if (ren.track) { bindPit(ren.track); fview.adoptScene(ren.track) }
     screens = new PitScreens()
     engineer = new Engineer()
     career = loadCareer()

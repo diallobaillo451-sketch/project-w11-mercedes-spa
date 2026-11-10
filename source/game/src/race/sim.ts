@@ -49,7 +49,7 @@ export interface Racer {
   wx: number; wy: number; wz: number; hx: number; hz: number; nx: number; ny: number; nz: number; steer: number; spin: number
   /** orientation du corps rigide (physique hybride) ; null = pose piste + couche visuelle */
   q: number[] | null
-  pitPhase: string; sepT: number
+  pitPhase: string; sepT: number; pitLat: number
   inPit: boolean
 }
 export interface Msg { t: number; text: string; kind: 'rc' | 'info' | 'pen' | 'flag' | 'team' }
@@ -91,7 +91,7 @@ export class RaceSim {
     this.leaderT = new Float64Array(Math.ceil((this.laps + 3) * this.L / this.binW) + 8).fill(NaN)
     this.buildProfiles()
     this.crit = this.buildCrit()
-    if (this.pit) { const P = this.pit, c = new Float32Array(P.n); for (let k = 1; k < P.n; k++) c[k] = c[k - 1] + Math.hypot(P.x[k] - P.x[k - 1], P.z[k] - P.z[k - 1]); this.pitCum = c; this.pitLen = c[P.n - 1]; this.pitEntryS = P.s[0] }
+    if (this.pit) this.rebindPit()
     const order = o.grid ?? this.defaultOrder(o.player)
     const ids = [o.player, ...DRIVERS.map(d => d.id).filter(id => id !== o.player)]
     for (const id of ids) this.cars.push(this.makeRacer(id, id === o.player))
@@ -119,7 +119,7 @@ export class RaceSim {
       pitP: 0, pitT: 0, pitWhy: '', wantPit: null, plan: [], boxP: 0, stops: 0,
       pen: 0, dtPend: 0, sgPend: 0, penServed: 0, warnings: 0, bw: false, gridPen: 0,
       gap: 0, int: 0, pos: 0, finished: false, finishT: 0, blueT: 0, slot: 0, runs: [], runIdx: 0, pushLeft: 0,
-      wx: 0, wy: 0, wz: 0, hx: 0, hz: -1, nx: 0, ny: 1, nz: 0, steer: 0, spin: 0, q: null, pitPhase: '', sepT: 0, inPit: false }
+      wx: 0, wy: 0, wz: 0, hx: 0, hz: -1, nx: 0, ny: 1, nz: 0, steer: 0, spin: 0, q: null, pitPhase: '', sepT: 0, pitLat: 0, inPit: false }
   }
   /** temps de qualif visé (s) : réel Spa 2020 rapporté à la pole 2020 du circuit */
   targetQ(id: string) { const pole = POLE_2020[this.circuit] ?? 101.252; return pole * (SPA_Q[id] ?? 104) / SPA_Q.ham }
@@ -183,7 +183,8 @@ export class RaceSim {
   // ───────────── pose monde (rendu, contacts avec le joueur)
   pose(r: Racer) {
     if (r.mode === 'pit' && this.pit && this.pitCum) { const P = this.pit, k = this.pitIdx(r.pitP), k1 = Math.min(P.n - 1, k + 1), f = Math.max(0, Math.min(1, (r.pitP - this.pitCum[k]) / Math.max(0.01, this.pitCum[k1] - this.pitCum[k])))
-      r.wx = P.x[k] + (P.x[k1] - P.x[k]) * f; r.wz = P.z[k] + (P.z[k1] - P.z[k]) * f; const hx = P.x[k1] - P.x[k], hz = P.z[k1] - P.z[k], n = Math.hypot(hx, hz) || 1; r.hx = hx / n; r.hz = hz / n }
+      r.wx = P.x[k] + (P.x[k1] - P.x[k]) * f; r.wz = P.z[k] + (P.z[k1] - P.z[k]) * f; const hx = P.x[k1] - P.x[k], hz = P.z[k1] - P.z[k], n = Math.hypot(hx, hz) || 1; r.hx = hx / n; r.hz = hz / n
+      if (r.pitLat) { const c0 = this.track.centre(P.s[k]); const gx = r.wx - c0.x, gz = r.wz - c0.z, gl = Math.hypot(gx, gz) || 1; r.wx += gx / gl * r.pitLat; r.wz += gz / gl * r.pitLat } }
     else { const c = this.track.centre(r.s), rx = -c.tz, rz = c.tx; r.wx = c.x + rx * r.d; r.wz = c.z + rz * r.d
       const a = Math.atan2(r.lat, Math.max(3, r.v)), ca = Math.cos(a), sa = Math.sin(a); r.hx = c.tx * ca + rx * sa; r.hz = c.tz * ca + rz * sa
       if (r.mode === 'spun') { const sp = r.spin; r.hx = c.tx * Math.cos(sp) + rx * Math.sin(sp); r.hz = c.tz * Math.cos(sp) + rz * Math.sin(sp) } }
@@ -191,6 +192,13 @@ export class RaceSim {
     if (Math.abs(g.d) < 60 && r.mode !== 'pit') r.idx = g.i
   }
   pitIdx(p: number) { const c = this.pitCum!; let lo = 0, hi = c.length - 1; while (lo < hi - 1) { const m = (lo + hi) >> 1; if (c[m] <= p) lo = m; else hi = m } return lo }
+  /** après applyAnchors : recalcule les abscisses du chemin */
+  rebindPit() {
+    const P = this.pit; if (!P) return
+    this.pitCum = P.cum
+    this.pitLen = P.cum[P.n - 1]
+    this.pitEntryS = P.s[P.iEntry] || P.s[0]
+  }
   // ───────────── boucle
   update(dt: number) {
     let rest = Math.min(dt, 0.1)
@@ -442,30 +450,42 @@ export class RaceSim {
     const start = a + Math.max(20, (b - a - span) / 2)
     return Math.min(b - 15, start + (g - 0.5) * 6.4)
   }
-  enterPit(r: Racer) { r.prevMode = r.mode === 'in' || this.kind !== 'race' ? 'garage' : r.mode; r.mode = 'pit'; r.pitP = 0; r.pitT = 0; r.boxP = this.boxOf(r.team); r.off = null; r.attackT = 0
+  enterPit(r: Racer) { r.prevMode = r.mode === 'in' || this.kind !== 'race' ? 'garage' : r.mode; r.mode = 'pit'; r.pitP = 0; r.pitT = 0; r.boxP = this.boxOf(r.team); r.off = null; r.attackT = 0; r.pitLat = 0
     this.ctrl.pitEvent(r, 'in') }
-  /** départ du garage (essais/qualif) : la voiture apparaît à son box et suit la voie jusqu'à la sortie */
-  leaveGarage(r: Racer) { r.mode = 'pit'; r.prevMode = 'out'; r.pitP = this.boxOf(r.team); r.boxP = -1; r.pitT = -1; r.v = 0; r.tyre.temp = 0.72; r.tyre.age = 0; r.tyre.flat = 0; r.lapValid = false
+  /** départ du garage (essais/qualif) : la voiture apparaît à son box, en voie de travail, et rejoint la voie rapide */
+  leaveGarage(r: Racer) { r.mode = 'pit'; r.prevMode = 'out'; r.pitP = this.boxOf(r.team); r.boxP = -1; r.pitT = -1; r.v = 0; r.pitLat = 2.7; r.tyre.temp = 0.72; r.tyre.age = 0; r.tyre.flat = 0; r.lapValid = false
     if (!r.tyre.used.includes(r.tyre.c)) r.tyre.used.push(r.tyre.c) }
   private stepPit(r: Racer, dt: number) {
     const P = this.pit!, c = this.pitCum!, inLim = r.pitP >= c[P.iIn] - 2 && r.pitP <= c[P.iOut]
     let vt = inLim ? PIT_LIMIT - 0.3 : Math.min(55, r.prof.v[this.idxOf(P.s[this.pitIdx(r.pitP)])] * 0.8)
     if (r.pitP < c[P.iIn]) vt = Math.min(vt, Math.sqrt(PIT_LIMIT ** 2 + 2 * 14 * Math.max(0, c[P.iIn] - 4 - r.pitP)))
-    // arrêt au box
-    if (r.boxP > 0) { const togo = r.boxP - r.pitP; vt = Math.min(vt, Math.sqrt(2 * 9 * Math.max(0, togo))); if (togo < 0.4) { r.v = 0; r.pitP = r.boxP; this.serviceTick(r, dt); this.posePit(r); return } }
+    // voie de travail seulement pour s'arrêter au box ; drive-through et file = voie rapide
+    const wantWork = r.boxP > 0 && r.boxP - r.pitP < 48 && r.boxP - r.pitP > -2
+    const latT = wantWork ? 2.7 : 0
+    r.pitLat += (latT - r.pitLat) * Math.min(1, dt * 1.6)
+    // arrêt exactement sur la case (abscisse du chemin, voie de travail)
+    if (r.boxP > 0) { const togo = r.boxP - r.pitP; vt = Math.min(vt, Math.sqrt(2 * 9 * Math.max(0, togo))); if (togo < 0.35) { r.v = 0; r.pitP = r.boxP; r.pitLat = 2.7; this.serviceTick(r, dt); this.posePit(r); return } }
     // file / voiture devant dans la voie
     for (const o of this.cars) if (o !== r && o.mode === 'pit') { const g = o.pitP - r.pitP; if (g > 0 && g < 14) vt = Math.min(vt, Math.max(0, o.v + (g - 8) * 0.8)) }
-    // feu de sortie rouge : on attend à la ligne
-    const exitP = c[P.iOut] + 5
-    if (!this.ctrl.pitExitGreen() && r.pitP < exitP) vt = Math.min(vt, Math.sqrt(2 * 8 * Math.max(0, exitP - r.pitP - 1)))
+    // feu de sortie : on s'arrête sur la ligne tant qu'il est rouge (drapeau rouge compris)
+    const exitP = c[P.iExit]
+    if (!this.ctrl.pitExitGreen() && r.pitP < exitP) vt = Math.min(vt, Math.sqrt(2 * 8 * Math.max(0, exitP - r.pitP - 1.2)))
     // drapeau rouge : file dans la voie rapide à la sortie, dans l'ordre
-    if (this.ctrl.red) { const q = this.ctrl.redSlot(r); if (q !== null) { const tgt = exitP - 8 - q * 8; vt = Math.min(vt, Math.sqrt(2 * 6 * Math.max(0, tgt - r.pitP))); if (tgt - r.pitP < 0.5) { r.v = 0; r.mode = 'redq'; return } } }
+    if (this.ctrl.red) { const q = this.ctrl.redSlot(r); if (q !== null) { const tgt = exitP - 8 - q * 8; vt = Math.min(vt, Math.sqrt(2 * 6 * Math.max(0, tgt - r.pitP))); if (tgt - r.pitP < 0.5) { r.v = 0; r.mode = 'redq'; r.pitLat = 0; return } } }
     r.v = Math.max(0, r.v + Math.max(-30 * dt, Math.min(10 * dt, vt - r.v)))
     const before = r.pitP; r.pitP += r.v * dt
-    // vitesse dans la voie (pour les commissaires)
     if (inLim && r.v > PIT_LIMIT + 0.4) this.ctrl.pitSpeeding(r, r.v)
-    if (before < exitP && r.pitP >= exitP) this.ctrl.pitEvent(r, 'out')
-    if (r.pitP >= this.pitLen) { r.mode = r.prevMode === 'garage' ? 'out' : r.prevMode; r.s = this.wrapS(P.s[P.n - 1]); r.d = P.d[P.n - 1]; r.idx = this.idxOf(r.s); r.lat = 0; r.off = P.d[P.n - 1] }
+    if (before < exitP && r.pitP >= exitP) {
+      if (!this.ctrl.pitExitGreen()) this.ctrl.pitLine(r, 'sortie')
+      this.ctrl.pitEvent(r, 'out')
+    }
+    // quitter le chemin avant la ligne de sortie = on coupe la ligne
+    if (r.pitP < exitP - 8 && Math.abs(r.pitLat) > 8) this.ctrl.pitLine(r, 'sortie')
+    if (r.pitP >= this.pitLen) {
+      r.mode = r.prevMode === 'garage' ? 'out' : r.prevMode
+      const k = P.n - 1
+      r.s = this.wrapS(P.s[k]); r.d = P.d[k]; r.idx = this.idxOf(r.s); r.lat = 0; r.off = P.d[k]; r.pitLat = 0
+    }
     this.posePit(r)
     if (r.boxP < 0 && r.pitT < 0) r.pitT = 0
   }

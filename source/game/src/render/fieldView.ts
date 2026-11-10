@@ -54,6 +54,25 @@ export class FieldView {
   lamps = new Map<number, Record<string, THREE.Mesh>>()
   anchors: Map<string, Anchor> = new Map()
   private jack0 = new Map<string, number>()
+  private pitLamp: THREE.Mesh | null = null
+  /** feu de sortie si Ty n'a pas posé `pit_exit_light` : rouge tant que la sortie est fermée (drapeau rouge compris) */
+  private paintExitLamp(sim: RaceSim) {
+    const named = this.anchors.get('anchor_pit_exit_light') ?? this.anchors.get('pit_exit_light')
+    if (named) { if (this.pitLamp) this.pitLamp.visible = false; return }
+    const pit = sim.pit; if (!pit) return
+    if (!this.pitLamp) {
+      const m = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, emissive: 0xff2208, emissiveIntensity: 3.2, toneMapped: false })
+      this.pitLamp = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.48, 0.1), m)
+      this.pitLamp.name = 'pit_exit_light_fallback'
+      this.root.add(this.pitLamp)
+    }
+    const L = pit.light
+    this.pitLamp.visible = true
+    this.pitLamp.position.set(L.x, 1.55, L.z)
+    const mt = this.pitLamp.material as THREE.MeshStandardMaterial
+    const green = sim.ctrl.pitExitGreen()
+    mt.emissive.set(green ? 0x20ff60 : 0xff2208)
+  }
   private lampState = new Map<number, string>()
   private protos = new Map<string, { l1: THREE.Object3D; l2: THREE.Object3D }>()
   ready = false
@@ -241,8 +260,9 @@ export class FieldView {
       const key = col + (blink ? 1 : 0)
       if (this.lampState.get(p.n) !== key) { this.lampState.set(p.n, key); this.setLamp(p.n, col, !!col && blink) }
     }
-    paintLight(this.anchors.get('anchor_pit_exit_light')?.node, sim.ctrl.pitExitGreen())
+    paintLight(this.anchors.get('anchor_pit_exit_light')?.node ?? this.anchors.get('pit_exit_light')?.node, sim.ctrl.pitExitGreen())
     paintLight(this.anchors.get('anchor_pit_box_light')?.node, sim.ctrl.boxLight === 'green')
+    this.paintExitLamp(sim)
     // crics : rotation procédurale autour du pivot (clips Blender lus tels quels s'ils existent, jamais une vidéo générée)
     const up = sim.player.pitPhase === 'jack' || sim.player.pitPhase === 'guns' || sim.player.pitPhase === 'off' || sim.player.pitPhase === 'on' || sim.player.pitPhase === 'drop'
     for (const name of ['anchor_jack_front', 'anchor_jack_rear']) {

@@ -164,6 +164,8 @@ export class Renderer {
   composer: EffectComposer | null = null; gtao: GTAOPass | null = null; bloom: UnrealBloomPass | null = null
   car = new THREE.Group(); rig: CarRig | null = null; cams!: CameraRig; fx!: Effects
   track: THREE.Group | null = null
+  /** tuile ajoutée : le jeu y cherche les ancres de la voie des stands */
+  onTile: ((root: THREE.Object3D) => void) | null = null
   tiles: { man: TileManifest; loaded: Set<string>; total: number; bytes: number } | null = null
   fxLevel = 0
   tilesAtStart = 0
@@ -410,6 +412,7 @@ export class Renderer {
     }
     this.swapPlaceholders(root)
     this.track!.add(root)
+    this.onTile?.(root)
     if (lod) this.lodIn.set(t.id, root); else { this.tiles!.loaded.add(t.id); this.tiles!.bytes += t.geoBytes }
     this.lastTile = t.id + (lod ? ' (LOD)' : '')
     if (this.cams) this.memLog('tuile ' + this.lastTile + ' ajoutée')
