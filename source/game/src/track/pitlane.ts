@@ -24,6 +24,9 @@ export class Pitlane {
   workSign = 1
   light: XZ = { x: 0, z: 0 }
   anchored = false
+  /** abscisse (m) du box d'une équipe, si les ancres Spa l'ont donné */
+  boxAt = new Map<string, number>()
+  setTeamBox(team: string, x: number, z: number) { this.boxAt.set(team, this.probe(x, z).p) }
   private last = 0
   constructor(p: PitlaneData, opts: { limitFromS?: number; limitToS?: number; wall?: number } = {}) {
     this.x = Float32Array.from(p.x); this.z = Float32Array.from(p.z); this.d = Float32Array.from(p.d); this.s = Int32Array.from(p.s); this.n = p.x.length

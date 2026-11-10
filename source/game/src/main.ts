@@ -29,6 +29,7 @@ import { applyCarPhysics, CARS2020 } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
+import { loadSpaPits } from './render/pitYard.ts'
 import { readPitAnchors } from './render/anchors.ts'
 import { PitScreens } from './render/pitScreens.ts'
 import { Engineer } from './race/engineer.ts'
@@ -685,6 +686,7 @@ async function main() {
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
     fview = new FieldView(ren)
     if (ren.track) { bindPit(ren.track); fview.adoptScene(ren.track) }
+    void loadSpaPits(game, ren, fview, carOfTeam(driverById(settings.profile.driver).team)).catch(e => dlog('stands : ' + (e as Error).message))
     screens = new PitScreens()
     engineer = new Engineer()
     career = loadCareer()

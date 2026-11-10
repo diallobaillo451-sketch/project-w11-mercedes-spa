@@ -447,6 +447,8 @@ export class RaceSim {
   boxOf(team: string) {
     // 42 garages espacés de 6,4 m (New Bot, mesure sur le modèle) répartis dans la zone limitée ; FIA/F1 en 1-5
     if (!this.pit || !this.pitCum) return 0
+    const pinned = this.pit.boxAt.get(team)
+    if (pinned !== undefined) return pinned
     const a = this.pitCum[this.pit.iIn], b = this.pitCum[this.pit.iOut], g = 6 + GARAGE_ORDER.indexOf(team) * 3 + 1, span = 42 * 6.4
     const start = a + Math.max(20, (b - a - span) / 2)
     return Math.min(b - 15, start + (g - 0.5) * 6.4)
