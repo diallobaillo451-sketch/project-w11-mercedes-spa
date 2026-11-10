@@ -81,11 +81,13 @@ export class FieldView {
     while (i > 1 && Math.abs(pit.d[i]) < 8) i--
     const smp = { h: 0, nx: 0, ny: 1, nz: 0, type: 1, s: 0, d: 0, i: 0 }
     sim.track.sample(pit.x[i], pit.z[i], Math.floor(pit.s[i] / sim.track.ds), smp)
+    const pathH = smp.h
     const c = sim.track.centre(smp.s)
     let dx = pit.x[i] - c.x, dz = pit.z[i] - c.z, len = Math.hypot(dx, dz) || 1
     dx /= len; dz /= len
     const x = pit.x[i] + dx * 3.8, z = pit.z[i] + dz * 3.8
-    const h = sim.track.sample(x, z, smp.i, smp).h
+    sim.track.sample(x, z, smp.i, smp)
+    const h = Math.abs(smp.h - pathH) > 1.5 ? pathH : smp.h
     this.pitGantry.visible = true
     this.pitGantry.position.set(x, h, z)
     this.pitGantry.rotation.y = Math.atan2(-dx, -dz)
@@ -108,7 +110,7 @@ export class FieldView {
       sim.track.sample(x, z, c.i, smp)
       const mat = new THREE.MeshStandardMaterial({ color: 0x101010, emissive: 0x000000, emissiveIntensity: 0, roughness: 0.45, toneMapped: false })
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 1.7, 6), poleM); pole.position.y = 0.85
-      const face = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.4, 0.05), mat); face.position.y = 1.85; face.name = 'marshal_board'
+      const face = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.62, 0.06), mat); face.position.y = 2.05; face.name = 'marshal_board'
       const g = new THREE.Group(); g.add(pole, face); g.position.set(x, smp.h, z); g.lookAt(c.x, smp.h + 1.6, c.z)
       this.root.add(g); this.boards.push({ n: p.n, mat })
     }
