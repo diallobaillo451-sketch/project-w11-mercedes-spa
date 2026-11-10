@@ -10,6 +10,7 @@ import { Renderer } from './render/renderer.ts'
 import { CAM_LABEL, CAM_ORDER, type CamMode } from './render/cameras.ts'
 import { Input } from './controls/input.ts'
 import { AudioEngine, type AudioFrame } from './audio/audio.ts'
+import { MenuMusic } from './audio/menuMusic.ts'
 import { AdaptiveResolution } from './quality/quality.ts'
 import { loadSettings, saveSettings } from './ui/settings.ts'
 import { aboutPanel, optionsPanel, setupPanel } from './ui/panels.ts'
@@ -42,6 +43,7 @@ const settings = loadSettings()
 let game: Game, ren: Renderer
 const input = new Input(settings.input)
 const audio = new AudioEngine()
+const menuMusic = new MenuMusic()
 const adapt = new AdaptiveResolution()
 let hud: Hud
 /** lot 8 C : plateau IA (rendu), tour de chronométrage, postes des commissaires (marshals.json de New Bot) */
@@ -93,6 +95,8 @@ function applySettings() {
   if (!settings.adaptive && adapt.step !== 0) { adapt.reset(); ren.setScale(1); ren.setFx(0) }
   audio.setVolume(settings.volume)
   radio.enabled = settings.radio; radio.setVolume(settings.radioVol)
+  menuMusic.setEnabled(settings.music)
+  menuMusic.setVolume(settings.musicVol)
   saveSettings(settings)
 }
 const CAM_SHORT: Record<CamMode, string> = { chase: 'Poursuite', close: 'Proche', tcam: 'T-cam', cockpit: 'Cockpit', tv: 'TV', free: 'Libre' }
@@ -168,6 +172,7 @@ function setScreen(s: Screen) {
   const studio = s === 'menu' || s === 'garage' || s === 'results'
   if (studio && !ren.show.active) ren.enterShowroom(); else if (!studio && s !== 'boot' && ren.show.active) ren.exitShowroom()
   if (s !== 'boot') audio.setMuted(studio || settings.muted)
+  menuMusic.setInMenu(studio)
   show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause'); show('garage', s === 'garage'); show('results', s === 'results')
   show('lights', s === 'drive' && !!run && run.kind !== 'legacy' && sessionKindOf(run) === 'race' && !run.lightsDone && (!game.field || game.field.ctrl.phase === 'lights'))
   const wkDrive = !!run && run.kind === 'weekend' && run.id !== 'RACE'
@@ -305,6 +310,7 @@ function frame(now: number) {
   // tests : pas d'image imposé (rendu logiciel lent → simulation en temps « image par image »)
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
+  menuMusic.update(dt)
   if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); return }
   const st = input.poll(dt, settings.setup.autoGear)
   const c = game.car
@@ -721,6 +727,7 @@ async function main() {
       // synchrones dans le toucher). Le menu s'affiche tout de suite ; le son arrive quand il est décodé.
       dlog('toucher pour démarrer')
       void audio.init().then(() => { audio.setVolume(settings.volume); dlog('audio prêt'); if (audio.ctx && audio.radioIn) { radio.attach(audio.ctx, audio.radioIn); radio.setVolume(settings.radioVol) } }).catch(e => derr(e, 'audio'))
+      menuMusic.arm()
       const gp = settings.input.steerMode === 'gyro' ? input.enableGyro() : null
       setScreen('menu')
       // iPhone : démarrage léger, puis montée en qualité si aucune perte de contexte après 12 s
