@@ -1,8 +1,7 @@
-# GitLab Pages : publie public/ (build Vite, base './'). Fichiers stockés EN BASE64 ; gros fichiers découpés dans parts/.
-# La CI décode, réassemble, puis vérifie TOUT par SHA-256 (SHA256SUMS).
-pages:
-  stage: deploy
-  image: alpine:3.20
+# GitLab Pages : publie public/. Assets lourds EN BASE64 (public/, parts/), vérifiés par SHA-256.
+# Le code (index.html, JS, CSS, sw.js) est compilé ICI depuis source/game (Vite) puis superposé à public/.
+.assemble:
+  image: node:22
   script:
     - find public parts -type f | while read f; do base64 -d "$f" > "$f.bin" && mv "$f.bin" "$f"; done
     - mkdir -p "$(dirname public/assets/spa/t04.bin)" && cat parts/assets__spa__t04.bin.part00 parts/assets__spa__t04.bin.part01 > public/assets/spa/t04.bin
@@ -12,9 +11,34 @@ pages:
     - mkdir -p "$(dirname public/assets/w11_lh2020_high_ktx2.glb)" && cat parts/assets__w11_lh2020_high_ktx2.glb.part00 parts/assets__w11_lh2020_high_ktx2.glb.part01 parts/assets__w11_lh2020_high_ktx2.glb.part02 parts/assets__w11_lh2020_high_ktx2.glb.part03 > public/assets/w11_lh2020_high_ktx2.glb
     - mkdir -p "$(dirname public/assets/spa_pits/garage_player.glb)" && cat parts/assets__spa_pits__garage_player.glb.part00 parts/assets__spa_pits__garage_player.glb.part01 parts/assets__spa_pits__garage_player.glb.part02 > public/assets/spa_pits/garage_player.glb
     - sha256sum -c SHA256SUMS
+    - cd source/game && npm ci && npx vite build && cd ../..
+    - rm -f public/assets/index-*.js public/assets/index-*.css
+    - cp -r source/game/dist/. public/
     - du -sh public
+
+pages:
+  extends: .assemble
+  stage: deploy
   artifacts:
     paths:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Branches : même assemblage, rien n'est publié.
+assemble_check:
+  extends: .assemble
+  stage: test
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+typecheck:
+  stage: test
+  image: node:22
+  script:
+    - cd source/game
+    - npm ci
+    - npx tsc --noEmit
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH

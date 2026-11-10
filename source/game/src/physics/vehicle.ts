@@ -144,6 +144,34 @@ export class Vehicle {
     this.gear = speed > 1 ? Math.max(1, GEAR_RATIOS.findIndex(gr => speed / W11.wheelRadiusR * gr * 60 / (2 * Math.PI) < 11500) + 1) : 1
     this.scrape = 0; this.impact = 0; this.flipped = 0; this.bInit = false
   }
+  /** Place la voiture en (x, z) avec le cap (hx, hz) : garage, voie des stands. Même pose que placeAt (repère aligné sur le sol). */
+  placeAtXZ(x: number, z: number, hx: number, hz: number, speed = 0) {
+    const smp = this.surface.sample(x, z, -1, tmp)
+    this.hint = smp.i
+    const n = [smp.nx, smp.ny, smp.nz]
+    let f = [hx, 0, hz]; const fd = f[0] * n[0] + f[2] * n[2]
+    f = [f[0] - fd * n[0], -fd * n[1], f[2] - fd * n[2]]; const fl = Math.hypot(f[0], f[1], f[2]) || 1; f = f.map(v => v / fl)
+    const back = [-f[0], -f[1], -f[2]]
+    const right = [n[1] * back[2] - n[2] * back[1], n[2] * back[0] - n[0] * back[2], n[0] * back[1] - n[1] * back[0]]
+    this.q = quatFromBasis(right, n, back)
+    this.updateR()
+    const R = this.R
+    this.pos = [x + R[3] * this.cg[1] + R[6] * this.cg[2], smp.h + R[4] * this.cg[1] + R[7] * this.cg[2], z + R[5] * this.cg[1] + R[8] * this.cg[2]]
+    const hw = [0, 0, 0], sm = newSample()
+    for (let it = 0; it < 4; it++) {
+      let sum = 0
+      for (const w of this.wheels) {
+        this.toWorld(w.hub[0], w.hub[1], w.hub[2], hw)
+        const g = this.surface.sample(this.pos[0] + hw[0], this.pos[2] + hw[2], this.hint, sm)
+        sum += (g.h + w.r / Math.max(0.5, g.ny) - (this.pos[1] + hw[1])) / Math.max(0.2, R[4])
+      }
+      const m = sum / 4
+      this.pos[0] += R[3] * m; this.pos[1] += R[4] * m; this.pos[2] += R[5] * m
+    }
+    this.vel = [f[0] * speed, f[1] * speed, f[2] * speed]; this.wb = [0, 0, 0]
+    for (const w of this.wheels) { w.omega = speed / w.r; w.c = 0; w.cPrev = 0; w.cdot = 0; w.alpha = 0; w.kappa = 0; w.fx = 0; w.fy = 0 }
+    this.scrape = 0; this.impact = 0; this.flipped = 0; this.bInit = false; this.offTrack = false
+  }
   updateR() {
     const [x, y, z, w] = this.q, R = this.R
     R[0] = 1 - 2 * (y * y + z * z); R[1] = 2 * (x * y + z * w); R[2] = 2 * (x * z - y * w)

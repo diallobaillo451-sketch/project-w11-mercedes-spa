@@ -16,7 +16,9 @@ export const DT = 1 / 240
 const MAX_STEPS = 12 // au-delà : ralenti plutôt que spirale de la mort
 
 export interface Pose { pos: number[]; q: number[] }
-export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean; pitEntry?: boolean; pitExit?: boolean; pitSpeeding?: number; repair?: boolean; pitStop?: boolean }
+/** garage du joueur (monde) : repère de façade (x, y, z, yaw), place de la voiture 1, case d'arrêt, sens de la voie (x, z), caméra intérieure */
+export interface GarageSpot { x: number; y: number; z: number; yaw: number; park: number[]; stop: number[]; lane: number[]; cam: number[] }
+export interface GameEvents { lap?: { time: number; valid: boolean; best: boolean }; sector?: number; invalid?: boolean; reset?: boolean; pitEntry?: boolean; pitExit?: boolean; pitSpeeding?: number; repair?: boolean; pitStop?: boolean; garageOut?: boolean }
 
 export class Game {
   track: TrackSurface; line: RacingLine; car: Vehicle; session: Session
@@ -69,6 +71,55 @@ export class Game {
     this.field?.rebindPit()
     return true
   }
+  /** garage du joueur, posé par pitYard (null : pas de garage 3D) ; sortie du garage = déplacement guidé jusqu'à la case d'arrêt */
+  garage: GarageSpot | null = null
+  garageExit: { pts: number[][]; cum: number[]; len: number; s: number; v: number; i: number } | null = null
+  private gLocal(g: GarageSpot, p: number[]): [number, number] { const sn = Math.sin(g.yaw), cs = Math.cos(g.yaw), dx = p[0] - g.x, dz = p[2] - g.z; return [dx * cs - dz * sn, dx * sn + dz * cs] }
+  private gWorld(g: GarageSpot, lx: number, lz: number): [number, number] { const sn = Math.sin(g.yaw), cs = Math.cos(g.yaw); return [g.x + lx * cs + lz * sn, g.z - lx * sn + lz * cs] }
+  /** pose la voiture dans son garage, nez vers la voie des stands */
+  parkInGarage() {
+    const g = this.garage; if (!g) return false
+    this.garageExit = null
+    this.car.placeAtXZ(g.park[0], g.park[2], Math.sin(g.yaw), Math.cos(g.yaw), 0)
+    this.car.speed = 0; this.car.rpmVis = 4000
+    this.snapshot()
+    return true
+  }
+  /** la voiture sort du garage toute seule (tout droit, virage vers le sens de la voie) et le joueur reprend la main sur la case d'arrêt */
+  beginGarageExit() {
+    const g = this.garage; if (!g || !this.parkInGarage()) return false
+    const [px, pz] = this.gLocal(g, g.park), [sx, sz] = this.gLocal(g, g.stop)
+    const ldx = (g.lane[0] * Math.cos(g.yaw) - g.lane[1] * Math.sin(g.yaw)) >= 0 ? 1 : -1
+    const R = Math.max(2.8, Math.min(4.5, sz - 1.4)), z0 = sz - R
+    const loc: number[][] = []
+    for (let z = pz; z < z0; z += 0.5) loc.push([px, z, 0, 1])
+    for (let a = 0; a <= 20; a++) { const th = a / 20 * Math.PI / 2; loc.push([px + ldx * R * (1 - Math.cos(th)), z0 + R * Math.sin(th), ldx * Math.sin(th), Math.cos(th)]) }
+    for (let x = px + ldx * R + ldx * 0.5; (sx - x) * ldx > 0; x += ldx * 0.5) loc.push([x, sz, ldx, 0])
+    const sn = Math.sin(g.yaw), cs = Math.cos(g.yaw)
+    const pts = loc.map(p => { const w = this.gWorld(g, p[0], p[1]); return [w[0], w[1], p[2] * cs + p[3] * sn, -p[2] * sn + p[3] * cs] })
+    const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
+    this.garageExit = { pts, cum, len: cum[cum.length - 1], s: 0, v: 0.4, i: 0 }
+    this.pitCommit = false; this.pitServed = false; this.holdT = 0; this.pitStopT = 0; this.pitShow.lift = 0; this.inPit = false
+    return true
+  }
+  private stepGarageExit() {
+    const E = this.garageExit!, c = this.car
+    E.v = Math.min(6.5, Math.max(0.4, Math.sqrt(2 * 2.4 * E.s)))
+    E.s += E.v * DT
+    if (E.s >= E.len) {
+      const l = E.pts[E.pts.length - 1]
+      c.placeAtXZ(l[0], l[1], l[2], l[3], E.v); c.speed = E.v
+      this.garageExit = null; this.events.garageOut = true
+      if (this.pit) { const q = this.pit.probe(l[0], l[1]); this.pitCommit = true; this.pitNear = true; this.pitMark = q.p }
+      return
+    }
+    while (E.i < E.pts.length - 2 && E.cum[E.i + 1] <= E.s) E.i++
+    const a = E.pts[E.i], b = E.pts[E.i + 1], t = (E.s - E.cum[E.i]) / Math.max(1e-6, E.cum[E.i + 1] - E.cum[E.i])
+    let hx = a[2] + (b[2] - a[2]) * t, hz = a[3] + (b[3] - a[3]) * t; const hl = Math.hypot(hx, hz) || 1; hx /= hl; hz /= hl
+    c.placeAtXZ(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, hx, hz, E.v)
+    c.speed = E.v
+    for (const w of c.wheels) w.angle += w.omega * DT
+  }
   /** météo vers laquelle le film d'eau converge (carrière, averse) ; null = figée */
   weatherTarget: Weather | null = null
   startField(o: { kind: SessionKind; laps: number; player: string; grid?: string[]; sessionLen?: number; seed?: number; posts?: unknown; exclude?: string[] }) {
@@ -92,7 +143,7 @@ export class Game {
   /** Départ lancé (contre-la-montre : tour de sortie court avant la ligne) ou arrêté aux stands. */
   sessionId = 0
   start(kind: SessionKind = this.session.kind) {
-    this.sessionId++
+    this.sessionId++; this.garageExit = null
     this.session = new Session(this.track.length, kind)
     const L = this.track.length
     if (kind === 'timetrial') { const s0 = L - 200; this.car.placeAt(s0, this.lineOffset(s0), 55) }
@@ -127,6 +178,7 @@ export class Game {
     let n = 0
     while (this.acc >= DT && n < MAX_STEPS) {
       this.snapshot()
+      if (this.garageExit) { this.stepGarageExit(); this.time += DT; this.acc -= DT; n++; continue }
       const ctl = this.autopilot ? this.auto.control(this.car) : this.ctl
       if (this.inPit) ctl.pitLim = true
       ctl.noReverse = false
@@ -165,7 +217,7 @@ export class Game {
       this.env.update(this.envAcc, this.session.timing.best?.time ?? 106); this.envAcc = 0
     }
     this.updateDebris(Math.min(realDt, 0.05))
-    this.updatePit(realDt)
+    if (!this.garageExit) this.updatePit(realDt)
     const c0 = this.car, ses = this.session
     if (ses.flag !== this.lastFlag) { this.lastFlag = ses.flag; this.bus.emit({ t: 'flag', car: 0, flag: ses.flag }) }
     if (this.maxImpact > 0.3) this.bus.emit({ t: 'impact', car: 0, k: this.maxImpact, kind: c0.hitKind })
@@ -177,6 +229,7 @@ export class Game {
     // voiture retournée ou immobilisée hors piste plus de 3 s → remise en piste automatique
     const c = this.car
     if (this.spectate) { this.spectateT += realDt; if (this.spectateT > 14) this.spectateHide = true; this.stuckT = 0 }
+    else if (this.garageExit) this.stuckT = 0
     else if (this.raceOver()) this.enterSpectate()
     else if (c.flipped > 1 || (c.offTrack && c.speed < 1 && this.ctl.throttle > 0.5)) this.stuckT += realDt
     else this.stuckT = 0

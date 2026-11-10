@@ -3,14 +3,16 @@
 import * as THREE from 'three'
 import type { TrackSurface } from '../track/surface.ts'
 
-export type CamMode = 'cockpit' | 'tcam' | 'close' | 'chase' | 'tv' | 'free'
+export type CamMode = 'cockpit' | 'tcam' | 'close' | 'chase' | 'tv' | 'free' | 'garage'
 export const CAM_ORDER: CamMode[] = ['chase', 'close', 'tcam', 'cockpit', 'tv', 'free']
-export const CAM_LABEL: Record<CamMode, string> = { cockpit: 'Cockpit', tcam: 'T-cam', close: 'Poursuite proche', chase: 'Poursuite', tv: 'TV', free: 'Libre' }
+export const CAM_LABEL: Record<CamMode, string> = { cockpit: 'Cockpit', tcam: 'T-cam', close: 'Poursuite proche', chase: 'Poursuite', tv: 'TV', free: 'Libre', garage: 'Garage' }
 
 export class CameraRig {
   cam: THREE.PerspectiveCamera; mode: CamMode = 'chase'
   orbitYaw = 0.6; orbitPitch = 0.25; orbitDist = 7
   shake = 0
+  /** caméra à l'intérieur du garage du joueur (monde), posée par pitYard */
+  gPos = new THREE.Vector3()
   private pos = new THREE.Vector3(); private look = new THREE.Vector3(); private first = true
   private tmp = new THREE.Vector3(); private tmp2 = new THREE.Vector3(); private m = new THREE.Matrix4()
   private tvPoints: THREE.Vector3[] = []; private tvIdx = -1
@@ -84,6 +86,14 @@ export class CameraRig {
         this.look.lerp(car.position, this.first ? 1 : k)
         c.lookAt(this.look)
         fov = THREE.MathUtils.clamp(2 * Math.atan(9 / Math.max(1, Math.sqrt(bd))) * 57.3, 6, 55)
+        break
+      }
+      case 'garage': {
+        this.tmp2.copy(car.position); this.tmp2.y += 0.6
+        this.look.lerp(this.tmp2, this.first ? 1 : 1 - Math.exp(-dt * 5))
+        c.position.copy(this.gPos)
+        c.lookAt(this.look)
+        fov = 50
         break
       }
       case 'free': {
