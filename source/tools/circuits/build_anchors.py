@@ -168,6 +168,45 @@ def main():
     add(A, 'anchor_pit_entry', s=pl.get('entry_s'), note=pl.get('note'))
     add(A, 'anchor_pit_exit', s=pl.get('exit_s'))
 
+    # Short aliases required for game-code pit-lane driving (do not rename the anchor_* keys).
+    def alias(short, long, **extra):
+        src = dict(A.get(long) or {})
+        src.update(extra)
+        src['alias_of'] = long
+        add(A, short, **{k: v for k, v in src.items() if k != 'name'})
+
+    alias('pit_entry', 'anchor_pit_entry')
+    alias('pit_exit', 'anchor_pit_exit')
+    alias('pit_exit_light', 'anchor_pit_exit_light')
+    # speed-limit lines: use explicit keys if measured, else same s as entry/exit as a placeholder only when provided
+    if pl.get('speed_start_s') is not None or pl.get('entry_s') is not None:
+        add(A, 'pit_speed_start', s=pl.get('speed_start_s', pl.get('entry_s')),
+            alias_of=None, note='ligne de début de limitation 80 km/h ; coincidente avec pit_entry si non mesurée séparément')
+    if pl.get('speed_end_s') is not None or pl.get('exit_s') is not None:
+        add(A, 'pit_speed_end', s=pl.get('speed_end_s', pl.get('exit_s')),
+            note='ligne de fin de limitation 80 km/h ; coincidente avec pit_exit si non mesurée séparément')
+
+    # pitlane_path: ordered samples for the game to drive cars (width, lane offsets, team stops)
+    points = pl.get('points_xyzs') or pl.get('points') or []
+    team_stops = []
+    for g in pits.get('garages') or []:
+        team = g.get('team')
+        stop = (g.get('pit_stop') or {})
+        if team and stop:
+            team_stops.append({'team': team, 'pos': stop.get('pos'), 'heading': stop.get('heading'),
+                               'anchor': f'anchor_pitbox_{team}'})
+    anchors['pitlane_path'] = {
+        'speed_limit_kmh': pl.get('speedLimitKmh') or 80,
+        'entry_s': pl.get('entry_s'),
+        'exit_s': pl.get('exit_s'),
+        'width_m': pl.get('width_m'),
+        'fast_lane_offset_m': pl.get('fast_lane_offset_m'),
+        'working_lane_offset_m': pl.get('working_lane_offset_m'),
+        'points': points,
+        'team_box_stops': team_stops,
+        'note': 'points ordonnés le long de la voie (xyz + s si disponibles). Offsets : voie rapide / voie de travail, d>0 = droite du sens de circulation dans la voie.',
+    }
+
     # --- grid 1..20 ---
     grid = (meta.get('grid') or {})
     slots = grid.get('slots') if isinstance(grid, dict) else grid
