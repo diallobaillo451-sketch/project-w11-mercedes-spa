@@ -1,3 +1,27 @@
+# Git LFS for new lot-1 assets on ty/lot1-circuits only.
+# Do not use global *.webp/*.ktx2/*.bin/*.glb — that would rewrite Spa / sky / detail already on main.
+shared/assets/kit_pieces/**/*.glb filter=lfs diff=lfs merge=lfs -text
+shared/assets/kit_pieces/**/*.ktx2 filter=lfs diff=lfs merge=lfs -text
+shared/assets/kit_pieces/**/*.webp filter=lfs diff=lfs merge=lfs -text
+shared/assets/kit_pieces/**/*.bin filter=lfs diff=lfs merge=lfs -text
+public/assets/sky/sky_night_*.webp filter=lfs diff=lfs merge=lfs -text
+public/assets/sky/sky_night_*.ktx2 filter=lfs diff=lfs merge=lfs -text
+shared/assets/imola/**/*.glb filter=lfs diff=lfs merge=lfs -text
+shared/assets/imola/**/*.ktx2 filter=lfs diff=lfs merge=lfs -text
+shared/assets/imola/**/*.webp filter=lfs diff=lfs merge=lfs -text
+shared/assets/imola/**/*.bin filter=lfs diff=lfs merge=lfs -text
+shared/incoming/circuits/**/*.glb filter=lfs diff=lfs merge=lfs -text
+# Regenerated lot-1 circuit folders (new files only; do not convert the incomplete newbot-shared dump in place)
+shared/assets/bahrain/track/**/*.bin filter=lfs diff=lfs merge=lfs -text
+shared/assets/bahrain/night/**/*.glb filter=lfs diff=lfs merge=lfs -text
+shared/assets/bahrain/night/**/*.ktx2 filter=lfs diff=lfs merge=lfs -text
+shared/assets/bahrain/night/**/*.webp filter=lfs diff=lfs merge=lfs -text
+shared/assets/monza_2020/pits/**/*.glb filter=lfs diff=lfs merge=lfs -text
+shared/assets/monza_2020/pits/**/*.ktx2 filter=lfs diff=lfs merge=lfs -text
+shared/assets/imola/pits/**/*.glb filter=lfs diff=lfs merge=lfs -text
+shared/assets/imola/pits/**/*.ktx2 filter=lfs diff=lfs merge=lfs -text
+shared/assets/bahrain/pits/**/*.glb filter=lfs diff=lfs merge=lfs -text
+shared/assets/bahrain/pits/**/*.ktx2 filter=lfs diff=lfs merge=lfs -text
 public/assets/sky/sky_night_2k.webp !text !filter !merge !diff
 public/assets/sky/sky_night_4k.ktx2 !text !filter !merge !diff
 public/assets/sky/sky_night_4k.webp !text !filter !merge !diff
