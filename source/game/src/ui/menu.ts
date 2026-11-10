@@ -3,6 +3,7 @@
 import { CARS, CIRCUITS, DRIVERS, TEAMS, driverById, teamAccent, carOfTeam } from '../data/drivers.ts'
 import { BACK, CHEV, alertBox, ctl, ctlCol, footnote, fmtTime, group, h, haptic, header, row, seg, stepper, toggle } from './kit.ts'
 import { REAL_MIN, WK_LABEL, WK_SHORT, type Weather } from '../core/weekend.ts'
+import { loadCareer, playerPos, table, careerCalendar } from '../core/career.ts'
 import type { ShowShot } from '../render/showroom.ts'
 
 export interface Profile {
@@ -222,6 +223,18 @@ export class Menu {
           row({ title: 'État', value: H.careerLabel() ?? 'Pas commencée' }),
         ))
         el.append(footnote('Points 2020 : 25-18-15-12-10-8-6-4-2-1 et 1 point du meilleur tour s’il est dans les 10. Spa se court vraiment. Les autres manches du calendrier disponible sont simulées tant que leur piste n’est pas livrée. Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer ne sont pas au calendrier.'))
+        const saved = loadCareer()
+        if (saved) {
+          const pilots = table(saved.points).slice(0, 8)
+          const teams = table(saved.constructors).slice(0, 5)
+          el.append(header('Pilotes'))
+          el.append(group(...pilots.map(([id, pts], i) => row({ title: `${i + 1}. ${driverById(id).last}`, value: `${pts} pt${pts > 1 ? 's' : ''}`, check: id === saved.driver }))))
+          el.append(header('Constructeurs'))
+          el.append(group(...teams.map(([id, pts], i) => row({ title: `${i + 1}. ${TEAMS[id]?.name ?? id}`, value: String(pts) }))))
+          const cal = careerCalendar()
+          const nxt = cal[saved.round]
+          if (nxt) el.append(footnote(`Prochaine manche : ${nxt.gp}${nxt.available ? '' : ' (simulée)'} · toi P${playerPos(saved)}.`))
+        }
         const b = h('button', 'ap-btn', H.careerLabel() ? 'Manche suivante' : 'Commencer la carrière')
         b.addEventListener('click', () => { haptic(); H.startCareer() })
         el.append(b)
