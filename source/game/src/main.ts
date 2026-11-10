@@ -366,7 +366,7 @@ function frame(now: number) {
   camF.set(0, 0, -1).applyQuaternion(cam.quaternion); camU.set(0, 1, 0).applyQuaternion(cam.quaternion); carF.set(0, 0, -1).applyQuaternion(ren.car.quaternion)
   aFrame.rpm = c.rpmVis; aFrame.throttle = c.throttleApplied ?? st.throttle; aFrame.speed = spd; aFrame.slip = slip; aFrame.kerb = kerb; aFrame.gravel = gravelA; aFrame.grass = grassA
   aFrame.scrape = game.maxScrape; aFrame.impact = game.maxImpact; if (c.hitKind) aFrame.hitKind = c.hitKind; aFrame.shift = game.shifts; aFrame.gear = c.gear; aFrame.limiter = c.limiter; aFrame.ers = (c.ers.kPower ?? 0) / 120_000
-  aFrame.inside = inside; aFrame.pan = inside ? 0 : THREE.MathUtils.clamp(tmp.dot(right), -1, 1); aFrame.dist = inside ? 1 : dist; aFrame.radialV = inside ? 0 : radialV; aFrame.cam = ren.cams.mode
+  aFrame.inside = inside; aFrame.pan = inside ? 0 : THREE.MathUtils.clamp(tmp.dot(right), -1, 1); aFrame.dist = inside ? 1 : dist; aFrame.radialV = inside ? 0 : radialV; aFrame.cam = ren.cams.mode === 'garage' ? 'chase' : ren.cams.mode
   aFrame.src![0] = carW.x; aFrame.src![1] = carW.y + 0.5; aFrame.src![2] = carW.z; aFrame.fwd![0] = carF.x; aFrame.fwd![1] = carF.y; aFrame.fwd![2] = carF.z
   aFrame.lis![0] = cam.position.x; aFrame.lis![1] = cam.position.y; aFrame.lis![2] = cam.position.z
   aFrame.lisF![0] = camF.x; aFrame.lisF![1] = camF.y; aFrame.lisF![2] = camF.z; aFrame.lisU![0] = camU.x; aFrame.lisU![1] = camU.y; aFrame.lisU![2] = camU.z
