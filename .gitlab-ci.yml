@@ -18,3 +18,26 @@ pages:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Branches : vérifie que le code source compile (ne publie rien).
+typecheck:
+  stage: test
+  image: node:22
+  script:
+    - cd source/game
+    - npm ci
+    - npx tsc --noEmit
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+build_check:
+  stage: test
+  image: node:22
+  script:
+    - cd source/game
+    - npm ci
+    - npx vite build
+    - du -sh dist
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
