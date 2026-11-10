@@ -23,12 +23,15 @@ export interface MenuHost {
   startLegacy(k: 'timetrial' | 'practice' | 'demo'): void
   openPanel(w: 'setup' | 'options' | 'about'): void
   bestLap(): number | null
+  /** carrière : libellé court (manche en cours) ou null si pas commencée */
+  careerLabel(): string | null
+  startCareer(): void
 }
 const FLAG: Record<string, string> = { GBR: 'GB', FIN: 'FI', NED: 'NL', THA: 'TH', MON: 'MC', GER: 'DE', ESP: 'ES', AUS: 'AU', FRA: 'FR', MEX: 'MX', CAN: 'CA', RUS: 'RU', ITA: 'IT', DEN: 'DK' }
 export const flagEmoji = (nat: string) => [...(FLAG[nat] ?? '')].map(c => String.fromCodePoint(0x1f1a5 + c.charCodeAt(0))).join('')
 const LAP_STEPS = [1, 2, 3, 5, 8, 10, 12, 15, 22, 30, 44]
 const MIN_STEPS = [3, 5, 8, 10, 12, 15, 18, 20, 25, 30, 45, 60, 90]
-type PageId = 'home' | 'mode' | 'driver' | 'circuit' | 'car' | 'quick' | 'weekend'
+type PageId = 'home' | 'mode' | 'driver' | 'circuit' | 'car' | 'quick' | 'weekend' | 'career'
 interface Page { id: PageId; el: HTMLElement; title: string; shot: ShowShot }
 
 export class Menu {
@@ -119,6 +122,11 @@ export class Menu {
         t1.addEventListener('click', () => { haptic(); P.mode = 'quick'; save(); this.flow = ['driver', 'circuit', 'car', 'quick']; this.push('driver') })
         t2.addEventListener('click', () => { haptic(); if (wk) H.startWeekend(false); else { P.mode = 'weekend'; save(); this.flow = ['driver', 'circuit', 'car', 'weekend']; this.push('driver') } })
         tiles.append(t1, t2); el.append(tiles)
+        el.append(header('Championnat'), group(row({
+          icon: 'flag', color: '#00d2be', title: 'Carrière 2020',
+          sub: H.careerLabel() ?? 'Pilotes et constructeurs · la météo n’est pas choisie',
+          chev: true, onTap: () => { this.flow = null; this.push('career') },
+        })))
         if (wk) el.append(group(row({ icon: 'cal', color: '#5e5ce6', title: 'Nouveau week-end', sub: 'Repartir de l’EL1', chev: true, onTap: () => { P.mode = 'weekend'; save(); this.flow = ['driver', 'circuit', 'car', 'weekend']; this.push('driver') } })))
         const d = driverById(P.driver), c = CIRCUITS.find(x => x.id === P.circuit)!, car = CARS.find(x => x.id === P.car)!
         el.append(header('Ta sélection'), group(
@@ -162,8 +170,8 @@ export class Menu {
       case 'circuit': {
         title(this.flow ? 'Étape 2 sur 4' : 'Calendrier', 'Circuit', 'Calendrier 2020 · 17 manches')
         const g = group(...CIRCUITS.map(c => row({ title: c.gp === c.name ? c.name : `${c.name}`, sub: `M${c.round} · GP ${c.gp === '70e anniversaire' ? 'du 70e anniversaire' : 'de ' + c.gp} · ${c.km.toFixed(3).replace('.', ',')} km · ${c.laps} tours`,
-          check: c.id === P.circuit, disabled: !c.available, badge: c.available ? undefined : 'Bientôt', onTap: () => { P.circuit = c.id; save(); this.refresh() } })))
-        el.append(g, footnote('Les autres circuits arrivent avec leurs modèles 3D. La structure est prête : il suffit d’ajouter les données de piste.'))
+          check: c.id === P.circuit, disabled: !c.available, badge: c.available ? undefined : 'Piste à venir', onTap: () => { P.circuit = c.id; save(); this.refresh() } })))
+        el.append(g, footnote('Spa est jouable. Les autres tracés du calendrier sont dans Carrière : on les court dès que la piste est livrée, sinon la manche est simulée au barème 2020.'))
         return { id, el, title: 'Circuit', shot: 'side' }
       }
       case 'car': {
@@ -180,7 +188,10 @@ export class Menu {
         st = stepper(P.laps, LAP_STEPS, v => `${v} tour${v > 1 ? 's' : ''}`, v => { P.laps = v; save(); this.footer('quick') })
         el.append(header('Course'), group(ctl('Tours', st), ctlCol('Distance', seg<number>([[3, 'Sprint'], [11, '25 %'], [22, '50 %'], [44, '100 %']], P.laps, setLaps), `${(P.laps * 7.004).toFixed(1).replace('.', ',')} km`)))
         this.conditions(el)
-        el.append(header('Adversaires'), group(row({ title: 'Plateau IA (19 voitures)', sub: 'Course en solo pour l’instant', badge: 'Bientôt', disabled: true }), row({ title: 'Difficulté IA', value: `${P.difficulty} %`, disabled: true })))
+        el.append(header('Adversaires'), group(
+          row({ title: 'Plateau', sub: '19 monoplaces 2020 · course, essais et qualifications', value: '20 voitures' }),
+          ctl('Difficulté IA', stepper(P.difficulty, { min: 40, max: 100, step: 5 }, v => `${v} %`, v => { P.difficulty = v; save() }), '40 novice · 100 réaliste'),
+        ))
         el.append(footnote('Aides au pilotage et commandes : Accueil → Options.'))
         return { id, el, title: 'Course rapide', shot: 'rear' }
       }
@@ -202,6 +213,19 @@ export class Menu {
         el.append(footnote('Entre chaque séance tu rentres au garage : l’ingénieur analyse la télémétrie et propose des réglages (ailerons, hauteur de caisse, différentiel, freins, pressions, pneus) que les mécaniciens préparent. Le chrono de séance continue pendant le travail des mécaniciens.'))
         void WK_SHORT
         return { id, el, title: 'Week-end', shot: 'rear' }
+      }
+      case 'career': {
+        title('Championnat', 'Carrière', 'Tu ne choisis pas la météo. Les aléas (pluie, safety car, panne) sont tirés.')
+        el.append(group(
+          row({ title: 'Baquet', value: `${driverById(P.driver).last} · ${TEAMS[driverById(P.driver).team].name}` }),
+          row({ title: 'Difficulté', value: `${P.difficulty} %` }),
+          row({ title: 'État', value: H.careerLabel() ?? 'Pas commencée' }),
+        ))
+        el.append(footnote('Points 2020 : 25-18-15-12-10-8-6-4-2-1 et 1 point du meilleur tour s’il est dans les 10. Spa se court vraiment. Les autres manches du calendrier disponible sont simulées tant que leur piste n’est pas livrée. Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer ne sont pas au calendrier.'))
+        const b = h('button', 'ap-btn', H.careerLabel() ? 'Manche suivante' : 'Commencer la carrière')
+        b.addEventListener('click', () => { haptic(); H.startCareer() })
+        el.append(b)
+        return { id, el, title: 'Carrière', shot: 'side' }
       }
       default: return this.build('home')
     }

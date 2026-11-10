@@ -24,10 +24,13 @@ import type { SessionKind } from './core/session.ts'
 import { Menu } from './ui/menu.ts'
 import { Garage, showResults } from './ui/garage.ts'
 import { driverById, carOfTeam } from './data/drivers.ts'
-import { applyCarPhysics } from './physics/cars2020.ts'
+import { applyCarPhysics, CARS2020 } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
+import { PitScreens } from './render/pitScreens.ts'
+import { Engineer } from './race/engineer.ts'
+import { award, careerCalendar, loadCareer, newCareer, playerPos, rollEvents, rollWeather, saveCareer, simulateRound, Rng as CareerRng, type CareerState } from './core/career.ts'
 import { Tower } from './ui/tower.ts'
 import { Session } from './core/session.ts'
 import { excludedFor, approxSession, startingGrid } from './core/quali.ts'
@@ -43,6 +46,12 @@ const adapt = new AdaptiveResolution()
 let hud: Hud
 /** lot 8 C : plateau IA (rendu), tour de chronométrage, postes des commissaires (marshals.json de New Bot) */
 let fview: FieldView | null = null, tower: Tower | null = null, marshals: unknown = null, ffPending = 0
+let screens: PitScreens | null = null
+let engineer: Engineer | null = null
+let career: CareerState | null = null
+let careerEvents: string[] = []
+let careerFired = ''
+const specTarget = new THREE.Object3D()
 let wheel: WheelDisplay | null = null
 const ws = { pitLim: false, ot: false, otT: 0, prevErs: 'hotlap' as string }
 type Screen = 'boot' | 'menu' | 'drive' | 'pause' | 'garage' | 'results'
@@ -99,6 +108,9 @@ function setupField(k: SessionKind | 'demo') {
     if (run.id === 'Q2' || run.id === 'Q3') exclude = excludedFor(wk, run.id)
   }
   const F = game.startField({ kind, laps: run.laps, player, grid, exclude, sessionLen: kind === 'race' ? undefined : run.remaining, posts: marshals })
+  F.difficulty = settings.profile.difficulty
+  F.hybridOn = true
+  if (kind === 'race') F.planRace()
   if (kind === 'race') {
     F.ctrl.startFormation()
     // règle 2020 : le top 10 part avec les pneus du meilleur tour de Q2
@@ -108,7 +120,14 @@ function setupField(k: SessionKind | 'demo') {
   tower?.bind(F)
   fview ??= new FieldView(ren); fview.root.visible = true
   const fv = fview
-  void fv.load(F).then(() => { if (!fv.lamps.size) void fv.loadLamps('./assets/spa_pits/marshal_lamps.glb', F); ren.memLog('plateau IA chargé') }).catch(e => dlog('plateau IA : ' + (e as Error).message))
+  const pu = CARS2020[settings.profile.car]?.pu ?? 'mercedes'
+  void audio.usePU(pu).catch(e => dlog('audio PU : ' + (e as Error).message))
+  ren.releaseCarCache()
+  void fv.load(F).then(async () => {
+    if (!fv.lamps.size) await fv.loadLamps('./assets/spa_pits/marshal_lamps.glb', F)
+    screens?.bind(fv.anchors)
+    ren.memLog('plateau IA chargé')
+  }).catch(e => dlog('plateau IA : ' + (e as Error).message))
 }
 function skipFormation() { const F = game.field; if (!F) return; F.ctrl.skipFormation(); hud.toast('Tour de formation passé · tout le monde en grille', 2000) }
 /** classement complet (plateau IA) pour l'écran de résultats */
@@ -338,6 +357,40 @@ function frame(now: number) {
   { const e = game.env, cw = game.car.wheels; aFrame.rain = e.rainRate; aFrame.wet = e.water[e.idx(game.car.s, game.car.d)]
     aFrame.lock = game.car.brakeApplied > 0.1 && game.car.speed > 6 ? Math.max(0, ...cw.map(w => w.contact && Math.abs(w.omega * w.r) < game.car.speed * 0.5 ? 1 : 0)) : 0 }
   audio.update(aFrame, dt)
+  if (game.field && screen === 'drive') {
+    const near = game.field.cars.filter(r => game.field!.near.has(r.i) && !r.player).slice(0, 3).map(r => ({
+      pu: CARS2020[r.car]?.pu ?? 'mercedes', rpm: 4200 + r.v * 68, x: r.wx, y: r.wy + 0.4, z: r.wz, throttle: Math.min(1, r.v / 70),
+    }))
+    void audio.updateNearby(near, [cam.position.x, cam.position.y, cam.position.z])
+    const note = engineer?.tick(game.field, dt)
+    if (note?.say) radio.say(note.say, note.critical ? 4 : 12)
+    if (note?.text) { hud.toast(note.text, note.critical ? 4200 : 2800); if (!note.say) audio.radio() }
+    screens?.update(game.field, c, game.env.weather)
+    screens?.setDom((game.inPit || screen === 'drive' && c.speed < 1 && game.inPit) && (screens?.bound ?? 0) === 0)
+    if (game.spectate && game.spectate !== 'tv' && fview) {
+      const step = Math.floor(game.spectateT / 8)
+      if (step !== Math.floor((game.spectateT - dt) / 8)) {
+        const ids = game.field.ordered().filter(r => !r.player && !r.out).map(r => r.id)
+        const i = Math.max(0, ids.indexOf(game.spectate))
+        game.spectate = ids[(i + 1) % Math.max(1, ids.length)] ?? game.spectate
+      }
+      const v = fview.views.find(x => x.r.id === game.spectate)
+      if (v) {
+        specTarget.position.set(v.r.wx, v.r.wy, v.r.wz)
+        if (v.r.q) specTarget.quaternion.set(v.r.q[0], v.r.q[1], v.r.q[2], v.r.q[3])
+        else specTarget.rotation.set(0, Math.atan2(v.r.hx, -v.r.hz), 0)
+        specTarget.updateMatrixWorld()
+        ren.camFollow = specTarget
+      }
+      ren.car.visible = !game.spectateHide
+    } else { ren.camFollow = null; if (!game.spectateHide) ren.car.visible = true }
+    if (!careerFired && careerEvents.length && game.field.ctrl.phase === 'racing' && game.field.t > 55) {
+      careerFired = '1'
+      if (careerEvents.includes('safety car')) game.field.ctrl.scDeploy('débris en piste')
+      else if (careerEvents.includes('virtual safety car')) game.field.ctrl.vscDeploy('voiture arrêtée')
+      if (careerEvents.includes('averse') && !game.weatherTarget) game.weatherTarget = game.env.weather === 'dry' ? 'wet' : 'rain'
+    }
+  }
   radioTelemetry(dt)
   camPrev.copy(cam.position)
   hud.update(game)
@@ -368,6 +421,39 @@ function applyDriver(id: string) { const d = driverById(id); void ren.setDriver(
 function startQuick() {
   const P = settings.profile; run = newRun('quick', P.laps, 0, raceFuel(P.laps))
   settings.damage = settings.damage ?? 'real'; startSession('race', true); setScreen('drive')
+}
+function startCareer() {
+  const P = settings.profile
+  career = career ?? loadCareer()
+  if (!career || career.driver !== P.driver) career = newCareer(P.driver, P.difficulty)
+  career.difficulty = P.difficulty
+  const cal = careerCalendar()
+  if (career.round >= cal.length) { hud.toast('Championnat terminé · P' + playerPos(career) + ' pilotes'); menu.refresh(); return }
+  const c = cal[career.round]
+  const rng = new CareerRng((career.seed + career.round * 17) >>> 0)
+  const weather = rollWeather(c, rng)
+  careerEvents = rollEvents(c, rng)
+  careerFired = ''
+  if (!c.available) {
+    const rows = simulateRound(career, c)
+    const me = rows.find(r => r.id === career!.driver)
+    award(career, c.id, rows, { weather, simulated: true })
+    saveCareer(career)
+    hud.toast(`${c.gp} simulé (${weather}) · P${me?.pos ?? '—'} · championnat P${playerPos(career)}`, 4600)
+    menu.refresh()
+    return
+  }
+  settings.weather = weather
+  settings.damage = 'real'
+  game.setWeather(weather)
+  game.weatherTarget = careerEvents.includes('averse') ? (weather === 'dry' || weather === 'damp' ? 'wet' : 'rain') : null
+  const plan: WeekendPlan = {
+    circuit: c.id, car: P.car, driver: P.driver, fpMin: [...P.fpMin] as [number, number, number], qMin: [...P.qMin] as [number, number, number],
+    raceLaps: Math.min(c.laps, P.raceLaps), weather, damage: 'real', skip: P.shortWeekend ? ['FP1', 'FP2'] : [],
+  }
+  wk = Weekend.create(plan)
+  hud.toast(`${c.gp} · ${weather}${c.night ? ' · nuit' : ''} · ${careerEvents.join(', ') || 'rien à signaler'}`, 4200)
+  startWeekend(false)
 }
 function startWeekend(fresh: boolean) {
   const P = settings.profile
@@ -583,6 +669,12 @@ async function main() {
     dlog('préréglage ' + diag.preset)
     await ren.load(game, track, bootProgress)
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
+    fview = new FieldView(ren)
+    screens = new PitScreens()
+    engineer = new Engineer()
+    career = loadCareer()
+    bootProgress('Plateau 2020…', 0.9)
+    await fview.preload((done, total, team) => bootProgress('Voitures · ' + team, 0.9 + 0.08 * done / Math.max(1, total)))
     hud = new Hud()
     tower = new Tower()
     marshals = await fetch('./assets/spa_pits/marshals.json').then(r => r.ok ? r.json() : null).catch(() => null)
@@ -607,6 +699,12 @@ async function main() {
       startQuick: () => startQuick(), startWeekend: fresh => startWeekend(fresh),
       weekendInProgress: () => wk && !wk.done ? `${WK_SHORT[wk.cur]} · ${WK_LABEL[wk.cur]}` : null,
       startLegacy: k => startSession(k), openPanel: w => openPanel(w), bestLap: () => game.storedBest,
+      careerLabel: () => {
+        const c = career ?? loadCareer(); if (!c) return null
+        const cal = careerCalendar(); const gp = cal[Math.min(c.round, cal.length - 1)]
+        return c.round >= cal.length ? `Terminé · P${playerPos(c)}` : `P${playerPos(c)} · ${gp?.gp ?? ''} (${c.round + 1}/${cal.length})`
+      },
+      startCareer: () => startCareer(),
     })
     setCam('tv')
     // mobile : départ sans GTAO et à 90 % de résolution ; l'adaptation remonte si l'iPhone tient 60 i/s
