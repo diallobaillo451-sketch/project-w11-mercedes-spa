@@ -11,7 +11,7 @@ import { bindLivery, readableLivery } from './livery.ts'
 import { collectAnchors, type Anchor } from './anchors.ts'
 
 type Mat = THREE.MeshStandardMaterial
-interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean }
+interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean; spin0: number; steer0: number }
 interface CarView { r: Racer; obj: THREE.LOD; wheels: WheelRef[]; blob: THREE.Mesh; pitch: number; roll: number; spin: number }
 const TEAMS = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
 const LOD1 = 28, LOD2 = 450
@@ -38,9 +38,89 @@ function collectWheels(root: THREE.Object3D): WheelRef[] {
   for (const w of ['FL', 'FR', 'RL', 'RR']) {
     const st = root.getObjectByName('W_' + w) ?? root.getObjectByName('W_' + w + '.L1')
     const sp = root.getObjectByName('W_' + w + '_spin') ?? root.getObjectByName('W_' + w + '_spin.L1')
-    if (sp) wheels.push({ spin: sp, steer: w[0] === 'F' ? st ?? null : null, front: w[0] === 'F' })
+    if (sp) wheels.push({ spin: sp, steer: w[0] === 'F' ? st ?? null : null, front: w[0] === 'F', spin0: sp.rotation.x, steer0: st?.rotation.y ?? 0 })
   }
   return wheels
+}
+/** maillages dont la quantification a explosé (un logo de jante à 8 m, lu comme une roue qui flotte) */
+function hideExploded(root: THREE.Object3D) {
+  const s = new THREE.Vector3()
+  root.traverse(o => {
+    const m = o as THREE.Mesh
+    if (!m.isMesh) return
+    const n = ((m.material as THREE.Material)?.name || '') + ' ' + o.name
+    if (/paint|carbon|decal|tyre|tire|wing|chassis|generic|body|hub/i.test(n)) return
+    if (!m.geometry.boundingBox) m.geometry.computeBoundingBox()
+    m.geometry.boundingBox!.getSize(s)
+    if (s.x > 3.5 || s.y > 3.5 || s.z > 3.5) m.visible = false
+  })
+}
+/** Les LOD n'ont pas de TEXCOORD (ou des UV quantifiées à 65535). On recopie l'UV du sommet HD le plus proche, même matériau. */
+function transferUVs(hi: THREE.Object3D, lod: THREE.Object3D) {
+  hi.updateWorldMatrix(true, true)
+  const v = new THREE.Vector3()
+  const CELL = 0.15
+  const key = (x: number, y: number, z: number) => `${Math.floor(x / CELL)}|${Math.floor(y / CELL)}|${Math.floor(z / CELL)}`
+  const buckets = new Map<string, { cell: Map<string, number[]>; pos: Float32Array; uv: Float32Array; n: number }>()
+  const lists = new Map<string, { px: number[]; pu: number[] }>()
+  hi.traverse(o => {
+    const m = o as THREE.Mesh
+    if (!m.isMesh) return
+    const pos = m.geometry.getAttribute('position'), uv = m.geometry.getAttribute('uv')
+    if (!pos || !uv) return
+    const name = ((m.material as THREE.Material).name) || ''
+    if (!name) return
+    let L = lists.get(name)
+    if (!L) { L = { px: [], pu: [] }; lists.set(name, L) }
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos as THREE.BufferAttribute, i).applyMatrix4(m.matrixWorld)
+      L.px.push(v.x, v.y, v.z); L.pu.push(uv.getX(i), uv.getY(i))
+    }
+  })
+  for (const [name, L] of lists) {
+    const n = L.px.length / 3
+    const pos = new Float32Array(L.px), uv = new Float32Array(L.pu), cell = new Map<string, number[]>()
+    for (let i = 0; i < n; i++) {
+      const k = key(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2])
+      const a = cell.get(k); if (a) a.push(i); else cell.set(k, [i])
+    }
+    buckets.set(name, { cell, pos, uv, n })
+  }
+  lod.updateWorldMatrix(true, true)
+  lod.traverse(o => {
+    const m = o as THREE.Mesh
+    if (!m.isMesh || !m.visible) return
+    const pos = m.geometry.getAttribute('position')
+    if (!pos) return
+    const name = ((m.material as THREE.Material).name) || ''
+    const b = buckets.get(name)
+    if (!b) return
+    const cur = m.geometry.getAttribute('uv')
+    let bad = !cur
+    if (cur) for (let i = 0; i < cur.count; i += Math.max(1, (cur.count / 24) | 0)) {
+      if (Math.abs(cur.getX(i)) > 2 || Math.abs(cur.getY(i)) > 2) { bad = true; break }
+    }
+    if (!bad) return
+    const uv = new Float32Array(pos.count * 2)
+    let miss = 0
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos as THREE.BufferAttribute, i).applyMatrix4(m.matrixWorld)
+      const cx = Math.floor(v.x / CELL), cy = Math.floor(v.y / CELL), cz = Math.floor(v.z / CELL)
+      let best = 0.4 * 0.4, bu = 0.02, bv = 0.02
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+        const arr = b.cell.get(`${cx + dx}|${cy + dy}|${cz + dz}`); if (!arr) continue
+        for (const idx of arr) {
+          const px = b.pos[idx * 3] - v.x, py = b.pos[idx * 3 + 1] - v.y, pz = b.pos[idx * 3 + 2] - v.z
+          const d = px * px + py * py + pz * pz
+          if (d < best) { best = d; bu = b.uv[idx * 2]; bv = b.uv[idx * 2 + 1] }
+        }
+      }
+      if (best >= 0.4 * 0.4) miss++
+      uv[i * 2] = bu; uv[i * 2 + 1] = bv
+    }
+    if (miss > pos.count * 0.65) return
+    m.geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
+  })
 }
 
 export class FieldView {
@@ -123,36 +203,31 @@ export class FieldView {
   stats = { tris1: 0, tris2: 0, texMB: 0 }
   constructor(ren: Renderer) { this.ren = ren; this.root.name = 'field'; ren.scene.add(this.root) }
 
-  /** matériaux HD d'une équipe (géométrie jetée, mip haut retiré). Mercedes = W11, jamais la livrée d'une autre équipe. */
-  private async teamMats(team: string): Promise<Mat[]> {
-    if (team === 'mercedes' && this.ren.rig && this.ren.carId === 'w11') {
-      const out: Mat[] = []
-      this.ren.rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
-        for (const mt of [m.material].flat() as Mat[]) { if (out.includes(mt)) continue; readableLivery(mt); out.push(mt); this.shared.add(mt) } })
-      return out
-    }
+  /** modèle HD au repos (pas la voiture du joueur, qui a déjà bougé) : sert d'atlas d'UV puis sa géométrie est jetée */
+  private async teamHi(team: string): Promise<THREE.Object3D> {
     const url = team === 'mercedes' ? './assets/w11_lh2020_high.glb' : `./cars/${carOfTeam(team)}_hi.glb`
     const g = await loadGLB(url, () => {}, this.ren.ktxAny())
-    const out: Mat[] = []
-    g.scene.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
-      for (const mt of [m.material].flat() as Mat[]) {
-        if (out.includes(mt)) continue
-        for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'] as const) { const t = mt[k]; if (t) dropTopMip(t) }
-        readableLivery(mt); out.push(mt)
-      }
-      m.geometry.dispose()
-    })
-    return out
+    return g.scene
   }
   private async proto(team: string) {
-    const mats = await this.teamMats(team)
+    const hi = await this.teamHi(team)
+    const mats: Mat[] = []
+    hi.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      for (const mt of [m.material].flat() as Mat[]) {
+        if (mats.includes(mt)) continue
+        for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'] as const) { const t = mt[k]; if (t) dropTopMip(t) }
+        readableLivery(mt); mats.push(mt)
+      } })
     const id = team === 'mercedes' ? 'mercedes' : carOfTeam(team)
     const [g1, g2] = await Promise.all([loadGLB(`./cars/${id}_lod1.glb`, () => {}), loadGLB(`./cars/${id}_lod2.glb`, () => {})])
     for (const g of [g1, g2]) {
+      hideExploded(g.scene)
+      transferUVs(hi, g.scene)
       const r = bindLivery(g.scene, mats, this.shared)
       g.scene.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; m.frustumCulled = true; m.castShadow = false; m.receiveShadow = false })
       if (r.hit === 0) dlog(`livrée ${team} : aucun matériau relié (${r.miss} manqués)`)
     }
+    hi.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose() })
     let seat = [0, 0, 0]
     if (id !== 'mercedes') { try { const meta = await (await fetch(`./cars/${id}.json`)).json() as { seat_gltf?: number[] }; seat = meta.seat_gltf ?? seat } catch { /* casque au défaut */ } }
     const hm = new THREE.MeshStandardMaterial({ color: teamAccent(team), roughness: 0.35, metalness: 0.1 })
@@ -284,7 +359,7 @@ export class FieldView {
       v.spin -= r.v / 0.33 * dt
       const steer = Math.max(-0.42, Math.min(0.42, r.steer ?? 0))
       const wheelsOff = phase === 'off'
-      for (const w of v.wheels) { w.spin.visible = !wheelsOff; w.spin.rotation.x = v.spin; if (w.steer) w.steer.rotation.y = steer }
+      for (const w of v.wheels) { w.spin.visible = !wheelsOff; w.spin.rotation.x = w.spin0 + v.spin; if (w.steer) w.steer.rotation.y = w.steer0 + steer }
     }
     if (this.sc) {
       const S = sim.ctrl.sc, on = S.active && S.mode !== 'park'; this.sc.visible = on
