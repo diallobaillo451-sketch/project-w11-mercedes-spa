@@ -11,6 +11,7 @@ export type RaceEvent =
   | { t: 'pitSpeeding'; car: number; kmh: number; penalty: number }
   | { t: 'reset'; car: number }
   | { t: 'repair'; car: number }
+  | { t: 'spectate'; car: number }
   | { t: 'best'; car: number; time: number }
 type Fn = (e: RaceEvent) => void
 export class EventBus {

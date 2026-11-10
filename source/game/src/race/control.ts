@@ -28,6 +28,9 @@ export class RaceControl {
   unlap = false
   lightsN = 0; lightsT = 0; lightsHold = 0; goT = -1; private gridT = 0; jumpRef = { s: 0, ok: false }
   greenT = 0
+  /** feu de case : rouge pendant le travail, vert au lâcher */
+  boxLight: 'red' | 'green' = 'red'
+  private boxGreenUntil = 0
   private blueFor = new Map<number, { t: number; posts: number; warned: boolean }>()
   private lastPost = new Map<number, number>()
   fastest: { r: Racer; t: number } | null = null
@@ -90,6 +93,7 @@ export class RaceControl {
     this.bluesLogic(dt)
     this.panels()
     this.stewards()
+    if (this.boxLight === 'green' && S.t > this.boxGreenUntil) this.boxLight = 'red'
   }
   // ───────────── départ : tour de formation, mise en grille, feux
   private startProcedure(dt: number) {
@@ -383,6 +387,7 @@ export class RaceControl {
   pitSpeeding(r: Racer, v: number) { const k = r as Racer & { _ps?: number }; if ((k._ps ?? 0) > this.sim.t - 20) return; k._ps = this.sim.t; this.caseNew(r, null, `excès de vitesse dans la voie des stands (${Math.round(v * 3.6)} km/h)`, this.sim.kind === 'race' ? '5s' : 'warn', 'limitation 80 km/h', 4) }
   /** libération du box : dangereuse si une voiture arrive dans la voie à moins de ~15 m */
   release(r: Racer) {
+    this.boxLight = 'green'; this.boxGreenUntil = this.sim.t + 3
     const S = this.sim
     const near = S.cars.find(o => o !== r && o.mode === 'pit' && o.pitP < r.pitP && r.pitP - o.pitP < 15 && o.v > 10)
     if (near && S.rng.next() < 0.5) this.caseNew(r, near, 'libération dangereuse', S.kind === 'race' ? '5s' : 'grid3', 'libéré devant une voiture dans la voie des stands', 10)
