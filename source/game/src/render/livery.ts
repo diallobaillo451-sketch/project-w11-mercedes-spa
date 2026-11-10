@@ -23,19 +23,25 @@ export function normMat(name: string) {
   return name.toLowerCase().replace(/(\.\d+)+$/g, '').replace(/\.l\d+$/i, '').replace(/_l\d+$/i, '')
 }
 
-/** Peinture de carrosserie : le vernis porte la couleur, le métal ne doit pas manger l'albédo. */
-export function readableLivery(mt: Pbr) {
+/** Peinture de carrosserie. L'albédo de la W11 est noir (pétrole + logos). Un metallicFactor 0,8
+ *  et un vernis miroir (clearcoatRoughness 0) renvoient le ciel HDRI : la voiture sort blanche.
+ *  On garde une laque : métal quasi nul, base mate, vernis large qui ne noie pas la couleur. */
+export function glossPaint(mt: Pbr) {
   if (mt.userData.liv) return
   mt.userData.liv = 1
   if (matRole(mt.name) !== 'paint') return
-  if (/safety/i.test(mt.name)) { mt.metalness = Math.min(mt.metalness, 0.55); return }
-  if (mt.metalness > 0.35) mt.metalness = 0.16
+  if (/safety/i.test(mt.name)) { mt.metalness = Math.min(mt.metalness, 0.5); mt.roughness = Math.max(mt.roughness, 0.28); return }
+  mt.metalness = 0.02
+  mt.roughness = Math.max(mt.roughness, 0.55)
+  mt.envMapIntensity = Math.min(mt.envMapIntensity || 1, 0.7)
   const p = mt as THREE.MeshPhysicalMaterial
   if (p.isMeshPhysicalMaterial) {
-    p.clearcoat = Math.max(p.clearcoat ?? 0, 0.88)
-    p.clearcoatRoughness = Math.min(p.clearcoatRoughness > 0 ? p.clearcoatRoughness : 0.08, 0.12)
+    p.clearcoat = 0.75
+    p.clearcoatRoughness = 0.24
+    p.specularIntensity = Math.min(p.specularIntensity || 1, 0.35)
   }
 }
+export function readableLivery(mt: Pbr) { glossPaint(mt) }
 
 export function bindLivery(root: THREE.Object3D, mats: Pbr[], shared: Set<THREE.Material>) {
   const byName = new Map<string, Pbr>()

@@ -4,6 +4,7 @@
 import * as THREE from 'three'
 import type { Vehicle } from '../physics/vehicle.ts'
 import { W11 } from '../physics/params.ts'
+import { glossPaint } from './livery.ts'
 
 const WN = ['FL', 'FR', 'RL', 'RR'] as const
 export class CarRig {
@@ -107,8 +108,7 @@ export class CarRig {
         { const P = new URLSearchParams(location.search), ua = navigator.userAgent, wk = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Firefox|Edg\//.test(ua)
           const an = P.has('caran') ? Number(P.get('caran')) : wk ? 1 : anisotropy
           for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap'] as const) { const t = s[k]; if (t) t.anisotropy = an } }
-        if (/PAINT|merc1|Car_wing/i.test(s.name) && s.isMeshPhysicalMaterial) { s.clearcoat = Math.max(s.clearcoat, 0.9); s.clearcoatRoughness = 0.04 }
-        if (/^MERCEDES_PAINT$|^merc1$/i.test(s.name) && s.metalness > 0.35) s.metalness = 0.16
+        if (/paint|merc1|livery/i.test(s.name)) glossPaint(s)
         if (/carbon/i.test(s.name) && s.isMeshPhysicalMaterial) { /* pas d anisotropie : sans tangentes, elle créait des lucioles blanches (scintillement) sur tout l arrière */ s.anisotropy = 0; s.clearcoat = Math.max(s.clearcoat, 0.5); s.clearcoatRoughness = 0.08 }
         if (/GLASS|Visor|Clear/i.test(s.name)) { m.castShadow = false }
       }

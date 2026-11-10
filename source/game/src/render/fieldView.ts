@@ -54,24 +54,64 @@ export class FieldView {
   lamps = new Map<number, Record<string, THREE.Mesh>>()
   anchors: Map<string, Anchor> = new Map()
   private jack0 = new Map<string, number>()
-  private pitLamp: THREE.Mesh | null = null
-  /** feu de sortie si Ty n'a pas posé `pit_exit_light` : rouge tant que la sortie est fermée (drapeau rouge compris) */
+  private pitGantry: THREE.Group | null = null
+  private pitRed: THREE.MeshStandardMaterial | null = null
+  private pitGreen: THREE.MeshStandardMaterial | null = null
+  private boards: { n: number; mat: THREE.MeshStandardMaterial }[] | null = null
+  /** feu de sortie : mât à côté de la voie, hors piste, lampe rouge et lampe verte. L'ancre de Ty remplace ce mât. */
   private paintExitLamp(sim: RaceSim) {
     const named = this.anchors.get('anchor_pit_exit_light') ?? this.anchors.get('pit_exit_light')
-    if (named) { if (this.pitLamp) this.pitLamp.visible = false; return }
+    if (named) { if (this.pitGantry) this.pitGantry.visible = false; return }
     const pit = sim.pit; if (!pit) return
-    if (!this.pitLamp) {
-      const m = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, emissive: 0xff2208, emissiveIntensity: 3.2, toneMapped: false })
-      this.pitLamp = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.48, 0.1), m)
-      this.pitLamp.name = 'pit_exit_light_fallback'
-      this.root.add(this.pitLamp)
+    if (!this.pitGantry) {
+      const dark = new THREE.MeshStandardMaterial({ color: 0x2c3136, roughness: 0.55, metalness: 0.35 })
+      const g = new THREE.Group(); g.name = 'pit_exit_light_fallback'
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.08, 8), dark); base.position.y = 0.04
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 3.15, 8), dark); pole.position.y = 1.6
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.07, 2.15), dark); arm.position.set(0, 3.12, 0.95)
+      const house = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.5, 0.18), dark); house.position.set(0, 3.0, 1.95)
+      this.pitRed = new THREE.MeshStandardMaterial({ color: 0x3a0000, emissive: 0xff1c08, emissiveIntensity: 2.6, toneMapped: false })
+      this.pitGreen = new THREE.MeshStandardMaterial({ color: 0x003010, emissive: 0x000000, emissiveIntensity: 0, toneMapped: false })
+      const red = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.05), this.pitRed); red.position.set(0, 3.12, 2.06); red.name = 'pit_exit_red'
+      const green = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.05), this.pitGreen); green.position.set(0, 2.88, 2.06); green.name = 'pit_exit_green'
+      g.add(base, pole, arm, house, red, green)
+      this.root.add(g); this.pitGantry = g
     }
-    const L = pit.light
-    this.pitLamp.visible = true
-    this.pitLamp.position.set(L.x, 1.55, L.z)
-    const mt = this.pitLamp.material as THREE.MeshStandardMaterial
-    const green = sim.ctrl.pitExitGreen()
-    mt.emissive.set(green ? 0x20ff60 : 0xff2208)
+    let i = Math.min(pit.iExit, pit.n - 1)
+    while (i > 1 && Math.abs(pit.d[i]) < 8) i--
+    const smp = { h: 0, nx: 0, ny: 1, nz: 0, type: 1, s: 0, d: 0, i: 0 }
+    sim.track.sample(pit.x[i], pit.z[i], Math.floor(pit.s[i] / sim.track.ds), smp)
+    const c = sim.track.centre(smp.s)
+    let dx = pit.x[i] - c.x, dz = pit.z[i] - c.z, len = Math.hypot(dx, dz) || 1
+    dx /= len; dz /= len
+    const x = pit.x[i] + dx * 3.8, z = pit.z[i] + dz * 3.8
+    const h = sim.track.sample(x, z, smp.i, smp).h
+    this.pitGantry.visible = true
+    this.pitGantry.position.set(x, h, z)
+    this.pitGantry.rotation.y = Math.atan2(-dx, -dz)
+    const on = sim.ctrl.pitExitGreen()
+    if (this.pitRed && this.pitGreen) {
+      this.pitRed.emissive.set(on ? 0x000000 : 0xff1c08); this.pitRed.emissiveIntensity = on ? 0 : 2.8
+      this.pitGreen.emissive.set(on ? 0x18ff62 : 0x000000); this.pitGreen.emissiveIntensity = on ? 2.8 : 0
+    }
+  }
+  /** panneaux de repli si le GLB des commissaires n'est pas là : un feu par poste, hors piste */
+  private ensureBoards(sim: RaceSim) {
+    if (this.lamps.size || this.boards) return
+    this.boards = []
+    const smp = { h: 0, nx: 0, ny: 1, nz: 0, type: 1, s: 0, d: 0, i: 0 }
+    const poleM = new THREE.MeshStandardMaterial({ color: 0x242424, roughness: 0.7 })
+    for (const p of sim.ctrl.posts) {
+      const c = sim.track.centre(p.s)
+      const edge = (p.side < 0 ? sim.track.WL[c.i] : sim.track.WR[c.i]) + 1.1
+      const x = c.x - c.tz * p.side * edge, z = c.z + c.tx * p.side * edge
+      sim.track.sample(x, z, c.i, smp)
+      const mat = new THREE.MeshStandardMaterial({ color: 0x101010, emissive: 0x000000, emissiveIntensity: 0, roughness: 0.45, toneMapped: false })
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 1.7, 6), poleM); pole.position.y = 0.85
+      const face = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.4, 0.05), mat); face.position.y = 1.85; face.name = 'marshal_board'
+      const g = new THREE.Group(); g.add(pole, face); g.position.set(x, smp.h, z); g.lookAt(c.x, smp.h + 1.6, c.z)
+      this.root.add(g); this.boards.push({ n: p.n, mat })
+    }
   }
   private lampState = new Map<number, string>()
   private protos = new Map<string, { l1: THREE.Object3D; l2: THREE.Object3D }>()
@@ -214,7 +254,8 @@ export class FieldView {
     const t = performance.now() / 1000
     for (const v of this.views) {
       const r = v.r
-      const gone = !!(r as Racer & { _gone?: boolean })._gone
+      const goneAt = (r as Racer & { _goneAt?: number })._goneAt
+      const gone = !!(r as Racer & { _gone?: boolean })._gone || (goneAt !== undefined && sim.t > goneAt)
       const hide = r.mode === 'garage' || (!!r.out && r.mode === 'dnf' && r.v < 0.5 && gone)
       v.obj.visible = !hide; v.blob.visible = !hide && r.v > 2
       if (hide) continue
@@ -263,6 +304,18 @@ export class FieldView {
     paintLight(this.anchors.get('anchor_pit_exit_light')?.node ?? this.anchors.get('pit_exit_light')?.node, sim.ctrl.pitExitGreen())
     paintLight(this.anchors.get('anchor_pit_box_light')?.node, sim.ctrl.boxLight === 'green')
     this.paintExitLamp(sim)
+    this.ensureBoards(sim)
+    if (this.boards) {
+      const blink = Math.floor(t * 4) % 2 === 0
+      const col: Record<string, number> = { yellow: 0xffcc00, double: 0xffaa00, blue: 0x1e6bff, red: 0xff2208, green: 0x20ff60, sc: 0xffcc00, vsc: 0xffcc00 }
+      for (const b of this.boards) {
+        const p = sim.ctrl.posts.find(q => q.n === b.n)
+        const pan = p?.panel ?? 'off'
+        const on = pan !== 'off' && pan !== 'chequered' && (pan !== 'double' || blink)
+        b.mat.emissive.setHex(on ? (col[pan] ?? 0xffcc00) : 0x000000)
+        b.mat.emissiveIntensity = on ? 3.4 : 0
+      }
+    }
     // crics : rotation procédurale autour du pivot (clips Blender lus tels quels s'ils existent, jamais une vidéo générée)
     const up = sim.player.pitPhase === 'jack' || sim.player.pitPhase === 'guns' || sim.player.pitPhase === 'off' || sim.player.pitPhase === 'on' || sim.player.pitPhase === 'drop'
     for (const name of ['anchor_jack_front', 'anchor_jack_rear']) {

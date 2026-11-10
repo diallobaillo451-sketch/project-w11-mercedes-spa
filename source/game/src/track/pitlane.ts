@@ -89,6 +89,19 @@ export class Pitlane {
   }
   /** la voiture est-elle dans la zone limitée (à moins de 6 m du chemin, entre les lignes) ? */
   inLimitZone(x: number, z: number) { const r = this.nearest(x, z); return r.dist < 6 && r.i >= this.iIn && r.i <= this.iOut }
+  /** mât du feu de sortie : dernier point encore dans la voie (pas sur l'asphalte de course), décalé vers les garages */
+  exitStand(): { x: number; z: number; yaw: number } {
+    let i = Math.min(this.iExit, this.n - 1)
+    const pitSide = Math.abs(this.d[i]) > 6
+    if (!pitSide) { let k = i; while (k > 1 && Math.abs(this.d[k]) < 8) k--; i = k }
+    const i1 = Math.min(this.n - 1, i + 1)
+    const tx = this.x[i1] - this.x[Math.max(0, i - 1)], tz = this.z[i1] - this.z[Math.max(0, i - 1)]
+    const tn = Math.hypot(tx, tz) || 1
+    const side = Math.sign(this.d[i] || this.workSign || 1) || 1
+    // gauche du sens de marche = (-tz, tx). On pousse du côté des garages, hors de la voie.
+    const ox = -tz / tn * side, oz = tx / tn * side
+    return { x: this.x[i] + ox * 3.6, z: this.z[i] + oz * 3.6, yaw: Math.atan2(tx, tz) }
+  }
   private indexNear(x: number, z: number) {
     let best = 0, bd = Infinity
     for (let i = 0; i < this.n; i++) { const d = (x - this.x[i]) ** 2 + (z - this.z[i]) ** 2; if (d < bd) { bd = d; best = i } }

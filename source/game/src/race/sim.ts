@@ -286,6 +286,7 @@ export class RaceSim {
     const k = Math.abs(ln.k[i])
     if (ahead && gA < 60) { if (k < 0.002) vt *= 1 + 0.012 * Math.exp(-gA / 25); else vt *= 1 - 0.015 * Math.exp(-gA / 20) }
     vt = C.speedCap(r, i, vt)
+    if (C.vsc && r.mode === 'race') C.vscOver(r, r.v, r.prof.v[i] * 0.62, dt)
     // ─ suivre (pas de place à côté) : on ne rentre pas dans la voiture devant
     if (ahead) { const v0 = ahead.v, gmin = 2.5 + r.v * 0.09, gg = gA - CL; vt = Math.min(vt, Math.max(0, v0 + (gg - gmin) * 0.9)); if (gg < 1) vt = Math.min(vt, v0 - 2)
       // freinage d'urgence (le pilote voit la voiture devant ralentir) : jamais de rapprochement sous la marge
@@ -673,7 +674,7 @@ export class RaceSim {
     for (const r of [rear, front]) if (!r.player) { if (r.dmg.fw > 0.3 || r.tyre.punct) r.wantPit = 'dégâts'; if (sev > 0.8 && this.rng.next() < 0.3 && !r.err) { r.err = { kind: 'spin', t: 0.4 }; this.ctrl.incident(r, r.s, 'spin') } }
     this.ctrl.collision(rear, front, dv, side)
   }
-  private pAhead = new Map<Racer, number>(); private vscT = 0
+  private pAhead = new Map<Racer, number>()
   /** règles appliquées au joueur : dépassement sous drapeau jaune / SC / VSC, delta VSC (vitesse), drapeau bleu ignoré */
   private playerRules(p: Racer, c: Vehicle) {
     const C = this.ctrl
@@ -688,8 +689,7 @@ export class RaceSim {
       this.pAhead.set(o, g)
     }
     // VSC : delta minimum (E : ≈ 60 % de la vitesse de course au même point)
-    if (C.vsc && !p.inPit) { const ref = this.profs.get(p.team)!.v[this.idxOf(p.s)] * 0.62; this.vscT = p.v > ref + 3 ? this.vscT + 1 / 60 : Math.max(0, this.vscT - 1 / 60)
-      if (this.vscT > 2.5) { this.vscT = -20; C.caseNew(p, null, 'non-respect du delta VSC', '5s', 'trop rapide sous VSC', 8) } }
+    if (C.vsc && !p.inPit) { const ref = this.profs.get(p.team)!.v[this.idxOf(p.s)] * 0.62; C.vscOver(p, p.v, ref, 1 / 60) }
     void c
   }
   /** contact joueur ↔ IA : impulsion et dégâts sur la vraie physique du joueur (Vehicle.carHit) */
@@ -711,6 +711,17 @@ export class RaceSim {
   // ───────────── classement en direct
   classify() {
     const A = this.cars
+    if (this.kind === 'race' && this.ctrl.red && this.ctrl.frozenOrder) {
+      const rank = new Map(this.ctrl.frozenOrder.map((r, i) => [r, i]))
+      const act = A.slice().sort((a, b) => (a.out ? 1 : 0) - (b.out ? 1 : 0) || (rank.get(a) ?? 99) - (rank.get(b) ?? 99))
+      act.forEach((r, k) => {
+        r.pos = k + 1
+        const g = (r as Racer & { _fgap?: number })._fgap
+        if (g !== undefined) r.gap = g
+        r.int = k === 0 ? 0 : (act[k - 1].out || r.out ? NaN : r.gap - act[k - 1].gap)
+      })
+      return
+    }
     if (this.kind === 'race') {
       // classement : distance parcourue ; une voiture arrivée est figée sur (tours, ordre d'arrivée)
       const sc = (r: Racer) => r.finished ? r.laps * this.L + (1e6 - r.finishT) * 1e-6 : r.dist

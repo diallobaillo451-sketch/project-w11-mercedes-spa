@@ -25,6 +25,8 @@ export class RaceControl {
   sc = { active: false, mode: 'park' as 'park' | 'out' | 'lead' | 'in', s: 0, d: 0, v: 0, lights: false, lapsLed: 0, caught: false, inThisLap: false, tEnd: 0, prof: null as Float64Array | null, T: 0, dist: 0, wx: 0, wy: 0, wz: 0, hx: 0, hz: -1, pitP: 0 }
   vsc = false; vscEnding = 0; vscEnd = 0
   red = false; redT = 0; resumeAt = 0; private redOrder: Racer[] = []
+  /** ordre et écarts figés au drapeau rouge (le classement live ne bouge plus) */
+  frozenOrder: Racer[] | null = null
   unlap = false
   lightsN = 0; lightsT = 0; lightsHold = 0; goT = -1; private gridT = 0; jumpRef = { s: 0, ok: false }
   greenT = 0
@@ -73,9 +75,12 @@ export class RaceControl {
   redFlag(why: string) {
     if (this.red) return
     this.red = true; this.redT = this.sim.t; this.sc.active = false; this.sc.mode = 'park'; this.vsc = false
-    this.redOrder = this.sim.ordered().filter(r => !r.out)
-    this.resumeAt = this.sim.t + (this.sim.kind === 'race' ? 50 : 35)
-    this.msg('DRAPEAU ROUGE — ' + why + (this.sim.kind === 'race' ? ' · toutes les voitures dans la voie des stands, au ralenti' : ' · séance suspendue'), 'rc')
+    const order = this.sim.ordered().filter(r => !r.out)
+    this.redOrder = order
+    this.frozenOrder = order.slice()
+    for (const r of order) (r as Racer & { _fgap?: number })._fgap = r.gap
+    this.resumeAt = this.sim.t + (this.sim.kind === 'race' ? 25 : 35)
+    this.msg('DRAPEAU ROUGE — ' + why + (this.sim.kind === 'race' ? ' · toutes les voitures dans la voie des stands, écarts figés' : ' · séance suspendue'), 'rc')
     for (const r of this.sim.cars) if (!r.player && !r.out && r.mode !== 'garage') { r.wantPit = 'drapeau rouge'; if (this.sim.kind !== 'race') r.mode = r.mode === 'pit' ? r.mode : 'in' }
   }
   redSlot(r: Racer) { if (!this.red || this.sim.kind !== 'race') return null; const k = this.redOrder.indexOf(r); return k < 0 ? null : k }
@@ -249,13 +254,18 @@ export class RaceControl {
       if (S.t > this.resumeAt && S.cars.every(r => r.player || r.mode === 'garage' || r.out)) { this.red = false; this.greenT = S.t + 10; this.msg('REPRISE DE LA SÉANCE — feu vert en sortie des stands', 'rc') }
       return
     }
-    if (S.t > this.resumeAt && S.cars.every(r => r.player || r.out || r.mode === 'redq')) {
-      // reprise 2020 : départ derrière la SC (tour de formation), puis départ arrêté sur la grille dans l'ordre
+    if (S.t > this.resumeAt && S.cars.every(r => r.player || r.out || r.mode === 'redq' || r.mode === 'pit' || r.mode === 'garage')) {
+      const playerIn = S.player.out || S.player.inPit || S.player.mode === 'pit' || S.player.mode === 'redq'
+      if (!playerIn && S.t < this.resumeAt + 70) return
+      // reprise : départ arrêté sur la grille, dans l'ordre figé. Pas de tour de formation.
       this.red = false
-      this.redOrder.forEach((r, k) => { r.slot = k; if (!r.player) { r.mode = 'pit'; r.prevMode = 'formation'; r.boxP = -1; r.pitT = -1 } })
-      this.phase = 'formation'; this.gridT = 0
-      for (const r of S.cars) (r as Racer & { _f0?: number })._f0 = r.dist
-      this.msg('REPRISE : tour derrière la safety car puis DÉPART ARRÊTÉ (ordre au moment du drapeau rouge)', 'rc')
+      this.frozenOrder = null
+      this.redOrder.forEach((r, k) => { r.slot = k })
+      for (const r of S.cars) { if (r.out) continue; S.placeOnGrid(r); r.v = 0; if (!r.player) r.mode = 'grid' }
+      this.phase = 'lights'; this.lightsT = 0; this.lightsN = 0; this.lightsHold = 0.6 + S.rng.next() * 1.6; this.gridT = 0
+      this.jumpRef = { s: S.player.s, ok: true }
+      this.placePlayerRequest = true
+      this.msg('REPRISE : DÉPART ARRÊTÉ — ordre du drapeau rouge, cinq feux', 'rc')
     }
   }
   // ───────────── drapeaux bleus (3 postes sans céder → pénalité)
@@ -334,7 +344,7 @@ export class RaceControl {
     }
   }
   clearIncident(r: Racer) { for (const inc of this.incidents.slice()) if (inc.r === r && inc.kind === 'spin') this.endIncident(inc) }
-  private endIncident(inc: Incident) { this.incidents.splice(this.incidents.indexOf(inc), 1); if (inc.r?.mode === 'dnf') { inc.r.out = inc.r.out ?? 'Accident'; (inc.r as Racer & { _gone?: boolean })._gone = true } if (!this.sc.active && !this.vsc && !this.red) this.msg(`Poste ${this.postBefore(inc.s).n} : piste dégagée, drapeau vert`, 'flag') }
+  private endIncident(inc: Incident) { this.incidents.splice(this.incidents.indexOf(inc), 1); if (inc.r?.mode === 'dnf') { inc.r.out = inc.r.out ?? 'Accident'; (inc.r as Racer & { _goneAt?: number })._goneAt = this.sim.t + 8 } if (!this.sc.active && !this.vsc && !this.red) this.msg(`Poste ${this.postBefore(inc.s).n} : piste dégagée, drapeau vert`, 'flag') }
   // ───────────── commissaires
   caseNew(a: Racer, b: Racer | null, what: string, pen: string, reason: string, delay = 20) {
     const S = this.sim
@@ -383,6 +393,17 @@ export class RaceControl {
     if (r.warnings <= 3) this.msg(`Limites de piste : ${r.code} · avertissement ${r.warnings}${r.warnings === 3 ? ' · DRAPEAU NOIR ET BLANC' : ''}`, 'rc')
     if (r.warnings === 3) r.bw = true
     if (r.warnings >= 4) { this.caseNew(r, null, 'limites de piste répétées', '5s', 'non-respect répété des limites de piste', 6); r.warnings = 2 }
+  }
+  /** état lu par les panneaux et par les outils : un poste, son drapeau, son panneau */
+  marshalState(): { n: number; s: number; panel: Panel; flag: Panel }[] {
+    return this.posts.map(p => ({ n: p.n, s: p.s, panel: p.panel, flag: p.flag }))
+  }
+  /** delta VSC : au-dessus du plafond pendant 2,5 s → 5 s, joueur et IA */
+  vscOver(r: Racer, v: number, ref: number, dt: number) {
+    if (!this.vsc || r.out) return
+    const k = r as Racer & { _vsc?: number }
+    k._vsc = v > ref + 3 ? (k._vsc ?? 0) + dt : Math.max(-20, (k._vsc ?? 0) - dt)
+    if ((k._vsc ?? 0) > 2.5) { k._vsc = -20; this.caseNew(r, null, 'non-respect du delta VSC', this.sim.kind === 'race' ? '5s' : 'warn', 'trop rapide sous VSC', 8) }
   }
   pitSpeeding(r: Racer, v: number) { const k = r as Racer & { _ps?: number }; if (k._ps !== undefined && k._ps > this.sim.t - 20) return; k._ps = this.sim.t; this.caseNew(r, null, `excès de vitesse dans la voie des stands (${Math.round(v * 3.6)} km/h)`, this.sim.kind === 'race' ? '5s' : 'warn', 'limitation 80 km/h', 4) }
   /** ligne d'entrée ou de sortie coupée, ou feu de sortie grillé */
