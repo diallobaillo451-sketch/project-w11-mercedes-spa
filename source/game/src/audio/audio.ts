@@ -57,7 +57,10 @@ export class AudioEngine {
   private rainG!: GainNode; private rainLowG!: GainNode; private hissG!: GainNode; private mguh!: OscillatorNode; private mguhG!: GainNode; private lockG!: GainNode
   private spool = 0; private crackT = 0
   private cut = 0; private dop = 1; private lastThr = 0; private pebT = 0; private popT = 0
-  async init(base = './audio/engine/', offline?: BaseAudioContext) {
+  pu: 'mercedes' | 'ferrari' | 'honda' | 'renault' = 'mercedes'
+  private bankBase = './audio/engine/'
+  async init(base?: string, offline?: BaseAudioContext) {
+    if (base) this.bankBase = base
     if (this.ctx) { if (live(this.ctx)) await this.ctx.resume(); return }
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     const ctx = this.ctx = offline ?? new AC({ latencyHint: 'interactive' })
@@ -99,18 +102,7 @@ export class AudioEngine {
     this.engLow = ctx.createBiquadFilter(); this.engLow.type = 'lowshelf'; this.engLow.frequency.value = 220; this.engLow.gain.value = 0
     this.engLow.connect(this.engLP); this.engLP.connect(this.engP)
     this.engBus = ctx.createGain(); this.engBus.gain.value = 0.9; this.engBus.connect(this.engLow)
-    const map = await (await fetch(base + 'engine-map.json')).json() as { samples: Sample[] }
-    const bufs = await Promise.all(map.samples.map(async s => {
-      const ab = await (await fetch(base + s.file)).arrayBuffer()
-      return await new Promise<AudioBuffer>((res, rej) => ctx.decodeAudioData(ab, res, rej))
-    }))
-    map.samples.forEach((s, i) => {
-      const src = ctx.createBufferSource(); src.buffer = bufs[i]; src.loop = true
-      const g = ctx.createGain(); g.gain.value = 0; src.connect(g); g.connect(this.engBus)
-      src.start(ctx.currentTime + 0.01, Math.random() * bufs[i].duration)
-      ;(s.load === 'on' ? this.on : this.off).push({ rpm: s.rpm_measured, src, g })
-    })
-    this.on.sort((a, b) => a.rpm - b.rpm); this.off.sort((a, b) => a.rpm - b.rpm)
+    await this.loadBank(this.bankBase)
     // corps du moteur à bas régime : harmoniques d'allumage V6 (sous la boucle, jamais seules)
     this.idleLP = ctx.createBiquadFilter(); this.idleLP.type = 'lowpass'; this.idleLP.frequency.value = 700; this.idleLP.Q.value = 0.8
     this.idleG = ctx.createGain(); this.idleG.gain.value = 0; this.idleLP.connect(this.idleG); this.idleG.connect(this.engBus)
@@ -151,6 +143,76 @@ export class AudioEngine {
     this.kerbO.connect(kl); kl.connect(this.kerbG); this.kerbG.connect(this.wheelP); this.kerbO.start()
     this.ready = true
   }
+  private ref: AudioBuffer | null = null
+  private async loadBank(base: string) {
+    const ctx = this.ctx!
+    for (const l of [...this.on, ...this.off]) { try { l.src.stop() } catch { /* déjà arrêté */ } l.g.disconnect() }
+    this.on = []; this.off = []
+    const map = await (await fetch(base + 'engine-map.json')).json() as { samples: Sample[] }
+    const bufs = await Promise.all(map.samples.map(async s => {
+      const ab = await (await fetch(base + s.file)).arrayBuffer()
+      return await new Promise<AudioBuffer>((res, rej) => ctx.decodeAudioData(ab.slice(0), res, rej))
+    }))
+    let best = 1e9
+    map.samples.forEach((s, i) => {
+      const src = ctx.createBufferSource(); src.buffer = bufs[i]; src.loop = true
+      const g = ctx.createGain(); g.gain.value = 0; src.connect(g); g.connect(this.engBus)
+      src.start(ctx.currentTime + 0.02, Math.random() * Math.max(0.01, bufs[i].duration * 0.5))
+      ;(s.load === 'on' ? this.on : this.off).push({ rpm: s.rpm_measured, src, g })
+      if (s.load === 'on' && Math.abs(s.rpm_measured - 10500) < best) { best = Math.abs(s.rpm_measured - 10500); this.ref = bufs[i] }
+    })
+    this.on.sort((a, b) => a.rpm - b.rpm); this.off.sort((a, b) => a.rpm - b.rpm)
+    this.bankBase = base
+  }
+  /** Bank de l'unité de puissance du joueur. Une autre PU ne retombe pas sur Mercedes. */
+  async usePU(pu: AudioEngine['pu']) {
+    if (pu === this.pu && this.on.length) return
+    const base = pu === 'mercedes' ? './audio/engine/' : `./audio/engine/${pu}/`
+    this.pu = pu
+    if (pu !== 'mercedes') {
+      const ok = await fetch(base + 'engine-map.json').then(r => r.ok).catch(() => false)
+      if (!ok) { for (const l of [...this.on, ...this.off]) l.g.gain.value = 0; this.on = []; this.off = []; return }
+    }
+    this.bankBase = base
+    if (!this.ctx || !this.ready) return
+    await this.loadBank(base)
+  }
+  private aiNodes: { src: AudioBufferSourceNode; g: GainNode; buf: AudioBuffer }[] = []
+  private aiBuf = new Map<string, AudioBuffer>()
+  /** 3–4 moteurs proches : une couche, le bank de LEUR unité, Doppler par le taux de lecture. */
+  async updateNearby(cars: { pu: string; rpm: number; x: number; y: number; z: number; throttle: number }[], cam: [number, number, number]) {
+    if (!this.ready || !this.ctx) return
+    const ctx = this.ctx
+    while (this.aiNodes.length < 3) {
+      const src = ctx.createBufferSource(); const g = ctx.createGain(); g.gain.value = 0
+      src.connect(g); g.connect(this.air); src.loop = true; src.start()
+      this.aiNodes.push({ src, g, buf: ctx.createBuffer(1, 1, ctx.sampleRate) })
+    }
+    const used = cars.slice(0, 3)
+    for (let i = 0; i < this.aiNodes.length; i++) {
+      const n = this.aiNodes[i], c = used[i]
+      if (!c) { n.g.gain.setTargetAtTime(0, ctx.currentTime, 0.05); continue }
+      let buf = c.pu === this.pu ? this.ref : this.aiBuf.get(c.pu)
+      if (!buf && c.pu !== this.pu && !this.aiBuf.has(c.pu)) {
+        this.aiBuf.set(c.pu, n.buf)
+        const base = `./audio/engine/${c.pu}/`
+        void fetch(base + 'engine-map.json').then(r => r.ok ? r.json() : null).then(async (map: { samples: Sample[] } | null) => {
+          const s = map?.samples?.find(x => x.load === 'on' && x.rpm_measured > 9000) ?? map?.samples?.find(x => x.load === 'on')
+          if (!s) return
+          const ab = await (await fetch(base + s.file)).arrayBuffer()
+          const b = await ctx.decodeAudioData(ab.slice(0))
+          this.aiBuf.set(c.pu, b)
+        }).catch(() => {})
+      }
+      buf = c.pu === this.pu ? this.ref : this.aiBuf.get(c.pu)
+      if (!buf || buf.length < 10) { n.g.gain.setTargetAtTime(0, ctx.currentTime, 0.05); continue }
+      if (n.buf !== buf) { try { n.src.stop() } catch { /* */ } n.src.disconnect(); const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(n.g); src.start(); n.src = src; n.buf = buf }
+      const dx = c.x - cam[0], dy = c.y - cam[1], dz = c.z - cam[2]
+      const dist = Math.hypot(dx, dy, dz)
+      n.g.gain.setTargetAtTime(Math.min(0.35, 8 / Math.max(6, dist)) * (0.35 + 0.65 * c.throttle), ctx.currentTime, 0.08)
+      n.src.playbackRate.setTargetAtTime(Math.max(0.5, Math.min(1.6, c.rpm / (n.buf === this.ref ? 10500 : 10000))), ctx.currentTime, 0.05)
+    }
+  }
   setVolume(v: number) { this.volume = v; if (this.master && this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : v, this.ctx.currentTime, 0.05) }
   setMuted(m: boolean) { this.muted = m; this.setVolume(this.volume) }
   suspend() { if (this.ctx && live(this.ctx)) void this.ctx.suspend() } resume() { if (this.ctx && live(this.ctx)) void this.ctx.resume() }
@@ -184,7 +246,7 @@ export class AudioEngine {
     const cam: AudioCam = a.cam ?? (a.inside ? 'cockpit' : 'chase'), P = PROFILE[cam]
     if (a.shift) this.cut = 0.045
     this.cut = Math.max(0, this.cut - dt)
-    const lim = a.limiter ? 0.55 + 0.45 * Math.round(Math.random()) : 1
+    const lim = a.limiter ? ((Math.floor(t * 24) & 1) ? 0.08 : 1) : 1
     const load = clamp(a.throttle, 0, 1) * (this.cut > 0 ? 0.15 : 1) * lim
     const dTarget = a.inside ? 1 : clamp(343 / (343 - clamp(a.radialV, -120, 120)), 0.7, 1.4)
     this.dop += (dTarget - this.dop) * Math.min(1, dt * 6)

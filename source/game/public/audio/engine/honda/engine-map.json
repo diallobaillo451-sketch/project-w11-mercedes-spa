@@ -1,0 +1,143 @@
+{
+ "version": 1,
+ "pu": "honda",
+ "method": "autocorrélation, varispeed ±10 %, fondu de boucle 120 ms, RMS 0,12",
+ "rpm_model": "rpm = 120 × f0 (ordre 0,5 ; allumage V6 = 6 × f0) — même hypothèse que Mercedes, revalidée par l'octave médiane",
+ "rights": "enregistrement fourni par l'auteur du projet, droits à confirmer",
+ "samples": [
+  {
+   "id": "on_08000",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 8000,
+   "rpm_measured": 8000,
+   "file": "on_08000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0579,
+   "frames": 7,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_09000",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 9000,
+   "rpm_measured": 9000,
+   "file": "on_09000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0477,
+   "frames": 7,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_09500",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 9500,
+   "rpm_measured": 9500,
+   "file": "on_09500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.034,
+   "frames": 8,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_10000",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 10000,
+   "rpm_measured": 10000,
+   "file": "on_10000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0555,
+   "frames": 23,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_10500",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 10500,
+   "rpm_measured": 10500,
+   "file": "on_10500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.004,
+   "frames": 52,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_11000",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 11000,
+   "rpm_measured": 11000,
+   "file": "on_11000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0479,
+   "frames": 50,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_11500",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 11500,
+   "rpm_measured": 11495,
+   "file": "on_11500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.012,
+   "frames": 33,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_12000",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 12000,
+   "rpm_measured": 12000,
+   "file": "on_12000.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0763,
+   "frames": 22,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "on_12500",
+   "load": "on",
+   "source": "honda_pu.mp3",
+   "rpm_target": 12500,
+   "rpm_measured": 12580,
+   "file": "on_12500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.04,
+   "frames": 14,
+   "codec": "aac-64k"
+  },
+  {
+   "id": "off_09500",
+   "load": "off",
+   "source": "honda_pu.mp3",
+   "rpm_target": 9500,
+   "rpm_measured": 9500,
+   "file": "off_09500.m4a",
+   "duration_s": 1.6,
+   "seam": 0.0634,
+   "frames": 8,
+   "codec": "aac-64k"
+  }
+ ],
+ "rejected": [
+  {
+   "id": "on_07000",
+   "reason": "pas assez de matière stable à ce régime"
+  },
+  {
+   "id": "off_07500",
+   "reason": "pas assez de matière stable à ce régime"
+  },
+  {
+   "id": "off_10500",
+   "reason": "pas assez de matière stable à ce régime"
+  }
+ ]
+}
