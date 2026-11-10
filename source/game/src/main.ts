@@ -29,7 +29,7 @@ import { applyCarPhysics, CARS2020 } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
-import { loadSpaPits } from './render/pitYard.ts'
+import { loadSpaPits, openGarageDoors, updateGarageAnims } from './render/pitYard.ts'
 import { readPitAnchors } from './render/anchors.ts'
 import { PitScreens } from './render/pitScreens.ts'
 import { Engineer } from './race/engineer.ts'
@@ -101,7 +101,7 @@ function applySettings() {
   menuMusic.setVolume(settings.musicVol)
   saveSettings(settings)
 }
-const CAM_SHORT: Record<CamMode, string> = { chase: 'Poursuite', close: 'Proche', tcam: 'T-cam', cockpit: 'Cockpit', tv: 'TV', free: 'Libre' }
+const CAM_SHORT: Record<CamMode, string> = { chase: 'Poursuite', close: 'Proche', tcam: 'T-cam', cockpit: 'Cockpit', tv: 'TV', free: 'Libre', garage: 'Garage' }
 function setCam(m: CamMode) { ren.cams.setMode(m); $('bCam').textContent = CAM_SHORT[m]; $('bCam').title = CAM_LABEL[m] }
 /** lot 8 C : plateau de 19 IA + direction de course pour la séance (course rapide, séances du week-end) */
 function setupField(k: SessionKind | 'demo') {
@@ -162,6 +162,8 @@ function startSession(k: SessionKind | 'demo', keepRun = false) {
   applySettings()
   setScreen('drive')
   setCam(k === 'demo' ? 'tv' : settings.camera)
+  // essais et qualifs : la voiture sort de son garage (caméra à l'intérieur), puis le joueur reprend la main dans la voie des stands
+  if ((k === 'practice' || k === 'qualifying') && game.beginGarageExit()) setCam('garage')
   $('hSess').hidden = !run
   if (run) { game.car.fuel = run.fuel; run.started = true; run.goT = game.time; run.pen0 = game.penalties; run.tel = newTelemetry() }
   lapsDone = 0; if (k === 'timetrial') { radio.say('radio_check', 0); radio.say('tour_lance_go', 0) } else if (k === 'practice') { radio.say('radio_check', 0); radio.say('sortie_garage', 0) }
@@ -171,9 +173,12 @@ function startSession(k: SessionKind | 'demo', keepRun = false) {
 }
 function setScreen(s: Screen) {
   screen = s
-  const studio = s === 'menu' || s === 'garage' || s === 'results'
+  // écran Garage : le vrai garage 3D du joueur (voiture à sa place, caméra à l'intérieur) ; sans garage 3D, la vitrine studio
+  const g3d = s === 'garage' && !!game?.garage
+  const studio = s === 'menu' || s === 'results' || (s === 'garage' && !g3d)
   if (studio && !ren.show.active) ren.enterShowroom(); else if (!studio && s !== 'boot' && ren.show.active) ren.exitShowroom()
-  if (s !== 'boot') audio.setMuted(studio || settings.muted)
+  if (g3d) { game.parkInGarage(); setCam('garage') }
+  if (s !== 'boot') audio.setMuted(studio || g3d || settings.muted)
   menuMusic.setInMenu(s === 'menu') // musique : menu principal uniquement (ni garage, ni résultats, ni course)
   show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause'); show('garage', s === 'garage'); show('results', s === 'results')
   show('lights', s === 'drive' && !!run && run.kind !== 'legacy' && sessionKindOf(run) === 'race' && !run.lightsDone && (!game.field || game.field.ctrl.phase === 'lights'))
@@ -314,6 +319,8 @@ function frame(now: number) {
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
   menuMusic.update(dt)
   if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); return }
+  updateGarageAnims(dt)
+  if (screen === 'garage') { garageTick(); if (game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt) }
   const st = input.poll(dt, settings.setup.autoGear)
   const c = game.car
   game.ctl.throttle = st.throttle; game.ctl.brake = st.brake; game.ctl.steer = st.steer
@@ -329,6 +336,7 @@ function frame(now: number) {
   if (run && screen === 'drive') runPre(dt)
   game.advance(screen === 'drive' ? dt : 0)
   const ev = game.events
+  if (ev.garageOut && !game.autopilot) setCam(settings.camera)
   if (run && screen === 'drive') runPost(dt)
   if (ev.lap) hud.toast((ev.lap.best ? 'Meilleur tour ! ' : 'Tour ') + fmt(ev.lap.time) + (ev.lap.valid ? '' : ' (invalide)'), 3200)
   else if (ev.invalid && !game.autopilot) hud.toast('Tour invalidé · limites de piste', 2000)
@@ -508,7 +516,7 @@ function makeGarage() {
     remaining: () => run!.remaining, spend: sec => { run!.remaining = Math.max(0, run!.remaining - sec); if (run!.started) ffPending += sec }, started: () => run!.started,
     goOut: () => {
       if (run!.id !== 'RACE' && run!.remaining <= 0) { endSession(); return }
-      if (!run!.started) { startSession(sessionKind(run!.id!), true) } else { applySettings(); game.car.fitTyres(settings.setup.compound, settings.blanketF, settings.blanketR); setScreen('drive') }
+      if (!run!.started) { startSession(sessionKind(run!.id!), true) } else { applySettings(); game.car.fitTyres(settings.setup.compound, settings.blanketF, settings.blanketR); setScreen('drive'); if (game.beginGarageExit()) setCam('garage') }
       run!.tel = newTelemetry(); saveRun()
     },
     endSession: () => endSession(), menu: () => { saveRun(); run = null; menu.reset(); setScreen('menu') }, save: () => { applySettings(); saveRun() },
@@ -671,7 +679,7 @@ async function main() {
       if (!game.pit) return
       const a = readPitAnchors(root)
       if (game.adoptPitAnchors(a)) dlog('voie des stands : ancres du circuit (' + (game.pit.anchored ? 'chemin ' + game.pit.n + ' pts' : '') + ')')
-      fview?.adoptScene(root)
+      fview?.adoptScene(root); openGarageDoors(root, game.garage)
     }
     game.autopilot = true
     const QL = ['low', 'medium', 'high', 'ultra'] as const, q0 = (params.get('q') as typeof settings.quality) || settings.quality
