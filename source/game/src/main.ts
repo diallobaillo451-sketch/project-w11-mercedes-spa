@@ -115,7 +115,7 @@ function setupField(k: SessionKind | 'demo') {
   }
   const F = game.startField({ kind, laps: run.laps, player, grid, exclude, sessionLen: kind === 'race' ? undefined : run.remaining, posts: marshals })
   F.difficulty = settings.profile.difficulty
-  F.hybridOn = true
+  F.hybridOn = new URLSearchParams(location.search).get('hybrid') !== '0' // ?hybrid=0 : IA en 1D seule (comparer la fluidité)
   if (kind === 'race') F.planRace()
   if (kind === 'race') {
     F.ctrl.startFormation()
@@ -174,7 +174,7 @@ function setScreen(s: Screen) {
   const studio = s === 'menu' || s === 'garage' || s === 'results'
   if (studio && !ren.show.active) ren.enterShowroom(); else if (!studio && s !== 'boot' && ren.show.active) ren.exitShowroom()
   if (s !== 'boot') audio.setMuted(studio || settings.muted)
-  menuMusic.setInMenu(studio)
+  menuMusic.setInMenu(s === 'menu') // musique : menu principal uniquement (ni garage, ni résultats, ni course)
   show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause'); show('garage', s === 'garage'); show('results', s === 'results')
   show('lights', s === 'drive' && !!run && run.kind !== 'legacy' && sessionKindOf(run) === 'race' && !run.lightsDone && (!game.field || game.field.ctrl.phase === 'lights'))
   const wkDrive = !!run && run.kind === 'weekend' && run.id !== 'RACE'
