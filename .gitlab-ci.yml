@@ -42,3 +42,14 @@ typecheck:
   allow_failure: true
   rules:
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+# Audit chiffré (lecture seule) : déclenché par [audit] dans le message du commit. Ne publie rien.
+audit_cars:
+  stage: test
+  image: node:22
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[audit\]/
+  script:
+    - !reference [.assemble, script]
+    - mkdir -p /tmp/w && cp source/game/tools/audit_cars.mjs /tmp/w/ && cd /tmp/w && npm init -y > /dev/null && npm i --silent @gltf-transform/core @gltf-transform/extensions @gltf-transform/functions draco3dgltf meshoptimizer
+    - cd /tmp/w && node audit_cars.mjs "$CI_PROJECT_DIR/public"
