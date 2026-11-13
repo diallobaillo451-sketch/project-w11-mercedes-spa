@@ -32,6 +32,7 @@ import { applyWet, wetU, SkidMarks, RainStreaks, LensDrops, DebrisView } from '.
 import { W11 } from '../physics/params.ts'
 import type { Game, Pose } from '../core/game.ts'
 import type { TrackSurface } from '../track/surface.ts'
+import { CIRCUIT } from '../core/circuit.ts'
 
 export type Progress = (label: string, frac: number) => void
 /** Téléchargement avec progression (fetch + flux), puis analyse glTF (meshopt). */
@@ -62,7 +63,7 @@ const ALBEDO_FIX: Record<string, [number, number]> = {
   'asph_new': [0.95, 0.3], 'groove1': [0.85, 0.35], 'groove2': [0.85, 0.35], 'groove3': [0.85, 0.35], 'groove_custom': [0.85, 0.35],
   'Parking': [0.8, 0.3], 'sand': [0.7, 0.2], 'misc': [0.8, 0.5], 'walls': [0.85, 0.4], 'new_AO': [0.85, 0.5],
 }
-const TRACK_DIR = './assets/spa/'
+const TRACK_DIR = CIRCUIT.sceneDir
 /** tuiles chargées avant le départ : décor global + celles dont la sphère englobante passe à moins de NEAR_M m de la voiture (au moins 3) ; E */
 const NEAR_M = 150
 export interface TileInfo { id: string; file: string; nodes: number; tris: number; cx: number; cz: number; r: number; geoBytes: number; tex: string[] }
@@ -306,13 +307,13 @@ export class Renderer {
     this.rig.onPartLost = (_w, p) => { for (let i = 0; i < 4; i++) this.fx.spark([p.x, p.y, p.z], game.car.vel, 2) }
     // herbe 3D en bord de piste (pas en qualité basse ; ?grass=0 pour comparer)
     if (q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
-      const gm = await fetch('./track/grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+      const gm = await fetch(CIRCUIT.trackDir + 'grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
       if (gm) this.grass = new Grass(track, gm, q.name === 'medium' ? 0.6 : 1.0, q.name === 'medium' ? 8000 : 14000, 34, this.detail?.tex.grass ?? null); if (this.grass) { this.scene.add(this.grass.mesh)
       dlog(`herbe 3D : ${this.grass.n} touffes (fenêtre ≤ ${this.grass.cap})`) }
     }
     // public des tribunes (toutes qualités : ≤ 36 triangles par personne près, 4 loin)
     if (new URLSearchParams(location.search).get('crowd') !== '0') {
-      const cb = await fetch('./track/crowd.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+      const cb = await fetch(CIRCUIT.trackDir + 'crowd.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
       if (cb) { this.crowd = new Crowd(cb); this.scene.add(this.crowd.group); dlog(`public : ${this.crowd.chunks.length} blocs`) }
     }
     // mobile : démarrage SANS composeur (cibles HalfFloat MSAA), sans sonde cube, ombre 1024 → upgrade() après stabilité

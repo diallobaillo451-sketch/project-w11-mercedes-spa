@@ -6,6 +6,7 @@ import { TrackSurface } from './track/surface.ts'
 import { Barriers } from './track/barriers.ts'
 import { Pitlane, type PitlaneData } from './track/pitlane.ts'
 import { Game } from './core/game.ts'
+import { CIRCUIT, switchCircuit } from './core/circuit.ts'
 import { Renderer } from './render/renderer.ts'
 import { CAM_LABEL, CAM_ORDER, type CamMode } from './render/cameras.ts'
 import { Input } from './controls/input.ts'
@@ -70,12 +71,20 @@ function bootProgress(label: string, f: number) {
   $('bootText').textContent = label + (diag.safe ? ' · mode sans échec' : ''); ($('bootBar') as HTMLElement).style.width = Math.round(f * 100) + '%' }
 
 let pitData: PitlaneData | null = null
+/** bouton Circuit (menu) : Spa ⇄ Monza, recharge la page */
+function mountCircuitButton() {
+  const b = document.createElement('button'); b.id = 'bCircuit'; b.type = 'button'; b.hidden = true
+  b.textContent = 'Circuit : ' + CIRCUIT.name + ' ⇄'
+  b.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:60;padding:7px 12px;border:0;border-radius:999px;background:rgba(20,20,24,.62);color:#fff;font:600 12px -apple-system,system-ui,sans-serif;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)'
+  b.addEventListener('click', () => switchCircuit())
+  document.body.appendChild(b)
+}
 async function loadTrack(): Promise<TrackSurface> {
   bootProgress('Surface de piste…', 0.02)
-  const [meta, bin, bar] = await Promise.all([fetch('./track/surface.json').then(r => r.json()), fetch('./track/surface.bin').then(r => r.arrayBuffer()),
-    fetch('./track/barriers.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)])
+  const [meta, bin, bar] = await Promise.all([fetch(CIRCUIT.trackDir + 'surface.json').then(r => r.json()), fetch(CIRCUIT.trackDir + 'surface.bin').then(r => r.arrayBuffer()),
+    fetch(CIRCUIT.trackDir + 'barriers.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)])
   const t = new TrackSurface(meta, new Uint16Array(bin)); if (bar) t.barriers = new Barriers(bar)
-  pitData = await fetch('./track/pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null)
+  pitData = await fetch(CIRCUIT.trackDir + 'pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null)
   return t
 }
 let appliedTyres = '', lastPunct = '00000000'
@@ -130,7 +139,7 @@ function setupField(k: SessionKind | 'demo') {
   void audio.usePU(pu).catch(e => dlog('audio PU : ' + (e as Error).message))
   ren.releaseCarCache()
   void fv.load(F).then(async () => {
-    if (!fv.lamps.size) await fv.loadLamps('./assets/spa_pits/marshal_lamps.glb', F)
+    if (CIRCUIT.spaPits && !fv.lamps.size) await fv.loadLamps('./assets/spa_pits/marshal_lamps.glb', F)
     screens?.bind(fv.anchors)
     ren.memLog('plateau IA chargé')
   }).catch(e => dlog('plateau IA : ' + (e as Error).message))
@@ -180,6 +189,7 @@ function setScreen(s: Screen) {
   if (g3d) { game.parkInGarage(); setCam('garage') }
   else if (s === 'drive' && ren.cams.mode === 'garage' && !game.garageExit) setCam(settings.camera)
   if (s !== 'boot') audio.setMuted(studio || g3d || settings.muted)
+  const bc = document.getElementById('bCircuit'); if (bc) bc.hidden = s !== 'menu'
   menuMusic.setInMenu(s === 'menu') // musique : menu principal uniquement (ni garage, ni résultats, ni course)
   show('boot', s === 'boot'); show('menu', s === 'menu'); show('pause', s === 'pause'); show('garage', s === 'garage'); show('results', s === 'results')
   show('lights', s === 'drive' && !!run && run.kind !== 'legacy' && sessionKindOf(run) === 'race' && !run.lightsDone && (!game.field || game.field.ctrl.phase === 'lights'))
@@ -675,7 +685,7 @@ async function main() {
     bootProgress('Trajectoire…', 0.05)
     await new Promise(r => setTimeout(r, 0))
     game = new Game(track, 'timetrial')
-    if (pitData) game.pit = new Pitlane(pitData, { limitFromS: 6790, limitToS: 200 })
+    if (pitData) game.pit = new Pitlane(pitData, CIRCUIT.pit)
     const bindPit = (root: THREE.Object3D) => {
       if (!game.pit) return
       const a = readPitAnchors(root)
@@ -695,7 +705,7 @@ async function main() {
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
     fview = new FieldView(ren)
     if (ren.track) { bindPit(ren.track); fview.adoptScene(ren.track) }
-    void loadSpaPits(game, ren, fview, carOfTeam(driverById(settings.profile.driver).team)).catch(e => dlog('stands : ' + (e as Error).message))
+    if (CIRCUIT.spaPits) void loadSpaPits(game, ren, fview, carOfTeam(driverById(settings.profile.driver).team)).catch(e => dlog('stands : ' + (e as Error).message))
     screens = new PitScreens()
     engineer = new Engineer()
     career = loadCareer()
@@ -703,7 +713,7 @@ async function main() {
     await fview.preload((done, total, team) => bootProgress('Voitures · ' + team, 0.9 + 0.08 * done / Math.max(1, total)))
     hud = new Hud()
     tower = new Tower()
-    marshals = await fetch('./assets/spa_pits/marshals.json').then(r => r.ok ? r.json() : null).catch(() => null)
+    marshals = CIRCUIT.marshals ? await fetch(CIRCUIT.marshals).then(r => r.ok ? r.json() : null).catch(() => null) : null
     $('bSkipF').addEventListener('click', () => skipFormation())
     void radio.load().then(() => dlog('radio : banque chargée')).catch(e => dlog('radio indisponible : ' + (e as Error).message))
     wireRadio()
@@ -737,6 +747,7 @@ async function main() {
     adapt.baseMs = adapt.targetMs = 1000 / ren.q.fps
     // qualité réduite (mode sans échec / plantage antérieur) : TOUJOURS visible à l'écran, avec la raison
     if (diag.safe || diag.drop > 0) { const b = document.createElement('div'); b.className = 'qwarn'; b.textContent = 'Qualité réduite : ' + (diag.safeReason || 'plantage GPU précédent') + ' · Options → Diagnostic'; document.body.appendChild(b) }
+    mountCircuitButton()
     bootProgress('Prêt', 1)
     bootDone()
     $('bootGo').hidden = false
