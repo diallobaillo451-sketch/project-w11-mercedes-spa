@@ -163,10 +163,10 @@ export class RaceControl {
       const ah = this.carAheadAny(r); if (ah && ah.mode !== 'grid') { const g = S.road(r.s, ah.s); vt = Math.min(vt, Math.max(0, ah.v + (g - 32) * 0.5)) }
       // place de grille : arrivée en douceur, arrêt sur la marque
       const slot = S.gridPos(r.slot), togo = S.road(r.s, slot.s), formDone = r.dist - ((r as Racer & { _f0?: number })._f0 ?? r.dist) > S.L * 0.6
-      if (formDone && togo > -2 && togo < 260) { vt = Math.min(vt, Math.sqrt(2 * 4.5 * Math.max(0, togo - 0.2))); if (togo < 0.5 && r.v < 1) { r.mode = 'grid'; r.v = 0; r.d = slot.d; r.dist -= S.L } }
-      return vt
+      if (formDone && togo > -2 && togo < 260) { vt = Math.min(vt, Math.sqrt(2 * 4.5 * Math.max(0, togo - 0.2))); if (togo < 0.5 && r.v < 1) { r.mode = 'grid'; r.v = 0; r.d = slot.d } }
+      return this.yellowSpeedCap(r, i, vt)
     }
-    if (this.red) { const vp = r.prof.v[i] * 0.45; return Math.min(vt, vp) }
+    if (this.red) { const vp = r.prof.v[i] * 0.45; return this.yellowSpeedCap(r, i, Math.min(vt, vp)) }
     if (this.vsc) vt = Math.min(vt, r.prof.v[i] * 0.6)
     if (this.sc.active && !(this as RaceControl).isUnlapping(r) && r.wantPit === null) {
       vt = Math.min(vt, r.prof.v[i] * 0.66)
@@ -178,11 +178,19 @@ export class RaceControl {
     if (this.sc.active && this.isUnlapping(r)) vt = Math.min(vt, r.prof.v[i] * 0.8)
     // reprise après SC : pas de dépassement avant la ligne
     if (this.phase === 'chequered' && r.finished) vt = Math.min(vt, r.prof.v[i] * 0.55)
-    const y = this.yellowAt(r.s)
-    if (y === 'double') vt *= 0.86; else if (y === 'yellow') vt *= 0.96
-    return vt
+    return this.yellowSpeedCap(r, i, vt)
   }
-  weave(r: Racer) { return (this.sc.active && !this.isUnlapping(r)) || (this.red && r.mode !== 'pit') }
+  private yellowSpeedCap(r: Racer, i: number, vt: number) {
+    const caution = this.yellowAhead(r.s, Math.min(600, Math.max(50, r.v * 5)))
+    if (!caution) return vt
+    const base = r.prof.v[i] || vt
+    const target = base * (caution.severity === 'double' ? 0.5 : 0.74)
+    if (caution.distance <= 0) return Math.min(vt, target)
+    const decel = caution.severity === 'double' ? 6 : 4
+    const brakingDistance = Math.max(0, caution.distance - 12)
+    return Math.min(vt, Math.sqrt(target * target + 2 * decel * brakingDistance))
+  }
+  weave(r: Racer) { return (this.sc.active && !this.isUnlapping(r)) || (this.red && r.mode !== 'pit') || !!this.yellowAt(r.s) }
   /** voiture devant sur la route, toutes voies confondues (pas de dépassement) */
   carAheadAny(r: Racer, ignorePit = false) {
     let best: Racer | null = null, g = 1e9
@@ -193,7 +201,7 @@ export class RaceControl {
   mayOvertake(r: Racer, ahead: Racer) {
     if (this.phase !== 'racing' && this.phase !== 'session' && this.phase !== 'chequered') return false
     if (this.red || this.vsc || (this.sc.active && !this.isUnlapping(r))) return false
-    if (this.yellowAt(r.s) || this.yellowAt(ahead.s)) return ahead.mode === 'spun' || ahead.mode === 'dnf' || !!ahead.err
+    if (this.yellowAt(r.s) || this.yellowAt(ahead.s)) return false
     // reprise après SC : dépassement autorisé seulement après la ligne de contrôle
     if (this.restartHold && this.sim.road(r.s, 0) > 0 && this.sim.road(r.s, 0) < 2500) return false
     return true
@@ -201,7 +209,7 @@ export class RaceControl {
   restartHold = false
   drsGlobal() { return !this.red && !this.vsc && !this.sc.active && this.sim.wetness() < 0.3 && !this.restartHold }
   drsAllowed(r: Racer, gapT: number) {
-    if (!this.drsGlobal()) return false
+    if (!this.drsGlobal() || this.yellowAt(r.s)) return false
     if (this.sim.kind !== 'race') return r.mode === 'push'
     // course : à partir du 3e tour (2 tours après le départ ou une reprise), moins d'1 s à la détection (art. 22.2 / 2020)
     if (r.laps < 2 || this.sim.t - this.drsResumeT < 0) return false
@@ -301,15 +309,25 @@ export class RaceControl {
     // bleu : poste juste devant la voiture qui va être doublée
     for (const r of S.cars) if (r.blueT > 0) { const p = this.postAfter(r.s); if (p.panel === 'off' || p.panel === 'green') { p.panel = 'blue'; p.flag = 'blue' } }
   }
-  /** zone jaune / double jaune à l'abscisse s (du poste en amont de l'incident au poste qui suit) */
-  yellowAt(s: number): 'yellow' | 'double' | null {
-    const S = this.sim; let res: 'yellow' | 'double' | null = null
+  /** Zone cautionnée en cours ou à venir; la distance permet de freiner avant le poste jaune. */
+  yellowAhead(s: number, horizon = 0): { severity: 'yellow' | 'double'; distance: number } | null {
+    const S = this.sim
+    let best: { severity: 'yellow' | 'double'; distance: number } | null = null
     for (const inc of this.incidents) {
       const up = this.postBefore(S.wrapS(this.postBefore(inc.s).s - 1)), nx = this.postAfter(inc.s)
-      const a = S.road(up.s, s), len = S.road(up.s, nx.s)
-      if (a >= 0 && a <= len) { if (inc.sev === 'double') return 'double'; res = 'yellow' }
+      const offset = S.road(up.s, s), len = S.road(up.s, nx.s)
+      let distance = 0
+      if (offset < 0 || offset > len) {
+        distance = S.road(s, up.s)
+        if (distance < 0 || distance > horizon) continue
+      }
+      if (!best || distance < best.distance || (distance === best.distance && inc.sev === 'double')) best = { severity: inc.sev, distance }
     }
-    return res
+    return best
+  }
+  /** zone jaune / double jaune à l'abscisse s (du poste en amont de l'incident au poste qui suit) */
+  yellowAt(s: number): 'yellow' | 'double' | null {
+    return this.yellowAhead(s, 0)?.severity ?? null
   }
   /** drapeau à afficher au joueur (volant / HUD), par priorité */
   playerFlag(): string {
@@ -415,10 +433,17 @@ export class RaceControl {
   }
   /** libération du box : dangereuse si une voiture arrive dans la voie à moins de ~15 m */
   release(r: Racer) {
-    this.boxLight = 'green'; this.boxGreenUntil = this.sim.t + 3
     const S = this.sim
-    const near = S.cars.find(o => o !== r && o.mode === 'pit' && o.pitP < r.pitP && r.pitP - o.pitP < 15 && o.v > 10)
-    if (near && S.rng.next() < 0.5) this.caseNew(r, near, 'libération dangereuse', S.kind === 'race' ? '5s' : 'grid3', 'libéré devant une voiture dans la voie des stands', 10)
+    const traffic = S.cars.filter(o => o !== r && o.mode === 'pit' && o.pitP < r.pitP && r.pitP - o.pitP < 30 && o.v > 10)
+    const wait = traffic.reduce((max, o) => Math.max(max, (r.pitP - o.pitP + 20) / Math.max(10, o.v)), 0)
+    const hold = r as Racer & { _releaseUntil?: number }
+    if (wait > 0) {
+      hold._releaseUntil = Math.max(hold._releaseUntil ?? S.t, S.t + wait)
+      this.boxLight = 'red'; this.boxGreenUntil = hold._releaseUntil + 3
+      return
+    }
+    delete hold._releaseUntil
+    this.boxLight = 'green'; this.boxGreenUntil = S.t + 3
   }
   pitOpenFor(_r: Racer) { return true }
   /** feu de sortie des stands : rouge si séance arrêtée / pas commencée, ou si le train de la SC passe */
