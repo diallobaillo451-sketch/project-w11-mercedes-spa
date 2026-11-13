@@ -6,7 +6,7 @@ import { TrackSurface } from './track/surface.ts'
 import { Barriers } from './track/barriers.ts'
 import { Pitlane, type PitlaneData } from './track/pitlane.ts'
 import { Game } from './core/game.ts'
-import { CIRCUIT, switchCircuit } from './core/circuit.ts'
+import { CIRCUIT, runtimeCircuitForCalendar, switchCircuit } from './core/circuit.ts'
 import { Renderer } from './render/renderer.ts'
 import { CAM_LABEL, CAM_ORDER, type CamMode } from './render/cameras.ts'
 import { Input } from './controls/input.ts'
@@ -71,7 +71,7 @@ function bootProgress(label: string, f: number) {
   $('bootText').textContent = label + (diag.safe ? ' · mode sans échec' : ''); ($('bootBar') as HTMLElement).style.width = Math.round(f * 100) + '%' }
 
 let pitData: PitlaneData | null = null
-/** bouton Circuit (menu) : Spa ⇄ Monza, recharge la page */
+/** bouton Circuit (menu) : Spa ⇄ Yas Marina, recharge la page */
 function mountCircuitButton() {
   const b = document.createElement('button'); b.id = 'bCircuit'; b.type = 'button'; b.hidden = true
   b.textContent = 'Circuit : ' + CIRCUIT.name + ' ⇄'
@@ -444,9 +444,18 @@ const sessionKindOf = (r: Run): SessionKind => r.kind === 'quick' ? 'race' : r.i
 const newRun = (kind: Run['kind'], laps: number, minutes: number, fuel: number): Run => ({ kind, laps, remaining: minutes * 60, chequered: false, tel: newTelemetry(), lockPrev: false,
   raceT: 0, lightsT: 0, lightsN: 0, lightsHold: 0.4 + Math.random() * 2.4, lightsDone: false, started: false, ended: false, pen0: 0, fuel })
 const raceFuel = (laps: number) => Math.min(110, 2.45 * laps + 2) // E : ≈ 2,45 kg/tour à Spa (110 kg pour 44 tours)
+/** Les assets de piste sont chargés au boot : une sélection différente exige un reload avant de démarrer. */
+function ensureRuntimeCircuit(calendarId: string, resume: string): boolean {
+  const target = runtimeCircuitForCalendar(calendarId)
+  if (CIRCUIT.id === target) return true
+  switchCircuit(target, resume)
+  return false
+}
 function applyDriver(id: string) { const d = driverById(id); void ren.setDriver(id, d.team !== 'mercedes'); radio.driver = id }
 function startQuick() {
-  const P = settings.profile; run = newRun('quick', P.laps, 0, raceFuel(P.laps))
+  const P = settings.profile
+  if (!ensureRuntimeCircuit(P.circuit, 'quick')) return
+  run = newRun('quick', P.laps, 0, raceFuel(P.laps))
   settings.damage = settings.damage ?? 'real'; startSession('race', true); setScreen('drive')
 }
 function startCareer() {
@@ -470,6 +479,7 @@ function startCareer() {
     menu.refresh()
     return
   }
+  if (!ensureRuntimeCircuit(c.id, 'career')) { saveCareer(career); return }
   settings.weather = weather
   settings.damage = 'real'
   game.setWeather(weather)
@@ -484,6 +494,8 @@ function startCareer() {
 }
 function startWeekend(fresh: boolean) {
   const P = settings.profile
+  const circuit = !fresh && wk ? wk.st.plan.circuit : P.circuit
+  if (!ensureRuntimeCircuit(circuit, fresh ? 'weekend-fresh' : 'weekend')) return
   if (fresh || !wk) {
     const plan: WeekendPlan = { circuit: P.circuit, car: P.car, driver: P.driver, fpMin: [...P.fpMin] as [number, number, number], qMin: [...P.qMin] as [number, number, number], raceLaps: P.raceLaps,
       weather: settings.weather, damage: settings.damage, skip: P.shortWeekend ? ['FP1', 'FP2'] : [] }
@@ -766,7 +778,15 @@ async function main() {
     }
     $('bootGo').addEventListener('click', go)
     last = performance.now(); requestAnimationFrame(frame)
-    if (params.has('auto')) { await go(); const k = params.get('auto') as SessionKind | 'demo'; if (k) startSession(k) }
+    const resume = params.get('resume')
+    if (resume) {
+      await go()
+      const u = new URL(location.href); u.searchParams.delete('resume'); history.replaceState(null, '', u)
+      if (resume === 'quick') startQuick()
+      else if (resume === 'career') startCareer()
+      else if (resume === 'weekend-fresh') startWeekend(true)
+      else if (resume === 'weekend') startWeekend(false)
+    } else if (params.has('auto')) { await go(); const k = params.get('auto') as SessionKind | 'demo'; if (k) startSession(k) }
     ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, menu, startQuick, startWeekend, endSession, openGarage, get run() { return run }, get wk() { return wk }, get fview() { return fview }, get tower() { return tower }, skipFormation, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
     ;(window as unknown as { __w11diag: unknown }).__w11diag = diag
   } catch (e) {

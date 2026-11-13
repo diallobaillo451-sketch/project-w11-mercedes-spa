@@ -1,6 +1,8 @@
 /** Surface physique : grille (s, d) précalculée dans Blender (t9_surface.py). Coordonnées glTF (Y haut). */
 export interface SurfaceMeta {
   N: number; ND: number; D0: number; DSTEP: number; ds: number; length: number
+  /** limite de décalage de la ligne de course, si la piste l’exige (m) */
+  lineOffsetMax?: number
   cx: number[]; cy: number[]; cz: number[]; wl: number[]; wr: number[]; wallL: number[]; wallR: number[]
 }
 export interface SurfaceSample { h: number; nx: number; ny: number; nz: number; type: number; s: number; d: number; i: number }
@@ -13,7 +15,7 @@ export interface Surface {
 }
 
 export class TrackSurface implements Surface {
-  N: number; ND: number; D0: number; DS: number; ds: number; length: number
+  N: number; ND: number; D0: number; DS: number; ds: number; length: number; lineOffsetMax: number
   cx: Float64Array; cy: Float64Array; cz: Float64Array; tx: Float64Array; tz: Float64Array
   wl: Float32Array; wr: Float32Array; WL: Float32Array; WR: Float32Array
   grid: Uint16Array; H: Float32Array; T: Uint8Array
@@ -23,6 +25,7 @@ export class TrackSurface implements Surface {
   barriers: import('./barriers.ts').Barriers | null = null
   constructor(meta: SurfaceMeta, grid: Uint16Array) {
     this.N = meta.N; this.ND = meta.ND; this.D0 = meta.D0; this.DS = meta.DSTEP; this.ds = meta.ds; this.length = meta.length
+    this.lineOffsetMax = Number.isFinite(meta.lineOffsetMax) ? Math.max(0.3, meta.lineOffsetMax!) : 9
     this.cx = Float64Array.from(meta.cx); this.cy = Float64Array.from(meta.cy); this.cz = Float64Array.from(meta.cz)
     this.wl = Float32Array.from(meta.wl); this.wr = Float32Array.from(meta.wr)
     this.WL = Float32Array.from(meta.wallL); this.WR = Float32Array.from(meta.wallR)

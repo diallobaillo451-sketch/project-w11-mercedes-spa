@@ -1,9 +1,14 @@
 // Tests physiques (Node ≥ 23, TypeScript natif) : node tests/physics.test.ts
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { Vehicle } from '../src/physics/vehicle.ts'
 import { FlatSurface, TrackSurface } from '../src/track/surface.ts'
+import { Barriers } from '../src/track/barriers.ts'
+import { Pitlane } from '../src/track/pitlane.ts'
 import { buildRacingLine } from '../src/track/racingLine.ts'
 import { Session } from '../src/core/session.ts'
+import { CIRCUITS } from '../src/core/circuit.ts'
 import { Autopilot } from '../src/physics/autopilot.ts'
 import { Timing, fmt } from '../src/timing/timing.ts'
 import { GEAR_RATIOS, icePower } from '../src/physics/powertrain.ts'
@@ -12,6 +17,7 @@ const DT = 1 / 240
 const results: { name: string; ok: boolean; info: string }[] = []
 const check = (name: string, ok: boolean, info: string) => { results.push({ name, ok, info }); console.log(`${ok ? 'OK  ' : 'FAIL'} ${name} — ${info}`) }
 const kmh = (v: number) => v * 3.6
+mkdirSync(new URL('../../reports/', import.meta.url), { recursive: true })
 
 // 1. repos : la voiture se pose, ne flotte pas, ne glisse pas
 {
@@ -67,13 +73,13 @@ function accelRun(drs: boolean) {
   }
   check('g latéral max', maxG > 3.0 && maxG < 6.5, `${maxG.toFixed(2)} g (réf. F1 2020 ≈ 4–5 g en courbe rapide, E)`)
 }
-// 5. tour de Spa en pilote automatique (calibration : pole Hamilton 1:41.252, ~328 km/h fin de Kemmel)
-{
+// 5. tour de Spa en pilote automatique, si ses données locales sont présentes (elles ne sont pas copiées dans ce dépôt).
+if (existsSync(new URL('../public/track/surface.bin', import.meta.url))) {
   const meta = JSON.parse(readFileSync(new URL('../public/track/surface.json', import.meta.url), 'utf8'))
   const buf = readFileSync(new URL('../public/track/surface.bin', import.meta.url))
   const grid = new Uint16Array(buf.buffer, buf.byteOffset, buf.byteLength / 2)
   const track = new TrackSurface(meta, grid)
-  if (!process.env.NOBAR) { const bb = readFileSync(new URL("../public/track/barriers.bin", import.meta.url)); track.barriers = new (await import("../src/track/barriers.ts")).Barriers(bb.buffer.slice(bb.byteOffset, bb.byteOffset + bb.byteLength)) }
+  if (!process.env.NOBAR) { const bb = readFileSync(new URL("../public/track/barriers.bin", import.meta.url)); track.barriers = new Barriers(bb.buffer.slice(bb.byteOffset, bb.byteOffset + bb.byteLength)) }
   const t0 = Date.now(); const line = buildRacingLine(track, 1600, 1.0); const tl = Date.now() - t0
   const car = new Vehicle(track); car.setup.steerAssist = 0; car.setup.stability = 0
   const ap = new Autopilot(line, Number(process.env.PACE ?? 1.06))
@@ -107,6 +113,59 @@ function accelRun(drs: boolean) {
   const L = car.ers.last
   check('ERS : bilan du dernier tour (≤ 4 MJ déployés, ≤ 2 MJ récupérés MGU-K, P)', minSoc >= 0 && L.deployed > 1e6 && L.deployed <= 4e6 + 1 && L.harvested > 0.3e6 && L.harvested <= 2e6 + 1, `déployé batterie→K ${(L.deployed / 1e6).toFixed(2)} MJ, récupéré K→batterie ${(L.harvested / 1e6).toFixed(2)} MJ, H→K direct ${(L.hToK / 1e6).toFixed(2)} MJ, SOC min ${(minSoc / 1e6).toFixed(2)} MJ`)
   console.log('   vitesse 200 m avant Bus Stop', vTrap.toFixed(1), 'km/h; pneus AV/AR', car.wheels[0].tyre.temp.toFixed(0), car.wheels[2].tyre.temp.toFixed(0), '°C')
+} else console.log('SKIP Spa : source/game/public/track/surface.bin absent (aucune donnée Spa substituée)')
+// 6. runtime physique Yas Marina : toutes les données proviennent du modèle Yas fourni; elles sont estimées/non officielles.
+{
+  const base = process.env.YAS_TRACK_DIR ? pathToFileURL(resolve(process.env.YAS_TRACK_DIR) + '/') : new URL('../public/track_yas/', import.meta.url)
+  const meta = JSON.parse(readFileSync(new URL('surface.json', base), 'utf8'))
+  const buf = readFileSync(new URL('surface.bin', base))
+  const grid = new Uint16Array(buf.buffer, buf.byteOffset, buf.byteLength / 2)
+  const track = new TrackSurface(meta, grid)
+  const jc = (meta.ND - 1) >> 1
+  let paved = 0
+  for (let i = 0; i < meta.N; i++) if (track.T[i * meta.ND + jc] === 1) paved++
+  check('Yas surface estimée chargée', meta.status.includes('estimated/non-official') && meta.N === 3882 && grid.length === meta.N * meta.ND && paved / meta.N > 0.97,
+    `${meta.status} · N=${meta.N}, ND=${meta.ND}, longueur ${meta.length.toFixed(1)} m, centre asphalté ${(100 * paved / meta.N).toFixed(2)} %`)
+
+  const bb = readFileSync(new URL('barriers.bin', base))
+  const barriers = new Barriers(bb.buffer.slice(bb.byteOffset, bb.byteOffset + bb.byteLength)); track.barriers = barriers
+  check('Yas barrières spatiales', barriers.n > 10000 && barriers.idx.length > barriers.n, `${barriers.n} segments · ${barriers.idx.length} références de grille`)
+
+  const pitData = JSON.parse(readFileSync(new URL('pitlane.json', base), 'utf8'))
+  const pit = new Pitlane(pitData, CIRCUITS.yas.pit)
+  const pm = JSON.parse(readFileSync(new URL('pitlane.json', base), 'utf8'))
+  const midPit = Math.floor((pit.iIn + pit.iOut) / 2)
+  check('Yas pitlane et zone 80 km/h', pm.status.includes('estimated/non-official') && pm.official_speed_limit_kmh === 80 && pit.iOut > pit.iIn && pit.inSpeedZone(pit.x[midPit], pit.z[midPit]),
+    `${pit.n} points · limitation ${pm.official_speed_limit_kmh} km/h (position ${pm.status})`)
+
+  const zones = CIRCUITS.yas.drs(track.length)
+  check('Yas DRS et secteurs configurés', zones.length === 2 && zones.every(([a, b]) => a >= 0 && b > a && b < track.length) && CIRCUITS.yas.gates[1] > CIRCUITS.yas.gates[0],
+    `DRS ${zones.map(([a, b]) => `${a.toFixed(0)}–${b.toFixed(0)} m`).join(' / ')} · secteurs ${CIRCUITS.yas.gates.map(x => x.toFixed(0)).join(' / ')} m (stations estimées)`)
+
+  const t0 = Date.now(), line = buildRacingLine(track, 1400, 1.0), lineMs = Date.now() - t0
+  const car = new Vehicle(track); car.setup.steerAssist = 0; car.setup.stability = 0
+  const ap = new Autopilot(line, Number(process.env.PACE ?? 1.06))
+  const timing = new Timing(track.length, 1, CIRCUITS.yas.gates[0], CIRCUITS.yas.gates[1])
+  const startS = track.length - 12; car.placeAt(startS, -2.2, 0)
+  check('Yas départ au bon index', Math.abs(car.s - startS) < 2 && Math.abs(car.trackIdx - Math.round(startS / track.ds)) < 2,
+    `demandé ${startS.toFixed(1)} m → s=${car.s.toFixed(1)} m, index=${car.trackIdx}`)
+  let t = 0, steps = 0, off = 0, hits = 0, maxV = 0
+  const tStart = Date.now()
+  while (t < 180 && timing.laps.length < 1) {
+    const c = ap.control(car)
+    car.drsAvailable = zones.some(([a, b]) => car.s >= a && car.s <= b)
+    car.step(DT, c); t += DT; steps++
+    timing.update(car.s, t, DT)
+    if (car.offTrack) off++
+    if (car.impact > 0.2) hits++
+    maxV = Math.max(maxV, car.forwardSpeed())
+    if (car.flipped > 1) break
+  }
+  const wall = (Date.now() - tStart) / 1000, best = timing.best?.time ?? Infinity
+  check('Yas tour auto chargeable et drivable', Number.isFinite(best) && best > 60 && best < 180,
+    `${fmt(best)} · ${timing.laps.length} tour(s) · s=${car.s.toFixed(0)} m, d=${car.d.toFixed(1)} m, v=${kmh(car.forwardSpeed()).toFixed(1)} km/h, t=${t.toFixed(1)} s · max ${kmh(maxV).toFixed(1)} km/h · ligne ${lineMs} ms · simu ${wall.toFixed(1)} s`)
+  check('Yas stabilité du tour auto', steps > 10000 && off < steps * 0.2 && hits < steps * 0.05,
+    `${off}/${steps} pas hors piste, ${hits} pas avec choc >0,2`)
 }
 console.log('rapports (vitesse à 12 500 tr/min) :', GEAR_RATIOS.map(r => r.toFixed(2)).join(' '), '; P_ICE 11 000 tr/min =', (icePower(11000, 1, 'quali') / 1000).toFixed(0), 'kW')
 writeFileSync(new URL('../../reports/physics_tests.json', import.meta.url), JSON.stringify(results, null, 1))
