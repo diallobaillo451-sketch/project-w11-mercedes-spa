@@ -296,7 +296,10 @@ export class Renderer {
         if (!list || typeof list !== 'object' || Array.isArray(list)) throw new Error('manifeste invalide')
         KTX_LIST = list
         dlog('KTX2 actif (' + Object.keys(KTX_LIST).length + ' textures de piste)')
-      } catch { dlog('ktx2.json absent → piste WebP, KTX2 voitures conservé') }
+      } catch {
+        if (CIRCUIT.id === 'yas') dlog('ktx2.json absent → piste WebP, KTX2 voitures conservé')
+        else { KTX = null; diag.ktx = false; dlog('ktx2.json absent → WebP') }
+      }
     }
     const pos = game.pose(this.pose).pos, d = (t: TileInfo) => t.id === 'base' ? -1e9 : Math.hypot(t.cx - pos[0], t.cz - pos[2]) - t.r
     const srt = [...man.tiles].sort((a, b) => d(a) - d(b)), first = srt.filter((t, i) => this.mobile ? i < 3 : (i < 4 || d(t) < NEAR_M)) /* mobile : décor + tuile du départ seulement → démarrage plus rapide, le reste en flux */, w = (t: TileInfo) => t.geoBytes + t.tex.reduce((a, u) => a + (man.texSizes[u] ?? 0), 0)
