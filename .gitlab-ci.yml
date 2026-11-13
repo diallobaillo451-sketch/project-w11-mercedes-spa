@@ -28,6 +28,25 @@
         test "$(stat -c%s public/track_monza/surface.bin)" -eq 4177492 && test "$(stat -c%s public/assets/monza/t01.bin)" -eq 5278344 && test "$(stat -c%s public/track_monza/barriers.bin)" -eq 1964848
       }
       if monza; then echo 'MONZA OK'; du -sh public/assets/monza public/track_monza; else echo 'ATTENTION : Monza non assemblé'; [ -z "$MONZA_STRICT" ] || exit 1; fi
+    - |
+      yas() {
+        Y=shared/assets/yas_marina_2021
+        git fetch --depth 1 origin newbot-shared || return 1
+        git cat-file -e FETCH_HEAD:$Y 2>/dev/null || return 2
+        git checkout FETCH_HEAD -- $Y || return 1
+        find $Y -type f \( -name '*.bin' -o -name '*.ktx2' -o -name '*.webp' \) ! -path "$Y/preview/*" | while read -r f; do base64 -d "$f" > "$f.dec" && mv "$f.dec" "$f" || exit 1; done || return 1
+        for p in $(find $Y -name '*.part001' ! -path "$Y/preview/*"); do b="${p%.part001}"; : > "$b"; for q in "$b".part*; do base64 -d "$q" >> "$b" || return 1; done; rm -f "$b".part*; done
+        mkdir -p public/assets/yas public/track_yas
+        cp -r $Y/scene/. public/assets/yas/ || return 1
+        for f in surface.json surface.bin meta.json; do cp $Y/track/$f public/track_yas/ || return 1; done
+        for f in barriers.bin pitlane.json crowd.bin crowd.json grassmask.bin; do if [ -f $Y/track/$f ]; then cp $Y/track/$f public/track_yas/ || return 1; fi; done
+        if [ -f $Y/marshals.json ]; then cp $Y/marshals.json public/track_yas/marshals.json || return 1; fi
+        test -s public/track_yas/surface.bin && test -s public/track_yas/meta.json && test -s public/assets/yas/tiles.json
+      }
+      r=0; yas || r=$?
+      if [ $r -eq 0 ]; then echo 'YAS MARINA OK'; du -sh public/assets/yas public/track_yas
+      elif [ $r -eq 2 ]; then echo 'Yas Marina : pas encore livré sur newbot-shared (shared/assets/yas_marina_2021), non publié'
+      else echo 'ATTENTION : Yas Marina non assemblé (livraison incomplète), non publié'; rm -rf public/assets/yas public/track_yas; [ -z "$YAS_STRICT" ] || exit 1; fi
     - du -sh public
 
 pages:
