@@ -85,6 +85,7 @@ async function loadTrack(): Promise<TrackSurface> {
     fetch(CIRCUIT.trackDir + 'barriers.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)])
   const t = new TrackSurface(meta, new Uint16Array(bin)); if (bar) t.barriers = new Barriers(bar)
   pitData = await fetch(CIRCUIT.trackDir + 'pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null)
+  await CIRCUIT.ready(pitData) // secteurs, DRS et zone des stands propres au circuit (Yas Marina : lus dans ses données livrées)
   return t
 }
 let appliedTyres = '', lastPunct = '00000000'
