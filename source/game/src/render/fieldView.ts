@@ -207,7 +207,15 @@ export class FieldView {
   /** modèle HD au repos (pas la voiture du joueur, qui a déjà bougé) : sert d'atlas d'UV puis sa géométrie est jetée */
   private async teamHi(team: string): Promise<THREE.Object3D> {
     const url = team === 'mercedes' ? './assets/w11_lh2020_high.glb' : `./cars/${carOfTeam(team)}_hi.glb`
-    const g = await loadGLB(url, () => {}, this.ren.ktxAny())
+    const ktx = this.ren.ktxAny()
+    // Même atlas HD compressé que le joueur : ne pas réintroduire une seconde
+    // copie RGBA de la W11 dans le plateau, juste après avoir allégé son boot.
+    const g = team === 'mercedes'
+      ? await loadGLB('./assets/w11_lh2020_high_ktx2.glb', () => {}, ktx).catch(e => {
+        dlog('IA mercedes KTX2 → repli WebP : ' + (e as Error).message)
+        return loadGLB(url, () => {}, ktx)
+      })
+      : await loadGLB(url, () => {}, ktx)
     return g.scene
   }
   private async proto(team: string) {
