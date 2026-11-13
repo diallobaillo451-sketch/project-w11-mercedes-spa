@@ -7,6 +7,7 @@ import * as THREE from 'three'
 import type { Game } from '../core/game.ts'
 import { FLAG_LABEL, type Flag } from '../core/session.ts'
 import { fmt } from '../timing/timing.ts'
+import { tyreCompoundColor } from '../render/tyreColor.ts'
 
 const FLAG_COL: Record<Flag, string> = { none: '#000', green: '#18d24a', yellow: '#ffd400', double: '#ffd400', red: '#ff2a1f', blue: '#2f7bff', chequered: '#ffffff', blackwhite: '#ffffff', sc: '#ffd400', vsc: '#ffd400' }
 const ERS_L: Record<string, string> = { hotlap: 'HOTLAP', overtake: 'OVERTAKE', balanced: 'BALANCED', charge: 'CHARGE' }
@@ -84,7 +85,7 @@ export class WheelDisplay {
     } else if (this.page === 1) {
       // page PNEUS : 3 zones de surface (int/mil/ext), carcasse, pression à chaud, usure, état (grainage, cloques, plat,
       // gommes ramassées, saleté, crevaison), disques ; bas d'écran : piste (eau, gomme, °C piste)
-      const wn = ['AVG', 'AVD', 'ARG', 'ARD'], cmp = c.setup.compound, ccol: Record<string, string> = { C1: '#f2f2f2', C2: '#f2f2f2', C3: '#ffd23f', C4: '#ff3b30', C5: '#ff3b30', I: '#19e04f', W: '#2f7bff' }
+      const wn = ['AVG', 'AVD', 'ARG', 'ARD'], cmp = c.setup.compound
       const tc = (T: number) => T < 75 ? '#3a8bff' : T < 95 ? '#4fc3ff' : T < 120 ? '#19e04f' : T < 135 ? '#ffd23f' : '#ff3b30'
       const hh = (H - top - 40) / 2
       c.wheels.forEach((w, i) => {
@@ -92,7 +93,7 @@ export class WheelDisplay {
         // 3 zones (intérieur côté châssis) : à gauche de la case pour les roues gauches, inversé pour les roues droites
         const z = w.left ? [t.zones[2], t.zones[1], t.zones[0]] : t.zones
         z.forEach((T, k) => { g.fillStyle = tc(T); g.fillRect(x + k * 9, y, 8, hh) })
-        g.fillStyle = ccol[cmp] ?? '#fff'; g.font = '700 15px -apple-system,Helvetica,Arial'; g.textAlign = 'left'; g.fillText(wn[i] + ' ' + cmp, x + 32, y + 12)
+        g.fillStyle = tyreCompoundColor(cmp); g.font = '700 15px -apple-system,Helvetica,Arial'; g.textAlign = 'left'; g.fillText(wn[i] + ' ' + cmp, x + 32, y + 12)
         g.fillStyle = '#fff'; g.font = '700 28px -apple-system,Helvetica,Arial'; g.fillText(Math.round(t.temp) + '°', x + 32, y + 40)
         g.font = '600 14px -apple-system,Helvetica,Arial'; g.fillStyle = '#cfe'
         g.fillText('carc. ' + Math.round(t.core) + '°  ' + t.pressure.toFixed(1) + ' psi', x + 100, y + 14)
