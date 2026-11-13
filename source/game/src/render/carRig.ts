@@ -3,12 +3,15 @@
  *  disques incandescents (température de frein), matériaux (vernis carrosserie, carbone anisotrope). */
 import * as THREE from 'three'
 import type { Vehicle } from '../physics/vehicle.ts'
-import { W11 } from '../physics/params.ts'
+import { W11, type Compound } from '../physics/params.ts'
 import { glossPaint } from './livery.ts'
+import { cloneTyreMaterials, setTyreCompoundColor } from './tyreColor.ts'
 
 const WN = ['FL', 'FR', 'RL', 'RR'] as const
 export class CarRig {
   root: THREE.Object3D
+  private tyreMaterials: THREE.MeshStandardMaterial[] = []
+  private tyreCompound: Compound | null = null
   /** feu arrière FIA (LED rouge) : allumé sous la pluie, clignote en récupération d'énergie */
   rainLight: THREE.MeshStandardMaterial[] = []; private rlInit = false
   hubs: THREE.Object3D[] = []; spins: THREE.Object3D[] = []; base: THREE.Vector3[] = []
@@ -57,6 +60,7 @@ export class CarRig {
   setCockpit(on: boolean) { for (const o of this.headMeshes) o.visible = !on }
   constructor(gltf: { scene: THREE.Object3D; animations: THREE.AnimationClip[] }, anisotropy: number, opt: { tcam?: number[] } = {}) {
     this.root = gltf.scene
+    this.tyreMaterials = cloneTyreMaterials([this.root])
     const byName = (n: string) => this.root.getObjectByName(n) ?? null
     WN.forEach((n, i) => {
       const hub = byName('W_' + n)!, spin = byName('W_' + n + '_spin')!
@@ -211,6 +215,7 @@ export class CarRig {
   }
   /** wheels : états interpolés (compression, angle, braquage). */
   update(car: Vehicle, wheels: { c: number; angle: number; steer: number }[], dt: number) {
+    if (this.tyreCompound !== car.setup.compound) { this.tyreCompound = car.setup.compound; setTyreCompoundColor(this.tyreMaterials, this.tyreCompound) }
     const fw = car.wheels
     for (let i = 0; i < 4; i++) {
       const w = wheels[i], hub = this.hubs[i], b = this.base[i]
