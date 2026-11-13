@@ -10,7 +10,7 @@ export interface Profile {
   driver: string; circuit: string; car: string; mode: 'quick' | 'weekend'; laps: number
   fpMin: [number, number, number]; qMin: [number, number, number]; raceLaps: number; shortWeekend: boolean; difficulty: number
 }
-export const defaultProfile = (): Profile => ({ driver: 'ham', circuit: 'bel', car: 'w11', mode: 'quick', laps: 5, fpMin: [20, 20, 15], qMin: [12, 10, 8], raceLaps: 10, shortWeekend: false, difficulty: 85 })
+export const defaultProfile = (): Profile => ({ driver: 'ham', circuit: 'bel', car: 'w11', mode: 'quick', laps: 5, fpMin: [20, 20, 15], qMin: [12, 10, 8], raceLaps: 10, shortWeekend: false, difficulty: 100 })
 export interface MenuHost {
   profile: Profile; weather: Weather; damage: 'off' | 'visual' | 'real'
   save(): void
