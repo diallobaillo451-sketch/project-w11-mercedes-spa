@@ -13,11 +13,6 @@ assets-work/audio/
 game/dist/
 game/dist-single/
 game/public/assets/
-!game/public/assets/
-game/public/assets/*
-!game/public/assets/yas_marina/
-!game/public/assets/yas_marina/**
-!game/public/assets/w11_lh2020_high.glb
 out/PROJECT_W11_single.html
 out/PROJECT_W11_dist.zip
 out/dist/

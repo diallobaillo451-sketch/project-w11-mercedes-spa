@@ -6,14 +6,12 @@ import { icePower } from '../physics/powertrain.ts'
 export interface RacingLine { x: Float64Array; z: Float64Array; e: Float64Array; k: Float64Array; v: Float64Array; N: number; ds: number }
 
 const O2MIN = Number((globalThis as any).process?.env?.O2MIN ?? 99)
-const VERTICAL_G = Number((globalThis as any).process?.env?.VERTICAL_G ?? 0.18)
 const MU_M = 2.35, MU_A = 1.75
 export function buildRacingLine(t: TrackSurface, iters = 1600, mu = 0.92): RacingLine {
   const N = t.N
-  const maxOffsetWidth = Math.min(9, t.lineOffsetMax + 0.95)
   const lim = (arr: Float32Array) => {
     const o = new Float64Array(N)
-    for (let i = 0; i < N; i++) { let m = 99; for (let k = -4; k <= 4; k++) m = Math.min(m, arr[(i + k + N) % N]); o[i] = Math.max(0.3, Math.min(m, maxOffsetWidth) - 0.95) }
+    for (let i = 0; i < N; i++) { let m = 99; for (let k = -4; k <= 4; k++) m = Math.min(m, arr[(i + k + N) % N]); o[i] = Math.max(0.3, Math.min(m, 9) - 0.95) }
     return o
   }
   const L = lim(t.wlR ?? t.wl), Rr = lim(t.wrR ?? t.wr)
@@ -70,23 +68,7 @@ export function buildRacingLine(t: TrackSurface, iters = 1600, mu = 0.92): Racin
     const den = m * kk - mu * MU_A * 0.5 * rho * ClA
     vmax[i] = den <= 0 ? 100 : Math.min(100, Math.sqrt(mu * MU_M * g * m / den))
   }
-  const ds = t.ds, gradeAngle = new Float64Array(N), smoothGrade = new Float64Array(N)
-  for (let i = 0; i < N; i++) {
-    const dz = t.cy[(i + 1) % N] - t.cy[(i - 1 + N) % N]
-    gradeAngle[i] = Math.atan2(dz, 2 * ds)
-  }
-  for (let i = 0; i < N; i++) {
-    let sum = 0
-    for (let j = -2; j <= 2; j++) sum += gradeAngle[(i + j + N) % N]
-    smoothGrade[i] = sum / 5
-  }
-  // A vertical grade break can unload the car even when plan-view curvature is mild.
-  // Use the estimated surface profile to limit vertical acceleration across sparse mesh gaps.
-  for (let i = 0; i < N; i++) {
-    const kv = Math.abs(smoothGrade[(i + 1) % N] - smoothGrade[(i - 1 + N) % N]) / (2 * ds)
-    if (kv > 1e-5) vmax[i] = Math.min(vmax[i], Math.sqrt(Math.max(0.02, VERTICAL_G) * g / kv))
-  }
-  const v = Float64Array.from(vmax)
+  const ds = t.ds, v = Float64Array.from(vmax)
   for (let pass = 0; pass < 2; pass++) {
     for (let i = 0; i < N * 1.2; i++) { // accélération
       const a = i % N, b = (i + 1) % N, va = v[a]
