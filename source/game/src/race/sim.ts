@@ -377,12 +377,25 @@ export class RaceSim {
     r.attackT = Math.max(0, r.attackT - dt); r.yieldT = Math.max(0, r.yieldT - dt); r.sepT = Math.max(0, r.sepT - dt)
     const edgeL = this.track.wlR[i] - 0.9, edgeR = this.track.wrR[i] - 0.9
     // céder le passage (bleu en course, trafic en qualif) : on se range du côté opposé à la trajectoire et on lève le pied
-    const mustYield = behind && gB < Math.max(25, behind.v * 1.2) && (C.isBlue(r, behind) || (this.kind !== 'race' && behind.mode === 'push' && r.mode !== 'push') || (this.kind !== 'race' && behind.player && this.playerOnHot && r.mode !== 'push'))
+    const mustYield = behind && gB < Math.max(32, behind.v * 1.45) && (C.isBlue(r, behind) || (this.kind !== 'race' && behind.mode === 'push' && r.mode !== 'push') || (this.kind !== 'race' && behind.player && this.playerOnHot && r.mode !== 'push'))
     if (mustYield) {
-      // une fois sur ~25 (pilote distrait), l'IA ne voit pas la voiture arriver → gêne (enquête)
+      // beaucoup plus rare de "ne pas voir" la voiture (surtout en qualif)
       const rk = r as Racer & { _yr?: number }, key = behind!.i * 1e6 + Math.floor(behind!.dist / this.L)
-      if (rk._yr !== key) { rk._yr = key; if (this.rng.next() < 0.03 * (1.15 - r.sk.cons) / 0.25) { r.yieldT = 4; if (behind!.mode === 'push' || behind!.player) C.impeding(r, behind!) } }
-      if (r.yieldT === 0) { const side = ln.e[i] > 0 ? -1 : 1; r.off = side < 0 ? -edgeL + 0.3 : edgeR - 0.3; r.v *= 1 - 0.02 * dt * 10 }
+      if (rk._yr !== key) {
+        rk._yr = key
+        const distractP = this.kind === 'race' ? 0.025 * (1.15 - r.sk.cons) / 0.25 : 0.006 * (1.15 - r.sk.cons) / 0.25
+        if (this.rng.next() < distractP) {
+          r.yieldT = 3.5
+          if (behind!.mode === 'push' || behind!.player) C.impeding(r, behind!)
+        }
+      }
+      if (r.yieldT === 0) {
+        const side = ln.e[i] > 0 ? -1 : 1
+        r.off = side < 0 ? -edgeL + 0.15 : edgeR - 0.15
+        // freine plus franchement pour laisser passer
+        r.v *= 1 - 0.045 * dt * 10
+        if (r.v > behind!.v - 4) r.v = Math.max(behind!.v - 6, r.v - 25 * dt)
+      }
       return
     }
     if (ahead && gA < 1.2 * Math.max(20, r.v) && C.mayOvertake(r, ahead)) {
