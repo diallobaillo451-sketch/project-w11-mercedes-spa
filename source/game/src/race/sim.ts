@@ -317,12 +317,21 @@ export class RaceSim {
     if (r.err?.kind === 'wide') dT = r.side > 0 ? eR + 2.6 : -(eL + 2.6)
     if (r.mode === 'spun') dT = r.d
     if (!(r.err?.kind === 'wide') && r.mode !== 'spun') dT = Math.max(-eL, Math.min(eR, dT))
-    // évitement : ne pas se rabattre sur une voiture qui est à côté
-    for (const o of this.cars) { if (o === r || !this.onTrack(o)) continue; const g = this.road(r.s, o.s); if (Math.abs(g) > CL + 0.8) continue
-      const sd = o.d - r.d; if (Math.abs(sd) < 3.2) { if (sd > 0 && dT > o.d - 2.15) dT = o.d - 2.15; if (sd <= 0 && dT < o.d + 2.15) dT = o.d + 2.15 } }
+    // évitement : ne pas se rabattre sur une voiture qui est à côté (marge plus large)
+    for (const o of this.cars) {
+      if (o === r || !this.onTrack(o)) continue
+      const g = this.road(r.s, o.s)
+      if (Math.abs(g) > CL + 2.5) continue
+      const sd = o.d - r.d
+      if (Math.abs(sd) < 3.8) {
+        if (sd > 0 && dT > o.d - 2.55) dT = o.d - 2.55
+        if (sd <= 0 && dT < o.d + 2.55) dT = o.d + 2.55
+      }
+    }
     const devT = dT - e0, dev0 = r.d - (this.lastE.get(r.i) ?? e0)
-    const rate = 1.0 + 0.035 * r.v
-    const dl = Math.max(-rate * dt, Math.min(rate * dt, (devT - dev0) * Math.min(1, dt * 2.5)))
+    // réaction latérale plus vive (surtout à vitesse élevée)
+    const rate = 1.45 + 0.055 * r.v
+    const dl = Math.max(-rate * dt, Math.min(rate * dt, (devT - dev0) * Math.min(1, dt * 3.2)))
     const nd = e0 + dev0 + dl
     const ndc = r.err?.kind === 'wide' || r.mode === 'spun' ? nd : Math.max(-(eL + 0.5), Math.min(eR + 0.5, nd))
     if (ghost) this.cmd.set(r.i, { vt, dT })
