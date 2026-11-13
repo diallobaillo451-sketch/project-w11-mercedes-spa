@@ -10,26 +10,32 @@ La présentation réutilise le ciel nocturne et le kit de mâts du dépôt. Dix 
 
 Le GLB a été découpé avec le pipeline de tuiles existant en 13 tuiles (base et `t00`–`t11`), avec 12 variantes LOD pour les tuiles distantes. Le paquet contient 84 textures partagées, 941 219 triangles haute résolution et 385 291 triangles LOD; son poids vérifié est d’environ 38,8 MB. Les références aux buffers et textures ont toutes été vérifiées. Le nouvel outil `source/tools/lod_track_tiles.mjs` produit ces LOD sans toucher aux scripts Spa existants.
 
-Ces tuiles sont livrées séparément dans `runtime_tiles/`; elles ne sont pas encore branchées dans le jeu. La configuration runtime ne déclare que Spa et Monza et aucun asset de surface physique Yas n’est disponible.
+Les tuiles sont maintenant copiées dans `source/game/public/assets/yas_marina/` et branchées au renderer avec le panorama nocturne Yas. Les données physiques sont rangées séparément dans `source/game/public/track_yas/`; la sélection runtime et l’épreuve Abu Dhabi utilisent Yas, sans exposer Monza tant que ses assets ne sont pas livrés.
 
 ## Données Yas officielles vérifiées
 
 La [carte FIA Doc 1 Abu Dhabi 2021](https://www.fia.com/sites/default/files/doc_1_-_2021_abu_dhabi_grand_prix_-_circuit_map.pdf) indique une longueur de centreline de 5,281 km, 16 virages, S1 à 205 m avant T5, S2 à 100 m avant T9, speed trap à 150 m avant T6, et les offsets DRS suivants : détection 1 à 40 m avant T5 / activation à 210 m après T5; détection 2 à 50 m après T7 / activation à 165 m après T7. Le [classement final FIA Doc 59](https://www.fia.com/sites/default/files/doc_59_-_2021_abu_dhabi_grand_prix_-_final_race_classification.pdf) donne 58 tours. Les [notes FIA Doc 4, version 2](https://www.fia.com/sites/default/files/doc_4_-_2021_abu_dhabi_grand_prix_-_race_directors_event_notes_version_2.pdf) précisent notamment les lignes et limites de piste. Les offsets ne deviennent pas des abscisses runtime `s` sans centerline validé.
 
-## Blocage de la ligne centrale et de la physique
+## Centerline et physique Yas (estimés, non officiels)
 
-L’extraction conservatrice du mesh asphalté `Object_40` l’a rasterisé à environ 2 m et obtenu un graphe de 83 nœuds contractés, 103 arêtes et 21 cycles de base. Les deux plus grands cycles propres mesurés font 2 487,63 m et 2 410,95 m, pas les 5 281 m FIA; ils présentent aussi de nombreuses intersections non adjacentes et jonctions. Un candidat présente en plus un saut d’altitude de 4,825 m. La recherche exhaustive haute résolution n’a pas terminé dans le temps imparti; ce résultat n’est pas une preuve que tout chemin possible est impossible, mais aucun centerline GP 2021 ne peut être validé à partir des données actuelles.
+Le centerline runtime est une digitalisation du plan FIA 2021 recalée sur le modèle Yas fourni; le sens croissant part de la ligne départ/arrivée vers T1. La version finale contient 3 882 points, un pas d’environ 1,373 m et une longueur de 5 329,52 m, soit +0,92 % par rapport aux 5 281 m FIA. La géométrie de course est estimée, pas officielle. Le raccord T9 existant reste contraint à la chaussée Yas `Object_40`; le secteur T5 a maintenant un bypass Yas-only entre les indices sources 960–1020, lissé et raccordé au tracé. Son rayon local minimal calculé est d’environ 7,16 m. Cette correction évite le spur FIA-vers-mesh qui envoyait l’IA hors chaussée.
 
-Le maillage contient la famille de routes GP ainsi que des accès et variantes, et les choix de branches T1–T16 ne sont pas résolus. Il faut une annotation ordonnée des branches/jonctions de `Object_40`, ou un centerline/masque de route topographique aligné au modèle. Sans cela, aucune grille `surface.json`/`surface.bin`, collision Yas, voie des stands, secteurs, zones DRS ni configuration de course n’est générée ou activée. Les données de piste ou de collision Spa/Monza n’ont pas été copiées.
+Le bake physique Blender 5.2.4 utilise la couche `Object_40` seule pour éviter de basculer entre niveaux superposés. Il ray-cast 3 775/3 882 stations (97,24 %); les 107 stations manquantes sont interpolées périodiquement et reçoivent un corridor central pavé estimé de ±4 m. La plus longue lacune est de 22 stations; le plus grand pas de hauteur adjacent après interpolation est 0,378 m. La grille fait 3 882 × 361 cellules (1,373 m longitudinalement, 0,25 m latéralement) et `surface.bin` code 287 810 cellules ray-castées/estimées en type chaussée et 1 113 592 cellules de repli type 4. Le centre de grille est asphalté à 100 %, avec les trous explicitement estimés. Les collisions comprennent 14 953 segments issus des faces verticales Yas portant les matériaux `tentrail`, avec 34 510 références dans 2 273 cellules spatiales. Aucune donnée physique Spa/Monza n’est reprise.
+
+La pitlane est une trajectoire estimée de 678,5 m sur 331 points. Le chemin lissé couvre 81,27 % des cellules chaussées de la couche `Object_40` sélectionnée; le corridor à offset fixe ne couvre que 73,60 %, raison pour laquelle le générateur choisit un chemin variable plutôt qu’un offset constant. La limitation de stand de 80 km/h vient de la référence FIA; ses abscisses estimées sont s≈5 083,83 m à l’entrée et 400,16 m à la sortie, et la géométrie reste non officielle. Les deux zones DRS sont reprojetées depuis les offsets FIA sur le centerline final : environ 1 648–2 527 m et 2 906–3 684 m. Les secteurs sont estimés à 1 248 m et 3 734 m.
+
+Le T1 et le secteur T5 corrigé passent maintenant le test de tour complet. Au dernier passage, le pilote automatique boucle en 2:16,635; 362/33 197 pas (1,09 %) sont signalés hors piste, avec 0 pas ayant un impact supérieur à 0,2. La vitesse maximale enregistrée est de 308,7 km/h. Le test accepte ce résultat; il s’agit d’une simulation interne, pas d’un temps officiel ni d’une validation FIA.
 
 ## Vérifications
 
-- Blender 5.2.4 : export `.blend`/GLB et dix rendus réels.
-- Tuiles runtime : 13 tuiles, 12 LOD; buffers et textures présents, aucune référence manquante.
+- Blender 5.2.4 : scène `.blend`, GLB et dix rendus réels présents dans le paquet visuel.
+- Tuiles runtime : 13 tuiles, 12 LOD; buffers et textures vérifiés et branchés dans le renderer.
 - `node --check source/tools/lod_track_tiles.mjs` : réussi.
-- `npm run build` : réussi.
-- `npm run test:physics` : les huit contrôles de dynamique indépendants passent; le test s’arrête ensuite avant le tour de Spa faute de `source/game/public/track/surface.bin`.
-- Yas n’est pas sélectionnable dans `source/game/src/core/circuit.ts`; aucun test de course, collision ou chrono Yas n’a été validé.
+- `npm run build` : réussi après la promotion des actifs Yas corrigés et le correctif de démarrage.
+- `npm run test:physics` : tous les contrôles passent, dont le tour IA Yas complet, les barrières, pitlane, DRS/secteurs et l’index de départ. 0 pas avec impact supérieur à 0,2; 362 pas hors piste sur 33 197. Spa est sauté car ses fichiers physiques locaux sont absents; aucune donnée Spa/Monza n’est substituée à Yas.
+- Smoke test Playwright : menu Yas sélectionnable, démarrage d’une course rapide, HUD actif, 13 tuiles au manifeste (6 chargées au départ) et commande clavier ArrowUp faisant avancer la voiture. Le navigateur a aussi émis 13 erreurs `EncodingError: Unable to decode audio data`; elles n’ont pas bloqué l’entrée en piste ni la conduite, mais restent un avertissement hors circuit.
+- Le démarrage Yas ignore maintenant les fichiers facultatifs de foule/herbe absents ou invalides au lieu d’interpréter le fallback HTML comme des données binaires. Le GLB W11 haute qualité déjà présent dans le projet source a été décodé et placé dans le répertoire public du jeu pour satisfaire son chargement initial; ce n’est pas une donnée géométrique de Yas.
+- Le centerline, la surface, la pitlane, les zones DRS et les secteurs restent explicitement estimés/non officiels, sauf les paramètres publiés FIA cités plus haut.
 
 ## Reproduction Blender
 

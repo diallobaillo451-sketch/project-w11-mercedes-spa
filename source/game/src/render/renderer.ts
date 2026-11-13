@@ -205,7 +205,8 @@ export class Renderer {
     this.r.info.autoReset = false // compteurs sur l'image complète (toutes les passes), remis à zéro dans frame()
     // réglages d'éclairage surchargeables par l'URL (?tm=aces|agx&exp=&sun=&env=&hemi=) pour les comparaisons
     const P = new URLSearchParams(location.search), num = (k: string, d: number) => P.has(k) ? Number(P.get(k)) : d
-    this.look = { tm: P.get('tm') ?? 'aces', exp: num('exp', 0.85), sun: num('sun', 3.3), env: num('env', 0.3), hemi: num('hemi', 0.1), sat: num('sat', 1.0), con: num('con', 1.06) } // E : réglage visuel (comparatifs out/look/cmp_light.png)
+    const night = !!CIRCUIT.night
+    this.look = { tm: P.get('tm') ?? 'aces', exp: num('exp', night ? 0.95 : 0.85), sun: num('sun', night ? 0.55 : 3.3), env: num('env', 0.3), hemi: num('hemi', night ? 0.55 : 0.1), sat: num('sat', 1.0), con: num('con', 1.06) } // E : réglage visuel (comparatifs out/look/cmp_light.png)
     this.r.toneMapping = this.look.tm === 'agx' ? THREE.AgXToneMapping : THREE.ACESFilmicToneMapping
     this.r.toneMappingExposure = this.look.exp
     // rendu direct (iPhone : sans composeur) → même étalonnage que la passe HDR (saturation, contraste) dans le shader, avant ACES
@@ -213,6 +214,7 @@ export class Renderer {
       if (!C.tonemapping_fragment.includes('w11grade')) C.tonemapping_fragment = C.tonemapping_fragment.replace('gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );',
         `/*w11grade*/ { vec3 gc = max(gl_FragColor.rgb, 0.0); float gl = dot(gc, vec3(0.2126, 0.7152, 0.0722)); gc = max(mix(vec3(gl), gc, ${f(this.look.sat)}), 0.0); gl_FragColor.rgb = 0.22 * pow(gc / 0.22, vec3(${f(this.look.con)})); }\n\tgl_FragColor.rgb = toneMapping( gl_FragColor.rgb );`) }
     this.sun.intensity = this.look.sun; this.hemi.intensity = this.look.hemi
+    if (night) this.sun.color.set(0xdce8ff)
     this.r.shadowMap.enabled = true
     this.r.shadowMap.type = THREE.PCFShadowMap // r18x : PCF filtré (radius) ; PCFSoft n'existe plus
     this.scene.add(this.hemi, this.sun, this.sun.target, this.car)
@@ -238,6 +240,15 @@ export class Renderer {
     pm.dispose()
     this.setupSun()
   }
+  /** Repli nocturne si la texture Yas ne charge pas : pas de ciel diurne Preetham. */
+  buildNightSky() {
+    this.scene.background = new THREE.Color(0x07101b)
+    this.scene.fog = new THREE.FogExp2(0x111923, 0.00024)
+    this.scene.environment = null
+    this.scene.environmentIntensity = this.look.env * this.q.envIntensity
+    this.sunDir.setFromSphericalCoords(1, THREE.MathUtils.degToRad(52), THREE.MathUtils.degToRad(215))
+    this.setupSun()
+  }
   dome: SkyDome | null = null
   setupSun() {
     this.sun.castShadow = true
@@ -251,16 +262,21 @@ export class Renderer {
     let skyOk = false
     if (P0.get('sky') !== '0') {
       try {
-        const { tex, meta } = await loadSky('./assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), KTX)
-        this.dome = new SkyDome(tex, meta, 215, n0('skyI', 3.2))
-        this.sunDir.copy(this.dome.sunDir)
+        const skyBase = CIRCUIT.night ? './assets/yas_marina/sky/' : './assets/sky/'
+        const { tex, meta } = await loadSky(skyBase, false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), KTX)
+        this.dome = new SkyDome(tex, meta, 215, n0('skyI', CIRCUIT.night ? 0.12 : 3.2))
+        if (CIRCUIT.night) {
+          // La photo est une nuit CC0 : supprimer le disque solaire sous l'horizon et conserver une lumière de remplissage haute.
+          this.dome.mat.uniforms.uSunI.value = 0
+          this.sunDir.setFromSphericalCoords(1, THREE.MathUtils.degToRad(52), THREE.MathUtils.degToRad(215))
+        } else this.sunDir.copy(this.dome.sunDir)
         this.scene.add(this.dome.mesh)
-        this.scene.environment = this.dome.envMap(this.r, 0x2c2e26); this.scene.environmentIntensity = n0('envH', 0.65) * this.q.envIntensity
+        this.scene.environment = this.dome.envMap(this.r, 0x2c2e26); this.scene.environmentIntensity = n0('envH', CIRCUIT.night ? 0.3 : 0.65) * this.q.envIntensity
         this.scene.fog = new THREE.FogExp2(this.dome.fogColor(), n0('fog', 0.00032))
         this.setupSun(); skyOk = true; dlog('ciel HDRI actif (soleil ' + meta.sun.elev.toFixed(1) + '°)')
       } catch (e) { dlog('ciel HDRI indisponible : ' + (e as Error).message) }
     }
-    if (!skyOk) this.buildSky()
+    if (!skyOk) CIRCUIT.night ? this.buildNightSky() : this.buildSky()
     const q = this.q
     // piste PLEINE QUALITÉ pour tous les niveaux (source la plus détaillée : 1,18 M triangles, textures natives jusqu'à
     // 8192×1024, AO Cycles cuite) découpée en 13 tuiles (tools/build_track_tiles.mjs) : décor global + tuiles proches
@@ -307,14 +323,21 @@ export class Renderer {
     this.rig.onPartLost = (_w, p) => { for (let i = 0; i < 4; i++) this.fx.spark([p.x, p.y, p.z], game.car.vel, 2) }
     // herbe 3D en bord de piste (pas en qualité basse ; ?grass=0 pour comparer)
     if (q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
-      const gm = await fetch(CIRCUIT.trackDir + 'grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
-      if (gm) this.grass = new Grass(track, gm, q.name === 'medium' ? 0.6 : 1.0, q.name === 'medium' ? 8000 : 14000, 34, this.detail?.tex.grass ?? null); if (this.grass) { this.scene.add(this.grass.mesh)
-      dlog(`herbe 3D : ${this.grass.n} touffes (fenêtre ≤ ${this.grass.cap})`) }
+      const gm = await fetch(CIRCUIT.trackDir + 'grassmask.bin').then(r => r.ok && !r.headers.get('content-type')?.includes('text/html') ? r.arrayBuffer() : null).catch(() => null)
+      if (gm && gm.byteLength >= 4) {
+        const C0 = new DataView(gm).getUint16(0, true), W = new DataView(gm).getUint16(2, true)
+        if (W > 0 && W <= track.ND && (W & 1) === 0 && C0 + W <= track.ND && gm.byteLength >= 4 + track.N * (W >> 1)) { this.grass = new Grass(track, gm, q.name === 'medium' ? 0.6 : 1.0, q.name === 'medium' ? 8000 : 14000, 34, this.detail?.tex.grass ?? null); this.scene.add(this.grass.mesh); dlog(`herbe 3D : ${this.grass.n} touffes (fenêtre ≤ ${this.grass.cap})`) }
+        else dlog('masque herbe absent ou invalide : chargement ignoré')
+      }
     }
     // public des tribunes (toutes qualités : ≤ 36 triangles par personne près, 4 loin)
     if (new URLSearchParams(location.search).get('crowd') !== '0') {
-      const cb = await fetch(CIRCUIT.trackDir + 'crowd.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
-      if (cb) { this.crowd = new Crowd(cb); this.scene.add(this.crowd.group); dlog(`public : ${this.crowd.chunks.length} blocs`) }
+      const cb = await fetch(CIRCUIT.trackDir + 'crowd.bin').then(r => r.ok && !r.headers.get('content-type')?.includes('text/html') ? r.arrayBuffer() : null).catch(() => null)
+      if (cb && cb.byteLength >= 4) {
+        const count = new DataView(cb).getUint32(0, true)
+        if (count > 0 && count <= 1_000_000 && cb.byteLength >= 4 + count * 16) { this.crowd = new Crowd(cb); this.scene.add(this.crowd.group); dlog(`public : ${this.crowd.chunks.length} blocs`) }
+        else dlog('foule absente ou buffer invalide : chargement ignoré')
+      }
     }
     // mobile : démarrage SANS composeur (cibles HalfFloat MSAA), sans sonde cube, ombre 1024 → upgrade() après stabilité
     // qualité complète dès le départ, mobile compris (composeur MSAA, ombre pleine, sonde) : le « démarrage léger »

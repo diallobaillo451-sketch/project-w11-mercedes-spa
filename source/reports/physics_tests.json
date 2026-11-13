@@ -1,0 +1,77 @@
+[
+ {
+  "name": "repos stable",
+  "ok": true,
+  "info": "v=0.0000 m/s, compressions mm=0.0/0.0/0.0/0.0, y=0.2900"
+ },
+ {
+  "name": "arrêt en pente 18 %",
+  "ok": true,
+  "info": "v=0.0068 m/s (10.2°)"
+ },
+ {
+  "name": "0-100 km/h",
+  "ok": true,
+  "info": "2.58 s (réf. publique F1 2020 ≈ 2,6 s, E)"
+ },
+ {
+  "name": "0-200 km/h",
+  "ok": true,
+  "info": "4.54 s (réf. ≈ 4,5–5 s, E)"
+ },
+ {
+  "name": "vitesse terminale (sans DRS, batterie pleine puis vide)",
+  "ok": true,
+  "info": "328.0 km/h après 40 s, rpm 12312 rapport 8, 0-300 9.80 s"
+ },
+ {
+  "name": "vitesse terminale DRS",
+  "ok": true,
+  "info": "342.0 km/h (+14.0)"
+ },
+ {
+  "name": "freinage 300→80 km/h",
+  "ok": true,
+  "info": "73.9 m en 1.56 s, décélération max 4.81 g, Tdisque AV 535 °C (freinage idéal en ligne droite ; ordre de grandeur Brembo pour La Source ≈ 120–130 m avec relâchement progressif, chiffre non vérifié)"
+ },
+ {
+  "name": "g latéral max",
+  "ok": true,
+  "info": "5.93 g (réf. F1 2020 ≈ 4–5 g en courbe rapide, E)"
+ },
+ {
+  "name": "Yas surface estimée chargée",
+  "ok": true,
+  "info": "estimated/non-official runtime physics; Object_40 surface layer; not a surveyed or FIA-provided grid · N=3882, ND=361, longueur 5329.5 m, centre asphalté 100.00 %"
+ },
+ {
+  "name": "Yas barrières spatiales",
+  "ok": true,
+  "info": "14953 segments · 34510 références de grille"
+ },
+ {
+  "name": "Yas pitlane et zone 80 km/h",
+  "ok": true,
+  "info": "331 points · limitation 80 km/h (position estimated/non-official; route selected from Yas paved mesh corridor)"
+ },
+ {
+  "name": "Yas DRS et secteurs configurés",
+  "ok": true,
+  "info": "DRS 1648–2527 m / 2906–3684 m · secteurs 1248 / 3734 m (stations estimées)"
+ },
+ {
+  "name": "Yas départ au bon index",
+  "ok": true,
+  "info": "demandé 5317.5 m → s=5317.6 m, index=3873"
+ },
+ {
+  "name": "Yas tour auto chargeable et drivable",
+  "ok": true,
+  "info": "2:16.635 · 1 tour(s) · s=1 m, d=-0.3 m, v=137.9 km/h, t=138.3 s · max 308.7 km/h · ligne 161 ms · simu 1.2 s"
+ },
+ {
+  "name": "Yas stabilité du tour auto",
+  "ok": true,
+  "info": "362/33197 pas hors piste, 0 pas avec choc >0,2"
+ }
+]

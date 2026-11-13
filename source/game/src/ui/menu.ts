@@ -30,7 +30,7 @@ export interface MenuHost {
 }
 const FLAG: Record<string, string> = { GBR: 'GB', FIN: 'FI', NED: 'NL', THA: 'TH', MON: 'MC', GER: 'DE', ESP: 'ES', AUS: 'AU', FRA: 'FR', MEX: 'MX', CAN: 'CA', RUS: 'RU', ITA: 'IT', DEN: 'DK' }
 export const flagEmoji = (nat: string) => [...(FLAG[nat] ?? '')].map(c => String.fromCodePoint(0x1f1a5 + c.charCodeAt(0))).join('')
-const LAP_STEPS = [1, 2, 3, 5, 8, 10, 12, 15, 22, 30, 44]
+const LAP_STEPS = [1, 2, 3, 5, 8, 10, 12, 15, 22, 30, 44, 58]
 const MIN_STEPS = [3, 5, 8, 10, 12, 15, 18, 20, 25, 30, 45, 60, 90]
 type PageId = 'home' | 'mode' | 'driver' | 'circuit' | 'car' | 'quick' | 'weekend' | 'career'
 interface Page { id: PageId; el: HTMLElement; title: string; shot: ShowShot }
@@ -57,9 +57,9 @@ export class Menu {
     this.root.style.setProperty('--tc', tc)
     this.hero.innerHTML = `<div class="num">${d.num}</div><div class="first">${flagEmoji(d.nat)} ${d.first}</div><div class="last">${d.last}</div><div class="team"><i></i>${t.name}</div>`
     this.hero.style.animation = 'none'; void this.hero.offsetWidth; this.hero.style.animation = ''
-    const b = this.H.bestLap()
+    const b = this.H.bestLap(), c = CIRCUITS.find(x => x.id === this.H.profile.circuit) ?? CIRCUITS[0]
     this.top.innerHTML = ''
-    const c = h('div', 'ap-chip'); c.textContent = b ? 'Record Spa · ' + fmtTime(b) : 'Saison 2020'; this.top.append(c)
+    const chip = h('div', 'ap-chip'); chip.textContent = b ? `Record ${c.name} · ${fmtTime(b)}` : 'Saison 2020'; this.top.append(chip)
   }
   private chrome() {
     const n = this.pages.length, cur = this.pages[n - 1]
@@ -79,7 +79,8 @@ export class Menu {
     if (i < 0) { const b = h('button', 'ap-btn', 'OK'); b.addEventListener('click', () => { haptic(); this.pop() }); F.append(b); return }
     if (last) {
       const s = h('div', 'sum'), d = driverById(P.driver)
-      s.textContent = P.mode === 'quick' ? `${d.first[0]}. ${d.last} · Spa · ${P.laps} tour${P.laps > 1 ? 's' : ''}` : `${d.first[0]}. ${d.last} · EL ${P.shortWeekend ? '3' : '1-2-3'} · Q1-Q3 · ${P.raceLaps} tours`
+      const c = CIRCUITS.find(x => x.id === P.circuit) ?? CIRCUITS[0]
+      s.textContent = P.mode === 'quick' ? `${d.first[0]}. ${d.last} · ${c.name} · ${P.laps} tour${P.laps > 1 ? 's' : ''}` : `${d.first[0]}. ${d.last} · ${c.name} · EL ${P.shortWeekend ? '3' : '1-2-3'} · Q1-Q3 · ${P.raceLaps} tours`
       const b = h('button', 'ap-btn', P.mode === 'quick' ? 'Démarrer la course' : 'Commencer le week-end')
       b.addEventListener('click', () => { haptic(); if (P.mode === 'quick') this.H.startQuick(); else this.startWk() })
       F.append(s, b)
@@ -113,7 +114,10 @@ export class Menu {
     const save = () => H.save()
     switch (id) {
       case 'home': {
-        title('Saison 2020 · Manche 7', 'Grand Prix de Belgique', 'Spa-Francorchamps · 7,004 km · 19 virages')
+        const c = CIRCUITS.find(x => x.id === P.circuit) ?? CIRCUITS[0]
+        const gp = c.gp === 'Abou Dabi' ? `d’${c.gp}` : `de ${c.gp}`
+        const layout = c.id === 'abu' ? 'layout 2021 · nuit' : 'saison 2020'
+        title(`Saison 2020 · Manche ${c.round}`, `Grand Prix ${gp}`, `${c.name} · ${c.km.toFixed(3).replace('.', ',')} km · ${c.laps} tours · ${layout}`)
         const tiles = h('div', 'ap-tiles')
         const t1 = h('button', 'ap-tile', `<div class="k">Course rapide</div><div class="n">Départ arrêté</div><div class="d">${P.laps} tour${P.laps > 1 ? 's' : ''} · feux rouges · drapeau à damier</div>${ICON_BG.flag}`)
         t1.style.setProperty('--c1', '#0f5a52'); t1.style.setProperty('--c2', '#062320')
@@ -129,7 +133,7 @@ export class Menu {
           chev: true, onTap: () => { this.flow = null; this.push('career') },
         })))
         if (wk) el.append(group(row({ icon: 'cal', color: '#5e5ce6', title: 'Nouveau week-end', sub: 'Repartir de l’EL1', chev: true, onTap: () => { P.mode = 'weekend'; save(); this.flow = ['driver', 'circuit', 'car', 'weekend']; this.push('driver') } })))
-        const d = driverById(P.driver), c = CIRCUITS.find(x => x.id === P.circuit)!, car = CARS.find(x => x.id === P.car)!
+        const d = driverById(P.driver), car = CARS.find(x => x.id === P.car)!
         el.append(header('Ta sélection'), group(
           row({ icon: 'helmet', color: teamAccent(d.team), title: 'Pilote', value: `${d.first[0]}. ${d.last} #${d.num}`, chev: true, onTap: () => this.push('driver') }),
           row({ icon: 'pin', color: '#ff9f0a', title: 'Circuit', value: c.name, chev: true, onTap: () => this.push('circuit') }),
@@ -169,10 +173,10 @@ export class Menu {
         return { id, el, title: 'Pilote', shot: 'driver' }
       }
       case 'circuit': {
-        title(this.flow ? 'Étape 2 sur 4' : 'Calendrier', 'Circuit', 'Calendrier 2020 · 17 manches')
-        const g = group(...CIRCUITS.map(c => row({ title: c.gp === c.name ? c.name : `${c.name}`, sub: `M${c.round} · GP ${c.gp === '70e anniversaire' ? 'du 70e anniversaire' : 'de ' + c.gp} · ${c.km.toFixed(3).replace('.', ',')} km · ${c.laps} tours`,
+        title(this.flow ? 'Étape 2 sur 4' : 'Calendrier', 'Circuit', `Calendrier 2020 · ${CIRCUITS.length} manches`)
+        const g = group(...CIRCUITS.map(c => row({ title: c.gp === c.name ? c.name : `${c.name}`, sub: `M${c.round} · GP ${c.gp === '70e anniversaire' ? 'du 70e anniversaire' : 'de ' + c.gp} · ${c.km.toFixed(3).replace('.', ',')} km · ${c.laps} tours${c.id === 'abu' ? ' · layout 2021 · nuit' : ''}`,
           check: c.id === P.circuit, disabled: !c.available, badge: c.available ? undefined : 'Piste à venir', onTap: () => { P.circuit = c.id; save(); this.refresh() } })))
-        el.append(g, footnote('Spa est jouable. Les autres tracés du calendrier sont dans Carrière : on les court dès que la piste est livrée, sinon la manche est simulée au barème 2020.'))
+        el.append(g, footnote('Spa et Yas Marina sont jouables. Abu Dhabi utilise le layout Yas 2021 de nuit; ses données de course officielles sont conservées, mais le centerline et les stations physiques estimés sont explicitement non officiels. Monza et les autres manches restent désactivés ici tant que leurs assets runtime ne sont pas livrés.'))
         return { id, el, title: 'Circuit', shot: 'side' }
       }
       case 'car': {
@@ -182,12 +186,18 @@ export class Menu {
         return { id, el, title: 'Voiture', shot: 'rear' }
       }
       case 'quick': {
+        const c = CIRCUITS.find(x => x.id === P.circuit) ?? CIRCUITS[0]
         title('Étape 4 sur 4', 'Course rapide', 'Départ arrêté depuis la pole, feux rouges')
         const presets = h('div'); presets.style.cssText = 'display:flex;gap:6px'
         let st: HTMLElement & { set?: (x: number) => void }
-        const setLaps = (v: number) => { P.laps = v; save(); st.set?.(v); this.footer('quick') }
-        st = stepper(P.laps, LAP_STEPS, v => `${v} tour${v > 1 ? 's' : ''}`, v => { P.laps = v; save(); this.footer('quick') })
-        el.append(header('Course'), group(ctl('Tours', st), ctlCol('Distance', seg<number>([[3, 'Sprint'], [11, '25 %'], [22, '50 %'], [44, '100 %']], P.laps, setLaps), `${(P.laps * 7.004).toFixed(1).replace('.', ',')} km`)))
+        let distanceLabel: HTMLElement | null = null
+        const updateDistance = () => { if (distanceLabel) distanceLabel.textContent = `${(P.laps * c.km).toFixed(1).replace('.', ',')} km` }
+        const setLaps = (v: number) => { P.laps = v; save(); st.set?.(v); updateDistance(); this.footer('quick') }
+        st = stepper(P.laps, LAP_STEPS, v => `${v} tour${v > 1 ? 's' : ''}`, v => { P.laps = v; save(); updateDistance(); this.footer('quick') })
+        const lapChoices: [number, string][] = [[3, 'Sprint'], [Math.max(1, Math.round(c.laps * 0.25)), '25 %'], [Math.max(1, Math.round(c.laps * 0.5)), '50 %'], [c.laps, '100 %']]
+        const distanceCell = ctlCol('Distance', seg<number>(lapChoices, P.laps, setLaps), `${(P.laps * c.km).toFixed(1).replace('.', ',')} km`)
+        distanceLabel = distanceCell.querySelector('small')
+        el.append(header('Course'), group(ctl('Tours', st), distanceCell))
         this.conditions(el)
         el.append(header('Adversaires'), group(
           row({ title: 'Plateau', sub: '19 monoplaces 2020 · course, essais et qualifications', value: '20 voitures' }),
@@ -197,6 +207,7 @@ export class Menu {
         return { id, el, title: 'Course rapide', shot: 'rear' }
       }
       case 'weekend': {
+        const c = CIRCUITS.find(x => x.id === P.circuit) ?? CIRCUITS[0]
         title('Étape 4 sur 4', 'Week-end de GP', 'Programme du vendredi au dimanche')
         const fp = (i: 0 | 1 | 2) => ctl(WK_LABEL[(['FP1', 'FP2', 'FP3'] as const)[i]], stepper(P.fpMin[i], MIN_STEPS, v => v + ' min', v => { P.fpMin[i] = v; save() }), `réel ${REAL_MIN[(['FP1', 'FP2', 'FP3'] as const)[i]]}`)
         const fpg = group(...(P.shortWeekend ? [fp(2)] : [fp(0), fp(1), fp(2)]))
@@ -207,9 +218,13 @@ export class Menu {
         el.append(header('Samedi — Qualifications'), group(
           ctlCol('Format', seg<string>([['short', 'Court'], ['mid', 'Moyen'], ['real', 'Réel'], ['custom', 'Perso']], qFmt, v => { const m: Record<string, number[]> = { short: [6, 5, 4], mid: [12, 10, 8], real: [18, 15, 12] }; if (m[v]) { P.qMin = m[v] as [number, number, number]; qs.forEach((s, i) => s.set?.(P.qMin[i])); save() } })),
           ...(['Q1', 'Q2', 'Q3'] as const).map((q, i) => ctl(q, qs[i], `réel ${REAL_MIN[q]}`))))
-        let rs: HTMLElement & { set?: (x: number) => void }
-        rs = stepper(P.raceLaps, LAP_STEPS, v => `${v} tour${v > 1 ? 's' : ''}`, v => { P.raceLaps = v; save(); this.footer('weekend') })
-        el.append(header('Dimanche — Course'), group(ctl('Tours', rs), ctlCol('Distance', seg<number>([[5, 'Courte'], [11, '25 %'], [22, '50 %'], [44, '100 %']], P.raceLaps, v => { P.raceLaps = v; save(); rs.set?.(v); this.footer('weekend') }), 'réel 44 tours')))
+        let rs: HTMLElement & { set?: (x: number) => void }, raceDistanceLabel: HTMLElement | null = null
+        const updateRaceDistance = () => { if (raceDistanceLabel) raceDistanceLabel.textContent = `${P.raceLaps} tours · ${(P.raceLaps * c.km).toFixed(1).replace('.', ',')} km · 100 % : ${c.laps} tours` }
+        rs = stepper(P.raceLaps, LAP_STEPS, v => `${v} tour${v > 1 ? 's' : ''}`, v => { P.raceLaps = v; save(); updateRaceDistance(); this.footer('weekend') })
+        const lapChoices: [number, string][] = [[5, 'Courte'], [Math.max(1, Math.round(c.laps * 0.25)), '25 %'], [Math.max(1, Math.round(c.laps * 0.5)), '50 %'], [c.laps, '100 %']]
+        const raceDistanceCell = ctlCol('Distance', seg<number>(lapChoices, P.raceLaps, v => { P.raceLaps = v; save(); rs.set?.(v); updateRaceDistance(); this.footer('weekend') }), `${P.raceLaps} tours · ${(P.raceLaps * c.km).toFixed(1).replace('.', ',')} km · 100 % : ${c.laps} tours`)
+        raceDistanceLabel = raceDistanceCell.querySelector('small')
+        el.append(header('Dimanche — Course'), group(ctl('Tours', rs), raceDistanceCell))
         this.conditions(el)
         el.append(footnote('Entre chaque séance tu rentres au garage : l’ingénieur analyse la télémétrie et propose des réglages (ailerons, hauteur de caisse, différentiel, freins, pressions, pneus) que les mécaniciens préparent. Le chrono de séance continue pendant le travail des mécaniciens.'))
         void WK_SHORT
@@ -222,7 +237,7 @@ export class Menu {
           row({ title: 'Difficulté', value: `${P.difficulty} %` }),
           row({ title: 'État', value: H.careerLabel() ?? 'Pas commencée' }),
         ))
-        el.append(footnote('Points 2020 : 25-18-15-12-10-8-6-4-2-1 et 1 point du meilleur tour s’il est dans les 10. Spa se court vraiment. Les autres manches du calendrier disponible sont simulées tant que leur piste n’est pas livrée. Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer ne sont pas au calendrier.'))
+        el.append(footnote('Points 2020 : 25-18-15-12-10-8-6-4-2-1 et 1 point du meilleur tour s’il est dans les 10. Spa et Yas Marina se courent réellement; Abu Dhabi utilise le layout 2021 de nuit. Les manches sans piste livrée sont simulées. Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer ne sont pas au calendrier.'))
         const saved = loadCareer()
         if (saved) {
           const pilots = table(saved.points).slice(0, 8)

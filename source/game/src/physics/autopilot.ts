@@ -45,7 +45,17 @@ export class Autopilot {
     // météo : le pilote adapte ses vitesses de passage à l'adhérence mesurée (v ∝ √μ) et freine plus tôt (regard plus loin)
     this.gS += (Math.sqrt(Math.min(1.03, car.wetGrip)) * (car.wetGrip < 0.95 ? 0.93 : 1) - this.gS) * 0.01
     let vt = L.v[ia] * this.pace * this.gS
-    if (this.gS < 0.97) { const far = (i + Math.round((v * v / (2 * 9.81 * 2.2 * this.gS * this.gS) + 5) / L.ds)) % N; vt = Math.min(vt, Math.sqrt(Math.max(0, (L.v[far] * this.pace * this.gS) ** 2 + 2 * 9.81 * 2.4 * this.gS * this.gS * Math.max(0, ((far - ia + N) % N) * L.ds)))) }
+    // Braking envelope: anticipate the next low-speed point instead of reacting
+    // only to the 3–15 m local lookahead (too late for fast approaches and grade breaks).
+    const aBrake = 9.81 * 1.2 * this.gS * this.gS
+    const scan = Math.min(N - 1, Math.ceil((v * v / (2 * aBrake) + 25) / L.ds))
+    let brakeDist = 0
+    for (let k = 1; k <= scan; k++) {
+      brakeDist += L.ds
+      const target = L.v[(i + k) % N] * this.pace * this.gS
+      const allowed = Math.sqrt(target * target + 2 * aBrake * brakeDist)
+      if (allowed < vt) vt = allowed
+    }
     const err = vt - v
     let throttle = 0, brake = 0
     if (err > 0.3) throttle = Math.min(1, 0.55 + err * 0.5)

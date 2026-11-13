@@ -116,7 +116,7 @@ export class Vehicle {
     const rx = -c.tz, rz = c.tx
     const x = c.x + rx * d, z = c.z + rz * d
     const smp = this.surface.sample(x, z, c.i, tmp)
-    this.hint = smp.i
+    this.hint = smp.i; this.s = smp.s; this.d = smp.d; this.trackIdx = smp.i
     // repère aligné sur la normale locale de la piste (pente + dévers)
     const n = [smp.nx, smp.ny, smp.nz]
     let f = [c.tx, 0, c.tz]; const fd = f[0] * n[0] + f[2] * n[2]
@@ -147,7 +147,7 @@ export class Vehicle {
   /** Place la voiture en (x, z) avec le cap (hx, hz) : garage, voie des stands. Même pose que placeAt (repère aligné sur le sol). */
   placeAtXZ(x: number, z: number, hx: number, hz: number, speed = 0) {
     const smp = this.surface.sample(x, z, -1, tmp)
-    this.hint = smp.i
+    this.hint = smp.i; this.s = smp.s; this.d = smp.d; this.trackIdx = smp.i
     const n = [smp.nx, smp.ny, smp.nz]
     let f = [hx, 0, hz]; const fd = f[0] * n[0] + f[2] * n[2]
     f = [f[0] - fd * n[0], -fd * n[1], f[2] - fd * n[2]]; const fl = Math.hypot(f[0], f[1], f[2]) || 1; f = f.map(v => v / fl)
