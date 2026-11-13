@@ -2,12 +2,10 @@
  *  limites de piste. Indépendant du rendu (testable sous Node). */
 import { Timing } from '../timing/timing.ts'
 import type { Vehicle } from '../physics/vehicle.ts'
+import { CIRCUIT } from './circuit.ts'
 
-/** Zones DRS de Spa 2020 (E : positions estimées sur notre ligne centrale ; 2 zones : Kemmel, ligne droite des stands). */
-export function drsZones(length: number): [number, number][] {
-  const k = length / 7001.7
-  return [[1380 * k, 2230 * k], [6790 * k, length], [0, 190 * k]]
-}
+/** Zones DRS du circuit actif (voir circuit.ts). */
+export function drsZones(length: number): [number, number][] { return CIRCUIT.drs(length) }
 export type SessionKind = 'practice' | 'qualifying' | 'timetrial' | 'race'
 /** drapeaux FIA affichés sur le volant (LEDs latérales + écran) et dans le HUD */
 export type Flag = 'none' | 'green' | 'yellow' | 'double' | 'red' | 'blue' | 'chequered' | 'blackwhite' | 'sc' | 'vsc'
@@ -19,7 +17,7 @@ export class Session {
   /** force un drapeau pendant `sec` secondes (démonstration, tests) */
   setFlag(f: Flag, sec = 6) { this.flag = f; this.flagT = sec }
   constructor(length: number, kind: SessionKind = 'timetrial') {
-    this.timing = new Timing(length); this.zones = drsZones(length); this.kind = kind
+    this.timing = new Timing(length, 1, CIRCUIT.gates[0], CIRCUIT.gates[1]); this.zones = drsZones(length); this.kind = kind
   }
   update(car: Vehicle, t: number, dt: number) {
     const s = car.s

@@ -14,6 +14,20 @@
     - cd source/game && npm ci && npx vite build && cd ../..
     - rm -f public/assets/index-*.js public/assets/index-*.css
     - cp -r source/game/dist/. public/
+    - |
+      monza() {
+        M=shared/assets/monza_2020
+        git fetch --depth 1 origin newbot-shared || return 1
+        git checkout FETCH_HEAD -- $M || return 1
+        find $M -type f \( -name '*.bin' -o -name '*.ktx2' -o -name '*.webp' \) ! -path "$M/preview/*" | while read -r f; do base64 -d "$f" > "$f.dec" && mv "$f.dec" "$f" || exit 1; done || return 1
+        for p in $(find $M -name '*.part001' ! -path "$M/preview/*"); do b="${p%.part001}"; : > "$b"; for q in "$b".part*; do base64 -d "$q" >> "$b" || return 1; done; rm -f "$b".part*; done
+        mkdir -p public/assets/monza public/track_monza
+        cp -r $M/scene/. public/assets/monza/ || return 1
+        for f in surface.json surface.bin barriers.bin pitlane.json crowd.bin crowd.json grassmask.bin meta.json; do cp $M/track/$f public/track_monza/ || return 1; done
+        cp $M/marshals.json public/track_monza/marshals.json || return 1
+        test "$(stat -c%s public/track_monza/surface.bin)" -eq 4177492 && test "$(stat -c%s public/assets/monza/t01.bin)" -eq 5278344 && test "$(stat -c%s public/track_monza/barriers.bin)" -eq 1964848
+      }
+      if monza; then echo 'MONZA OK'; du -sh public/assets/monza public/track_monza; else echo 'ATTENTION : Monza non assemblé'; fi
     - du -sh public
 
 pages:
