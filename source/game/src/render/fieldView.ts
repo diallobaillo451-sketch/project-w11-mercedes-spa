@@ -9,10 +9,11 @@ import { carOfTeam, teamAccent } from '../data/drivers.ts'
 import { dlog } from '../diag.ts'
 import { bindLivery, readableLivery } from './livery.ts'
 import { collectAnchors, type Anchor } from './anchors.ts'
+import { cloneTyreMaterials, setTyreCompoundColor } from './tyreColor.ts'
 
 type Mat = THREE.MeshStandardMaterial
 interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean; spin0: number; steer0: number }
-interface CarView { r: Racer; obj: THREE.LOD; wheels: WheelRef[]; blob: THREE.Mesh; pitch: number; roll: number; spin: number }
+interface CarView { r: Racer; obj: THREE.LOD; wheels: WheelRef[]; tyreMaterials: THREE.MeshStandardMaterial[]; tyreCompound: Racer['tyre']['c']; blob: THREE.Mesh; pitch: number; roll: number; spin: number }
 const TEAMS = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
 const LOD1 = 28, LOD2 = 450
 /** Modèle SC remplaçable (Mercedes-AMG GT Black Series optimisé, plus tard sous shared/assets/safety_car/). */
@@ -260,7 +261,7 @@ export class FieldView {
     dlog(`plateau : ${this.views.length} voitures, ${this.protos.size} équipes en ${Math.round(performance.now() - t0)} ms · LOD1 ${this.stats.tris1 | 0} tris, LOD2 ${this.stats.tris2 | 0} · GPU ≈ ${(gb.tex / 1048576).toFixed(1)} + ${(gb.geo / 1048576).toFixed(1)} Mo`)
   }
   private buildViews(sim: RaceSim) {
-    for (const v of this.views) { v.obj.removeFromParent(); v.blob.removeFromParent() }
+    for (const v of this.views) { v.obj.removeFromParent(); v.blob.removeFromParent(); for (const m of v.tyreMaterials) m.dispose() }
     this.views = []
     const bt = blobTex(), bm = new THREE.MeshBasicMaterial({ map: bt, transparent: true, depthWrite: false })
     const bg = new THREE.PlaneGeometry(2.3, 5.6).rotateX(-Math.PI / 2)
@@ -271,8 +272,9 @@ export class FieldView {
       lod.addLevel(a, 0); lod.addLevel(b, LOD1); lod.addLevel(new THREE.Object3D(), LOD2)
       lod.matrixAutoUpdate = false; lod.name = 'ai_' + r.id
       const wheels = [...collectWheels(a), ...collectWheels(b)]
+      const tyreMaterials = cloneTyreMaterials([a, b]); setTyreCompoundColor(tyreMaterials, r.tyre.c)
       const blob = new THREE.Mesh(bg, bm); blob.matrixAutoUpdate = false; blob.renderOrder = 1
-      this.root.add(lod, blob); this.views.push({ r, obj: lod, wheels, blob, pitch: 0, roll: 0, spin: 0 })
+      this.root.add(lod, blob); this.views.push({ r, obj: lod, wheels, tyreMaterials, tyreCompound: r.tyre.c, blob, pitch: 0, roll: 0, spin: 0 })
     }
   }
   /** Remplace le modèle de safety car (GLB affiché + GLB haute définition pour les matériaux). */
@@ -331,6 +333,7 @@ export class FieldView {
     const t = performance.now() / 1000
     for (const v of this.views) {
       const r = v.r
+      if (v.tyreCompound !== r.tyre.c) { v.tyreCompound = r.tyre.c; setTyreCompoundColor(v.tyreMaterials, v.tyreCompound) }
       const goneAt = (r as Racer & { _goneAt?: number })._goneAt
       const gone = !!(r as Racer & { _gone?: boolean })._gone || (goneAt !== undefined && sim.t > goneAt)
       const hide = r.mode === 'garage' || (!!r.out && r.mode === 'dnf' && r.v < 0.5 && gone)
