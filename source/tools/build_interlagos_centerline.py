@@ -1,1 +1,201 @@
-IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwoiIiJFeHRyYWN0IGEgY2xvc2VkLCBzbW9vdGhlZCBJbnRlcmxhZ29zIGNlbnRlcmxpbmUgZnJvbSB0aGUgT2JqZWN0XzEwOSByb2FkIHNrZWxldG9uLgoKVGhlIDAuNSBtIHJhc3RlciBza2VsZXRvbiBjYW4gY29udGFpbiBwaXhlbC1zY2FsZSB6aWctemFncy4gQSAyIG0gcGVyaW9kaWMgR2F1c3NpYW4Kc21vb3RoaW5nIHdhcyB2YWxpZGF0ZWQgYWdhaW5zdCBib3RoIDAuNSBtIGFuZCAxIG0gcmFzdGVycyAobGVuZ3RocyBjb252ZXJnZSBuZWFyCjQuMjkga20pLiBBIHBsYW4tdG8tbWVzaCBhZmZpbmUgZml0IHN1cHBsaWVzIHRoZSBzdGFydC9maW5pc2ggYW5jaG9yIGFuZCBmb3J3YXJkCm9yaWVudGF0aW9uICh0b3dhcmRzIFQxKS4gVGhpcyB0b29sIHdyaXRlcyBCbGVuZGVyLWhvcml6b250YWwgWFkgcG9pbnRzOyB0aGUgQmxlbmRlcgpiYWtlIGNvbnZlcnRzIHRoZW0gdG8gZ2xURiAoeCwgaGVpZ2h0LCAteSkuCgpSZXF1aXJlcyBQeXRob24gcGFja2FnZXM6IG9wZW5jdi1weXRob24sIG5ldHdvcmt4LCBudW1weSwgc2NpcHkuCiIiIgpmcm9tIF9fZnV0dXJlX18gaW1wb3J0IGFubm90YXRpb25zCmltcG9ydCBhcmdwYXJzZSwganNvbiwgbWF0aApmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKaW1wb3J0IGN2MgppbXBvcnQgbmV0d29ya3ggYXMgbngKaW1wb3J0IG51bXB5IGFzIG5wCmZyb20gc2NpcHkubmRpbWFnZSBpbXBvcnQgZ2F1c3NpYW5fZmlsdGVyMWQKCgpkZWYgYWZmaW5lX21hcChzb3VyY2VfeHk6IG5wLm5kYXJyYXksIHJlZl9tYXNrOiBucC5uZGFycmF5LCBhbGlnbm1lbnQ6IGRpY3QsIHRhcmdldF9zaGFwZTogdHVwbGVbaW50LCBpbnRdKSAtPiBucC5uZGFycmF5OgogICAgbiwgbGFiZWxzLCBzdGF0cywgXyA9IGN2Mi5jb25uZWN0ZWRDb21wb25lbnRzV2l0aFN0YXRzKHJlZl9tYXNrLmFzdHlwZShucC51aW50OCksIDgpCiAgICBrZWVwID0gbnAuemVyb3NfbGlrZShyZWZfbWFzaykKICAgIGZvciBpIGluIHJhbmdlKDEsIG4pOgogICAgICAgIHgsIHksIHcsIGgsIGFyZWEgPSBzdGF0c1tpXQogICAgICAgIGlmIGFyZWEgPj0gMyBhbmQgeSA8IDM0MCBhbmQgeCA8IDQ3MCBhbmQgeCArIHcgPiAyMDoKICAgICAgICAgICAga2VlcFtsYWJlbHMgPT0gaV0gPSBUcnVlCiAgICB5cywgeHMgPSBucC53aGVyZShrZWVwKQogICAgc3gwLCBzeDEgPSBpbnQoeHMubWluKCkpLCBpbnQoeHMubWF4KCkpCiAgICBzeTAsIHN5MSA9IGludCh5cy5taW4oKSksIGludCh5cy5tYXgoKSkKICAgIHNvdXJjZV9jZW50ZXIgPSBucC5hcnJheShbKHN4MCArIHN4MSkgKiAwLjUsIChzeTAgKyBzeTEpICogMC41XSwgZHR5cGU9bnAuZmxvYXQ2NCkKICAgIHRoZXRhID0gbWF0aC5yYWRpYW5zKGFsaWdubWVudFsndGhldGFfZGVnJ10pCiAgICBjLCBzID0gbWF0aC5jb3ModGhldGEpLCBtYXRoLnNpbih0aGV0YSkKICAgIGF4LCBheSA9IGFsaWdubWVudFsnc2NhbGVfeHknXQogICAgZHgsIGR5ID0gYWxpZ25tZW50WydvZmZzZXRfcHgnXQogICAgdGgsIHR3ID0gdGFyZ2V0X3NoYXBlCiAgICB0YXJnZXRfY2VudGVyID0gbnAuYXJyYXkoWyh0dyAtIDEpICogMC41LCAodGggLSAxKSAqIDAuNV0sIGR0eXBlPW5wLmZsb2F0NjQpCiAgICBwID0gbnAuYXNhcnJheShzb3VyY2VfeHksIGR0eXBlPW5wLmZsb2F0NjQpIC0gc291cmNlX2NlbnRlcgogICAgeCA9IHRhcmdldF9jZW50ZXJbMF0gKyBkeCArIGF4ICogKGMgKiBwWy4uLiwgMF0gLSBzICogcFsuLi4sIDFdKQogICAgeSA9IHRhcmdldF9jZW50ZXJbMV0gKyBkeSArIGF5ICogKHMgKiBwWy4uLiwgMF0gKyBjICogcFsuLi4sIDFdKQogICAgcmV0dXJuIG5wLnN0YWNrKFt4LCB5XSwgYXhpcz0tMSkKCgpkZWYgcHJvamVjdF90b19sb29wKHBvaW50czogbnAubmRhcnJheSwgY3VtdWxhdGl2ZTogbnAubmRhcnJheSwgcXVlcnk6IG5wLm5kYXJyYXkpIC0+IHR1cGxlW25wLm5kYXJyYXksIG5wLm5kYXJyYXldOgogICAgYSA9IHBvaW50cwogICAgYiA9IG5wLnJvbGwocG9pbnRzLCAtMSwgYXhpcz0wKQogICAgdiA9IGIgLSBhCiAgICBkZW4gPSBucC5laW5zdW0oJ2lqLGlqLT5pJywgdiwgdikKICAgIHEgPSBucC5hc2FycmF5KHF1ZXJ5LCBkdHlwZT1ucC5mbG9hdDY0KQogICAgdCA9IG5wLmNsaXAobnAuZWluc3VtKCdpaixpai0+aScsIHFbTm9uZSwgOl0gLSBhLCB2KSAvIG5wLm1heGltdW0oZGVuLCAxZS0xMiksIDAuMCwgMS4wKQogICAgY2xvc2VzdCA9IGEgKyB2ICogdFs6LCBOb25lXQogICAgZDIgPSBucC5laW5zdW0oJ2lqLGlqLT5pJywgY2xvc2VzdCAtIHFbTm9uZSwgOl0sIGNsb3Nlc3QgLSBxW05vbmUsIDpdKQogICAgaSA9IGludChucC5hcmdtaW4oZDIpKQogICAgcmV0dXJuIG5wLmFycmF5KFtjdW11bGF0aXZlW2ldICsgdFtpXSAqIG1hdGguc3FydChkZW5baV0pXSksIG5wLmFycmF5KFttYXRoLnNxcnQoZDJbaV0pXSkKCgpkZWYgc2FtcGxlX2xvb3AocG9pbnRzOiBucC5uZGFycmF5LCBjdW11bGF0aXZlOiBucC5uZGFycmF5LCBzOiBmbG9hdCkgLT4gbnAubmRhcnJheToKICAgIGxlbmd0aCA9IGZsb2F0KGN1bXVsYXRpdmVbLTFdKQogICAgdSA9IHMgJSBsZW5ndGgKICAgIGkgPSBpbnQobnAuc2VhcmNoc29ydGVkKGN1bXVsYXRpdmUsIHUsIHNpZGU9J3JpZ2h0JykgLSAxKQogICAgaSA9IG1heCgwLCBtaW4oaSwgbGVuKHBvaW50cykgLSAxKSkKICAgIHNlZyA9IGN1bXVsYXRpdmVbaSArIDFdIC0gY3VtdWxhdGl2ZVtpXQogICAgZiA9IDAuMCBpZiBzZWcgPCAxZS0xMiBlbHNlICh1IC0gY3VtdWxhdGl2ZVtpXSkgLyBzZWcKICAgIHJldHVybiBwb2ludHNbaV0gKiAoMSAtIGYpICsgcG9pbnRzWyhpICsgMSkgJSBsZW4ocG9pbnRzKV0gKiBmCgoKZGVmIG1haW4oKSAtPiBOb25lOgogICAgYXAgPSBhcmdwYXJzZS5Bcmd1bWVudFBhcnNlcigpCiAgICBhcC5hZGRfYXJndW1lbnQoJy0tbWFzay1kaXInLCB0eXBlPVBhdGgsIHJlcXVpcmVkPVRydWUsIGhlbHA9J2RpcmVjdG9yeSBjb250YWluaW5nIHJvYWRfc2tlbGV0b24ucG5nIGFuZCByb2FkX21hc2tfcmVwb3J0Lmpzb24gYXQgMC41IG0vcHgnKQogICAgYXAuYWRkX2FyZ3VtZW50KCctLW1hc2sxLXJlcG9ydCcsIHR5cGU9UGF0aCwgcmVxdWlyZWQ9VHJ1ZSwgaGVscD0ncm9hZF9tYXNrX3JlcG9ydC5qc29uIGZvciAxIG0vcHggcmFzdGVyJykKICAgIGFwLmFkZF9hcmd1bWVudCgnLS1yZWZlcmVuY2UnLCB0eXBlPVBhdGgsIHJlcXVpcmVkPVRydWUsIGhlbHA9J0ZhbkFtcCB0cmFjayBtYXAgc2tlbGV0b24gaW1hZ2UgKDUxMng0MTMpJykKICAgIGFwLmFkZF9hcmd1bWVudCgnLS1hbGlnbm1lbnQnLCB0eXBlPVBhdGgsIHJlcXVpcmVkPVRydWUsIGhlbHA9J3JlZmVyZW5jZV9hbGlnbm1lbnRfZ2xvYmFsLmpzb24nKQogICAgYXAuYWRkX2FyZ3VtZW50KCctLW91dCcsIHR5cGU9UGF0aCwgcmVxdWlyZWQ9VHJ1ZSwgaGVscD0nb3V0cHV0IGNlbnRlcmxpbmUgSlNPTicpCiAgICBhcC5hZGRfYXJndW1lbnQoJy0tb3ZlcmxheScsIHR5cGU9UGF0aCwgcmVxdWlyZWQ9VHJ1ZSwgaGVscD0nZGlhZ25vc3RpYyBvdmVybGF5IFBORycpCiAgICBhcC5hZGRfYXJndW1lbnQoJy0tc3RhcnQteHknLCB0eXBlPWZsb2F0LCBuYXJncz0yLCBkZWZhdWx0PSgxNDMuMCwgNzIuMCksIGhlbHA9J3NvdXJjZS1tYXAgWFkgb24gdGhlIGZpbmlzaCBzdHJhaWdodCwgYXQgdGhlIHRyYWNrIChub3QgdGhlIGZsYWcgaWNvbiBjZW50ZXIpJykKICAgIGFwLmFkZF9hcmd1bWVudCgnLS10MS14eScsIHR5cGU9ZmxvYXQsIG5hcmdzPTIsIGRlZmF1bHQ9KDM5LjAsIDEzMC4wKSwgaGVscD0nc291cmNlLW1hcCBYWSBuZWFyIFQxIGFwZXgsIGZvciBkaXJlY3Rpb24nKQogICAgYXAuYWRkX2FyZ3VtZW50KCctLXNtb290aGluZy1tJywgdHlwZT1mbG9hdCwgZGVmYXVsdD0yLjApCiAgICBhcC5hZGRfYXJndW1lbnQoJy0tc3BhY2luZy1tJywgdHlwZT1mbG9hdCwgZGVmYXVsdD0xLjApCiAgICBhcmdzID0gYXAucGFyc2VfYXJncygpCgogICAgcmVwb3J0ID0ganNvbi5sb2FkcygoYXJncy5tYXNrX2RpciAvICdyb2FkX21hc2tfcmVwb3J0Lmpzb24nKS5yZWFkX3RleHQoKSkKICAgIHJlcG9ydDEgPSBqc29uLmxvYWRzKGFyZ3MubWFzazFfcmVwb3J0LnJlYWRfdGV4dCgpKQogICAgYWxpZ25tZW50ID0ganNvbi5sb2FkcyhhcmdzLmFsaWdubWVudC5yZWFkX3RleHQoKSkKICAgIHJlZiA9IGN2Mi5pbXJlYWQoc3RyKGFyZ3MucmVmZXJlbmNlKSwgY3YyLklNUkVBRF9HUkFZU0NBTEUpCiAgICBpZiByZWYgaXMgTm9uZToKICAgICAgICByYWlzZSBGaWxlTm90Rm91bmRFcnJvcihhcmdzLnJlZmVyZW5jZSkKICAgIHNrZWxldG9uID0gY3YyLmltcmVhZChzdHIoYXJncy5tYXNrX2RpciAvICdyb2FkX3NrZWxldG9uLnBuZycpLCBjdjIuSU1SRUFEX0dSQVlTQ0FMRSkgPiAwCiAgICBjZWxsID0gZmxvYXQocmVwb3J0WydjZWxsX21fcGVyX3B4J10pCiAgICBtaW5feCwgbWluX3kgPSByZXBvcnRbJ2JvdW5kc194eV9taW4nXQogICAgbWF4X3gsIG1heF95ID0gcmVwb3J0Wydib3VuZHNfeHlfbWF4J10KICAgIHlzLCB4cyA9IG5wLndoZXJlKHNrZWxldG9uKQogICAgcGl4ID0gc2V0KHppcCh5cy50b2xpc3QoKSwgeHMudG9saXN0KCkpKQogICAgZ3JhcGggPSBueC5HcmFwaCgpCiAgICBncmFwaC5hZGRfbm9kZXNfZnJvbShzb3J0ZWQocGl4KSkKICAgIGZvciB5LCB4IGluIHNvcnRlZChwaXgpOgogICAgICAgIGZvciBkeSwgZHggaW4gKCgwLCAxKSwgKDEsIDApLCAoMSwgMSksICgxLCAtMSkpOgogICAgICAgICAgICBxID0gKHkgKyBkeSwgeCArIGR4KQogICAgICAgICAgICBpZiBxIG5vdCBpbiBwaXg6CiAgICAgICAgICAgICAgICBjb250aW51ZQogICAgICAgICAgICBpZiBkeSBhbmQgZHggYW5kICgoeSArIGR5LCB4KSBpbiBwaXggb3IgKHksIHggKyBkeCkgaW4gcGl4KToKICAgICAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgICAgIGdyYXBoLmFkZF9lZGdlKCh5LCB4KSwgcSwgd2VpZ2h0PWNlbGwgKiAobWF0aC5zcXJ0KDIpIGlmIGR5IGFuZCBkeCBlbHNlIDEuMCkpCiAgICBjb21wb25lbnRzID0gc29ydGVkKG54LmNvbm5lY3RlZF9jb21wb25lbnRzKGdyYXBoKSwga2V5PWxlbiwgcmV2ZXJzZT1UcnVlKQogICAgbWFpbl9ncmFwaCA9IGdyYXBoLnN1YmdyYXBoKGNvbXBvbmVudHNbMF0pLmNvcHkoKQogICAgY3ljbGVzID0gbnguY3ljbGVfYmFzaXMobWFpbl9ncmFwaCkKICAgIGlmIG5vdCBjeWNsZXM6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKCdObyBjbG9zZWQgY3ljbGUgZm91bmQgaW4gcm9hZCBza2VsZXRvbicpCiAgICAjIEluIHRoaXMgbWVzaCBvbmx5IG9uZSBjeWNsZSBzcGFucyB0aGUgY29tcGxldGUgdHJhY2s7IHNob3J0IGN5Y2xlcyBhcmUgYnJhbmNoZXMvbG9vcHMuCiAgICBkZWYgcmF3X2xlbmd0aChjeWNsZTogbGlzdFt0dXBsZVtpbnQsIGludF1dKSAtPiBmbG9hdDoKICAgICAgICB4eSA9IG5wLmFzYXJyYXkoWyh4LCB5KSBmb3IgeSwgeCBpbiBjeWNsZV0sIGR0eXBlPW5wLmZsb2F0NjQpCiAgICAgICAgcmV0dXJuIGZsb2F0KG5wLmxpbmFsZy5ub3JtKG5wLnJvbGwoeHksIC0xLCBheGlzPTApIC0geHksIGF4aXM9MSkuc3VtKCkgKiBjZWxsKQogICAgY2FuZGlkYXRlID0gbWF4KGN5Y2xlcywga2V5PXJhd19sZW5ndGgpCiAgICBwaXhfeHkgPSBucC5hc2FycmF5KFsoeCwgeSkgZm9yIHksIHggaW4gY2FuZGlkYXRlXSwgZHR5cGU9bnAuZmxvYXQ2NCkKICAgIHdvcmxkID0gbnAuY29sdW1uX3N0YWNrKFttaW5feCArIHBpeF94eVs6LCAwXSAqIGNlbGwsIG1heF95IC0gcGl4X3h5WzosIDFdICogY2VsbF0pCiAgICBzaWdtYV9weCA9IGFyZ3Muc21vb3RoaW5nX20gLyBjZWxsCiAgICBzbW9vdGggPSBucC5jb2x1bW5fc3RhY2soW2dhdXNzaWFuX2ZpbHRlcjFkKHdvcmxkWzosIGtdLCBzaWdtYV9weCwgbW9kZT0nd3JhcCcpIGZvciBrIGluIHJhbmdlKDIpXSkKICAgIHNlZyA9IG5wLnJvbGwoc21vb3RoLCAtMSwgYXhpcz0wKSAtIHNtb290aAogICAgc2VnX2xlbiA9IG5wLmxpbmFsZy5ub3JtKHNlZywgYXhpcz0xKQogICAgY3VtdWxhdGl2ZSA9IG5wLnJfWzAuMCwgbnAuY3Vtc3VtKHNlZ19sZW4pXQogICAgbGVuZ3RoID0gZmxvYXQoY3VtdWxhdGl2ZVstMV0pCgogICAgIyBNYXAgdGhlIHN0YXJ0L1QxIGFuY2hvcnMgdGhyb3VnaCB0aGUgc2FtZSBhZmZpbmUgZml0IHVzZWQgZm9yIHRoZSByb3V0ZSBvdmVybGF5LgogICAgdGFyZ2V0X2gsIHRhcmdldF93ID0gYWxpZ25tZW50Wyd0YXJnZXRfaHcnXQogICAgcmVmX21hc2sgPSBjdjIuaW1yZWFkKHN0cihhcmdzLnJlZmVyZW5jZSksIGN2Mi5JTVJFQURfR1JBWVNDQUxFKSA+IDAKICAgIHN0YXJ0X3B4MSwgdDFfcHgxID0gYWZmaW5lX21hcChucC5hc2FycmF5KFthcmdzLnN0YXJ0X3h5LCBhcmdzLnQxX3h5XSksIHJlZl9tYXNrLCBhbGlnbm1lbnQsICh0YXJnZXRfaCwgdGFyZ2V0X3cpKQogICAgcjEgPSBmbG9hdChyZXBvcnQxWydjZWxsX21fcGVyX3B4J10pCiAgICB4MF8xLCB5MF8xID0gcmVwb3J0MVsnYm91bmRzX3h5X21pbiddCiAgICB4MV8xLCB5MV8xID0gcmVwb3J0MVsnYm91bmRzX3h5X21heCddCiAgICBzdGFydF93b3JsZCA9IG5wLmFycmF5KFt4MF8xICsgc3RhcnRfcHgxWzBdICogcjEsIHkxXzEgLSBzdGFydF9weDFbMV0gKiByMV0pCiAgICB0MV93b3JsZCA9IG5wLmFycmF5KFt4MF8xICsgdDFfcHgxWzBdICogcjEsIHkxXzEgLSB0MV9weDFbMV0gKiByMV0pCiAgICBzdGFydF9zX2EsIHN0YXJ0X2VyciA9IHByb2plY3RfdG9fbG9vcChzbW9vdGgsIGN1bXVsYXRpdmUsIHN0YXJ0X3dvcmxkKQogICAgdDFfc19hLCB0MV9lcnIgPSBwcm9qZWN0X3RvX2xvb3Aoc21vb3RoLCBjdW11bGF0aXZlLCB0MV93b3JsZCkKICAgIHMwID0gZmxvYXQoc3RhcnRfc19hWzBdKQogICAgdDFfcyA9IGZsb2F0KHQxX3NfYVswXSkKICAgIGZvcndhcmRfZGVsdGEgPSAodDFfcyAtIHMwKSAlIGxlbmd0aAogICAgcmV2ZXJzZV9kZWx0YSA9IChzMCAtIHQxX3MpICUgbGVuZ3RoCiAgICBkaXJlY3Rpb24gPSAxIGlmIGZvcndhcmRfZGVsdGEgPD0gcmV2ZXJzZV9kZWx0YSBlbHNlIC0xCiAgICB0MV9wcm9ncmVzcyA9IGZvcndhcmRfZGVsdGEgaWYgZGlyZWN0aW9uID09IDEgZWxzZSByZXZlcnNlX2RlbHRhCgogICAgbiA9IG1heCgzLCBpbnQocm91bmQobGVuZ3RoIC8gYXJncy5zcGFjaW5nX20pKSkKICAgIGRzID0gbGVuZ3RoIC8gbgogICAgc19zYW1wbGVzID0gbnAuYXJhbmdlKG4sIGR0eXBlPW5wLmZsb2F0NjQpICogZHMKICAgIHBvaW50cyA9IG5wLmFzYXJyYXkoW3NhbXBsZV9sb29wKHNtb290aCwgY3VtdWxhdGl2ZSwgczAgKyBkaXJlY3Rpb24gKiBzKSBmb3IgcyBpbiBzX3NhbXBsZXNdKQoKICAgICMgTGVuZ3RoIGNvbXBhcmlzb24gYXQgYm90aCBhdmFpbGFibGUgcmFzdGVyIHJlc29sdXRpb25zLCBhcHBseWluZyB0aGUgc2FtZSAyIG0gbG93LXBhc3MuCiAgICBkZWYgc21vb3RoZWRfbGVuZ3RoKHNrX3BhdGg6IFBhdGgsIHJyX3BhdGg6IFBhdGgpIC0+IGZsb2F0OgogICAgICAgIHJyID0ganNvbi5sb2Fkcyhycl9wYXRoLnJlYWRfdGV4dCgpKTsgc2sgPSBjdjIuaW1yZWFkKHN0cihza19wYXRoKSwgMCkgPiAwCiAgICAgICAgeXksIHh4ID0gbnAud2hlcmUoc2spOyBwcCA9IHNldCh6aXAoeXkudG9saXN0KCksIHh4LnRvbGlzdCgpKSk7IGdnID0gbnguR3JhcGgoKTsgZ2cuYWRkX25vZGVzX2Zyb20oc29ydGVkKHBwKSkKICAgICAgICBjYyA9IGZsb2F0KHJyWydjZWxsX21fcGVyX3B4J10pCiAgICAgICAgZm9yIHl5MCwgeHgwIGluIHNvcnRlZChwcCk6CiAgICAgICAgICAgIGZvciBkZHksIGRkeCBpbiAoKDAsIDEpLCAoMSwgMCksICgxLCAxKSwgKDEsIC0xKSk6CiAgICAgICAgICAgICAgICBxcSA9ICh5eTAgKyBkZHksIHh4MCArIGRkeCkKICAgICAgICAgICAgICAgIGlmIHFxIG5vdCBpbiBwcCBvciAoZGR5IGFuZCBkZHggYW5kICgoeXkwICsgZGR5LCB4eDApIGluIHBwIG9yICh5eTAsIHh4MCArIGRkeCkgaW4gcHApKToKICAgICAgICAgICAgICAgICAgICBjb250aW51ZQogICAgICAgICAgICAgICAgZ2cuYWRkX2VkZ2UoKHl5MCwgeHgwKSwgcXEsIHdlaWdodD1jYyAqIChtYXRoLnNxcnQoMikgaWYgZGR5IGFuZCBkZHggZWxzZSAxKSkKICAgICAgICBoaCA9IGdnLnN1YmdyYXBoKG1heChueC5jb25uZWN0ZWRfY29tcG9uZW50cyhnZyksIGtleT1sZW4pKS5jb3B5KCkKICAgICAgICBjeWMgPSBtYXgobnguY3ljbGVfYmFzaXMoaGgpLCBrZXk9bGFtYmRhIGM6IHN1bShoaFt1XVt2XVsnd2VpZ2h0J10gZm9yIHUsIHYgaW4gemlwKGMsIGNbMTpdICsgY1s6MV0pKSkKICAgICAgICBweHkgPSBucC5hc2FycmF5KFsoeCwgeSkgZm9yIHksIHggaW4gY3ljXSwgZHR5cGU9ZmxvYXQpICogY2MKICAgICAgICBwcDIgPSBucC5jb2x1bW5fc3RhY2soW2dhdXNzaWFuX2ZpbHRlcjFkKHB4eVs6LCBrXSwgYXJncy5zbW9vdGhpbmdfbSAvIGNjLCBtb2RlPSd3cmFwJykgZm9yIGsgaW4gcmFuZ2UoMildKQogICAgICAgIHJldHVybiBmbG9hdChucC5saW5hbGcubm9ybShucC5yb2xsKHBwMiwgLTEsIGF4aXM9MCkgLSBwcDIsIGF4aXM9MSkuc3VtKCkpCgogICAgIyBUaGUgMSBtIHNrZWxldG9uIFBORyBsaXZlcyBiZXNpZGUgaXRzIHJlcG9ydDsgdGhlIGNhbGxlciBtYXkgcGFzcyB0aGF0IHJlcG9ydCBwYXRoLgogICAgbTFfc2tlbGV0b24gPSBhcmdzLm1hc2sxX3JlcG9ydC5wYXJlbnQgLyAncm9hZF9za2VsZXRvbi5wbmcnCiAgICBsZW5ndGhfMW0gPSBzbW9vdGhlZF9sZW5ndGgobTFfc2tlbGV0b24sIGFyZ3MubWFzazFfcmVwb3J0KQogICAgbGVuZ3RoXzA1bSA9IGxlbmd0aAogICAgb2ZmaWNpYWwgPSA0MzA5LjAKICAgIHJlc3VsdCA9IHsKICAgICAgICAnc291cmNlX21lc2gnOiAnT2JqZWN0XzEwOScsICdzb3VyY2VfcmFzdGVyJzogc3RyKGFyZ3MubWFza19kaXIpLAogICAgICAgICdob3Jpem9udGFsX2Nvb3JkaW5hdGVzJzogJ0JsZW5kZXIgd29ybGQgWCxZOyBjb252ZXJ0IHRvIGdsVEYgKHgsIGhlaWdodCwgLXkpJywKICAgICAgICAnY2VsbF9tX3Blcl9weCc6IGNlbGwsICdzZWxlY3RlZF9jeWNsZV9ub2Rlcyc6IGludChsZW4oY2FuZGlkYXRlKSksCiAgICAgICAgJ3Ntb290aGluZ19zaWdtYV9tJzogYXJncy5zbW9vdGhpbmdfbSwgJ3NhbXBsZV9zcGFjaW5nX20nOiBkcywKICAgICAgICAnbGVuZ3RoX20nOiByb3VuZChsZW5ndGgsIDMpLCAnb2ZmaWNpYWxfbGVuZ3RoX20nOiBvZmZpY2lhbCwKICAgICAgICAnbGVuZ3RoX2RpZmZlcmVuY2VfcGVyY2VudCc6IHJvdW5kKChsZW5ndGggLyBvZmZpY2lhbCAtIDEpICogMTAwLCAzKSwKICAgICAgICAnc3RhYmlsaXR5XzFtX3Ntb290aGVkX2xlbmd0aF9tJzogcm91bmQobGVuZ3RoXzFtLCAzKSwKICAgICAgICAnc3RhYmlsaXR5XzBfNW1fc21vb3RoZWRfbGVuZ3RoX20nOiByb3VuZChsZW5ndGhfMDVtLCAzKSwKICAgICAgICAnc3RhcnRfZmluaXNoX3NvdXJjZV94eSc6IGxpc3QoYXJncy5zdGFydF94eSksICdzdGFydF9maW5pc2hfd29ybGRfeHknOiBzdGFydF93b3JsZC50b2xpc3QoKSwKICAgICAgICAnc3RhcnRfZmluaXNoX2ZpdF9lcnJvcl9tJzogcm91bmQoZmxvYXQoc3RhcnRfZXJyWzBdKSwgMyksCiAgICAgICAgJ3QxX3NvdXJjZV94eSc6IGxpc3QoYXJncy50MV94eSksICd0MV93b3JsZF94eSc6IHQxX3dvcmxkLnRvbGlzdCgpLAogICAgICAgICd0MV9maXRfZXJyb3JfbSc6IHJvdW5kKGZsb2F0KHQxX2VyclswXSksIDMpLCAnZm9yd2FyZF9kaXJlY3Rpb24nOiAnaW5jcmVhc2luZ19zJyBpZiBkaXJlY3Rpb24gPT0gMSBlbHNlICdkZWNyZWFzaW5nX3MnLAogICAgICAgICd0MV9zX20nOiByb3VuZCh0MV9wcm9ncmVzcywgMyksICduJzogbiwKICAgICAgICAncG9pbnRzX3hfYmxlbmRlcic6IFtyb3VuZChmbG9hdCh2KSwgNCkgZm9yIHYgaW4gcG9pbnRzWzosIDBdXSwKICAgICAgICAncG9pbnRzX3lfYmxlbmRlcic6IFtyb3VuZChmbG9hdCh2KSwgNCkgZm9yIHYgaW4gcG9pbnRzWzosIDFdXSwKICAgIH0KICAgIGFyZ3Mub3V0LnBhcmVudC5ta2RpcihwYXJlbnRzPVRydWUsIGV4aXN0X29rPVRydWUpCiAgICBhcmdzLm91dC53cml0ZV90ZXh0KGpzb24uZHVtcHMocmVzdWx0LCBzZXBhcmF0b3JzPSgnLCcsICc6JykpKQoKICAgICMgRGlhZ25vc3RpYyBvdmVybGF5OiBjZW50ZXJsaW5lIHJlZCwgc3RhcnQgZ3JlZW4sIFQxIGJsdWUsIHJlZ2lzdGVyZWQgbWFwIHNrZWxldG9uIHdoaXRlLgogICAgYmFzZSA9IGN2Mi5pbXJlYWQoc3RyKGFyZ3MubWFza19kaXIgLyAncm9hZF9tYXNrLnBuZycpLCBjdjIuSU1SRUFEX0dSQVlTQ0FMRSkKICAgIG92ZXJsYXkgPSBjdjIuY3Z0Q29sb3IoYmFzZSwgY3YyLkNPTE9SX0dSQVkyQkdSKQogICAgcm91dGVfcHggPSBucC5jb2x1bW5fc3RhY2soWyhwb2ludHNbOiwgMF0gLSBtaW5feCkgLyBjZWxsLCAobWF4X3kgLSBwb2ludHNbOiwgMV0pIC8gY2VsbF0pLnJvdW5kKCkuYXN0eXBlKG5wLmludDMyKS5yZXNoYXBlKC0xLCAxLCAyKQogICAgY3YyLnBvbHlsaW5lcyhvdmVybGF5LCBbcm91dGVfcHhdLCBUcnVlLCAoMCwgMCwgMjU1KSwgMiwgY3YyLkxJTkVfQUEpCiAgICBzdGFydF9wID0gbnAuYXJyYXkoWyhzdGFydF93b3JsZFswXSAtIG1pbl94KSAvIGNlbGwsIChtYXhfeSAtIHN0YXJ0X3dvcmxkWzFdKSAvIGNlbGxdKS5yb3VuZCgpLmFzdHlwZShpbnQpCiAgICB0MV9wID0gbnAuYXJyYXkoWyh0MV93b3JsZFswXSAtIG1pbl94KSAvIGNlbGwsIChtYXhfeSAtIHQxX3dvcmxkWzFdKSAvIGNlbGxdKS5yb3VuZCgpLmFzdHlwZShpbnQpCiAgICBjdjIuY2lyY2xlKG92ZXJsYXksIHR1cGxlKHN0YXJ0X3AudG9saXN0KCkpLCA2LCAoMCwgMjU1LCAwKSwgLTEsIGN2Mi5MSU5FX0FBKQogICAgY3YyLmNpcmNsZShvdmVybGF5LCB0dXBsZSh0MV9wLnRvbGlzdCgpKSwgNiwgKDI1NSwgMCwgMCksIC0xLCBjdjIuTElORV9BQSkKICAgIGFyZ3Mub3ZlcmxheS5wYXJlbnQubWtkaXIocGFyZW50cz1UcnVlLCBleGlzdF9vaz1UcnVlKQogICAgY3YyLmltd3JpdGUoc3RyKGFyZ3Mub3ZlcmxheSksIG92ZXJsYXkpCiAgICBwcmludChqc29uLmR1bXBzKHtrOiByZXN1bHRba10gZm9yIGsgaW4gWydsZW5ndGhfbScsICdvZmZpY2lhbF9sZW5ndGhfbScsICdsZW5ndGhfZGlmZmVyZW5jZV9wZXJjZW50JywgJ3N0YWJpbGl0eV8xbV9zbW9vdGhlZF9sZW5ndGhfbScsICdzdGFiaWxpdHlfMF81bV9zbW9vdGhlZF9sZW5ndGhfbScsICdzdGFydF9maW5pc2hfZml0X2Vycm9yX20nLCAndDFfZml0X2Vycm9yX20nLCAnZm9yd2FyZF9kaXJlY3Rpb24nLCAndDFfc19tJywgJ24nXX0pKQoKaWYgX19uYW1lX18gPT0gJ19fbWFpbl9fJzoKICAgIG1haW4oKQo=
+#!/usr/bin/env python3
+"""Extract a closed, smoothed Interlagos centerline from the Object_109 road skeleton.
+
+The 0.5 m raster skeleton can contain pixel-scale zig-zags. A 2 m periodic Gaussian
+smoothing was validated against both 0.5 m and 1 m rasters (lengths converge near
+4.29 km). A plan-to-mesh affine fit supplies the start/finish anchor and forward
+orientation (towards T1). This tool writes Blender-horizontal XY points; the Blender
+bake converts them to glTF (x, height, -y).
+
+Requires Python packages: opencv-python, networkx, numpy, scipy.
+"""
+from __future__ import annotations
+import argparse, json, math
+from pathlib import Path
+import cv2
+import networkx as nx
+import numpy as np
+from scipy.ndimage import gaussian_filter1d
+
+
+def affine_map(source_xy: np.ndarray, ref_mask: np.ndarray, alignment: dict, target_shape: tuple[int, int]) -> np.ndarray:
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(ref_mask.astype(np.uint8), 8)
+    keep = np.zeros_like(ref_mask)
+    for i in range(1, n):
+        x, y, w, h, area = stats[i]
+        if area >= 3 and y < 340 and x < 470 and x + w > 20:
+            keep[labels == i] = True
+    ys, xs = np.where(keep)
+    sx0, sx1 = int(xs.min()), int(xs.max())
+    sy0, sy1 = int(ys.min()), int(ys.max())
+    source_center = np.array([(sx0 + sx1) * 0.5, (sy0 + sy1) * 0.5], dtype=np.float64)
+    theta = math.radians(alignment['theta_deg'])
+    c, s = math.cos(theta), math.sin(theta)
+    ax, ay = alignment['scale_xy']
+    dx, dy = alignment['offset_px']
+    th, tw = target_shape
+    target_center = np.array([(tw - 1) * 0.5, (th - 1) * 0.5], dtype=np.float64)
+    p = np.asarray(source_xy, dtype=np.float64) - source_center
+    x = target_center[0] + dx + ax * (c * p[..., 0] - s * p[..., 1])
+    y = target_center[1] + dy + ay * (s * p[..., 0] + c * p[..., 1])
+    return np.stack([x, y], axis=-1)
+
+
+def project_to_loop(points: np.ndarray, cumulative: np.ndarray, query: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    a = points
+    b = np.roll(points, -1, axis=0)
+    v = b - a
+    den = np.einsum('ij,ij->i', v, v)
+    q = np.asarray(query, dtype=np.float64)
+    t = np.clip(np.einsum('ij,ij->i', q[None, :] - a, v) / np.maximum(den, 1e-12), 0.0, 1.0)
+    closest = a + v * t[:, None]
+    d2 = np.einsum('ij,ij->i', closest - q[None, :], closest - q[None, :])
+    i = int(np.argmin(d2))
+    return np.array([cumulative[i] + t[i] * math.sqrt(den[i])]), np.array([math.sqrt(d2[i])])
+
+
+def sample_loop(points: np.ndarray, cumulative: np.ndarray, s: float) -> np.ndarray:
+    length = float(cumulative[-1])
+    u = s % length
+    i = int(np.searchsorted(cumulative, u, side='right') - 1)
+    i = max(0, min(i, len(points) - 1))
+    seg = cumulative[i + 1] - cumulative[i]
+    f = 0.0 if seg < 1e-12 else (u - cumulative[i]) / seg
+    return points[i] * (1 - f) + points[(i + 1) % len(points)] * f
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--mask-dir', type=Path, required=True, help='directory containing road_skeleton.png and road_mask_report.json at 0.5 m/px')
+    ap.add_argument('--mask1-report', type=Path, required=True, help='road_mask_report.json for 1 m/px raster')
+    ap.add_argument('--reference', type=Path, required=True, help='FanAmp track map skeleton image (512x413)')
+    ap.add_argument('--alignment', type=Path, required=True, help='reference_alignment_global.json')
+    ap.add_argument('--out', type=Path, required=True, help='output centerline JSON')
+    ap.add_argument('--overlay', type=Path, required=True, help='diagnostic overlay PNG')
+    ap.add_argument('--start-xy', type=float, nargs=2, default=(143.0, 72.0), help='source-map XY on the finish straight, at the track (not the flag icon center)')
+    ap.add_argument('--t1-xy', type=float, nargs=2, default=(39.0, 130.0), help='source-map XY near T1 apex, for direction')
+    ap.add_argument('--smoothing-m', type=float, default=2.0)
+    ap.add_argument('--spacing-m', type=float, default=1.0)
+    args = ap.parse_args()
+
+    report = json.loads((args.mask_dir / 'road_mask_report.json').read_text())
+    report1 = json.loads(args.mask1_report.read_text())
+    alignment = json.loads(args.alignment.read_text())
+    ref = cv2.imread(str(args.reference), cv2.IMREAD_GRAYSCALE)
+    if ref is None:
+        raise FileNotFoundError(args.reference)
+    skeleton = cv2.imread(str(args.mask_dir / 'road_skeleton.png'), cv2.IMREAD_GRAYSCALE) > 0
+    cell = float(report['cell_m_per_px'])
+    min_x, min_y = report['bounds_xy_min']
+    max_x, max_y = report['bounds_xy_max']
+    ys, xs = np.where(skeleton)
+    pix = set(zip(ys.tolist(), xs.tolist()))
+    graph = nx.Graph()
+    graph.add_nodes_from(sorted(pix))
+    for y, x in sorted(pix):
+        for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):
+            q = (y + dy, x + dx)
+            if q not in pix:
+                continue
+            if dy and dx and ((y + dy, x) in pix or (y, x + dx) in pix):
+                continue
+            graph.add_edge((y, x), q, weight=cell * (math.sqrt(2) if dy and dx else 1.0))
+    components = sorted(nx.connected_components(graph), key=len, reverse=True)
+    main_graph = graph.subgraph(components[0]).copy()
+    cycles = nx.cycle_basis(main_graph)
+    if not cycles:
+        raise RuntimeError('No closed cycle found in road skeleton')
+    # In this mesh only one cycle spans the complete track; short cycles are branches/loops.
+    def raw_length(cycle: list[tuple[int, int]]) -> float:
+        xy = np.asarray([(x, y) for y, x in cycle], dtype=np.float64)
+        return float(np.linalg.norm(np.roll(xy, -1, axis=0) - xy, axis=1).sum() * cell)
+    candidate = max(cycles, key=raw_length)
+    pix_xy = np.asarray([(x, y) for y, x in candidate], dtype=np.float64)
+    world = np.column_stack([min_x + pix_xy[:, 0] * cell, max_y - pix_xy[:, 1] * cell])
+    sigma_px = args.smoothing_m / cell
+    smooth = np.column_stack([gaussian_filter1d(world[:, k], sigma_px, mode='wrap') for k in range(2)])
+    seg = np.roll(smooth, -1, axis=0) - smooth
+    seg_len = np.linalg.norm(seg, axis=1)
+    cumulative = np.r_[0.0, np.cumsum(seg_len)]
+    length = float(cumulative[-1])
+
+    # Map the start/T1 anchors through the same affine fit used for the route overlay.
+    target_h, target_w = alignment['target_hw']
+    ref_mask = cv2.imread(str(args.reference), cv2.IMREAD_GRAYSCALE) > 0
+    start_px1, t1_px1 = affine_map(np.asarray([args.start_xy, args.t1_xy]), ref_mask, alignment, (target_h, target_w))
+    r1 = float(report1['cell_m_per_px'])
+    x0_1, y0_1 = report1['bounds_xy_min']
+    x1_1, y1_1 = report1['bounds_xy_max']
+    start_world = np.array([x0_1 + start_px1[0] * r1, y1_1 - start_px1[1] * r1])
+    t1_world = np.array([x0_1 + t1_px1[0] * r1, y1_1 - t1_px1[1] * r1])
+    start_s_a, start_err = project_to_loop(smooth, cumulative, start_world)
+    t1_s_a, t1_err = project_to_loop(smooth, cumulative, t1_world)
+    s0 = float(start_s_a[0])
+    t1_s = float(t1_s_a[0])
+    forward_delta = (t1_s - s0) % length
+    reverse_delta = (s0 - t1_s) % length
+    direction = 1 if forward_delta <= reverse_delta else -1
+    t1_progress = forward_delta if direction == 1 else reverse_delta
+
+    n = max(3, int(round(length / args.spacing_m)))
+    ds = length / n
+    s_samples = np.arange(n, dtype=np.float64) * ds
+    points = np.asarray([sample_loop(smooth, cumulative, s0 + direction * s) for s in s_samples])
+
+    # Length comparison at both available raster resolutions, applying the same 2 m low-pass.
+    def smoothed_length(sk_path: Path, rr_path: Path) -> float:
+        rr = json.loads(rr_path.read_text()); sk = cv2.imread(str(sk_path), 0) > 0
+        yy, xx = np.where(sk); pp = set(zip(yy.tolist(), xx.tolist())); gg = nx.Graph(); gg.add_nodes_from(sorted(pp))
+        cc = float(rr['cell_m_per_px'])
+        for yy0, xx0 in sorted(pp):
+            for ddy, ddx in ((0, 1), (1, 0), (1, 1), (1, -1)):
+                qq = (yy0 + ddy, xx0 + ddx)
+                if qq not in pp or (ddy and ddx and ((yy0 + ddy, xx0) in pp or (yy0, xx0 + ddx) in pp)):
+                    continue
+                gg.add_edge((yy0, xx0), qq, weight=cc * (math.sqrt(2) if ddy and ddx else 1))
+        hh = gg.subgraph(max(nx.connected_components(gg), key=len)).copy()
+        cyc = max(nx.cycle_basis(hh), key=lambda c: sum(hh[u][v]['weight'] for u, v in zip(c, c[1:] + c[:1])))
+        pxy = np.asarray([(x, y) for y, x in cyc], dtype=float) * cc
+        pp2 = np.column_stack([gaussian_filter1d(pxy[:, k], args.smoothing_m / cc, mode='wrap') for k in range(2)])
+        return float(np.linalg.norm(np.roll(pp2, -1, axis=0) - pp2, axis=1).sum())
+
+    # The 1 m skeleton PNG lives beside its report; the caller may pass that report path.
+    m1_skeleton = args.mask1_report.parent / 'road_skeleton.png'
+    length_1m = smoothed_length(m1_skeleton, args.mask1_report)
+    length_05m = length
+    official = 4309.0
+    result = {
+        'source_mesh': 'Object_109', 'source_raster': str(args.mask_dir),
+        'horizontal_coordinates': 'Blender world X,Y; convert to glTF (x, height, -y)',
+        'cell_m_per_px': cell, 'selected_cycle_nodes': int(len(candidate)),
+        'smoothing_sigma_m': args.smoothing_m, 'sample_spacing_m': ds,
+        'length_m': round(length, 3), 'official_length_m': official,
+        'length_difference_percent': round((length / official - 1) * 100, 3),
+        'stability_1m_smoothed_length_m': round(length_1m, 3),
+        'stability_0_5m_smoothed_length_m': round(length_05m, 3),
+        'start_finish_source_xy': list(args.start_xy), 'start_finish_world_xy': start_world.tolist(),
+        'start_finish_fit_error_m': round(float(start_err[0]), 3),
+        't1_source_xy': list(args.t1_xy), 't1_world_xy': t1_world.tolist(),
+        't1_fit_error_m': round(float(t1_err[0]), 3), 'forward_direction': 'increasing_s' if direction == 1 else 'decreasing_s',
+        't1_s_m': round(t1_progress, 3), 'n': n,
+        'points_x_blender': [round(float(v), 4) for v in points[:, 0]],
+        'points_y_blender': [round(float(v), 4) for v in points[:, 1]],
+    }
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(result, separators=(',', ':')))
+
+    # Diagnostic overlay: centerline red, start green, T1 blue, registered map skeleton white.
+    base = cv2.imread(str(args.mask_dir / 'road_mask.png'), cv2.IMREAD_GRAYSCALE)
+    overlay = cv2.cvtColor(base, cv2.COLOR_GRAY2BGR)
+    route_px = np.column_stack([(points[:, 0] - min_x) / cell, (max_y - points[:, 1]) / cell]).round().astype(np.int32).reshape(-1, 1, 2)
+    cv2.polylines(overlay, [route_px], True, (0, 0, 255), 2, cv2.LINE_AA)
+    start_p = np.array([(start_world[0] - min_x) / cell, (max_y - start_world[1]) / cell]).round().astype(int)
+    t1_p = np.array([(t1_world[0] - min_x) / cell, (max_y - t1_world[1]) / cell]).round().astype(int)
+    cv2.circle(overlay, tuple(start_p.tolist()), 6, (0, 255, 0), -1, cv2.LINE_AA)
+    cv2.circle(overlay, tuple(t1_p.tolist()), 6, (255, 0, 0), -1, cv2.LINE_AA)
+    args.overlay.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(args.overlay), overlay)
+    print(json.dumps({k: result[k] for k in ['length_m', 'official_length_m', 'length_difference_percent', 'stability_1m_smoothed_length_m', 'stability_0_5m_smoothed_length_m', 'start_finish_fit_error_m', 't1_fit_error_m', 'forward_direction', 't1_s_m', 'n']}))
+
+if __name__ == '__main__':
+    main()

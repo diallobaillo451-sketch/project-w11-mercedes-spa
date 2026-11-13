@@ -1,1 +1,33 @@
-IiIiSW1wb3J0IG5vbiBkZXN0cnVjdGlmIGR1IEdMQiBJbnRlcmxhZ29zIGZvdXJuaSBldCBnw6luw6lyYXRpb24gZCd1bmUgY29waWUgLmJsZW5kLgoKVXNhZ2UgZGVwdWlzIGxhIHJhY2luZSBkdSBkw6lww7R0IDoKICBibGVuZGVyIC1iIC0tcHl0aG9uIHNvdXJjZS9ibGVuZGVyL3NjcmlwdHMvaW50ZXJsYWdvc18yMDIzX2ltcG9ydC5weQpPcHRpb25uZWwgOiBkw6lmaW5pciBJTlRFUkxBR09TX1NPVVJDRSBldCBJTlRFUkxBR09TX0JMRU5EX09VVC4KTGUgc2NyaXB0IG5lIHJlLXNjYWxlLCBuZSBkw6lwbGFjZSBldCBuZSBzdXBwcmltZSBhdWN1bmUgZ8Opb23DqXRyaWUgZHUgbW9kw6hsZSBzb3VyY2UuCiIiIgppbXBvcnQgYnB5LCBoYXNobGliLCBvcwpmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKUkVQTyA9IFBhdGgoX19maWxlX18pLnJlc29sdmUoKS5wYXJlbnRzWzNdClNPVVJDRSA9IFBhdGgob3MuZW52aXJvbi5nZXQoJ0lOVEVSTEFHT1NfU09VUkNFJywgc3RyKFJFUE8gLyAnc291cmNlL2JsZW5kZXIvYXNzZXRzL2ludGVybGFnb3NfMjAyMy9mYWlsZWRfaW1wb3J0X2ludGVybGFnb3NfY2lyY3VpdF8yMDIzX2xheW91dC5nbGInKSkpCk9VVFBVVCA9IFBhdGgob3MuZW52aXJvbi5nZXQoJ0lOVEVSTEFHT1NfQkxFTkRfT1VUJywgc3RyKFJFUE8gLyAnc291cmNlL2JsZW5kZXIvd29yay9pbnRlcmxhZ29zXzIwMjMvaW50ZXJsYWdvc18yMDIzX3NvdXJjZS5ibGVuZCcpKSkKaWYgbm90IFNPVVJDRS5pc19maWxlKCk6IHJhaXNlIEZpbGVOb3RGb3VuZEVycm9yKGYiR0xCIHNvdXJjZSBpbnRyb3V2YWJsZSA6IHtTT1VSQ0V9IikKT1VUUFVULnBhcmVudC5ta2RpcihwYXJlbnRzPVRydWUsIGV4aXN0X29rPVRydWUpCnNoYSA9IGhhc2hsaWIuc2hhMjU2KFNPVVJDRS5yZWFkX2J5dGVzKCkpLmhleGRpZ2VzdCgpCmZvciBvYmogaW4gbGlzdChicHkuZGF0YS5vYmplY3RzKTogYnB5LmRhdGEub2JqZWN0cy5yZW1vdmUob2JqLCBkb191bmxpbms9VHJ1ZSkKcmVzdWx0ID0gYnB5Lm9wcy5pbXBvcnRfc2NlbmUuZ2x0ZihmaWxlcGF0aD1zdHIoU09VUkNFKSkKaWYgJ0ZJTklTSEVEJyBub3QgaW4gcmVzdWx0OiByYWlzZSBSdW50aW1lRXJyb3IoZiLDiWNoZWMgZGUgbCdpbXBvcnQgZ2xURiA6IHtyZXN1bHR9IikKc2NlbmUgPSBicHkuY29udGV4dC5zY2VuZQpzY2VuZVsncHJvamVjdF9sYWJlbCddID0gJ0lOVEVSTEFHT1NfMjAyM19XT1JLSU5HX0NPUFknCnRleHQgPSBicHkuZGF0YS50ZXh0cy5uZXcoJ1NPVVJDRV9BTkRfTElDRU5TRS50eHQnKQp0ZXh0LndyaXRlKAogICAgJ1NvdXJjZSBHTEIgOiBmYWlsZWRfaW1wb3J0X2ludGVybGFnb3NfY2lyY3VpdF8yMDIzX2xheW91dC5nbGJcbicKICAgICdBdXRldXIgZMOpY2xhcsOpIGRhbnMgYXNzZXQuZXh0cmFzIDogRGF2ZSBMb3ZlIC8gU2tldGNoZmFiIChUeWxlcl9EYXZlKVxuJwogICAgJ0xpY2VuY2UgZMOpY2xhcsOpZSA6IENDIEJZIDQuMCDigJQgaHR0cHM6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL2xpY2Vuc2VzL2J5LzQuMC9cbicKICAgICdTb3VyY2UgOiBodHRwczovL3NrZXRjaGZhYi5jb20vM2QtbW9kZWxzL2ZhaWxlZC1pbXBvcnQtaW50ZXJsYWdvcy1jaXJjdWl0LTIwMjMtbGF5b3V0LTRlNWYwZWJiMmYyYjQ4ZDI4OWQ1ZjYyMzFjMjI1MTJiXG4nCiAgICBmJ1NIQS0yNTYgOiB7c2hhfVxuJwogICAgJ01vZGlmaWNhdGlvbnMgcsOpYWxpc8OpZXMgcGFyIGNlIHNjcmlwdCA6IGltcG9ydCBnbFRGIGV0IGVuY2Fwc3VsYXRpb24gZGFucyBjZSAuYmxlbmQgc2V1bGVtZW50LlxuJwogICAgJ0xhIGfDqW9tw6l0cmllIGV0IGxlcyB0cmFuc2Zvcm1hdGlvbnMgaW1wb3J0w6llcyBzb250IGNvbnNlcnbDqWVzOyB2YWxpZGVyIGxlIHJlcMOocmUgZXQgbOKAmcOpY2hlbGxlIGF2YW50IHRvdXQgZXhwb3J0IGRlIGpldS5cbicKKQpicHkub3BzLmZpbGUucGFja19hbGwoKQpicHkub3BzLndtLnNhdmVfYXNfbWFpbmZpbGUoZmlsZXBhdGg9c3RyKE9VVFBVVCksIGNvbXByZXNzPVRydWUpCnByaW50KGYnSU5URVJMQUdPU19CTEVORF9PSyBzb3VyY2U9e1NPVVJDRX0gc2hhMjU2PXtzaGF9IG91dHB1dD17T1VUUFVUfSBtZXNoZXM9e3N1bShvLnR5cGUgPT0gIk1FU0giIGZvciBvIGluIGJweS5kYXRhLm9iamVjdHMpfSBpbWFnZXM9e2xlbihicHkuZGF0YS5pbWFnZXMpfScpCg==
+"""Import non destructif du GLB Interlagos fourni et génération d'une copie .blend.
+
+Usage depuis la racine du dépôt :
+  blender -b --python source/blender/scripts/interlagos_2023_import.py
+Optionnel : définir INTERLAGOS_SOURCE et INTERLAGOS_BLEND_OUT.
+Le script ne re-scale, ne déplace et ne supprime aucune géométrie du modèle source.
+"""
+import bpy, hashlib, os
+from pathlib import Path
+REPO = Path(__file__).resolve().parents[3]
+SOURCE = Path(os.environ.get('INTERLAGOS_SOURCE', str(REPO / 'source/blender/assets/interlagos_2023/failed_import_interlagos_circuit_2023_layout.glb')))
+OUTPUT = Path(os.environ.get('INTERLAGOS_BLEND_OUT', str(REPO / 'source/blender/work/interlagos_2023/interlagos_2023_source.blend')))
+if not SOURCE.is_file(): raise FileNotFoundError(f"GLB source introuvable : {SOURCE}")
+OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+sha = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
+for obj in list(bpy.data.objects): bpy.data.objects.remove(obj, do_unlink=True)
+result = bpy.ops.import_scene.gltf(filepath=str(SOURCE))
+if 'FINISHED' not in result: raise RuntimeError(f"Échec de l'import glTF : {result}")
+scene = bpy.context.scene
+scene['project_label'] = 'INTERLAGOS_2023_WORKING_COPY'
+text = bpy.data.texts.new('SOURCE_AND_LICENSE.txt')
+text.write(
+    'Source GLB : failed_import_interlagos_circuit_2023_layout.glb\n'
+    'Auteur déclaré dans asset.extras : Dave Love / Sketchfab (Tyler_Dave)\n'
+    'Licence déclarée : CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/\n'
+    'Source : https://sketchfab.com/3d-models/failed-import-interlagos-circuit-2023-layout-4e5f0ebb2f2b48d289d5f6231c22512b\n'
+    f'SHA-256 : {sha}\n'
+    'Modifications réalisées par ce script : import glTF et encapsulation dans ce .blend seulement.\n'
+    'La géométrie et les transformations importées sont conservées; valider le repère et l’échelle avant tout export de jeu.\n'
+)
+bpy.ops.file.pack_all()
+bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT), compress=True)
+print(f'INTERLAGOS_BLEND_OK source={SOURCE} sha256={sha} output={OUTPUT} meshes={sum(o.type == "MESH" for o in bpy.data.objects)} images={len(bpy.data.images)}')

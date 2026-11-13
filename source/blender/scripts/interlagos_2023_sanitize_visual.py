@@ -1,1 +1,65 @@
-IiIiQ3JlYXRlIGEgc2FuaXRpemVkIHZpc3VhbCBjb3B5IG9mIHRoZSBzdXBwbGllZCBJbnRlcmxhZ29zIEdMQi4KCk9ubHkgSW1hZ2VfOTggKGlkZW50aWZpZWQgYXMgc2F0ZWxsaXRlIGltYWdlcnkgaW4gdGhlIHByb3ZpZGVkIHNvdXJjZSkgaXMgcmVtb3ZlZC4KSXRzIG1hdGVyaWFsIGlzIHJlcGxhY2VkIGJ5IGEgZmxhdCBncmFzcy1saWtlIGNvbG9yLiBHZW9tZXRyeSwgdHJhbnNmb3JtcywgYW5kIGFsbApvdGhlciBtYXRlcmlhbHMvaW1hZ2VzIGFyZSByZXRhaW5lZC4gVGhlIG9yaWdpbmFsIEdMQiBhbmQgaW1wb3J0ZWQgc291cmNlIC5ibGVuZAphcmUgbm90IG1vZGlmaWVkLgoiIiIKaW1wb3J0IGJweSwgb3MsIGpzb24sIGhhc2hsaWIKZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgpSRVBPID0gUGF0aChfX2ZpbGVfXykucmVzb2x2ZSgpLnBhcmVudHNbM10KU09VUkNFX0JMRU5EID0gUGF0aChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19CTEVORF9JTicsIHN0cihSRVBPIC8gJ3NvdXJjZS9ibGVuZGVyL3dvcmsvaW50ZXJsYWdvc18yMDIzL2ludGVybGFnb3NfMjAyM19zb3VyY2UuYmxlbmQnKSkpCk9VVF9CTEVORCA9IFBhdGgob3MuZW52aXJvbi5nZXQoJ0lOVEVSTEFHT1NfU0FOSVRJWkVEX0JMRU5EJywgc3RyKFJFUE8gLyAnc291cmNlL2JsZW5kZXIvd29yay9pbnRlcmxhZ29zXzIwMjMvaW50ZXJsYWdvc18yMDIzX3Nhbml0aXplZC5ibGVuZCcpKSkKT1VUX0dMQiA9IFBhdGgob3MuZW52aXJvbi5nZXQoJ0lOVEVSTEFHT1NfU0FOSVRJWkVEX0dMQicsIHN0cihSRVBPIC8gJ3NvdXJjZS9ibGVuZGVyL3dvcmsvaW50ZXJsYWdvc18yMDIzL2ludGVybGFnb3NfMjAyM19zYW5pdGl6ZWQuZ2xiJykpKQpPVVRfUkVQT1JUID0gT1VUX0dMQi53aXRoX3N1ZmZpeCgnLmpzb24nKQpJTUFHRV9OQU1FID0gb3MuZW52aXJvbi5nZXQoJ0lOVEVSTEFHT1NfU0FURUxMSVRFX0lNQUdFJywgJ0ltYWdlXzk4JykKaWYgbm90IFNPVVJDRV9CTEVORC5pc19maWxlKCk6IHJhaXNlIEZpbGVOb3RGb3VuZEVycm9yKFNPVVJDRV9CTEVORCkKT1VUX0JMRU5ELnBhcmVudC5ta2RpcihwYXJlbnRzPVRydWUsIGV4aXN0X29rPVRydWUpCmlmIGJweS5kYXRhLmZpbGVwYXRoICE9IHN0cihTT1VSQ0VfQkxFTkQpOiBicHkub3BzLndtLm9wZW5fbWFpbmZpbGUoZmlsZXBhdGg9c3RyKFNPVVJDRV9CTEVORCkpCgpyZW1vdmVkX2Zyb20gPSBbXQpmb3IgbWF0IGluIGJweS5kYXRhLm1hdGVyaWFsczoKICAgIGlmIG5vdCBtYXQudXNlX25vZGVzIG9yIG5vdCBtYXQubm9kZV90cmVlOiBjb250aW51ZQogICAgbm9kZXMgPSBtYXQubm9kZV90cmVlLm5vZGVzCiAgICBpbWFnZV9ub2RlcyA9IFtuIGZvciBuIGluIG5vZGVzIGlmIG4udHlwZSA9PSAnVEVYX0lNQUdFJyBhbmQgbi5pbWFnZSBhbmQgbi5pbWFnZS5uYW1lID09IElNQUdFX05BTUVdCiAgICBpZiBub3QgaW1hZ2Vfbm9kZXM6IGNvbnRpbnVlCiAgICBic2RmID0gbmV4dCgobiBmb3IgbiBpbiBub2RlcyBpZiBuLnR5cGUgPT0gJ0JTREZfUFJJTkNJUExFRCcpLCBOb25lKQogICAgaWYgYnNkZjoKICAgICAgICBiYXNlID0gYnNkZi5pbnB1dHMuZ2V0KCdCYXNlIENvbG9yJykKICAgICAgICBpZiBiYXNlOgogICAgICAgICAgICBmb3IgbGluayBpbiBsaXN0KGJhc2UubGlua3MpOiBtYXQubm9kZV90cmVlLmxpbmtzLnJlbW92ZShsaW5rKQogICAgICAgICAgICBiYXNlLmRlZmF1bHRfdmFsdWUgPSAoMC4xMywgMC4yMCwgMC4xMSwgMS4wKQogICAgICAgIHJvdWdoID0gYnNkZi5pbnB1dHMuZ2V0KCdSb3VnaG5lc3MnKQogICAgICAgIGlmIHJvdWdoOiByb3VnaC5kZWZhdWx0X3ZhbHVlID0gMC45MgogICAgICAgIG1ldGFsID0gYnNkZi5pbnB1dHMuZ2V0KCdNZXRhbGxpYycpCiAgICAgICAgaWYgbWV0YWw6IG1ldGFsLmRlZmF1bHRfdmFsdWUgPSAwLjAKICAgIGZvciBub2RlIGluIGltYWdlX25vZGVzOgogICAgICAgIGZvciBsaW5rIGluIGxpc3Qobm9kZS5pbnB1dHNbMF0ubGlua3MpICsgbGlzdChub2RlLm91dHB1dHNbMF0ubGlua3MpOgogICAgICAgICAgICBtYXQubm9kZV90cmVlLmxpbmtzLnJlbW92ZShsaW5rKQogICAgICAgIG5vZGVzLnJlbW92ZShub2RlKQogICAgbWF0WydzYXRlbGxpdGVfdGV4dHVyZV9yZW1vdmVkJ10gPSBJTUFHRV9OQU1FCiAgICBtYXRbJ3JlcGxhY2VtZW50J10gPSAnZmxhdCBncmVlbjsgZ2VvbWV0cnkgYW5kIHdvcmxkIHRyYW5zZm9ybXMgcHJlc2VydmVkJwogICAgcmVtb3ZlZF9mcm9tLmFwcGVuZChtYXQubmFtZSkKaWYgbm90IHJlbW92ZWRfZnJvbTogcmFpc2UgUnVudGltZUVycm9yKGYnTm8gbWF0ZXJpYWwgdXNlZCB0aGUgdGFyZ2V0IGltYWdlIHtJTUFHRV9OQU1FfTsgcmVmdXNpbmcgdG8gZXhwb3J0IGFuIHVuY2hhbmdlZCBjb3B5LicpCmltZyA9IGJweS5kYXRhLmltYWdlcy5nZXQoSU1BR0VfTkFNRSkKaWYgaW1nIGFuZCBpbWcudXNlcnMgPT0gMDogYnB5LmRhdGEuaW1hZ2VzLnJlbW92ZShpbWcpCiMgUmVtb3ZlIHVudXNlZCBjb3BpZXMvYWxpYXNlcyB0aGF0IHBvaW50IHRvIHRoZSBzYW1lIG9yaWdpbmFsIGltYWdlIGRhdGFibG9jayBuYW1lLgpmb3IgaW1hZ2UgaW4gbGlzdChicHkuZGF0YS5pbWFnZXMpOgogICAgaWYgSU1BR0VfTkFNRSBpbiBpbWFnZS5uYW1lIGFuZCBpbWFnZS51c2VycyA9PSAwOiBicHkuZGF0YS5pbWFnZXMucmVtb3ZlKGltYWdlKQoKYnB5LmNvbnRleHQuc2NlbmVbJ3Zpc3VhbF9zYW5pdGl6YXRpb24nXSA9IGYne0lNQUdFX05BTUV9IHJlbW92ZWQ7IGNvcnJlc3BvbmRpbmcgbWF0ZXJpYWwgcmVwbGFjZWQgd2l0aCBmbGF0IGNvbG9yLicKYnB5Lm9wcy5maWxlLnBhY2tfYWxsKCkKYnB5Lm9wcy53bS5zYXZlX2FzX21haW5maWxlKGZpbGVwYXRoPXN0cihPVVRfQkxFTkQpLCBjb21wcmVzcz1UcnVlKQpPVVRfR0xCLnBhcmVudC5ta2RpcihwYXJlbnRzPVRydWUsIGV4aXN0X29rPVRydWUpCnJlc3VsdCA9IGJweS5vcHMuZXhwb3J0X3NjZW5lLmdsdGYoZmlsZXBhdGg9c3RyKE9VVF9HTEIpLCBleHBvcnRfZm9ybWF0PSdHTEInLCBleHBvcnRfYXBwbHk9RmFsc2UsIGV4cG9ydF95dXA9VHJ1ZSwgZXhwb3J0X2ltYWdlX2Zvcm1hdD0nQVVUTycpCmlmICdGSU5JU0hFRCcgbm90IGluIHJlc3VsdDogcmFpc2UgUnVudGltZUVycm9yKGYnR0xCIGV4cG9ydCBmYWlsZWQ6IHtyZXN1bHR9JykKcmVwb3J0ID0gewogICAgJ3NvdXJjZV9ibGVuZCc6IHN0cihTT1VSQ0VfQkxFTkQpLCAnc2FuaXRpemVkX2JsZW5kJzogc3RyKE9VVF9CTEVORCksICdzYW5pdGl6ZWRfZ2xiJzogc3RyKE9VVF9HTEIpLAogICAgJ3JlbW92ZWRfaW1hZ2UnOiBJTUFHRV9OQU1FLCAnbWF0ZXJpYWxzX3JlcGxhY2VkJzogcmVtb3ZlZF9mcm9tLAogICAgJ21lc2hfY291bnQnOiBzdW0oby50eXBlID09ICdNRVNIJyBmb3IgbyBpbiBicHkuZGF0YS5vYmplY3RzKSwKICAgICdyZW1haW5pbmdfaW1hZ2VfbmFtZXMnOiBbaS5uYW1lIGZvciBpIGluIGJweS5kYXRhLmltYWdlc10sCiAgICAnbm90ZXMnOiAnT3JpZ2luYWwgR0xCL3NvdXJjZSAuYmxlbmQgYXJlIHVuY2hhbmdlZC4gT2JqZWN0IGdlb21ldHJ5L3RyYW5zZm9ybXMgYXJlIHJldGFpbmVkLiBJbWFnZV85OCBzYXRlbGxpdGUgaW1hZ2VyeSBpcyBub3QgcHJlc2VudCBpbiB0aGUgZXhwb3J0ZWQgbW9kZWwuJwp9Ck9VVF9SRVBPUlQud3JpdGVfdGV4dChqc29uLmR1bXBzKHJlcG9ydCwgaW5kZW50PTIpKQpwcmludCgnSU5URVJMQUdPU19TQU5JVElaRURfT0snLCBqc29uLmR1bXBzKHJlcG9ydCwgc2VwYXJhdG9ycz0oJywnLCAnOicpKSkK
+"""Create a sanitized visual copy of the supplied Interlagos GLB.
+
+Only Image_98 (identified as satellite imagery in the provided source) is removed.
+Its material is replaced by a flat grass-like color. Geometry, transforms, and all
+other materials/images are retained. The original GLB and imported source .blend
+are not modified.
+"""
+import bpy, os, json, hashlib
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[3]
+SOURCE_BLEND = Path(os.environ.get('INTERLAGOS_BLEND_IN', str(REPO / 'source/blender/work/interlagos_2023/interlagos_2023_source.blend')))
+OUT_BLEND = Path(os.environ.get('INTERLAGOS_SANITIZED_BLEND', str(REPO / 'source/blender/work/interlagos_2023/interlagos_2023_sanitized.blend')))
+OUT_GLB = Path(os.environ.get('INTERLAGOS_SANITIZED_GLB', str(REPO / 'source/blender/work/interlagos_2023/interlagos_2023_sanitized.glb')))
+OUT_REPORT = OUT_GLB.with_suffix('.json')
+IMAGE_NAME = os.environ.get('INTERLAGOS_SATELLITE_IMAGE', 'Image_98')
+if not SOURCE_BLEND.is_file(): raise FileNotFoundError(SOURCE_BLEND)
+OUT_BLEND.parent.mkdir(parents=True, exist_ok=True)
+if bpy.data.filepath != str(SOURCE_BLEND): bpy.ops.wm.open_mainfile(filepath=str(SOURCE_BLEND))
+
+removed_from = []
+for mat in bpy.data.materials:
+    if not mat.use_nodes or not mat.node_tree: continue
+    nodes = mat.node_tree.nodes
+    image_nodes = [n for n in nodes if n.type == 'TEX_IMAGE' and n.image and n.image.name == IMAGE_NAME]
+    if not image_nodes: continue
+    bsdf = next((n for n in nodes if n.type == 'BSDF_PRINCIPLED'), None)
+    if bsdf:
+        base = bsdf.inputs.get('Base Color')
+        if base:
+            for link in list(base.links): mat.node_tree.links.remove(link)
+            base.default_value = (0.13, 0.20, 0.11, 1.0)
+        rough = bsdf.inputs.get('Roughness')
+        if rough: rough.default_value = 0.92
+        metal = bsdf.inputs.get('Metallic')
+        if metal: metal.default_value = 0.0
+    for node in image_nodes:
+        for link in list(node.inputs[0].links) + list(node.outputs[0].links):
+            mat.node_tree.links.remove(link)
+        nodes.remove(node)
+    mat['satellite_texture_removed'] = IMAGE_NAME
+    mat['replacement'] = 'flat green; geometry and world transforms preserved'
+    removed_from.append(mat.name)
+if not removed_from: raise RuntimeError(f'No material used the target image {IMAGE_NAME}; refusing to export an unchanged copy.')
+img = bpy.data.images.get(IMAGE_NAME)
+if img and img.users == 0: bpy.data.images.remove(img)
+# Remove unused copies/aliases that point to the same original image datablock name.
+for image in list(bpy.data.images):
+    if IMAGE_NAME in image.name and image.users == 0: bpy.data.images.remove(image)
+
+bpy.context.scene['visual_sanitization'] = f'{IMAGE_NAME} removed; corresponding material replaced with flat color.'
+bpy.ops.file.pack_all()
+bpy.ops.wm.save_as_mainfile(filepath=str(OUT_BLEND), compress=True)
+OUT_GLB.parent.mkdir(parents=True, exist_ok=True)
+result = bpy.ops.export_scene.gltf(filepath=str(OUT_GLB), export_format='GLB', export_apply=False, export_yup=True, export_image_format='AUTO')
+if 'FINISHED' not in result: raise RuntimeError(f'GLB export failed: {result}')
+report = {
+    'source_blend': str(SOURCE_BLEND), 'sanitized_blend': str(OUT_BLEND), 'sanitized_glb': str(OUT_GLB),
+    'removed_image': IMAGE_NAME, 'materials_replaced': removed_from,
+    'mesh_count': sum(o.type == 'MESH' for o in bpy.data.objects),
+    'remaining_image_names': [i.name for i in bpy.data.images],
+    'notes': 'Original GLB/source .blend are unchanged. Object geometry/transforms are retained. Image_98 satellite imagery is not present in the exported model.'
+}
+OUT_REPORT.write_text(json.dumps(report, indent=2))
+print('INTERLAGOS_SANITIZED_OK', json.dumps(report, separators=(',', ':')))

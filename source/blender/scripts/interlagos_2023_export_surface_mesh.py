@@ -1,1 +1,28 @@
-IiIiRXh0cmFpdCBsZXMgdHJpYW5nbGVzIG9yaWVudMOpcyB2ZXJzIGxlIGhhdXQgZCd1biBtZXNoIEdMQiBlbiBjb29yZG9ubsOpZXMgd29ybGQgQmxlbmRlci4KU29ydGllIGQnYXVkaXQgdW5pcXVlbWVudDsgbmUgbW9kaWZpZSBqYW1haXMgbGEgZ8Opb23DqXRyaWUgZGUgbGEgY29waWUgLmJsZW5kLgoiIiIKaW1wb3J0IGJweSwgb3MsIGpzb24sIGhhc2hsaWIKaW1wb3J0IG51bXB5IGFzIG5wCmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aApmcm9tIG1hdGh1dGlscyBpbXBvcnQgVmVjdG9yClJFUE89UGF0aChfX2ZpbGVfXykucmVzb2x2ZSgpLnBhcmVudHNbM10KQkxFTkQ9UGF0aChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19CTEVORF9JTicsc3RyKFJFUE8vJ3NvdXJjZS9ibGVuZGVyL3dvcmsvaW50ZXJsYWdvc18yMDIzL2ludGVybGFnb3NfMjAyM19zb3VyY2UuYmxlbmQnKSkpCk9VVD1QYXRoKG9zLmVudmlyb24uZ2V0KCdJTlRFUkxBR09TX01FU0hfT1VUJyxzdHIoUkVQTy8nc291cmNlL2JsZW5kZXIvd29yay9pbnRlcmxhZ29zXzIwMjMvb2JqZWN0XzEwOV90b3BfdHJpYW5nbGVzLm5weicpKSkKTkFNRT1vcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19NRVNIX05BTUUnLCdPYmplY3RfMTA5JykKYnB5Lm9wcy53bS5vcGVuX21haW5maWxlKGZpbGVwYXRoPXN0cihCTEVORCkpCm9iaj1icHkuZGF0YS5vYmplY3RzLmdldChOQU1FKQppZiBub3Qgb2JqIG9yIG9iai50eXBlIT0nTUVTSCc6IHJhaXNlIFJ1bnRpbWVFcnJvcihmJ01lc2ggYWJzZW50IDoge05BTUV9JykKb2JqLmRhdGEuY2FsY19sb29wX3RyaWFuZ2xlcygpOyBNPW9iai5tYXRyaXhfd29ybGQ7IFI9TS50b18zeDMoKQp2ZXJ0cz1ucC5hc2FycmF5KFt0dXBsZShNQHYuY28pIGZvciB2IGluIG9iai5kYXRhLnZlcnRpY2VzXSxkdHlwZT1ucC5mbG9hdDY0KQpmYWNlcz1bXTsgbm9ybWFscz1bXQpmb3IgdHJpIGluIG9iai5kYXRhLmxvb3BfdHJpYW5nbGVzOgogbj1SQHRyaS5ub3JtYWwKIGlmIG4ubGVuZ3RoOiBuLm5vcm1hbGl6ZSgpCiBpZiBuLno+MC41NToKICBmYWNlcy5hcHBlbmQodHJpLnZlcnRpY2VzKTsgbm9ybWFscy5hcHBlbmQoKG4ueCxuLnksbi56KSkKZmFjZXM9bnAuYXNhcnJheShmYWNlcyxkdHlwZT1ucC5pbnQzMik7IG5vcm1hbHM9bnAuYXNhcnJheShub3JtYWxzLGR0eXBlPW5wLmZsb2F0MzIpCnRyaXM9dmVydHNbZmFjZXNdCk9VVC5wYXJlbnQubWtkaXIocGFyZW50cz1UcnVlLGV4aXN0X29rPVRydWUpCm5wLnNhdmV6X2NvbXByZXNzZWQoT1VULHRyaWFuZ2xlcz10cmlzLmFzdHlwZShucC5mbG9hdDMyKSxub3JtYWxzPW5vcm1hbHMpCm1pbnM9dHJpcy5yZXNoYXBlKC0xLDMpLm1pbihheGlzPTApOyBtYXhzPXRyaXMucmVzaGFwZSgtMSwzKS5tYXgoYXhpcz0wKQpwcmludChqc29uLmR1bXBzKHsnbWVzaCc6TkFNRSwnYWxsVHJpYW5nbGVzJzpsZW4ob2JqLmRhdGEubG9vcF90cmlhbmdsZXMpLCd1cHdhcmRUcmlhbmdsZXMnOmxlbihmYWNlcyksJ2JvdW5kc01pbic6bWlucy50b2xpc3QoKSwnYm91bmRzTWF4JzptYXhzLnRvbGlzdCgpLCdvdXRwdXQnOnN0cihPVVQpfSxzZXBhcmF0b3JzPSgnLCcsJzonKSkpCg==
+"""Extrait les triangles orientés vers le haut d'un mesh GLB en coordonnées world Blender.
+Sortie d'audit uniquement; ne modifie jamais la géométrie de la copie .blend.
+"""
+import bpy, os, json, hashlib
+import numpy as np
+from pathlib import Path
+from mathutils import Vector
+REPO=Path(__file__).resolve().parents[3]
+BLEND=Path(os.environ.get('INTERLAGOS_BLEND_IN',str(REPO/'source/blender/work/interlagos_2023/interlagos_2023_source.blend')))
+OUT=Path(os.environ.get('INTERLAGOS_MESH_OUT',str(REPO/'source/blender/work/interlagos_2023/object_109_top_triangles.npz')))
+NAME=os.environ.get('INTERLAGOS_MESH_NAME','Object_109')
+bpy.ops.wm.open_mainfile(filepath=str(BLEND))
+obj=bpy.data.objects.get(NAME)
+if not obj or obj.type!='MESH': raise RuntimeError(f'Mesh absent : {NAME}')
+obj.data.calc_loop_triangles(); M=obj.matrix_world; R=M.to_3x3()
+verts=np.asarray([tuple(M@v.co) for v in obj.data.vertices],dtype=np.float64)
+faces=[]; normals=[]
+for tri in obj.data.loop_triangles:
+ n=R@tri.normal
+ if n.length: n.normalize()
+ if n.z>0.55:
+  faces.append(tri.vertices); normals.append((n.x,n.y,n.z))
+faces=np.asarray(faces,dtype=np.int32); normals=np.asarray(normals,dtype=np.float32)
+tris=verts[faces]
+OUT.parent.mkdir(parents=True,exist_ok=True)
+np.savez_compressed(OUT,triangles=tris.astype(np.float32),normals=normals)
+mins=tris.reshape(-1,3).min(axis=0); maxs=tris.reshape(-1,3).max(axis=0)
+print(json.dumps({'mesh':NAME,'allTriangles':len(obj.data.loop_triangles),'upwardTriangles':len(faces),'boundsMin':mins.tolist(),'boundsMax':maxs.tolist(),'output':str(OUT)},separators=(',',':')))

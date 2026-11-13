@@ -1,1 +1,205 @@
-IiIiQmFrZSBJbnRlcmxhZ29zIHN1cmZhY2UuYmluL3N1cmZhY2UuanNvbiBmcm9tIHRoZSBzdXBwbGllZCBHTEIgd29ya2luZyBjb3B5LgoKQ29uc2VydmF0aXZlIHBoeXNpY3MgdGFnczogT2JqZWN0XzEwOSBhc3BoYWx0ICgxKSwgT2JqZWN0XzI0IGdyYXNzICg0KSwgYW5kCk9iamVjdF8yNSB0ZXJyYWluIGZhbGxiYWNrICg0LCBnZW9tZXRyeSBvbmx5OyBpdHMgc2F0ZWxsaXRlIHRleHR1cmUgaXMgbm90IHJlYWQpLgpPYmplY3RfODcgc3VwcGxpZXMgb25seSBvbmUgZXhhY3QgY2VudGVyLWhlaWdodCBmYWxsYmFjayBhdCB0aGUgYXVkaXRlZCBtZXNoIHNlYW0KbmVhciBzPTM4NDkgbTsgaXQgaXMgbm90IHRyZWF0ZWQgYXMgYSBnZW5lcmFsIGFzcGhhbHQgc3VyZmFjZS4gT3RoZXIgc2NlbmVyeSBpcyBleGNsdWRlZC4KClVzYWdlIGZyb20gcmVwb3NpdG9yeSByb290OgogIElOVEVSTEFHT1NfQ0VOVEVSTElORT1zb3VyY2UvYmxlbmRlci93b3JrL2ludGVybGFnb3NfMjAyMy9pbnRlcmxhZ29zX2NlbnRlcmxpbmUuanNvbiBcXAogIElOVEVSTEFHT1NfVFJBQ0tfT1VUPXNvdXJjZS9nYW1lL3B1YmxpYy90cmFja19pbnRlcmxhZ29zIFxcCiAgYmxlbmRlciAtYiBzb3VyY2UvYmxlbmRlci93b3JrL2ludGVybGFnb3NfMjAyMy9pbnRlcmxhZ29zXzIwMjNfc291cmNlLmJsZW5kIFxcCiAgICAtLXB5dGhvbiBzb3VyY2UvYmxlbmRlci9zY3JpcHRzL2ludGVybGFnb3NfMjAyM19idWlsZF9zdXJmYWNlLnB5CiIiIgppbXBvcnQgYnB5LCBqc29uLCBvcywgaGFzaGxpYgppbXBvcnQgbnVtcHkgYXMgbnAKZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmZyb20gbWF0aHV0aWxzIGltcG9ydCBWZWN0b3IKZnJvbSBtYXRodXRpbHMuYnZodHJlZSBpbXBvcnQgQlZIVHJlZQoKUkVQTyA9IFBhdGgoX19maWxlX18pLnJlc29sdmUoKS5wYXJlbnRzWzNdCkJMRU5EID0gUGF0aChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19CTEVORF9JTicsIHN0cihSRVBPIC8gJ3NvdXJjZS9ibGVuZGVyL3dvcmsvaW50ZXJsYWdvc18yMDIzL2ludGVybGFnb3NfMjAyM19zb3VyY2UuYmxlbmQnKSkpCkNFTlRFUkxJTkUgPSBQYXRoKG9zLmVudmlyb24uZ2V0KCdJTlRFUkxBR09TX0NFTlRFUkxJTkUnLCBzdHIoUkVQTyAvICdzb3VyY2UvYmxlbmRlci93b3JrL2ludGVybGFnb3NfMjAyMy9pbnRlcmxhZ29zX2NlbnRlcmxpbmUuanNvbicpKSkKT1VUID0gUGF0aChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19UUkFDS19PVVQnLCBzdHIoUkVQTyAvICdzb3VyY2UvZ2FtZS9wdWJsaWMvdHJhY2tfaW50ZXJsYWdvcycpKSkKRDAgPSBmbG9hdChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19EMCcsICctNDUnKSkKRFNURVAgPSBmbG9hdChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19EU1RFUCcsICcwLjUnKSkKRDEgPSBmbG9hdChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19EMScsICc0NScpKQppZiBub3QgQ0VOVEVSTElORS5pc19maWxlKCk6IHJhaXNlIEZpbGVOb3RGb3VuZEVycm9yKGYnQ2VudHJlbGluZSBhYnNlbnQgOiB7Q0VOVEVSTElORX0nKQppZiBub3QgT1VULmlzX2Fic29sdXRlKCk6IE9VVCA9IChSRVBPIC8gT1VUKS5yZXNvbHZlKCkKT1VULm1rZGlyKHBhcmVudHM9VHJ1ZSwgZXhpc3Rfb2s9VHJ1ZSkKCiMgVGhlIGludm9raW5nIGNvbW1hbmQgbm9ybWFsbHkgb3BlbnMgdGhlIHNvdXJjZSAuYmxlbmQ7IGFsc28gYWNjZXB0IGRpcmVjdCBzY3JpcHQgdXNlLgppZiBicHkuZGF0YS5maWxlcGF0aCAhPSBzdHIoQkxFTkQpIGFuZCBCTEVORC5pc19maWxlKCk6CiAgICBicHkub3BzLndtLm9wZW5fbWFpbmZpbGUoZmlsZXBhdGg9c3RyKEJMRU5EKSkKY2VudGVyID0ganNvbi5sb2FkcyhDRU5URVJMSU5FLnJlYWRfdGV4dCgpKQp4dyA9IG5wLmFzYXJyYXkoY2VudGVyWydwb2ludHNfeF9ibGVuZGVyJ10sIGR0eXBlPW5wLmZsb2F0NjQpCnl3ID0gbnAuYXNhcnJheShjZW50ZXJbJ3BvaW50c195X2JsZW5kZXInXSwgZHR5cGU9bnAuZmxvYXQ2NCkKTiA9IGxlbih4dykKaWYgTiA8IDEwMDAgb3IgbGVuKHl3KSAhPSBOOiByYWlzZSBSdW50aW1lRXJyb3IoZidDZW50cmVsaW5lIGxlbmd0aC9jb3VudCBpbnZhbGlkOiBOPXtOfScpCkwgPSBmbG9hdChjZW50ZXJbJ2xlbmd0aF9tJ10pCmRzID0gTCAvIE4KU0VBTV9TVEFUSU9OX00gPSAzODQ5LjAKU0VBTV9JTkRFWCA9IGludChyb3VuZChTRUFNX1NUQVRJT05fTSAvIGRzKSkKU0VBTV9YWSA9ICgtNDQ1LjM5MjYsIDIzNy4wNDU5KQoKCmRlZiBtYWtlX2J2aChuYW1lKToKICAgIG9iaiA9IGJweS5kYXRhLm9iamVjdHMuZ2V0KG5hbWUpCiAgICBpZiBvYmogaXMgTm9uZSBvciBvYmoudHlwZSAhPSAnTUVTSCc6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYnTWVzaCByZXF1aXMgYWJzZW50IDoge25hbWV9JykKICAgIG9iai5kYXRhLmNhbGNfbG9vcF90cmlhbmdsZXMoKQogICAgTSA9IG9iai5tYXRyaXhfd29ybGQKICAgIHZlcnRzID0gW00gQCB2LmNvIGZvciB2IGluIG9iai5kYXRhLnZlcnRpY2VzXQogICAgdHJpcyA9IFt0dXBsZSh0LnZlcnRpY2VzKSBmb3IgdCBpbiBvYmouZGF0YS5sb29wX3RyaWFuZ2xlc10KICAgIGlmIG5vdCB0cmlzOiByYWlzZSBSdW50aW1lRXJyb3IoZidNZXNoIHZpZGUgOiB7bmFtZX0nKQogICAgdHJlZSA9IEJWSFRyZWUuRnJvbVBvbHlnb25zKHZlcnRzLCB0cmlzLCBhbGxfdHJpYW5nbGVzPVRydWUpCiAgICByZXR1cm4gdHJlZSwgbGVuKHRyaXMpCgpyb2FkX2J2aCwgcm9hZF90cmlzID0gbWFrZV9idmgoJ09iamVjdF8xMDknKQpncmFzc19idmgsIGdyYXNzX3RyaXMgPSBtYWtlX2J2aCgnT2JqZWN0XzI0JykKdGVycmFpbl9idmgsIHRlcnJhaW5fdHJpcyA9IG1ha2VfYnZoKCdPYmplY3RfMjUnKQpzZWFtX2J2aCwgc2VhbV90cmlzID0gbWFrZV9idmgoJ09iamVjdF84NycpCgpkZWYgY2FzdCh0cmVlLCB4LCB5KToKICAgIGhpdCA9IHRyZWUucmF5X2Nhc3QoVmVjdG9yKChmbG9hdCh4KSwgZmxvYXQoeSksIDE2MC4wKSksIFZlY3RvcigoMC4wLCAwLjAsIC0xLjApKSwgMzIwLjApCiAgICByZXR1cm4gTm9uZSBpZiBoaXRbMF0gaXMgTm9uZSBlbHNlIGZsb2F0KGhpdFswXS56KQoKIyBUcmFjay1yaWdodCBkaXJlY3Rpb24gaW4gQmxlbmRlciBob3Jpem9udGFsIFhZLiBJbiBnYW1lL2dsVEYgY29vcmRpbmF0ZXMgKHgseik9IChYLC1ZKS4KZHggPSBucC5yb2xsKHh3LCAtMikgLSBucC5yb2xsKHh3LCAyKQpkeSA9IG5wLnJvbGwoeXcsIC0yKSAtIG5wLnJvbGwoeXcsIDIpCm5vcm0gPSBucC5tYXhpbXVtKG5wLmh5cG90KGR4LCBkeSksIDFlLTkpCnR4LCB0eSA9IGR4IC8gbm9ybSwgZHkgLyBub3JtCnJ4LCByeSA9IHR5LCAtdHgKTkQgPSBpbnQocm91bmQoKEQxIC0gRDApIC8gRFNURVApKSArIDEKRCA9IEQwICsgbnAuYXJhbmdlKE5ELCBkdHlwZT1ucC5mbG9hdDY0KSAqIERTVEVQCmpjID0gKE5EIC0gMSkgLy8gMgpIID0gbnAuZW1wdHkoKE4sIE5EKSwgZHR5cGU9bnAuZmxvYXQzMikKVCA9IG5wLnplcm9zKChOLCBORCksIGR0eXBlPW5wLnVpbnQ4KQpHID0gbnAuemVyb3MoKE4sIE5EKSwgZHR5cGU9bnAudWludDgpICAjIG1hc3F1ZSBzw6lwYXLDqSA6IGhpdHMgZGlyZWN0cyBkJ09iamVjdF8yNCBzZXVsZW1lbnQKY2VudGVyX3ogPSBucC5lbXB0eShOLCBkdHlwZT1ucC5mbG9hdDMyKQpjZW50ZXJfc25hcCA9IG5wLnplcm9zKE4sIGR0eXBlPW5wLmZsb2F0MzIpCmNlbnRlcl9vYmplY3Q4N19mYWxsYmFjayA9IG5wLnplcm9zKE4sIGR0eXBlPWJvb2wpCnJvYWRfY2VudGVyX2hpdHMgPSByb2FkX2NlbnRlcl9zbmFwcyA9IGNlbnRlcl9jZWxsc19icmlkZ2VkID0gMApyb2FkX2NlbnRlcl9zbmFwX21heCA9IDAuMApyb2FkX2hpdHMgPSBncmFzc19oaXRzID0gdGVycmFpbl9oaXRzID0gMAoKZm9yIGkgaW4gcmFuZ2UoTik6CiAgICAjIERldGVybWluZSB0aGUgdHJ1ZSBjZW50ZXJsaW5lIGVsZXZhdGlvbiBmcm9tIHRoZSBhc3BoYWx0IG1lc2ggaXRzZWxmLgogICAgemMgPSBjYXN0KHJvYWRfYnZoLCB4d1tpXSwgeXdbaV0pCiAgICBkaXJlY3RfaGl0ID0gemMgaXMgbm90IE5vbmUKICAgIHNuYXAgPSAwLjAKICAgIGlmIHpjIGlzIE5vbmU6CiAgICAgICAgIyBCcmlkZ2Ugb25seSBhIHNtYWxsIHNlYW0gaW4gdGhlIGltcG9ydGVkIHRyaWFuZ2xlczsgcmVjb3JkIGVhY2ggYm91bmRlZCBsYXRlcmFsIHNuYXAuCiAgICAgICAgZm9yIHN0ZXAgaW4gbnAuYXJhbmdlKDAuNSwgNS4wMSwgMC41KToKICAgICAgICAgICAgZm9yIHNpZ24gaW4gKC0xLjAsIDEuMCk6CiAgICAgICAgICAgICAgICBkZCA9IHNpZ24gKiBmbG9hdChzdGVwKQogICAgICAgICAgICAgICAgemMgPSBjYXN0KHJvYWRfYnZoLCB4d1tpXSArIHJ4W2ldICogZGQsIHl3W2ldICsgcnlbaV0gKiBkZCkKICAgICAgICAgICAgICAgIGlmIHpjIGlzIG5vdCBOb25lOgogICAgICAgICAgICAgICAgICAgIHNuYXAgPSBmbG9hdChzdGVwKTsgcm9hZF9jZW50ZXJfc25hcHMgKz0gMQogICAgICAgICAgICAgICAgICAgIHJvYWRfY2VudGVyX3NuYXBfbWF4ID0gbWF4KHJvYWRfY2VudGVyX3NuYXBfbWF4LCBzbmFwKQogICAgICAgICAgICAgICAgICAgIGJyZWFrCiAgICAgICAgICAgIGlmIHpjIGlzIG5vdCBOb25lOiBicmVhawogICAgaWYgZGlyZWN0X2hpdDogcm9hZF9jZW50ZXJfaGl0cyArPSAxCiAgICBpZiB6YyBpcyBOb25lIGFuZCBpID09IFNFQU1fSU5ERVggYW5kIGFicyhpICogZHMgLSBTRUFNX1NUQVRJT05fTSkgPCAwLjEgYW5kIG5wLmh5cG90KHh3W2ldIC0gU0VBTV9YWVswXSwgeXdbaV0gLSBTRUFNX1hZWzFdKSA8IDAuMDU6CiAgICAgICAgemMgPSBjYXN0KHNlYW1fYnZoLCB4d1tpXSwgeXdbaV0pCiAgICAgICAgaWYgemMgaXMgbm90IE5vbmU6IGNlbnRlcl9vYmplY3Q4N19mYWxsYmFja1tpXSA9IFRydWUKICAgIGlmIHpjIGlzIE5vbmU6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYnTm8gYXNwaGFsdCBoaXQgYXQgY2VudGVybGluZSBzPXtpICogZHM6LjFmfSBtOyBpbnNwZWN0IGFsaWdubWVudCBiZWZvcmUgYmFraW5nJykKICAgIGNlbnRlcl96W2ldID0gemMKICAgIGNlbnRlcl9zbmFwW2ldID0gc25hcAogICAgZm9yIGosIGQgaW4gZW51bWVyYXRlKEQpOgogICAgICAgIHB4ID0geHdbaV0gKyByeFtpXSAqIGQKICAgICAgICBweSA9IHl3W2ldICsgcnlbaV0gKiBkCiAgICAgICAgemggPSBjYXN0KHJvYWRfYnZoLCBweCwgcHkpCiAgICAgICAgaWYgemggaXMgbm90IE5vbmU6CiAgICAgICAgICAgIEhbaSwgal0gPSB6aDsgVFtpLCBqXSA9IDE7IHJvYWRfaGl0cyArPSAxCiAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgemggPSBjYXN0KGdyYXNzX2J2aCwgcHgsIHB5KQogICAgICAgIGlmIHpoIGlzIG5vdCBOb25lOgogICAgICAgICAgICBIW2ksIGpdID0gemg7IFRbaSwgal0gPSA0OyBHW2ksIGpdID0gMTsgZ3Jhc3NfaGl0cyArPSAxCiAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgIyBUZXJyYWluIGlzIGEgbGFzdC1yZXNvcnQgZWxldmF0aW9uIHNvdXJjZSBvbmx5OyBpbWFnZS90ZXh0dXJlIGRhdGEgaXMgbmV2ZXIgdXNlZCBoZXJlLgogICAgICAgIHpoID0gY2FzdCh0ZXJyYWluX2J2aCwgcHgsIHB5KQogICAgICAgIGlmIHpoIGlzIG5vdCBOb25lOgogICAgICAgICAgICBIW2ksIGpdID0gemg7IFRbaSwgal0gPSA0OyB0ZXJyYWluX2hpdHMgKz0gMQogICAgICAgICAgICBjb250aW51ZQogICAgICAgIEhbaSwgal0gPSB6YyAtIDEuMAogICAgICAgIFRbaSwgal0gPSAwCiAgICBpZiAoMC4wIDwgc25hcCA8PSAyLjAgb3IgY2VudGVyX29iamVjdDg3X2ZhbGxiYWNrW2ldKSBhbmQgVFtpLCBqY10gIT0gMToKICAgICAgICAjIEJyaWRnZSBhIHNtYWxsIHNlYW0gZnJvbSBhIG1lYXN1cmVkIGFzcGhhbHQgaGVpZ2h0OyBPYmplY3RfODcgaXMgZXhhY3QtcG9pbnQgb25seS4KICAgICAgICBIW2ksIGpjXSA9IHpjOyBUW2ksIGpjXSA9IDE7IGNlbnRlcl9jZWxsc19icmlkZ2VkICs9IDEKICAgIGlmIGkgJSA1MDAgPT0gMDogcHJpbnQoZidJTlRFUkxBR09TX1NVUkZBQ0VfUk9XIHtpfS97Tn0nKQoKIyBGaWxsIGlzb2xhdGVkIG5vLWhpdCBjZWxscyBmcm9tIHRoZSBuZWFyZXN0IG5lYXJieSBwaHlzaWNhbCBncm91bmQgY2VsbCBpbiB0aGUgc2FtZSBjcm9zcy1zZWN0aW9uLgpmb3IgaSBpbiByYW5nZShOKToKICAgIHplcm9zID0gbnAud2hlcmUoVFtpXSA9PSAwKVswXQogICAgZm9yIGogaW4gemVyb3M6CiAgICAgICAgZm9yIHN0ZXAgaW4gcmFuZ2UoMSwgMTMpOgogICAgICAgICAgICBjYW5kaWRhdGVzID0gKGogLSBzdGVwLCBqICsgc3RlcCkKICAgICAgICAgICAgayA9IG5leHQoKHEgZm9yIHEgaW4gY2FuZGlkYXRlcyBpZiAwIDw9IHEgPCBORCBhbmQgVFtpLCBxXSBpbiAoMSwgNCkpLCBOb25lKQogICAgICAgICAgICBpZiBrIGlzIG5vdCBOb25lOgogICAgICAgICAgICAgICAgSFtpLCBqXSA9IEhbaSwga10KICAgICAgICAgICAgICAgIFRbaSwgal0gPSA0CiAgICAgICAgICAgICAgICBicmVhawoKIyBBc3BoYWx0L2tlcmIgd2lkdGhzIGFyZSBkZXJpdmVkIGRpcmVjdGx5IGZyb20gY29udGlndW91cyByb2FkIGNlbGxzIGFyb3VuZCBzLWNlbnRyZS4KamMgPSAoTkQgLSAxKSAvLyAyCndsID0gbnAuZW1wdHkoTiwgZHR5cGU9bnAuZmxvYXQzMik7IHdyID0gbnAuZW1wdHkoTiwgZHR5cGU9bnAuZmxvYXQzMikKZm9yIGkgaW4gcmFuZ2UoTik6CiAgICBmb3Igc2lnbiwgYXJyIGluICgoLTEsIHdsKSwgKDEsIHdyKSk6CiAgICAgICAgaiA9IGpjCiAgICAgICAgd2hpbGUgMCA8PSBqICsgc2lnbiA8IE5EIGFuZCBUW2ksIGogKyBzaWduXSBpbiAoMSwgMiwgMyk6CiAgICAgICAgICAgIGogKz0gc2lnbgogICAgICAgIGFycltpXSA9IG1heCgxLjIsIG1pbigxOC4wLCBhYnMoaiAtIGpjKSAqIERTVEVQKSkKIyBUaGUgc291cmNlIGRvZXMgbm90IHByb3ZpZGUgdmFsaWRhdGVkIGNvbnRpbnVvdXMgY29sbGlzaW9uIGJhcnJpZXJzLiBLZWVwIHRoZSBzYW1wbGVkIGdyYXNzIHJ1bi1vZmYgZHJpdmVhYmxlLgp3YWxsTCA9IG5wLmZ1bGwoTiwgMjUuMCwgZHR5cGU9bnAuZmxvYXQzMikKd2FsbFIgPSBucC5mdWxsKE4sIDI1LjAsIGR0eXBlPW5wLmZsb2F0MzIpCnJlbCA9IG5wLmNsaXAobnAucm91bmQoKEggLSBjZW50ZXJfels6LCBOb25lXSkgKiAxMDAuMCkgKyA0MDk2LCAwLCA4MTkxKS5hc3R5cGUobnAudWludDE2KQpwYWNrZWQgPSAocmVsIDw8IDMpIHwgVC5hc3R5cGUobnAudWludDE2KQpHTV9DMCwgR01fVyA9IDI2LCAxMjggICMgY29sb25uZXMgLTMyLjAgbSDDoCArMzEuNSBtOyBHcmFzcyBuJ2luc3RhbmNpZSBxdSdlbnRyZSAyIGV0IDE2IG0gZHUgY2VudHJlLgppZiBHTV9DMCArIEdNX1cgPiBORCBvciBHTV9XICUgMjogcmFpc2UgUnVudGltZUVycm9yKCdHcmFzc21hc2sgd2luZG93IG11c3QgYmUgZXZlbiBhbmQgZml0IHRoZSBzdXJmYWNlIGdyaWQnKQpnbSA9IEdbOiwgR01fQzA6R01fQzAgKyBHTV9XXQpnbV9wYWNrZWQgPSAoZ21bOiwgMDo6Ml0gfCAoZ21bOiwgMTo6Ml0gPDwgNCkpLmFzdHlwZShucC51aW50OCkKZ3Jhc3NtYXNrX2J5dGVzID0gbnAuYXNhcnJheShbR01fQzAsIEdNX1ddLCBkdHlwZT0nPHUyJykudG9ieXRlcygpICsgZ21fcGFja2VkLnRvYnl0ZXMob3JkZXI9J0MnKQooT1VUIC8gJ2dyYXNzbWFzay5iaW4nKS53cml0ZV9ieXRlcyhncmFzc21hc2tfYnl0ZXMpCgptZXRhID0gewogICAgJ25vdGUnOiAnSW50ZXJsYWdvcyBzdXJmYWNlIGZyb20gdGhlIHN1cHBsaWVkIENDIEJZIEdMQjsgQmxlbmRlciBjb29yZGluYXRlcyBjb252ZXJ0ZWQgdG8gZ2xURiAoWSB1cCkuIEhlaWdodCBpcyByZWxhdGl2ZSB0byBjeVtpXS4gTm8gb2JzdGFjbGUgY29sbGlzaW9ucyBhcmUgYmFrZWQ7IE9iamVjdF8yNSBpcyBlbGV2YXRpb24gZmFsbGJhY2sgb25seSwgd2l0aCBubyB0ZXh0dXJlIGRhdGEuIE9iamVjdF84NyBpcyB1c2VkIG9ubHkgZm9yIHRoZSBleGFjdCBjZW50ZXIgc2FtcGxlIGF0IHM9Mzg0OSBtIGFmdGVyIGFuIGF1ZGl0ZWQgT2JqZWN0XzEwOSBnYXAuJywKICAgICdOJzogTiwgJ05EJzogTkQsICdEMCc6IEQwLCAnRFNURVAnOiBEU1RFUCwgJ2RzJzogZHMsICdsZW5ndGgnOiBMLAogICAgJ3R5cGVzJzogeycwJzogJ3ZpZGUnLCAnMSc6ICdhc3BoYWx0ZScsICcyJzogJ3ZpYnJldXInLCAnMyc6ICd0YXBpcy9wZWludCcsICc0JzogJ2hlcmJlJywgJzUnOiAnZ3JhdmllcicsICc2JzogJ2VhdScsICc3JzogJ29iamV0L211cid9LAogICAgJ3NvdXJjZV9tZXNoZXMnOiB7J09iamVjdF8xMDknOiB7J2NsYXNzJzogJ2FzcGhhbHRlJywgJ3R5cGUnOiAxLCAndHJpYW5nbGVzJzogcm9hZF90cmlzfSwgJ09iamVjdF8yNCc6IHsnY2xhc3MnOiAnaGVyYmUnLCAndHlwZSc6IDQsICd0cmlhbmdsZXMnOiBncmFzc190cmlzfSwgJ09iamVjdF8yNSc6IHsnY2xhc3MnOiAndGVycmFpbiBmYWxsYmFjaywgZ2VvbWV0cnkgb25seScsICd0eXBlJzogNCwgJ3RyaWFuZ2xlcyc6IHRlcnJhaW5fdHJpc30sICdPYmplY3RfODcnOiB7J2NsYXNzJzogJ2V4YWN0IHNpbmdsZS1zYW1wbGUgc2VhbSBmYWxsYmFjayBvbmx5JywgJ3R5cGUnOiAxLCAndHJpYW5nbGVzJzogc2VhbV90cmlzfX0sCiAgICAnZ3Jhc3NtYXNrJzogeydmaWxlJzogJ2dyYXNzbWFzay5iaW4nLCAnc291cmNlJzogJ2RpcmVjdCBPYmplY3RfMjQgaGl0cyBvbmx5JywgJ2NvbHVtbjAnOiBHTV9DMCwgJ3dpZHRoJzogR01fVywgJ3BhY2tpbmcnOiAnMiBmb3VyLWJpdCBjbGFzc2VzIHBlciBieXRlJ30sCiAgICAnY2VudGVyX2dhcF9mYWxsYmFjayc6IHsnb2JqZWN0JzogJ09iamVjdF84NycsICdzdGF0aW9uX20nOiBTRUFNX1NUQVRJT05fTSwgJ2luZGV4JzogU0VBTV9JTkRFWCwgJ3dvcmxkX3h5JzogbGlzdChTRUFNX1hZKSwgJ3VzZXMnOiAnY2VudGVyIGNlbGwgb25seTsgbm90IGEgZ2VuZXJhbCBzdXJmYWNlIGNsYXNzaWZpY2F0aW9uJ30sCiAgICAncHJvdmVuYW5jZSc6IHsnZmlsZSc6ICdmYWlsZWRfaW1wb3J0X2ludGVybGFnb3NfY2lyY3VpdF8yMDIzX2xheW91dC5nbGInLCAnYXV0aG9yJzogJ0RhdmUgTG92ZSAvIFNrZXRjaGZhYiAoVHlsZXJfRGF2ZSknLCAnbGljZW5zZV9kZWNsYXJlZCc6ICdDQyBCWSA0LjAnLCAnc291cmNlX3VybCc6ICdodHRwczovL3NrZXRjaGZhYi5jb20vM2QtbW9kZWxzL2ZhaWxlZC1pbXBvcnQtaW50ZXJsYWdvcy1jaXJjdWl0LTIwMjMtbGF5b3V0LTRlNWYwZWJiMmYyYjQ4ZDI4OWQ1ZjYyMzFjMjI1MTJiJ30sCiAgICAnY3gnOiBbcm91bmQoZmxvYXQodiksIDMpIGZvciB2IGluIHh3XSwKICAgICdjeSc6IFtyb3VuZChmbG9hdCh2KSwgMykgZm9yIHYgaW4gY2VudGVyX3pdLAogICAgJ2N6JzogW3JvdW5kKGZsb2F0KC12KSwgMykgZm9yIHYgaW4geXddLAogICAgJ3dsJzogW3JvdW5kKGZsb2F0KHYpLCAyKSBmb3IgdiBpbiB3bF0sICd3cic6IFtyb3VuZChmbG9hdCh2KSwgMikgZm9yIHYgaW4gd3JdLAogICAgJ3dhbGxMJzogW3JvdW5kKGZsb2F0KHYpLCAyKSBmb3IgdiBpbiB3YWxsTF0sICd3YWxsUic6IFtyb3VuZChmbG9hdCh2KSwgMikgZm9yIHYgaW4gd2FsbFJdLAp9CihPVVQgLyAnc3VyZmFjZS5iaW4nKS53cml0ZV9ieXRlcyhwYWNrZWQudG9ieXRlcyhvcmRlcj0nQycpKQooT1VUIC8gJ3N1cmZhY2UuanNvbicpLndyaXRlX3RleHQoanNvbi5kdW1wcyhtZXRhLCBzZXBhcmF0b3JzPSgnLCcsICc6JykpKQoKY291bnRzID0ge3N0cihpbnQoaykpOiBpbnQodikgZm9yIGssIHYgaW4gemlwKCpucC51bmlxdWUoVCwgcmV0dXJuX2NvdW50cz1UcnVlKSl9CnN0YXRzID0gewogICAgJ04nOiBOLCAnTkQnOiBORCwgJ2xlbmd0aF9tJzogTCwgJ2RzX20nOiBkcywgJ0QwX20nOiBEMCwgJ0RTVEVQX20nOiBEU1RFUCwKICAgICdzYW1wbGVfY2VsbHMnOiBpbnQoTiAqIE5EKSwgJ3R5cGVfY291bnRzJzogY291bnRzLAogICAgJ3JvYWRfY2VudGVyX2RpcmVjdF9oaXRzX3BlcmNlbnQnOiAxMDAuMCAqIHJvYWRfY2VudGVyX2hpdHMgLyBOLAogICAgJ3JvYWRfY2VudGVyX3NuYXBzJzogcm9hZF9jZW50ZXJfc25hcHMsICdyb2FkX2NlbnRlcl9zbmFwX21heF9tJzogcm9hZF9jZW50ZXJfc25hcF9tYXgsCiAgICAnY2VudGVyX2NlbGxzX2JyaWRnZWQnOiBjZW50ZXJfY2VsbHNfYnJpZGdlZCwKICAgICdvYmplY3Q4N19leGFjdF9zYW1wbGVfZmFsbGJhY2tzJzogaW50KG5wLmNvdW50X25vbnplcm8oY2VudGVyX29iamVjdDg3X2ZhbGxiYWNrKSksCiAgICAnb2JqZWN0ODdfZmFsbGJhY2tfc3RhdGlvbnNfbSc6IFtmbG9hdChpICogZHMpIGZvciBpIGluIG5wLndoZXJlKGNlbnRlcl9vYmplY3Q4N19mYWxsYmFjaylbMF1dLAogICAgJ3JvYWRfZ3JpZF9oaXRzJzogcm9hZF9oaXRzLCAnZ3Jhc3NfZ3JpZF9oaXRzJzogZ3Jhc3NfaGl0cywgJ3RlcnJhaW5fZmFsbGJhY2tfaGl0cyc6IHRlcnJhaW5faGl0cywKICAgICdncmFzc21hc2tfYnl0ZXMnOiBsZW4oZ3Jhc3NtYXNrX2J5dGVzKSwgJ2dyYXNzbWFza19hY3RpdmVfY2VsbHMnOiBpbnQobnAuY291bnRfbm9uemVybyhHWzosIEdNX0MwOkdNX0MwICsgR01fV10pKSwKICAgICdyZW1haW5pbmdfZW1wdHlfY2VsbHMnOiBpbnQobnAuY291bnRfbm9uemVybyhUID09IDApKSwKICAgICd3bF9tX3F1YW50aWxlcyc6IFtmbG9hdCh2KSBmb3IgdiBpbiBucC5wZXJjZW50aWxlKHdsLCBbNSwgNTAsIDk1XSldLAogICAgJ3dyX21fcXVhbnRpbGVzJzogW2Zsb2F0KHYpIGZvciB2IGluIG5wLnBlcmNlbnRpbGUod3IsIFs1LCA1MCwgOTVdKV0sCiAgICAnaGVpZ2h0X3JlbGF0aXZlX2NtX21pbm1heCc6IFtpbnQocmVsLm1pbigpKSwgaW50KHJlbC5tYXgoKSldLAogICAgJ3dhcm5pbmdzJzogW10KfQppZiBucC5jb3VudF9ub256ZXJvKFRbOiwgamNdICE9IDEpID4gbWF4KDUsIE4gKiAwLjAwNSk6CiAgICBzdGF0c1snd2FybmluZ3MnXS5hcHBlbmQoJ01vcmUgdGhhbiAwLjUlIG9mIGNlbnRyZSBzYW1wbGVzIGFyZSBub3QgdGFnZ2VkIGFzcGhhbHQ7IGluc3BlY3QgY2VudHJlbGluZS4nKQppZiBzdGF0c1sncmVtYWluaW5nX2VtcHR5X2NlbGxzJ10gPiAwOgogICAgc3RhdHNbJ3dhcm5pbmdzJ10uYXBwZW5kKCdTb21lIGRpc3RhbnQgbGF0ZXJhbCBjZWxscyBoYXZlIG5vIGdyb3VuZCBoaXQ7IHRoZXNlIGFyZSBpbnRlbnRpb25hbGx5IHR5cGUgMC4nKQooT1VUIC8gJ3N1cmZhY2Vfc3RhdHMuanNvbicpLndyaXRlX3RleHQoanNvbi5kdW1wcyhzdGF0cywgaW5kZW50PTIpKQpwcmludCgnSU5URVJMQUdPU19TVVJGQUNFX09LJywganNvbi5kdW1wcyhzdGF0cywgc2VwYXJhdG9ycz0oJywnLCAnOicpKSkK
+"""Bake Interlagos surface.bin/surface.json from the supplied GLB working copy.
+
+Conservative physics tags: Object_109 asphalt (1), Object_24 grass (4), and
+Object_25 terrain fallback (4, geometry only; its satellite texture is not read).
+Object_87 supplies only one exact center-height fallback at the audited mesh seam
+near s=3849 m; it is not treated as a general asphalt surface. Other scenery is excluded.
+
+Usage from repository root:
+  INTERLAGOS_CENTERLINE=source/blender/work/interlagos_2023/interlagos_centerline.json \\
+  INTERLAGOS_TRACK_OUT=source/game/public/track_interlagos \\
+  blender -b source/blender/work/interlagos_2023/interlagos_2023_source.blend \\
+    --python source/blender/scripts/interlagos_2023_build_surface.py
+"""
+import bpy, json, os, hashlib
+import numpy as np
+from pathlib import Path
+from mathutils import Vector
+from mathutils.bvhtree import BVHTree
+
+REPO = Path(__file__).resolve().parents[3]
+BLEND = Path(os.environ.get('INTERLAGOS_BLEND_IN', str(REPO / 'source/blender/work/interlagos_2023/interlagos_2023_source.blend')))
+CENTERLINE = Path(os.environ.get('INTERLAGOS_CENTERLINE', str(REPO / 'source/blender/work/interlagos_2023/interlagos_centerline.json')))
+OUT = Path(os.environ.get('INTERLAGOS_TRACK_OUT', str(REPO / 'source/game/public/track_interlagos')))
+D0 = float(os.environ.get('INTERLAGOS_D0', '-45'))
+DSTEP = float(os.environ.get('INTERLAGOS_DSTEP', '0.5'))
+D1 = float(os.environ.get('INTERLAGOS_D1', '45'))
+if not CENTERLINE.is_file(): raise FileNotFoundError(f'Centreline absent : {CENTERLINE}')
+if not OUT.is_absolute(): OUT = (REPO / OUT).resolve()
+OUT.mkdir(parents=True, exist_ok=True)
+
+# The invoking command normally opens the source .blend; also accept direct script use.
+if bpy.data.filepath != str(BLEND) and BLEND.is_file():
+    bpy.ops.wm.open_mainfile(filepath=str(BLEND))
+center = json.loads(CENTERLINE.read_text())
+xw = np.asarray(center['points_x_blender'], dtype=np.float64)
+yw = np.asarray(center['points_y_blender'], dtype=np.float64)
+N = len(xw)
+if N < 1000 or len(yw) != N: raise RuntimeError(f'Centreline length/count invalid: N={N}')
+L = float(center['length_m'])
+ds = L / N
+SEAM_STATION_M = 3849.0
+SEAM_INDEX = int(round(SEAM_STATION_M / ds))
+SEAM_XY = (-445.3926, 237.0459)
+
+
+def make_bvh(name):
+    obj = bpy.data.objects.get(name)
+    if obj is None or obj.type != 'MESH':
+        raise RuntimeError(f'Mesh requis absent : {name}')
+    obj.data.calc_loop_triangles()
+    M = obj.matrix_world
+    verts = [M @ v.co for v in obj.data.vertices]
+    tris = [tuple(t.vertices) for t in obj.data.loop_triangles]
+    if not tris: raise RuntimeError(f'Mesh vide : {name}')
+    tree = BVHTree.FromPolygons(verts, tris, all_triangles=True)
+    return tree, len(tris)
+
+road_bvh, road_tris = make_bvh('Object_109')
+grass_bvh, grass_tris = make_bvh('Object_24')
+terrain_bvh, terrain_tris = make_bvh('Object_25')
+seam_bvh, seam_tris = make_bvh('Object_87')
+
+def cast(tree, x, y):
+    hit = tree.ray_cast(Vector((float(x), float(y), 160.0)), Vector((0.0, 0.0, -1.0)), 320.0)
+    return None if hit[0] is None else float(hit[0].z)
+
+# Track-right direction in Blender horizontal XY. In game/glTF coordinates (x,z)= (X,-Y).
+dx = np.roll(xw, -2) - np.roll(xw, 2)
+dy = np.roll(yw, -2) - np.roll(yw, 2)
+norm = np.maximum(np.hypot(dx, dy), 1e-9)
+tx, ty = dx / norm, dy / norm
+rx, ry = ty, -tx
+ND = int(round((D1 - D0) / DSTEP)) + 1
+D = D0 + np.arange(ND, dtype=np.float64) * DSTEP
+jc = (ND - 1) // 2
+H = np.empty((N, ND), dtype=np.float32)
+T = np.zeros((N, ND), dtype=np.uint8)
+G = np.zeros((N, ND), dtype=np.uint8)  # masque séparé : hits directs d'Object_24 seulement
+center_z = np.empty(N, dtype=np.float32)
+center_snap = np.zeros(N, dtype=np.float32)
+center_object87_fallback = np.zeros(N, dtype=bool)
+road_center_hits = road_center_snaps = center_cells_bridged = 0
+road_center_snap_max = 0.0
+road_hits = grass_hits = terrain_hits = 0
+
+for i in range(N):
+    # Determine the true centerline elevation from the asphalt mesh itself.
+    zc = cast(road_bvh, xw[i], yw[i])
+    direct_hit = zc is not None
+    snap = 0.0
+    if zc is None:
+        # Bridge only a small seam in the imported triangles; record each bounded lateral snap.
+        for step in np.arange(0.5, 5.01, 0.5):
+            for sign in (-1.0, 1.0):
+                dd = sign * float(step)
+                zc = cast(road_bvh, xw[i] + rx[i] * dd, yw[i] + ry[i] * dd)
+                if zc is not None:
+                    snap = float(step); road_center_snaps += 1
+                    road_center_snap_max = max(road_center_snap_max, snap)
+                    break
+            if zc is not None: break
+    if direct_hit: road_center_hits += 1
+    if zc is None and i == SEAM_INDEX and abs(i * ds - SEAM_STATION_M) < 0.1 and np.hypot(xw[i] - SEAM_XY[0], yw[i] - SEAM_XY[1]) < 0.05:
+        zc = cast(seam_bvh, xw[i], yw[i])
+        if zc is not None: center_object87_fallback[i] = True
+    if zc is None:
+        raise RuntimeError(f'No asphalt hit at centerline s={i * ds:.1f} m; inspect alignment before baking')
+    center_z[i] = zc
+    center_snap[i] = snap
+    for j, d in enumerate(D):
+        px = xw[i] + rx[i] * d
+        py = yw[i] + ry[i] * d
+        zh = cast(road_bvh, px, py)
+        if zh is not None:
+            H[i, j] = zh; T[i, j] = 1; road_hits += 1
+            continue
+        zh = cast(grass_bvh, px, py)
+        if zh is not None:
+            H[i, j] = zh; T[i, j] = 4; G[i, j] = 1; grass_hits += 1
+            continue
+        # Terrain is a last-resort elevation source only; image/texture data is never used here.
+        zh = cast(terrain_bvh, px, py)
+        if zh is not None:
+            H[i, j] = zh; T[i, j] = 4; terrain_hits += 1
+            continue
+        H[i, j] = zc - 1.0
+        T[i, j] = 0
+    if (0.0 < snap <= 2.0 or center_object87_fallback[i]) and T[i, jc] != 1:
+        # Bridge a small seam from a measured asphalt height; Object_87 is exact-point only.
+        H[i, jc] = zc; T[i, jc] = 1; center_cells_bridged += 1
+    if i % 500 == 0: print(f'INTERLAGOS_SURFACE_ROW {i}/{N}')
+
+# Fill isolated no-hit cells from the nearest nearby physical ground cell in the same cross-section.
+for i in range(N):
+    zeros = np.where(T[i] == 0)[0]
+    for j in zeros:
+        for step in range(1, 13):
+            candidates = (j - step, j + step)
+            k = next((q for q in candidates if 0 <= q < ND and T[i, q] in (1, 4)), None)
+            if k is not None:
+                H[i, j] = H[i, k]
+                T[i, j] = 4
+                break
+
+# Asphalt/kerb widths are derived directly from contiguous road cells around s-centre.
+jc = (ND - 1) // 2
+wl = np.empty(N, dtype=np.float32); wr = np.empty(N, dtype=np.float32)
+for i in range(N):
+    for sign, arr in ((-1, wl), (1, wr)):
+        j = jc
+        while 0 <= j + sign < ND and T[i, j + sign] in (1, 2, 3):
+            j += sign
+        arr[i] = max(1.2, min(18.0, abs(j - jc) * DSTEP))
+# The source does not provide validated continuous collision barriers. Keep the sampled grass run-off driveable.
+wallL = np.full(N, 25.0, dtype=np.float32)
+wallR = np.full(N, 25.0, dtype=np.float32)
+rel = np.clip(np.round((H - center_z[:, None]) * 100.0) + 4096, 0, 8191).astype(np.uint16)
+packed = (rel << 3) | T.astype(np.uint16)
+GM_C0, GM_W = 26, 128  # colonnes -32.0 m à +31.5 m; Grass n'instancie qu'entre 2 et 16 m du centre.
+if GM_C0 + GM_W > ND or GM_W % 2: raise RuntimeError('Grassmask window must be even and fit the surface grid')
+gm = G[:, GM_C0:GM_C0 + GM_W]
+gm_packed = (gm[:, 0::2] | (gm[:, 1::2] << 4)).astype(np.uint8)
+grassmask_bytes = np.asarray([GM_C0, GM_W], dtype='<u2').tobytes() + gm_packed.tobytes(order='C')
+(OUT / 'grassmask.bin').write_bytes(grassmask_bytes)
+
+meta = {
+    'note': 'Interlagos surface from the supplied CC BY GLB; Blender coordinates converted to glTF (Y up). Height is relative to cy[i]. No obstacle collisions are baked; Object_25 is elevation fallback only, with no texture data. Object_87 is used only for the exact center sample at s=3849 m after an audited Object_109 gap.',
+    'N': N, 'ND': ND, 'D0': D0, 'DSTEP': DSTEP, 'ds': ds, 'length': L,
+    'types': {'0': 'vide', '1': 'asphalte', '2': 'vibreur', '3': 'tapis/peint', '4': 'herbe', '5': 'gravier', '6': 'eau', '7': 'objet/mur'},
+    'source_meshes': {'Object_109': {'class': 'asphalte', 'type': 1, 'triangles': road_tris}, 'Object_24': {'class': 'herbe', 'type': 4, 'triangles': grass_tris}, 'Object_25': {'class': 'terrain fallback, geometry only', 'type': 4, 'triangles': terrain_tris}, 'Object_87': {'class': 'exact single-sample seam fallback only', 'type': 1, 'triangles': seam_tris}},
+    'grassmask': {'file': 'grassmask.bin', 'source': 'direct Object_24 hits only', 'column0': GM_C0, 'width': GM_W, 'packing': '2 four-bit classes per byte'},
+    'center_gap_fallback': {'object': 'Object_87', 'station_m': SEAM_STATION_M, 'index': SEAM_INDEX, 'world_xy': list(SEAM_XY), 'uses': 'center cell only; not a general surface classification'},
+    'provenance': {'file': 'failed_import_interlagos_circuit_2023_layout.glb', 'author': 'Dave Love / Sketchfab (Tyler_Dave)', 'license_declared': 'CC BY 4.0', 'source_url': 'https://sketchfab.com/3d-models/failed-import-interlagos-circuit-2023-layout-4e5f0ebb2f2b48d289d5f6231c22512b'},
+    'cx': [round(float(v), 3) for v in xw],
+    'cy': [round(float(v), 3) for v in center_z],
+    'cz': [round(float(-v), 3) for v in yw],
+    'wl': [round(float(v), 2) for v in wl], 'wr': [round(float(v), 2) for v in wr],
+    'wallL': [round(float(v), 2) for v in wallL], 'wallR': [round(float(v), 2) for v in wallR],
+}
+(OUT / 'surface.bin').write_bytes(packed.tobytes(order='C'))
+(OUT / 'surface.json').write_text(json.dumps(meta, separators=(',', ':')))
+
+counts = {str(int(k)): int(v) for k, v in zip(*np.unique(T, return_counts=True))}
+stats = {
+    'N': N, 'ND': ND, 'length_m': L, 'ds_m': ds, 'D0_m': D0, 'DSTEP_m': DSTEP,
+    'sample_cells': int(N * ND), 'type_counts': counts,
+    'road_center_direct_hits_percent': 100.0 * road_center_hits / N,
+    'road_center_snaps': road_center_snaps, 'road_center_snap_max_m': road_center_snap_max,
+    'center_cells_bridged': center_cells_bridged,
+    'object87_exact_sample_fallbacks': int(np.count_nonzero(center_object87_fallback)),
+    'object87_fallback_stations_m': [float(i * ds) for i in np.where(center_object87_fallback)[0]],
+    'road_grid_hits': road_hits, 'grass_grid_hits': grass_hits, 'terrain_fallback_hits': terrain_hits,
+    'grassmask_bytes': len(grassmask_bytes), 'grassmask_active_cells': int(np.count_nonzero(G[:, GM_C0:GM_C0 + GM_W])),
+    'remaining_empty_cells': int(np.count_nonzero(T == 0)),
+    'wl_m_quantiles': [float(v) for v in np.percentile(wl, [5, 50, 95])],
+    'wr_m_quantiles': [float(v) for v in np.percentile(wr, [5, 50, 95])],
+    'height_relative_cm_minmax': [int(rel.min()), int(rel.max())],
+    'warnings': []
+}
+if np.count_nonzero(T[:, jc] != 1) > max(5, N * 0.005):
+    stats['warnings'].append('More than 0.5% of centre samples are not tagged asphalt; inspect centreline.')
+if stats['remaining_empty_cells'] > 0:
+    stats['warnings'].append('Some distant lateral cells have no ground hit; these are intentionally type 0.')
+(OUT / 'surface_stats.json').write_text(json.dumps(stats, indent=2))
+print('INTERLAGOS_SURFACE_OK', json.dumps(stats, separators=(',', ':')))

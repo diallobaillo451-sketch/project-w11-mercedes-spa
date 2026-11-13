@@ -1,1 +1,65 @@
-aW1wb3J0IGFzc2VydCBmcm9tICdub2RlOmFzc2VydC9zdHJpY3QnCmltcG9ydCB7IGV4aXN0c1N5bmMsIHJlYWRGaWxlU3luYyB9IGZyb20gJ25vZGU6ZnMnCmltcG9ydCB7IGRpcm5hbWUsIHJlc29sdmUgfSBmcm9tICdub2RlOnBhdGgnCmltcG9ydCB7IGZpbGVVUkxUb1BhdGggfSBmcm9tICdub2RlOnVybCcKaW1wb3J0IHsgVHJhY2tTdXJmYWNlLCBuZXdTYW1wbGUgfSBmcm9tICcuLi9zcmMvdHJhY2svc3VyZmFjZS50cycKaW1wb3J0IHsgQ0lSQ1VJVFMgfSBmcm9tICcuLi9zcmMvY29yZS9jaXJjdWl0LnRzJwppbXBvcnQgeyBHcmFzcyB9IGZyb20gJy4uL3NyYy9yZW5kZXIvZ3Jhc3MudHMnCgpjb25zdCBoZXJlID0gZGlybmFtZShmaWxlVVJMVG9QYXRoKGltcG9ydC5tZXRhLnVybCkpCmNvbnN0IHB1YmxpY0RpciA9IHJlc29sdmUoaGVyZSwgJy4uL3B1YmxpYycpCmNvbnN0IHRyYWNrRGlyID0gcmVzb2x2ZShwdWJsaWNEaXIsICd0cmFja19pbnRlcmxhZ29zJykKY29uc3Qgc2NlbmVEaXIgPSByZXNvbHZlKHB1YmxpY0RpciwgJ2Fzc2V0cy9pbnRlcmxhZ29zXzIwMjMnKQphc3NlcnQuZXF1YWwoQ0lSQ1VJVFMuaW50ZXJsYWdvcy50cmFja0RpciwgJy4vdHJhY2tfaW50ZXJsYWdvcy8nKQphc3NlcnQuZXF1YWwoQ0lSQ1VJVFMuaW50ZXJsYWdvcy5iYXJyaWVyc0ZpbGUsIG51bGwsICdkbyBub3QgcGFyc2UgYSBtaXNzaW5nIGJhcnJpZXIgZmlsZScpCmFzc2VydC5lcXVhbChDSVJDVUlUUy5pbnRlcmxhZ29zLnBpdGxhbmVGaWxlLCBudWxsKQphc3NlcnQuZXF1YWwoQ0lSQ1VJVFMuaW50ZXJsYWdvcy5ncmFzc01hc2tGaWxlLCAnZ3Jhc3NtYXNrLmJpbicpCmFzc2VydC5lcXVhbChDSVJDVUlUUy5pbnRlcmxhZ29zLmNyb3dkRmlsZSwgbnVsbCkKY29uc3QgbWV0YSA9IEpTT04ucGFyc2UocmVhZEZpbGVTeW5jKHJlc29sdmUodHJhY2tEaXIsICdzdXJmYWNlLmpzb24nKSwgJ3V0ZjgnKSkKY29uc3QgYnl0ZXMgPSByZWFkRmlsZVN5bmMocmVzb2x2ZSh0cmFja0RpciwgJ3N1cmZhY2UuYmluJykpCmFzc2VydC5lcXVhbChieXRlcy5ieXRlTGVuZ3RoLCBtZXRhLk4gKiBtZXRhLk5EICogMiwgJ3N1cmZhY2UuYmluIG11c3QgZXhhY3RseSBtYXRjaCBOIMOXIE5EIHVpbnQxNiBjZWxscycpCmFzc2VydC5vayhtZXRhLmxlbmd0aCA+IDQyMDAgJiYgbWV0YS5sZW5ndGggPCA0MzAwLCAnbWVhc3VyZWQgSW50ZXJsYWdvcyBsYXAgbGVuZ3RoIGlzIG91dCBvZiBleHBlY3RlZCByYW5nZScpCmFzc2VydC5lcXVhbChtZXRhLmN4Lmxlbmd0aCwgbWV0YS5OKQphc3NlcnQuZXF1YWwobWV0YS5jeS5sZW5ndGgsIG1ldGEuTikKYXNzZXJ0LmVxdWFsKG1ldGEuY3oubGVuZ3RoLCBtZXRhLk4pCmFzc2VydC5lcXVhbChtZXRhLndsLmxlbmd0aCwgbWV0YS5OKQphc3NlcnQuZXF1YWwobWV0YS53ci5sZW5ndGgsIG1ldGEuTikKCmNvbnN0IGdyaWQgPSBuZXcgVWludDE2QXJyYXkoYnl0ZXMuYnVmZmVyLCBieXRlcy5ieXRlT2Zmc2V0LCBieXRlcy5ieXRlTGVuZ3RoIC8gMikKY29uc3QgamMgPSAobWV0YS5ORCAtIDEpID4+IDEKbGV0IGNlbnRlckFzcGhhbHQgPSAwCmxldCBncmFzc0NlbGxzID0gMApmb3IgKGxldCBpID0gMDsgaSA8IG1ldGEuTjsgaSsrKSB7CiAgaWYgKChncmlkW2kgKiBtZXRhLk5EICsgamNdICYgNykgPT09IDEpIGNlbnRlckFzcGhhbHQrKwogIGZvciAobGV0IGogPSAwOyBqIDwgbWV0YS5ORDsgaisrKSBpZiAoKGdyaWRbaSAqIG1ldGEuTkQgKyBqXSAmIDcpID09PSA0KSBncmFzc0NlbGxzKysKfQphc3NlcnQub2soY2VudGVyQXNwaGFsdCAvIG1ldGEuTiA+IDAuOTk1LCAnYXQgbGVhc3QgOTkuNSUgb2YgY2VudGVybGluZSBjZWxscyBtdXN0IGJlIGFzcGhhbHQnKQphc3NlcnQub2soZ3Jhc3NDZWxscyA+IDEwMDAsICdncmFzcy9ydW4tb2ZmIGNlbGxzIG11c3QgYmUgcmVwcmVzZW50ZWQnKQpjb25zdCBncmFzc01hc2sgPSByZWFkRmlsZVN5bmMocmVzb2x2ZSh0cmFja0RpciwgJ2dyYXNzbWFzay5iaW4nKSkKYXNzZXJ0LmVxdWFsKGdyYXNzTWFzay5yZWFkVUludDE2TEUoMCksIDI2LCAnZ3Jhc3NtYXNrIGNvbHVtbiBvcmlnaW4gbXVzdCBtYXRjaCB0aGUgLTMyIG0gd2luZG93JykKYXNzZXJ0LmVxdWFsKGdyYXNzTWFzay5yZWFkVUludDE2TEUoMiksIDEyOCwgJ2dyYXNzbWFzayB3aWR0aCBtdXN0IGJlIGV2ZW4gZm9yIG5pYmJsZSBwYWNraW5nJykKYXNzZXJ0LmVxdWFsKGdyYXNzTWFzay5ieXRlTGVuZ3RoLCA0ICsgbWV0YS5OICogNjQsICdncmFzc21hc2sgbXVzdCBjb250YWluIG9uZSBwYWNrZWQgcm93IHBlciBjZW50ZXIgc2FtcGxlJykKYXNzZXJ0LmVxdWFsKG1ldGEuY2VudGVyX2dhcF9mYWxsYmFjaz8ub2JqZWN0LCAnT2JqZWN0Xzg3JywgJ3RoZSBzaW5nbGUgYXVkaXRlZCBzZWFtIGZhbGxiYWNrIG11c3QgYmUgZG9jdW1lbnRlZCcpCmFzc2VydC5lcXVhbChtZXRhLmNlbnRlcl9nYXBfZmFsbGJhY2s/LmluZGV4LCAzODQ5KQoKY29uc3Qgc3VyZmFjZSA9IG5ldyBUcmFja1N1cmZhY2UobWV0YSwgZ3JpZCkKY29uc3QgZ3Jhc3NNYXNrQnVmZmVyID0gZ3Jhc3NNYXNrLmJ1ZmZlci5zbGljZShncmFzc01hc2suYnl0ZU9mZnNldCwgZ3Jhc3NNYXNrLmJ5dGVPZmZzZXQgKyBncmFzc01hc2suYnl0ZUxlbmd0aCkKY29uc3QgZ3Jhc3MgPSBuZXcgR3Jhc3Moc3VyZmFjZSwgZ3Jhc3NNYXNrQnVmZmVyLCAwLjYsIDgwMDApCmFzc2VydC5vayhncmFzcy5uID4gMCwgJ09iamVjdF8yNCBncmFzc21hc2sgbXVzdCBjcmVhdGUgaW5zdGFuY2VkIGdyYXNzIHR1ZnRzJykKY29uc3Qgc2FtcGxlID0gbmV3U2FtcGxlKCkKZm9yIChsZXQgaSA9IDA7IGkgPCBtZXRhLk47IGkgKz0gMjUpIHsKICBjb25zdCBxID0gc3VyZmFjZS5zYW1wbGUobWV0YS5jeFtpXSwgbWV0YS5jeltpXSwgaSwgc2FtcGxlKQogIGFzc2VydC5lcXVhbChxLnR5cGUsIDEsIGBjZW50ZXJsaW5lIHN0YXRpb24gJHtpfSBtdXN0IHJlc29sdmUgdG8gYXNwaGFsdGApCiAgYXNzZXJ0Lm9rKE51bWJlci5pc0Zpbml0ZShxLmgpICYmIE51bWJlci5pc0Zpbml0ZShxLm54KSAmJiBOdW1iZXIuaXNGaW5pdGUocS5ueSkgJiYgTnVtYmVyLmlzRmluaXRlKHEubnopKQp9Cgpjb25zdCBtYW5pZmVzdFBhdGggPSByZXNvbHZlKHNjZW5lRGlyLCAndGlsZXMuanNvbicpCmFzc2VydC5vayhleGlzdHNTeW5jKG1hbmlmZXN0UGF0aCksICd0aWxlcy5qc29uIGlzIHJlcXVpcmVkJykKY29uc3QgbWFuaWZlc3QgPSBKU09OLnBhcnNlKHJlYWRGaWxlU3luYyhtYW5pZmVzdFBhdGgsICd1dGY4JykpCmFzc2VydC5vayhBcnJheS5pc0FycmF5KG1hbmlmZXN0LnRpbGVzKSAmJiBtYW5pZmVzdC50aWxlcy5sZW5ndGggPj0gMiwgJ3NwYXRpYWwgdGlsZSBtYW5pZmVzdCBtdXN0IGNvbnRhaW4gbXVsdGlwbGUgdGlsZXMnKQpmb3IgKGNvbnN0IHRpbGUgb2YgbWFuaWZlc3QudGlsZXMpIHsKICBhc3NlcnQub2soZXhpc3RzU3luYyhyZXNvbHZlKHNjZW5lRGlyLCB0aWxlLmZpbGUpKSwgYG1pc3NpbmcgdGlsZSAke3RpbGUuZmlsZX1gKQogIGZvciAoY29uc3QgdXJpIG9mIHRpbGUudGV4ID8/IFtdKSBhc3NlcnQub2soZXhpc3RzU3luYyhyZXNvbHZlKHNjZW5lRGlyLCB1cmkpKSwgYG1pc3NpbmcgdGlsZSB0ZXh0dXJlICR7dXJpfWApCn0KYXNzZXJ0Lm9rKCFKU09OLnN0cmluZ2lmeShtYW5pZmVzdCkuaW5jbHVkZXMoJ0ltYWdlXzk4JyksICdzYXRlbGxpdGUgdGV4dHVyZSBJbWFnZV85OCBtdXN0IG5vdCBiZSByZWZlcmVuY2VkJykKY29uc29sZS5sb2coYE9LIEludGVybGFnb3M6ICR7bWV0YS5OfSBjZW50ZXIgc2FtcGxlcywgJHttYW5pZmVzdC50aWxlcy5sZW5ndGh9IHRpbGVzLCAke2dyYXNzLm59IGdyYXNzIHR1ZnRzLCAke01hdGgucm91bmQoYnl0ZXMuYnl0ZUxlbmd0aCAvIDEwMjQpfSBLaUIgc3VyZmFjZS5iaW4sICR7bWV0YS5sZW5ndGgudG9GaXhlZCgxKX0gbSBtZWFzdXJlZCBsYXBgKQo=
+import assert from 'node:assert/strict'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { TrackSurface, newSample } from '../src/track/surface.ts'
+import { CIRCUITS } from '../src/core/circuit.ts'
+import { Grass } from '../src/render/grass.ts'
+
+const here = dirname(fileURLToPath(import.meta.url))
+const publicDir = resolve(here, '../public')
+const trackDir = resolve(publicDir, 'track_interlagos')
+const sceneDir = resolve(publicDir, 'assets/interlagos_2023')
+assert.equal(CIRCUITS.interlagos.trackDir, './track_interlagos/')
+assert.equal(CIRCUITS.interlagos.barriersFile, null, 'do not parse a missing barrier file')
+assert.equal(CIRCUITS.interlagos.pitlaneFile, null)
+assert.equal(CIRCUITS.interlagos.grassMaskFile, 'grassmask.bin')
+assert.equal(CIRCUITS.interlagos.crowdFile, null)
+const meta = JSON.parse(readFileSync(resolve(trackDir, 'surface.json'), 'utf8'))
+const bytes = readFileSync(resolve(trackDir, 'surface.bin'))
+assert.equal(bytes.byteLength, meta.N * meta.ND * 2, 'surface.bin must exactly match N × ND uint16 cells')
+assert.ok(meta.length > 4200 && meta.length < 4300, 'measured Interlagos lap length is out of expected range')
+assert.equal(meta.cx.length, meta.N)
+assert.equal(meta.cy.length, meta.N)
+assert.equal(meta.cz.length, meta.N)
+assert.equal(meta.wl.length, meta.N)
+assert.equal(meta.wr.length, meta.N)
+
+const grid = new Uint16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 2)
+const jc = (meta.ND - 1) >> 1
+let centerAsphalt = 0
+let grassCells = 0
+for (let i = 0; i < meta.N; i++) {
+  if ((grid[i * meta.ND + jc] & 7) === 1) centerAsphalt++
+  for (let j = 0; j < meta.ND; j++) if ((grid[i * meta.ND + j] & 7) === 4) grassCells++
+}
+assert.ok(centerAsphalt / meta.N > 0.995, 'at least 99.5% of centerline cells must be asphalt')
+assert.ok(grassCells > 1000, 'grass/run-off cells must be represented')
+const grassMask = readFileSync(resolve(trackDir, 'grassmask.bin'))
+assert.equal(grassMask.readUInt16LE(0), 26, 'grassmask column origin must match the -32 m window')
+assert.equal(grassMask.readUInt16LE(2), 128, 'grassmask width must be even for nibble packing')
+assert.equal(grassMask.byteLength, 4 + meta.N * 64, 'grassmask must contain one packed row per center sample')
+assert.equal(meta.center_gap_fallback?.object, 'Object_87', 'the single audited seam fallback must be documented')
+assert.equal(meta.center_gap_fallback?.index, 3849)
+
+const surface = new TrackSurface(meta, grid)
+const grassMaskBuffer = grassMask.buffer.slice(grassMask.byteOffset, grassMask.byteOffset + grassMask.byteLength)
+const grass = new Grass(surface, grassMaskBuffer, 0.6, 8000)
+assert.ok(grass.n > 0, 'Object_24 grassmask must create instanced grass tufts')
+const sample = newSample()
+for (let i = 0; i < meta.N; i += 25) {
+  const q = surface.sample(meta.cx[i], meta.cz[i], i, sample)
+  assert.equal(q.type, 1, `centerline station ${i} must resolve to asphalt`)
+  assert.ok(Number.isFinite(q.h) && Number.isFinite(q.nx) && Number.isFinite(q.ny) && Number.isFinite(q.nz))
+}
+
+const manifestPath = resolve(sceneDir, 'tiles.json')
+assert.ok(existsSync(manifestPath), 'tiles.json is required')
+const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+assert.ok(Array.isArray(manifest.tiles) && manifest.tiles.length >= 2, 'spatial tile manifest must contain multiple tiles')
+for (const tile of manifest.tiles) {
+  assert.ok(existsSync(resolve(sceneDir, tile.file)), `missing tile ${tile.file}`)
+  for (const uri of tile.tex ?? []) assert.ok(existsSync(resolve(sceneDir, uri)), `missing tile texture ${uri}`)
+}
+assert.ok(!JSON.stringify(manifest).includes('Image_98'), 'satellite texture Image_98 must not be referenced')
+console.log(`OK Interlagos: ${meta.N} center samples, ${manifest.tiles.length} tiles, ${grass.n} grass tufts, ${Math.round(bytes.byteLength / 1024)} KiB surface.bin, ${meta.length.toFixed(1)} m measured lap`)

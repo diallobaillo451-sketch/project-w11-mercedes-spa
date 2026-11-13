@@ -1,1 +1,35 @@
-IiIiRXh0cmFpdCBsZXMgaW1hZ2VzIGV0IGwnaW52ZW50YWlyZSBkZXMgbWF0w6lyaWF1eCBkdSAuYmxlbmQgZGUgdHJhdmFpbCBwb3VyIGF1ZGl0LiIiIgppbXBvcnQgYnB5LCBqc29uLCBvcwpmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKZnJvbSBtYXRodXRpbHMgaW1wb3J0IFZlY3RvcgpSRVBPPVBhdGgoX19maWxlX18pLnJlc29sdmUoKS5wYXJlbnRzWzNdCkJMRU5EPVBhdGgob3MuZW52aXJvbi5nZXQoJ0lOVEVSTEFHT1NfQkxFTkRfSU4nLHN0cihSRVBPLydzb3VyY2UvYmxlbmRlci93b3JrL2ludGVybGFnb3NfMjAyMy9pbnRlcmxhZ29zXzIwMjNfc291cmNlLmJsZW5kJykpKQpPVVQ9UGF0aChvcy5lbnZpcm9uLmdldCgnSU5URVJMQUdPU19URVhUVVJFX09VVCcsc3RyKFJFUE8vJ3NvdXJjZS9ibGVuZGVyL3dvcmsvaW50ZXJsYWdvc18yMDIzL3RleHR1cmVzJykpKQpPVVQubWtkaXIocGFyZW50cz1UcnVlLGV4aXN0X29rPVRydWUpCmJweS5vcHMud20ub3Blbl9tYWluZmlsZShmaWxlcGF0aD1zdHIoQkxFTkQpKQppbWFnZXM9W10KZm9yIGksaW1nIGluIGVudW1lcmF0ZShicHkuZGF0YS5pbWFnZXMpOgogaWYgaW1nLnR5cGU9PSdSRU5ERVJfUkVTVUxUJyBvciBpbWcuc2l6ZVswXTwxIG9yIGltZy5zaXplWzFdPDE6IGNvbnRpbnVlCiBwPU9VVC9mJ3tpOjAzZH1fe2ltZy5uYW1lLnJlcGxhY2UoIi8iLCJfIil9LnBuZycKIHRyeToKICBpbWcuZmlsZXBhdGhfcmF3PXN0cihwKTsgaW1nLmZpbGVfZm9ybWF0PSdQTkcnOyBpbWcuc2F2ZSgpCiBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgcHJpbnQoJ0lNQUdFX1NBVkVfRkFJTCcsaW1nLm5hbWUsc3RyKGUpKTsgY29udGludWUKIGltYWdlcy5hcHBlbmQoeyduYW1lJzppbWcubmFtZSwncGF0aCc6c3RyKHApLCd3aWR0aCc6aW50KGltZy5zaXplWzBdKSwnaGVpZ2h0JzppbnQoaW1nLnNpemVbMV0pLCdieXRlcyc6cC5zdGF0KCkuc3Rfc2l6ZX0pCm1hdGVyaWFscz1bXQpmb3IgbWF0IGluIGJweS5kYXRhLm1hdGVyaWFsczoKIHJlZnM9W10KIGlmIG1hdC5ub2RlX3RyZWU6CiAgZm9yIG5vZGUgaW4gbWF0Lm5vZGVfdHJlZS5ub2RlczoKICAgaWYgbm9kZS50eXBlPT0nVEVYX0lNQUdFJyBhbmQgbm9kZS5pbWFnZTogcmVmcy5hcHBlbmQobm9kZS5pbWFnZS5uYW1lKQogbWF0ZXJpYWxzLmFwcGVuZCh7J25hbWUnOm1hdC5uYW1lLCdpbWFnZXMnOnJlZnMsJ2Jhc2VfY29sb3InOmxpc3QobWF0LmRpZmZ1c2VfY29sb3IpfSkKb2JqZWN0cz1bXQpmb3Igb2JqIGluIGJweS5kYXRhLm9iamVjdHM6CiBpZiBvYmoudHlwZSE9J01FU0gnOiBjb250aW51ZQogb2JqLmRhdGEuY2FsY19sb29wX3RyaWFuZ2xlcygpCiBwdHM9W29iai5tYXRyaXhfd29ybGRAVmVjdG9yKHYpIGZvciB2IGluIG9iai5ib3VuZF9ib3hdCiBvYmplY3RzLmFwcGVuZCh7J25hbWUnOm9iai5uYW1lLCd0cmlhbmdsZXMnOmxlbihvYmouZGF0YS5sb29wX3RyaWFuZ2xlcyksJ21hdGVyaWFscyc6W20ubmFtZSBpZiBtIGVsc2UgTm9uZSBmb3IgbSBpbiBvYmouZGF0YS5tYXRlcmlhbHNdLAogICdtaW4nOlttaW4ocFtpXSBmb3IgcCBpbiBwdHMpIGZvciBpIGluIHJhbmdlKDMpXSwnbWF4JzpbbWF4KHBbaV0gZm9yIHAgaW4gcHRzKSBmb3IgaSBpbiByYW5nZSgzKV19KQpyZXBvcnQ9eydzb3VyY2UnOnN0cihCTEVORCksJ2ltYWdlcyc6aW1hZ2VzLCdtYXRlcmlhbHMnOm1hdGVyaWFscywnb2JqZWN0cyc6b2JqZWN0c30KKE9VVC8naW50ZXJsYWdvc19tYXRlcmlhbHMuanNvbicpLndyaXRlX3RleHQoanNvbi5kdW1wcyhyZXBvcnQsaW5kZW50PTIpLGVuY29kaW5nPSd1dGYtOCcpCnByaW50KGYnSU5URVJMQUdPU19URVhUVVJFX1JFUE9SVCBpbWFnZXM9e2xlbihpbWFnZXMpfSBtYXRlcmlhbHM9e2xlbihtYXRlcmlhbHMpfSBvYmplY3RzPXtsZW4ob2JqZWN0cyl9IGRpcj17T1VUfScpCg==
+"""Extrait les images et l'inventaire des matériaux du .blend de travail pour audit."""
+import bpy, json, os
+from pathlib import Path
+from mathutils import Vector
+REPO=Path(__file__).resolve().parents[3]
+BLEND=Path(os.environ.get('INTERLAGOS_BLEND_IN',str(REPO/'source/blender/work/interlagos_2023/interlagos_2023_source.blend')))
+OUT=Path(os.environ.get('INTERLAGOS_TEXTURE_OUT',str(REPO/'source/blender/work/interlagos_2023/textures')))
+OUT.mkdir(parents=True,exist_ok=True)
+bpy.ops.wm.open_mainfile(filepath=str(BLEND))
+images=[]
+for i,img in enumerate(bpy.data.images):
+ if img.type=='RENDER_RESULT' or img.size[0]<1 or img.size[1]<1: continue
+ p=OUT/f'{i:03d}_{img.name.replace("/","_")}.png'
+ try:
+  img.filepath_raw=str(p); img.file_format='PNG'; img.save()
+ except Exception as e:
+  print('IMAGE_SAVE_FAIL',img.name,str(e)); continue
+ images.append({'name':img.name,'path':str(p),'width':int(img.size[0]),'height':int(img.size[1]),'bytes':p.stat().st_size})
+materials=[]
+for mat in bpy.data.materials:
+ refs=[]
+ if mat.node_tree:
+  for node in mat.node_tree.nodes:
+   if node.type=='TEX_IMAGE' and node.image: refs.append(node.image.name)
+ materials.append({'name':mat.name,'images':refs,'base_color':list(mat.diffuse_color)})
+objects=[]
+for obj in bpy.data.objects:
+ if obj.type!='MESH': continue
+ obj.data.calc_loop_triangles()
+ pts=[obj.matrix_world@Vector(v) for v in obj.bound_box]
+ objects.append({'name':obj.name,'triangles':len(obj.data.loop_triangles),'materials':[m.name if m else None for m in obj.data.materials],
+  'min':[min(p[i] for p in pts) for i in range(3)],'max':[max(p[i] for p in pts) for i in range(3)]})
+report={'source':str(BLEND),'images':images,'materials':materials,'objects':objects}
+(OUT/'interlagos_materials.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+print(f'INTERLAGOS_TEXTURE_REPORT images={len(images)} materials={len(materials)} objects={len(objects)} dir={OUT}')

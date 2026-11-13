@@ -1,1 +1,76 @@
-IyBHaXRMYWIgUGFnZXMgOiBwdWJsaWUgcHVibGljLy4gQXNzZXRzIGxvdXJkcyBFTiBCQVNFNjQgKHB1YmxpYy8sIHBhcnRzLyksIHbDqXJpZmnDqXMgcGFyIFNIQS0yNTYuCiMgTGUgY29kZSAoaW5kZXguaHRtbCwgSlMsIENTUywgc3cuanMpIGVzdCBjb21waWzDqSBJQ0kgZGVwdWlzIHNvdXJjZS9nYW1lIChWaXRlKSBwdWlzIHN1cGVycG9zw6kgw6AgcHVibGljLy4KLmFzc2VtYmxlOgogIGltYWdlOiBub2RlOjIyCiAgc2NyaXB0OgogICAgLSBmaW5kIHB1YmxpYyBwYXJ0cyAtdHlwZSBmIHwgd2hpbGUgcmVhZCBmOyBkbyBiYXNlNjQgLWQgIiRmIiA+ICIkZi5iaW4iICYmIG12ICIkZi5iaW4iICIkZiI7IGRvbmUKICAgIC0gbWtkaXIgLXAgIiQoZGlybmFtZSBwdWJsaWMvYXNzZXRzL3NwYS90MDQuYmluKSIgJiYgY2F0IHBhcnRzL2Fzc2V0c19fc3BhX190MDQuYmluLnBhcnQwMCBwYXJ0cy9hc3NldHNfX3NwYV9fdDA0LmJpbi5wYXJ0MDEgPiBwdWJsaWMvYXNzZXRzL3NwYS90MDQuYmluCiAgICAtIG1rZGlyIC1wICIkKGRpcm5hbWUgcHVibGljL2Fzc2V0cy9zcGEvdDA1LmJpbikiICYmIGNhdCBwYXJ0cy9hc3NldHNfX3NwYV9fdDA1LmJpbi5wYXJ0MDAgcGFydHMvYXNzZXRzX19zcGFfX3QwNS5iaW4ucGFydDAxID4gcHVibGljL2Fzc2V0cy9zcGEvdDA1LmJpbgogICAgLSBta2RpciAtcCAiJChkaXJuYW1lIHB1YmxpYy9hc3NldHMvc3BhL3QwNV9sb2QuYmluKSIgJiYgY2F0IHBhcnRzL2Fzc2V0c19fc3BhX190MDVfbG9kLmJpbi5wYXJ0MDAgcGFydHMvYXNzZXRzX19zcGFfX3QwNV9sb2QuYmluLnBhcnQwMSA+IHB1YmxpYy9hc3NldHMvc3BhL3QwNV9sb2QuYmluCiAgICAtIG1rZGlyIC1wICIkKGRpcm5hbWUgcHVibGljL2Fzc2V0cy9zcGEvdGV4L2M1ZmY3ZDliZmQ1N2JiNzgua3R4MikiICYmIGNhdCBwYXJ0cy9hc3NldHNfX3NwYV9fdGV4X19jNWZmN2Q5YmZkNTdiYjc4Lmt0eDIucGFydDAwIHBhcnRzL2Fzc2V0c19fc3BhX190ZXhfX2M1ZmY3ZDliZmQ1N2JiNzgua3R4Mi5wYXJ0MDEgcGFydHMvYXNzZXRzX19zcGFfX3RleF9fYzVmZjdkOWJmZDU3YmI3OC5rdHgyLnBhcnQwMiA+IHB1YmxpYy9hc3NldHMvc3BhL3RleC9jNWZmN2Q5YmZkNTdiYjc4Lmt0eDIKICAgIC0gbWtkaXIgLXAgIiQoZGlybmFtZSBwdWJsaWMvYXNzZXRzL3cxMV9saDIwMjBfaGlnaF9rdHgyLmdsYikiICYmIGNhdCBwYXJ0cy9hc3NldHNfX3cxMV9saDIwMjBfaGlnaF9rdHgyLmdsYi5wYXJ0MDAgcGFydHMvYXNzZXRzX193MTFfbGgyMDIwX2hpZ2hfa3R4Mi5nbGIucGFydDAxIHBhcnRzL2Fzc2V0c19fdzExX2xoMjAyMF9oaWdoX2t0eDIuZ2xiLnBhcnQwMiBwYXJ0cy9hc3NldHNfX3cxMV9saDIwMjBfaGlnaF9rdHgyLmdsYi5wYXJ0MDMgPiBwdWJsaWMvYXNzZXRzL3cxMV9saDIwMjBfaGlnaF9rdHgyLmdsYgogICAgLSBta2RpciAtcCAiJChkaXJuYW1lIHB1YmxpYy9hc3NldHMvc3BhX3BpdHMvZ2FyYWdlX3BsYXllci5nbGIpIiAmJiBjYXQgcGFydHMvYXNzZXRzX19zcGFfcGl0c19fZ2FyYWdlX3BsYXllci5nbGIucGFydDAwIHBhcnRzL2Fzc2V0c19fc3BhX3BpdHNfX2dhcmFnZV9wbGF5ZXIuZ2xiLnBhcnQwMSBwYXJ0cy9hc3NldHNfX3NwYV9waXRzX19nYXJhZ2VfcGxheWVyLmdsYi5wYXJ0MDIgPiBwdWJsaWMvYXNzZXRzL3NwYV9waXRzL2dhcmFnZV9wbGF5ZXIuZ2xiCiAgICAtIHNoYTI1NnN1bSAtYyBTSEEyNTZTVU1TCiAgICAtIGNkIHNvdXJjZS9nYW1lICYmIG5wbSBjaSAmJiBucG0gcnVuIHRlc3Q6aW50ZXJsYWdvcyAmJiBucHggdml0ZSBidWlsZCAmJiBjZCAuLi8uLgogICAgLSBybSAtZiBwdWJsaWMvYXNzZXRzL2luZGV4LSouanMgcHVibGljL2Fzc2V0cy9pbmRleC0qLmNzcwogICAgLSBjcCAtciBzb3VyY2UvZ2FtZS9kaXN0Ly4gcHVibGljLwogICAgLSB8CiAgICAgIG1vbnphKCkgewogICAgICAgIE09c2hhcmVkL2Fzc2V0cy9tb256YV8yMDIwCiAgICAgICAgZ2l0IGZldGNoIC0tZGVwdGggMSBvcmlnaW4gbmV3Ym90LXNoYXJlZCB8fCByZXR1cm4gMQogICAgICAgIGdpdCBjaGVja291dCBGRVRDSF9IRUFEIC0tICRNIHx8IHJldHVybiAxCiAgICAgICAgZmluZCAkTSAtdHlwZSBmIFwoIC1uYW1lICcqLmJpbicgLW8gLW5hbWUgJyoua3R4MicgLW8gLW5hbWUgJyoud2VicCcgXCkgISAtcGF0aCAiJE0vcHJldmlldy8qIiB8IHdoaWxlIHJlYWQgLXIgZjsgZG8gYmFzZTY0IC1kICIkZiIgPiAiJGYuZGVjIiAmJiBtdiAiJGYuZGVjIiAiJGYiIHx8IGV4aXQgMTsgZG9uZSB8fCByZXR1cm4gMQogICAgICAgIGZvciBwIGluICQoZmluZCAkTSAtbmFtZSAnKi5wYXJ0MDAxJyAhIC1wYXRoICIkTS9wcmV2aWV3LyoiKTsgZG8gYj0iJHtwJS5wYXJ0MDAxfSI7IDogPiAiJGIiOyBmb3IgcSBpbiAiJGIiLnBhcnQqOyBkbyBiYXNlNjQgLWQgIiRxIiA+PiAiJGIiIHx8IHJldHVybiAxOyBkb25lOyBybSAtZiAiJGIiLnBhcnQqOyBkb25lCiAgICAgICAgbWtkaXIgLXAgcHVibGljL2Fzc2V0cy9tb256YSBwdWJsaWMvdHJhY2tfbW9uemEKICAgICAgICBjcCAtciAkTS9zY2VuZS8uIHB1YmxpYy9hc3NldHMvbW9uemEvIHx8IHJldHVybiAxCiAgICAgICAgZm9yIGYgaW4gc3VyZmFjZS5qc29uIHN1cmZhY2UuYmluIGJhcnJpZXJzLmJpbiBwaXRsYW5lLmpzb24gY3Jvd2QuYmluIGNyb3dkLmpzb24gZ3Jhc3NtYXNrLmJpbiBtZXRhLmpzb247IGRvIGNwICRNL3RyYWNrLyRmIHB1YmxpYy90cmFja19tb256YS8gfHwgcmV0dXJuIDE7IGRvbmUKICAgICAgICBjcCAkTS9tYXJzaGFscy5qc29uIHB1YmxpYy90cmFja19tb256YS9tYXJzaGFscy5qc29uIHx8IHJldHVybiAxCiAgICAgICAgdGVzdCAiJChzdGF0IC1jJXMgcHVibGljL3RyYWNrX21vbnphL3N1cmZhY2UuYmluKSIgLWVxIDQxNzc0OTIgJiYgdGVzdCAiJChzdGF0IC1jJXMgcHVibGljL2Fzc2V0cy9tb256YS90MDEuYmluKSIgLWVxIDUyNzgzNDQgJiYgdGVzdCAiJChzdGF0IC1jJXMgcHVibGljL3RyYWNrX21vbnphL2JhcnJpZXJzLmJpbikiIC1lcSAxOTY0ODQ4CiAgICAgIH0KICAgICAgaWYgbW9uemE7IHRoZW4gZWNobyAnTU9OWkEgT0snOyBkdSAtc2ggcHVibGljL2Fzc2V0cy9tb256YSBwdWJsaWMvdHJhY2tfbW9uemE7IGVsc2UgZWNobyAnQVRURU5USU9OIDogTW9uemEgbm9uIGFzc2VtYmzDqSc7IFsgLXogIiRNT05aQV9TVFJJQ1QiIF0gfHwgZXhpdCAxOyBmaQogICAgLSBkdSAtc2ggcHVibGljCgpwYWdlczoKICBleHRlbmRzOiAuYXNzZW1ibGUKICBzdGFnZTogZGVwbG95CiAgYXJ0aWZhY3RzOgogICAgcGF0aHM6CiAgICAgIC0gcHVibGljCiAgcnVsZXM6CiAgICAtIGlmOiAkQ0lfQ09NTUlUX0JSQU5DSCA9PSAkQ0lfREVGQVVMVF9CUkFOQ0gKCiMgQnJhbmNoZXMgOiBtw6ptZSBhc3NlbWJsYWdlLCByaWVuIG4nZXN0IHB1Ymxpw6kuCmFzc2VtYmxlX2NoZWNrOgogIGV4dGVuZHM6IC5hc3NlbWJsZQogIHN0YWdlOiB0ZXN0CiAgdmFyaWFibGVzOgogICAgTU9OWkFfU1RSSUNUOiAiMSIKICBydWxlczoKICAgIC0gaWY6ICckQ0lfQ09NTUlUX0JSQU5DSCAmJiAkQ0lfQ09NTUlUX0JSQU5DSCAhPSAkQ0lfREVGQVVMVF9CUkFOQ0ggJiYgJENJX0NPTU1JVF9CUkFOQ0ggIT0gImZlYXR1cmUvaW50ZXJsYWdvcyInCgpwYWdlc19pbnRlcmxhZ29zX3ByZXZpZXc6CiAgZXh0ZW5kczogLmFzc2VtYmxlCiAgc3RhZ2U6IGRlcGxveQogIHBhZ2VzOgogICAgcHVibGlzaDogcHVibGljCiAgICBwYXRoX3ByZWZpeDogaW50ZXJsYWdvcy13aXAKICAgIGV4cGlyZV9pbjogMSB3ZWVrCiAgZW52aXJvbm1lbnQ6CiAgICBuYW1lOiBpbnRlcmxhZ29zLXdpcAogICAgdXJsOiAkQ0lfUEFHRVNfVVJMCiAgYXJ0aWZhY3RzOgogICAgcGF0aHM6CiAgICAgIC0gcHVibGljCiAgcnVsZXM6CiAgICAtIGlmOiAnJENJX0NPTU1JVF9CUkFOQ0ggPT0gImZlYXR1cmUvaW50ZXJsYWdvcyInCgp0eXBlY2hlY2s6CiAgc3RhZ2U6IHRlc3QKICBpbWFnZTogbm9kZToyMgogIHNjcmlwdDoKICAgIC0gY2Qgc291cmNlL2dhbWUKICAgIC0gbnBtIGNpCiAgICAtIG5weCB0c2MgLS1ub0VtaXQKICBydWxlczoKICAgIC0gaWY6ICRDSV9DT01NSVRfQlJBTkNIICYmICRDSV9DT01NSVRfQlJBTkNIICE9ICRDSV9ERUZBVUxUX0JSQU5DSAo=
+# GitLab Pages : publie public/. Assets lourds EN BASE64 (public/, parts/), vérifiés par SHA-256.
+# Le code (index.html, JS, CSS, sw.js) est compilé ICI depuis source/game (Vite) puis superposé à public/.
+.assemble:
+  image: node:22
+  script:
+    - find public parts -type f | while read f; do base64 -d "$f" > "$f.bin" && mv "$f.bin" "$f"; done
+    - find source/game/public/assets/interlagos_2023 source/game/public/track_interlagos -type f | while read f; do base64 -d "$f" > "$f.bin" && mv "$f.bin" "$f"; done
+    - mkdir -p "$(dirname public/assets/spa/t04.bin)" && cat parts/assets__spa__t04.bin.part00 parts/assets__spa__t04.bin.part01 > public/assets/spa/t04.bin
+    - mkdir -p "$(dirname public/assets/spa/t05.bin)" && cat parts/assets__spa__t05.bin.part00 parts/assets__spa__t05.bin.part01 > public/assets/spa/t05.bin
+    - mkdir -p "$(dirname public/assets/spa/t05_lod.bin)" && cat parts/assets__spa__t05_lod.bin.part00 parts/assets__spa__t05_lod.bin.part01 > public/assets/spa/t05_lod.bin
+    - mkdir -p "$(dirname public/assets/spa/tex/c5ff7d9bfd57bb78.ktx2)" && cat parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part00 parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part01 parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part02 > public/assets/spa/tex/c5ff7d9bfd57bb78.ktx2
+    - mkdir -p "$(dirname public/assets/w11_lh2020_high_ktx2.glb)" && cat parts/assets__w11_lh2020_high_ktx2.glb.part00 parts/assets__w11_lh2020_high_ktx2.glb.part01 parts/assets__w11_lh2020_high_ktx2.glb.part02 parts/assets__w11_lh2020_high_ktx2.glb.part03 > public/assets/w11_lh2020_high_ktx2.glb
+    - mkdir -p "$(dirname public/assets/spa_pits/garage_player.glb)" && cat parts/assets__spa_pits__garage_player.glb.part00 parts/assets__spa_pits__garage_player.glb.part01 parts/assets__spa_pits__garage_player.glb.part02 > public/assets/spa_pits/garage_player.glb
+    - sha256sum -c SHA256SUMS
+    - cd source/game && npm ci && npm run test:interlagos && npx vite build && cd ../..
+    - rm -f public/assets/index-*.js public/assets/index-*.css
+    - cp -r source/game/dist/. public/
+    - |
+      monza() {
+        M=shared/assets/monza_2020
+        git fetch --depth 1 origin newbot-shared || return 1
+        git checkout FETCH_HEAD -- $M || return 1
+        find $M -type f \( -name '*.bin' -o -name '*.ktx2' -o -name '*.webp' \) ! -path "$M/preview/*" | while read -r f; do base64 -d "$f" > "$f.dec" && mv "$f.dec" "$f" || exit 1; done || return 1
+        for p in $(find $M -name '*.part001' ! -path "$M/preview/*"); do b="${p%.part001}"; : > "$b"; for q in "$b".part*; do base64 -d "$q" >> "$b" || return 1; done; rm -f "$b".part*; done
+        mkdir -p public/assets/monza public/track_monza
+        cp -r $M/scene/. public/assets/monza/ || return 1
+        for f in surface.json surface.bin barriers.bin pitlane.json crowd.bin crowd.json grassmask.bin meta.json; do cp $M/track/$f public/track_monza/ || return 1; done
+        cp $M/marshals.json public/track_monza/marshals.json || return 1
+        test "$(stat -c%s public/track_monza/surface.bin)" -eq 4177492 && test "$(stat -c%s public/assets/monza/t01.bin)" -eq 5278344 && test "$(stat -c%s public/track_monza/barriers.bin)" -eq 1964848
+      }
+      if monza; then echo 'MONZA OK'; du -sh public/assets/monza public/track_monza; else echo 'ATTENTION : Monza non assemblé'; [ -z "$MONZA_STRICT" ] || exit 1; fi
+    - du -sh public
+
+pages:
+  extends: .assemble
+  stage: deploy
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Branches : même assemblage, rien n'est publié.
+assemble_check:
+  extends: .assemble
+  stage: test
+  variables:
+    MONZA_STRICT: "1"
+  rules:
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_COMMIT_BRANCH != "feature/interlagos"'
+
+pages_interlagos_preview:
+  extends: .assemble
+  stage: deploy
+  pages:
+    publish: public
+    path_prefix: interlagos-wip
+    expire_in: 1 week
+  environment:
+    name: interlagos-wip
+    url: $CI_PAGES_URL
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "feature/interlagos"'
+
+typecheck:
+  stage: test
+  image: node:22
+  script:
+    - cd source/game
+    - npm ci
+    - npx tsc --noEmit
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH

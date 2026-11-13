@@ -1,1 +1,30 @@
-ewogICJuYW1lIjogInByb2plY3QtdzExIiwKICAicHJpdmF0ZSI6IHRydWUsCiAgInZlcnNpb24iOiAiMC4yLjAiLAogICJ0eXBlIjogIm1vZHVsZSIsCiAgInNjcmlwdHMiOiB7CiAgICAiZGV2IjogInZpdGUiLAogICAgImJ1aWxkIjogInZpdGUgYnVpbGQiLAogICAgImJ1aWxkOnNpbmdsZSI6ICJ2aXRlIGJ1aWxkIC0tbW9kZSBzaW5nbGUgLS1vdXREaXIgZGlzdC1zaW5nbGUgJiYgbm9kZSB0b29scy9pbmxpbmUtc2luZ2xlLm1qcyIsCiAgICAidGVzdDpwaHlzaWNzIjogIm5vZGUgdGVzdHMvcGh5c2ljcy50ZXN0LnRzIiwKICAgICJ0ZXN0OmludGVybGFnb3MiOiAibm9kZSB0ZXN0cy9pbnRlcmxhZ29zLnRlc3QudHMiLAogICAgInRlc3Q6YXBwIjogIm5vZGUgdGVzdHMvYXBwLm1qcyIsCiAgICAiemlwIjogIm5vZGUgdG9vbHMvemlwLWRpc3QubWpzIgogIH0sCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJ0aHJlZSI6ICJeMC4xODcuMCIKICB9LAogICJkZXZEZXBlbmRlbmNpZXMiOiB7CiAgICAiQGdsdGYtdHJhbnNmb3JtL2NvcmUiOiAiXjQuNS4xIiwKICAgICJAZ2x0Zi10cmFuc2Zvcm0vZXh0ZW5zaW9ucyI6ICJeNC41LjEiLAogICAgIkBnbHRmLXRyYW5zZm9ybS9mdW5jdGlvbnMiOiAiXjQuNS4xIiwKICAgICJAcGxheXdyaWdodC90ZXN0IjogIl4xLjY0LjEiLAogICAgIkB0eXBlcy9ub2RlIjogIl4yNC4xOS4yIiwKICAgICJAdHlwZXMvdGhyZWUiOiAiXjAuMTg3LjAiLAogICAgIm1lc2hvcHRpbWl6ZXIiOiAiXjEuMy4wIiwKICAgICJzaGFycCI6ICJeMC4zNS41IiwKICAgICJ0eXBlc2NyaXB0IjogIl43LjAuMiIsCiAgICAidml0ZSI6ICJeOC4zLjUiCiAgfQp9Cg==
+{
+  "name": "project-w11",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --mode single --outDir dist-single && node tools/inline-single.mjs",
+    "test:physics": "node tests/physics.test.ts",
+    "test:interlagos": "node tests/interlagos.test.ts",
+    "test:app": "node tests/app.mjs",
+    "zip": "node tools/zip-dist.mjs"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.19.2",
+    "@types/three": "^0.187.0",
+    "meshoptimizer": "^1.3.0",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
