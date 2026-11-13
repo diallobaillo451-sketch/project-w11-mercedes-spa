@@ -461,10 +461,11 @@ export class RaceSim {
     if (r.mode === 'sc' || this.ctrl.sc.active || this.ctrl.vsc) M *= 0.15
     const diffM = 1.5 - 0.95 * (this.difficulty / 100)
     const p = (x: number) => this.rng.next() < x * w * M * f * diffM
-    if (p(0.0003 * (wet > 0.3 ? 2 : 1))) { this.crash(r); return }
-    if (p(0.0007)) { r.err = { kind: 'spin', t: 0.8 }; r.v *= 0.7; this.ctrl.incident(r, r.s, 'spin'); r.tyre.flat = Math.min(1, r.tyre.flat + 0.5); return }
-    if (p(0.010 * late * push)) { r.err = { kind: 'lock', t: 0.9 }; r.tyre.flat = Math.min(1, r.tyre.flat + 0.08); if (r.tyre.flat > 0.6) r.wantPit = r.wantPit ?? 'plat'; return }
-    if (p(0.010 * late * push)) { r.err = { kind: 'wide', t: 1.6 }; r.side = Math.sign(this.line.e[(i + Math.round(80 / this.ds)) % this.N]) || 1; return }
+    // crashes et spins plus rares (surtout les crashes "purs"), mais toujours plus fréquents sous pression / pluie / pneus froids
+    if (p(0.00014 * (wet > 0.3 ? 2.2 : 1))) { this.crash(r); return }
+    if (p(0.00045)) { r.err = { kind: 'spin', t: 0.8 }; r.v *= 0.7; this.ctrl.incident(r, r.s, 'spin'); r.tyre.flat = Math.min(1, r.tyre.flat + 0.5); return }
+    if (p(0.008 * late * push)) { r.err = { kind: 'lock', t: 0.9 }; r.tyre.flat = Math.min(1, r.tyre.flat + 0.08); if (r.tyre.flat > 0.6) r.wantPit = r.wantPit ?? 'plat'; return }
+    if (p(0.008 * late * push)) { r.err = { kind: 'wide', t: 1.6 }; r.side = Math.sign(this.line.e[(i + Math.round(80 / this.ds)) % this.N]) || 1; return }
   }
   crash(r: Racer) {
     const heavy = this.rng.next() < 0.7
