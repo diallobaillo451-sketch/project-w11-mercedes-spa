@@ -12,14 +12,15 @@ export class Autopilot {
     const L = this.line, N = L.N
     const v = Math.max(0, car.forwardSpeed())
     const i = car.trackIdx
-    const look = 5 + v * 0.30
+    // regard plus long à haute vitesse pour anticiper mieux les courbes
+    const look = 7 + v * 0.38
     const j = (i + Math.round(look / L.ds)) % N
     const tx = L.x[j] - car.pos[0], tz = L.z[j] - car.pos[2]
     const R = car.R
     const lx = tx * R[0] + tz * R[2], lz = tx * R[6] + tz * R[8]
     const alpha = Math.atan2(lx, -lz)
     const dist = Math.hypot(lx, lz)
-    let delta = Math.atan(2 * W11.wheelbase * Math.sin(alpha) / Math.max(dist, 3))
+    let delta = Math.atan(2 * W11.wheelbase * Math.sin(alpha) / Math.max(dist, 4.5))
     const vRef = car.setup.steerAssist >= 2 ? 26 : car.setup.steerAssist >= 1 ? 34 : 1e9
     const lock = W11.steerLock * Math.max(0.11, 1 / (1 + (v * v) / (vRef * vRef)))
     // amortissement lacet
