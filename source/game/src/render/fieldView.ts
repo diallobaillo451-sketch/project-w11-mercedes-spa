@@ -14,7 +14,7 @@ type Mat = THREE.MeshStandardMaterial
 interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean; spin0: number; steer0: number }
 interface CarView { r: Racer; obj: THREE.LOD; wheels: WheelRef[]; blob: THREE.Mesh; pitch: number; roll: number; spin: number }
 const TEAMS = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
-const LOD1 = 28, LOD2 = 450
+const LOD1 = 28
 /** Modèle SC remplaçable (Mercedes-AMG GT Black Series optimisé, plus tard sous shared/assets/safety_car/). */
 export const SAFETY_CAR_LOD = './cars/safetycar_lod1.glb'
 export const SAFETY_CAR_HI = './cars/safetycar_hi.glb'
@@ -25,6 +25,13 @@ function blobTex() {
   const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d')!
   const gr = g.createRadialGradient(32, 32, 4, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(1, 'rgba(0,0,0,0)')
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t
+}
+/** Deux niveaux : le modèle LOD2 reste actif au loin, sans niveau vide qui efface la voiture. */
+export function createCarLod(lod1: THREE.Object3D, lod2: THREE.Object3D): THREE.LOD {
+  const lod = new THREE.LOD()
+  lod.addLevel(lod1, 0)
+  lod.addLevel(lod2, LOD1)
+  return lod
 }
 function dropTopMip(t: THREE.Texture) {
   const ct = t as THREE.CompressedTexture
@@ -43,13 +50,13 @@ function collectWheels(root: THREE.Object3D): WheelRef[] {
   return wheels
 }
 /** maillages dont la quantification a explosé (un logo de jante à 8 m, lu comme une roue qui flotte) */
-function hideExploded(root: THREE.Object3D) {
+export function hideExploded(root: THREE.Object3D) {
   const s = new THREE.Vector3()
   root.traverse(o => {
     const m = o as THREE.Mesh
     if (!m.isMesh) return
     const n = ((m.material as THREE.Material)?.name || '') + ' ' + o.name
-    if (/paint|carbon|decal|tyre|tire|wing|chassis|generic|body|hub/i.test(n)) return
+    if (/paint|carbon|decal|tyre|tire|wing|chassis|generic|body|hub|detail/i.test(n)) return
     if (!m.geometry.boundingBox) m.geometry.computeBoundingBox()
     m.geometry.boundingBox!.getSize(s)
     if (s.x > 3.5 || s.y > 3.5 || s.z > 3.5) m.visible = false
@@ -267,8 +274,7 @@ export class FieldView {
     for (const r of sim.cars) {
       if (r.player) continue
       const p = this.protos.get(r.team); if (!p) continue
-      const lod = new THREE.LOD(), a = p.l1.clone(), b = p.l2.clone()
-      lod.addLevel(a, 0); lod.addLevel(b, LOD1); lod.addLevel(new THREE.Object3D(), LOD2)
+      const a = p.l1.clone(), b = p.l2.clone(), lod = createCarLod(a, b)
       lod.matrixAutoUpdate = false; lod.name = 'ai_' + r.id
       const wheels = [...collectWheels(a), ...collectWheels(b)]
       const blob = new THREE.Mesh(bg, bm); blob.matrixAutoUpdate = false; blob.renderOrder = 1
