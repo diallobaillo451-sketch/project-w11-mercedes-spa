@@ -8,8 +8,10 @@ import { dedup, prune, weld, textureCompress, reorder, quantize } from '@gltf-tr
 import { MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
 import sharp from 'sharp';
 import fs from 'node:fs'; import path from 'node:path'; import crypto from 'node:crypto';
-const [,, inp, outDir, Ks='12', qC='92', qN='95'] = process.argv;
+const [,, inp, outDir, Ks='12', qC='92', qN='95', rulesPath] = process.argv;
 const K = +Ks;
+const rules = rulesPath ? JSON.parse(fs.readFileSync(rulesPath, 'utf8')) : {};
+const alphaModes = rules.materialAlphaModes || {};
 await MeshoptEncoder.ready; await MeshoptDecoder.ready;
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.encoder':MeshoptEncoder,'meshopt.decoder':MeshoptDecoder});
 const doc = await io.read(inp);
@@ -18,8 +20,11 @@ const BLEND = /^(groove1|groove2|groove3|groove_custom|asph_patch_joint|Glass|Gl
 const normals = new Set();
 for (const m of doc.getRoot().listMaterials()) {
   const n = m.getName();
-  if (MASK.test(n)) { m.setAlphaMode('MASK'); m.setAlphaCutoff(0.5); }
-  else if (BLEND.test(n)) m.setAlphaMode('BLEND');
+  const explicit = alphaModes[n] ?? alphaModes[n.replace(/\.\d+$/, '')];
+  if (explicit && !['OPAQUE', 'MASK', 'BLEND'].includes(explicit)) throw new Error(`Invalid alpha mode ${explicit} for ${n}`);
+  if (explicit === 'MASK' || (!explicit && MASK.test(n))) { m.setAlphaMode('MASK'); m.setAlphaCutoff(0.5); }
+  else if (explicit === 'BLEND' || (!explicit && BLEND.test(n))) m.setAlphaMode('BLEND');
+  else if (explicit === 'OPAQUE') m.setAlphaMode('OPAQUE');
   if (m.getNormalTexture()) normals.add(m.getNormalTexture());
 }
 await doc.transform(dedup(), prune(), weld());

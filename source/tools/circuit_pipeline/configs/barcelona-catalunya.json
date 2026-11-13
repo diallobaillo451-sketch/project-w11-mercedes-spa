@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "circuit": {
+    "id": "barcelona-catalunya",
+    "display_name": "Circuit de Barcelona-Catalunya"
+  },
+  "blender": {
+    "export_roundtrip": true,
+    "preserve_source_geometry": true
+  },
+  "tiles": {
+    "enabled": false,
+    "count": 12,
+    "color_quality": 92,
+    "normal_quality": 95,
+    "material_alpha_modes": {}
+  },
+  "game_integration": {
+    "enabled": false,
+    "status": "asset_import_and_roundtrip_only",
+    "missing_verified_inputs": [
+      "centreline and circuit length",
+      "physical surface grid and terrain types",
+      "barriers and collision configuration",
+      "pit-lane entry, exit, and speed-limit coordinates",
+      "sector gates and DRS zones",
+      "verified circuit-specific environment and infrastructure placement",
+      "runtime tile configuration and game selector entry"
+    ]
+  }
+}

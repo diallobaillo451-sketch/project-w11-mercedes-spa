@@ -48,6 +48,14 @@ assemble_check:
   rules:
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
 
+circuit_pipeline_unit:
+  stage: test
+  image: python:3.12
+  script:
+    - python -m unittest discover -s source/tools/circuit_pipeline -p 'test_*.py' -v
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
 typecheck:
   stage: test
   image: node:22
