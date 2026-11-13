@@ -7,8 +7,8 @@ export const DRIVERS = data.drivers as Driver[]
 export const driverById = (id: string) => DRIVERS.find(d => d.id === id) ?? DRIVERS[0]
 /** couleur d'accent lisible pour l'interface (la 1re couleur des équipes sombres est noire / bleu nuit) */
 export const teamAccent = (t: string) => ({ mercedes: '#00d2be', ferrari: '#dc0000', redbull: '#3671c6', mclaren: '#ff8700', renault: '#fff500', alphatauri: '#c8d1db', racingpoint: '#f596c8', alfaromeo: '#a6051a', haas: '#b6babd', williams: '#00a3e0' } as Record<string, string>)[t] ?? '#ffffff'
-/** Calendrier carrière 2020 avec layouts runtime livrés; Abu Dhabi utilise explicitement le tracé Yas 2021 de nuit.
- *  Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer sont retirés. */
+/** Calendrier : manches 2020 dont on a un circuit, plus les tracés reçus hors calendrier 2020.
+ *  Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer sont retirés. `available` = piste jouable aujourd'hui (Spa). */
 export interface Circuit { id: string; name: string; gp: string; country: string; km: number; laps: number; available: boolean; round: number; career: boolean; night?: boolean; rain: number; air: [number, number] }
 const ROWS: [string, string, string, string, number, number, number, number, number, boolean?][] = [
   ['aut', 'Red Bull Ring', 'Autriche', 'AUT', 4.318, 71, 0.28, 14, 26],
@@ -22,7 +22,7 @@ const ROWS: [string, string, string, string, number, number, number, number, num
   ['eif', 'Nürburgring', 'Eifel', 'GER', 5.148, 60, 0.38, 8, 16],
   ['emi', 'Imola', 'Émilie-Romagne', 'ITA', 4.909, 63, 0.3, 12, 20],
   ['bhr', 'Sakhir', 'Bahreïn', 'BHR', 5.412, 57, 0.02, 26, 34, true],
-  ['abu', 'Yas Marina 2021', 'Abou Dabi', 'UAE', 5.281, 58, 0.02, 24, 32, true],
+  ['abu', 'Yas Marina', 'Abou Dabi', 'UAE', 5.554, 55, 0.02, 24, 32, true],
   ['mel', 'Albert Park', 'Australie', 'AUS', 5.303, 58, 0.2, 16, 26],
   ['chn', 'Shanghai', 'Chine', 'CHN', 5.451, 56, 0.22, 16, 24],
   ['can', 'Gilles-Villeneuve', 'Canada', 'CAN', 4.361, 70, 0.18, 16, 26],
@@ -32,8 +32,7 @@ const ROWS: [string, string, string, string, number, number, number, number, num
   ['mys', 'Sepang', 'Malaisie', 'MYS', 5.543, 56, 0.4, 26, 33],
 ]
 export const CIRCUITS: Circuit[] = ROWS.map(([id, name, gp, country, km, laps, rain, lo, hi, night], i) => ({
-  id, name, gp, country, km, laps, rain, air: [lo, hi] as [number, number], night: !!night, career: true,
-  available: id === 'bel' || id === 'abu', round: i + 1,
+  id, name, gp, country, km, laps, rain, air: [lo, hi] as [number, number], night: !!night, career: true, available: id === 'bel', round: i + 1,
 }))
 export interface Car { id: string; name: string; team: string; available: boolean }
 export const CARS: Car[] = [{ id: 'w11', name: 'Mercedes-AMG F1 W11 EQ Performance', team: 'mercedes', available: true },

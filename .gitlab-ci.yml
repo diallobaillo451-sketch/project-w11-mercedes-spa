@@ -29,7 +29,6 @@
       }
       if monza; then echo 'MONZA OK'; du -sh public/assets/monza public/track_monza; else echo 'ATTENTION : Monza non assemblé'; [ -z "$MONZA_STRICT" ] || exit 1; fi
     - du -sh public
-    - cd source/game && YAS_TRACK_DIR=public/track_yas npm run test:physics && cd ../..
 
 pages:
   extends: .assemble
