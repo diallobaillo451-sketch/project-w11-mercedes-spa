@@ -60,9 +60,10 @@ export class Autopilot {
     brake *= this.bScale * Math.sqrt(Math.max(0.08, 1 - lat * lat * 0.9))
     const aR = (car.wheels[2].alpha + car.wheels[3].alpha) / 2
     const latR = Math.min(1, Math.abs(aR) / W11.tyre.aPeak)
-    // hors trajectoire : on ne réaccélère pas tant que l'écart n'est pas résorbé (sans freiner : ça bloquerait la roue intérieure)
-    if (latErr > 1.2 && lat > 0.8) throttle = Math.min(throttle, Math.max(0.15, 0.6 - 0.08 * latErr))
-    if (latR > 0.6) throttle *= Math.max(0.3, 1 - (latR - 0.6) * 1.5)
+    // hors trajectoire : on lève davantage le pied pour rester stable
+    if (latErr > 0.9 && lat > 0.65) throttle = Math.min(throttle, Math.max(0.12, 0.55 - 0.11 * latErr))
+    if (latErr > 2.2) throttle = Math.min(throttle, 0.25)
+    if (latR > 0.55) throttle *= Math.max(0.25, 1 - (latR - 0.55) * 1.7)
     return { throttle: Math.max(0, throttle), brake, steer, drs: true }
   }
 }
