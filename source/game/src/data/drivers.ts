@@ -1,5 +1,5 @@
 /** Grille 2020 : 20 pilotes titulaires, 10 équipes (données dans drivers2020.json, partagées avec tools/drivers_paint.py). */
-import data from './drivers2020.json'
+import data from './drivers2020.json' with { type: 'json' }
 export interface Team { name: string; short: string; c1: string; c2: string; c3: string; chest: string; chest2: string }
 export interface Driver { id: string; first: string; last: string; num: number; team: string; nat: string; flag: string[]; original?: boolean }
 export const TEAMS = data.teams as Record<string, Team>
