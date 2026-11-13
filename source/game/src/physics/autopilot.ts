@@ -71,7 +71,10 @@ export class Autopilot {
     const latR = Math.min(1, Math.abs(aR) / W11.tyre.aPeak)
     // hors trajectoire : on ne réaccélère pas tant que l'écart n'est pas résorbé (sans freiner : ça bloquerait la roue intérieure)
     if (latErr > 1.2 && lat > 0.8) throttle = Math.min(throttle, Math.max(0.15, 0.6 - 0.08 * latErr))
-    if (latR > 0.6) throttle *= Math.max(0.3, 1 - (latR - 0.6) * 1.5)
+    // Share the friction circle with lateral load: avoid demanding full drive torque
+    // while either axle is already using most of its measured cornering capacity.
+    const latUse = Math.max(lat, latR)
+    throttle *= Math.sqrt(Math.max(0.08, 1 - latUse * latUse * 0.9))
     return { throttle: Math.max(0, throttle), brake, steer, drs: true }
   }
 }

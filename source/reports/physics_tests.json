@@ -67,11 +67,11 @@
  {
   "name": "Yas tour auto chargeable et drivable",
   "ok": true,
-  "info": "2:16.635 · 1 tour(s) · s=1 m, d=-0.3 m, v=137.9 km/h, t=138.3 s · max 308.7 km/h · ligne 161 ms · simu 1.2 s"
+  "info": "2:18.440 · 1 tour(s) · s=1 m, d=-0.3 m, v=137.7 km/h, t=140.1 s · max 308.6 km/h · ligne 236 ms · simu 1.8 s"
  },
  {
   "name": "Yas stabilité du tour auto",
   "ok": true,
-  "info": "362/33197 pas hors piste, 0 pas avec choc >0,2"
+  "info": "9/33630 pas hors piste, 10 pas avec choc >0,2"
  }
 ]
