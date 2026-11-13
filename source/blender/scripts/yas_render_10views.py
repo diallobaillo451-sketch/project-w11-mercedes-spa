@@ -26,7 +26,7 @@ def cli_args():
     p.add_argument('--glb', required=True)
     p.add_argument('--width', type=int, default=960)
     p.add_argument('--height', type=int, default=600)
-    p.add_argument('--samples', type=int, default=16)
+    p.add_argument('--samples', type=int, default=8)
     p.add_argument('--mast-count', type=int, default=10)
     p.add_argument('--sky-intensity', type=float, default=0.12)
     p.add_argument('--limit-views', type=int, default=0, help='Render only the first N cameras for a quick check.')
@@ -159,8 +159,8 @@ def make_prepared_skydome(scene, col, sky_path, meta_path, intensity=0.12):
     world.node_tree.nodes.clear()
     bg = world.node_tree.nodes.new('ShaderNodeBackground')
     bg.name = 'Dark night below the prepared horizon'
-    bg.inputs['Color'].default_value = (0.001, 0.0025, 0.009, 1.0)
-    bg.inputs['Strength'].default_value = 1.0
+    bg.inputs['Color'].default_value = (0.006, 0.012, 0.035, 1.0)
+    bg.inputs['Strength'].default_value = 0.65
     wo = world.node_tree.nodes.new('ShaderNodeOutputWorld')
     world.node_tree.links.new(bg.outputs['Background'], wo.inputs['Surface'])
     world['sky_asset'] = str(Path(sky_path).resolve())
@@ -219,8 +219,8 @@ def ground_z(scene, x, y, depsgraph):
 
 def add_floodlight_instances(scene, mast_path, preview_col, mast_col, positions, count, center):
     if len(positions) < count:
-        fallback = [(-1180, 620), (-800, 780), (-350, 820), (120, 820), (600, 780),
-                    (1050, 620), (1120, 100), (850, -520), (300, -820), (-480, -820)]
+        fallback = [(-520, 480), (-160, 480), (200, 480), (560, 440), (720, 180),
+                    (650, 300), (-250, -480), (-700, -220), (-900, -100), (-650, -300)]
         positions = positions + fallback[len(positions):]
     positions = positions[:count]
     depsgraph = bpy.context.evaluated_depsgraph_get()
@@ -238,6 +238,9 @@ def add_floodlight_instances(scene, mast_path, preview_col, mast_col, positions,
             raise RuntimeError(f'Could not find mast root for light {index}')
         root = roots[0]
         for obj in imported:
+            if obj.type == 'MESH' and 'floodlight_ground_blob' in obj.name.lower():
+                bpy.data.objects.remove(obj, do_unlink=True)
+                continue
             move_to_collection(obj, mast_col)
             obj['yas_generated_mast'] = True
             obj['yas_floodlight_index'] = index
@@ -259,9 +262,9 @@ def add_floodlight_instances(scene, mast_path, preview_col, mast_col, positions,
         root['yas_floodlight_index'] = index
 
         light_data = bpy.data.lights.new(f'YAS_FLOODLIGHT_{index:02d}_beam', 'AREA')
-        light_data.energy = 1200000.0
+        light_data.energy = 0.0
         light_data.shape = 'DISK'
-        light_data.size = 48.0
+        light_data.size = 36.0
         light_data.color = (1.0, 0.93, 0.82)
         light_data.use_shadow = False
         light_obj = bpy.data.objects.new(f'YAS_PREVIEW_FLOOD_{index:02d}', light_data)
@@ -269,7 +272,7 @@ def add_floodlight_instances(scene, mast_path, preview_col, mast_col, positions,
         light_obj.location = (x, y, z + 35.0)
         light_obj['preview_only'] = True
         light_obj['yas_generated_night'] = True
-        target = Vector((center.x * 0.45 + x * 0.55, center.y * 0.45 + y * 0.55, center.z + 5.0))
+        target = Vector((x, y, z + 2.0))
         look_at(light_obj, target)
         lamps.append(light_obj)
     return positions, lamps
@@ -277,7 +280,7 @@ def add_floodlight_instances(scene, mast_path, preview_col, mast_col, positions,
 
 def add_moon_fill(scene, col, center):
     data = bpy.data.lights.new('YAS_MOON_FILL', 'SUN')
-    data.energy = 0.35
+    data.energy = 1.2
     data.angle = math.radians(22.0)
     data.color = (0.40, 0.52, 0.85)
     data.use_shadow = False
@@ -288,6 +291,28 @@ def add_moon_fill(scene, col, center):
     obj['preview_only'] = True
     obj['yas_generated_night'] = True
     return obj
+
+
+def add_preview_softboxes(scene, col, center, span):
+    """Soft preview fill lifts the dark model while retaining its night sky."""
+    def add(name, offset, target_offset, energy, color, size):
+        data = bpy.data.lights.new(name, 'AREA')
+        data.energy = energy
+        data.color = color
+        data.shape = 'DISK'
+        data.size = size
+        obj = bpy.data.objects.new(name, data)
+        col.objects.link(obj)
+        obj.location = (center.x + offset[0], center.y + offset[1], center.z + offset[2])
+        look_at(obj, (center.x + target_offset[0], center.y + target_offset[1], center.z + target_offset[2]))
+        obj['preview_only'] = True
+        obj['yas_generated_night'] = True
+        return obj
+
+    add('YAS_PREVIEW_SOFTBOX_KEY', (0.0, -0.12 * span, 0.48 * span),
+        (0.0, 0.0, 0.0), 3_500_000.0, (0.78, 0.85, 1.0), 0.52 * span)
+    add('YAS_PREVIEW_SOFTBOX_FILL', (0.40 * span, 0.25 * span, 0.34 * span),
+        (0.0, 0.0, 0.02 * span), 2_400_000.0, (1.0, 0.74, 0.48), 0.42 * span)
 
 
 def add_camera(scene, col, name, pos, target, lens=50.0, ortho=None):
@@ -361,8 +386,9 @@ def main():
     masts = link_collection(scene, 'YAS Marina | floodlight instances')
     make_prepared_skydome(scene, presentation, a.sky, a.sky_meta, a.sky_intensity)
     positions, lamps = add_floodlight_instances(scene, a.mast, presentation, masts,
-                                                 old_positions, a.mast_count, center)
+                                                 [], a.mast_count, center)
     add_moon_fill(scene, presentation, center)
+    span = max(hi.x - lo.x, hi.y - lo.y, hi.z - lo.z, 1.0)
 
     # Preview settings are tuned for fast, clean EEVEE output in 5.2.4.
     scene.render.engine = 'BLENDER_EEVEE'
@@ -377,7 +403,7 @@ def main():
     scene.render.image_settings.color_mode = 'RGB'
     scene.render.film_transparent = False
     scene.view_settings.view_transform = 'AgX'
-    scene.view_settings.exposure = 0.5
+    scene.view_settings.exposure = 1.45
     try:
         scene.view_settings.look = 'AgX - Medium High Contrast'
     except Exception:
@@ -388,8 +414,8 @@ def main():
     # intentionally aimed at real visible sectors of this circuit mesh.
     cx, cy, cz = center.x, center.y, center.z
     views = [
-        ('01_overview', 'Full circuit — aerial overview', (cx, cy, cz + 4700), (cx, cy, cz), 50, 3550),
-        ('02_hero_straight', 'Main straight — night approach', (cx + 150, cy + 2250, cz + 310), (cx, cy + 640, cz + 18), 58, None),
+        ('01_overview', 'Full circuit — aerial overview', (cx, cy, cz + 5000), (cx, cy, cz), 50, 2200),
+        ('02_hero_straight', 'Main straight — night approach', (cx - 500, cy + 1000, cz + 220), (cx - 100, cy + 460, cz + 8), 90, None),
         ('03_pit_complex', 'Pit complex — garages and entry', (cx - 1680, cy - 1420, cz + 520), (cx - 790, cy - 480, cz + 20), 52, None),
         ('04_hotel_sector', 'Hotel sector — floodlit bend', (cx + 1580, cy + 1450, cz + 850), (cx + 650, cy + 500, cz + 24), 52, None),
         ('05_north_loop', 'North loop — elevated view', (cx + 980, cy + 1760, cz + 600), (cx + 570, cy + 720, cz + 20), 58, None),
@@ -397,20 +423,22 @@ def main():
         ('07_central_chicane', 'Central link — track-level', (cx + 520, cy - 1230, cz + 430), (cx + 190, cy + 70, cz + 20), 58, None),
         ('08_west_sweeper', 'West sweeper — floodlight view', (cx - 1830, cy + 420, cz + 520), (cx - 920, cy + 180, cz + 18), 60, None),
         ('09_east_sweeper', 'East sweeper — night panorama', (cx + 2090, cy + 430, cz + 720), (cx + 820, cy + 200, cz + 24), 56, None),
-        ('10_full_hero', 'Yas Marina — full night hero', (cx + 40, cy - 3200, cz + 1460), (cx, cy + 40, cz + 20), 42, None),
+        ('10_full_hero', 'Yas Marina — full night hero', (cx + 1200, cy - 1800, cz + 1500), (cx, cy, cz + 20), 50, None),
     ]
     if a.limit_views > 0:
         views = views[:max(1, min(a.limit_views, len(views)))]
     cameras = []
     for slug, title, pos, target, lens, ortho in views:
+        if slug not in {'01_overview', '02_hero_straight', '10_full_hero'}:
+            target_v = Vector(target)
+            pos = target_v + (Vector(pos) - target_v) * 0.62
         cam = add_camera(scene, presentation, slug, pos, target, lens=lens, ortho=ortho)
         cam['view_title'] = title
         cameras.append((slug, title, cam))
 
-    # Keep the realistic waterline horizon from the prepared sky and aim each
-    # floodlight beam toward the center of the mapped circuit.
+    # Keep the fixture geometry; an even moon fill avoids harsh pools on the model.
     for light in lamps:
-        light.data.energy = 1200000.0
+        light.data.energy = 0.0
     scene['night_environment'] = 'Repository-prepared sky_night_4k.webp + sky_night.json; decoded using the repository skydome mapping.'
     scene['night_floodlight_asset'] = str(Path(a.mast).resolve())
     scene['night_floodlight_instances'] = len(positions)
