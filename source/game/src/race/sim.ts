@@ -288,9 +288,17 @@ export class RaceSim {
     vt = C.speedCap(r, i, vt)
     if (C.vsc && r.mode === 'race') C.vscOver(r, r.v, r.prof.v[i] * 0.62, dt)
     // ─ suivre (pas de place à côté) : on ne rentre pas dans la voiture devant
-    if (ahead) { const v0 = ahead.v, gmin = 2.5 + r.v * 0.09, gg = gA - CL; vt = Math.min(vt, Math.max(0, v0 + (gg - gmin) * 0.9)); if (gg < 1) vt = Math.min(vt, v0 - 2)
-      // freinage d'urgence (le pilote voit la voiture devant ralentir) : jamais de rapprochement sous la marge
-      if (gg < gmin * 0.6 && r.v > v0 && !r.err) r.v = Math.max(v0, r.v - 60 * dt) }
+    if (ahead) {
+      const v0 = ahead.v
+      // marge plus large à haute vitesse + réaction plus agressive
+      const gmin = 3.4 + r.v * 0.13
+      const gg = gA - CL
+      vt = Math.min(vt, Math.max(0, v0 + (gg - gmin) * 1.15))
+      if (gg < 1.8) vt = Math.min(vt, v0 - 3)
+      // freinage d'urgence plus dur : jamais de rapprochement sous la marge
+      if (gg < gmin * 0.75 && r.v > v0 && !r.err) r.v = Math.max(v0 - 1, r.v - 85 * dt)
+      if (gg < 1.0 && !r.err) r.v = Math.max(0, Math.min(r.v, v0 - 4))
+    }
     // ─ tactique (attaque, défense, bleus, trafic) toutes les ~0,2 s
     this.tactics(r, ahead, gA, behind, gB, dt)
     // ─ intégration longitudinale
