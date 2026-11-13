@@ -17,7 +17,7 @@ import { DRIVERS, carOfTeam } from '../data/drivers.ts'
 import type { Pitlane } from '../track/pitlane.ts'
 import type { Vehicle } from '../physics/vehicle.ts'
 import { drsZones, type SessionKind } from '../core/session.ts'
-import { SPA_Q, POLE_2020, SKILL, PIT_CREW, RELIAB, GARAGE_ORDER, TYRE, type Comp, type Skill } from './data.ts'
+import { SPA_Q, POLE_2020, SKILL, PIT_CREW, RELIAB, INCIDENT_RATE_PER_LAP, PUNCTURE_RATE_PER_LAP, GARAGE_ORDER, TYRE, type Comp, type Skill } from './data.ts'
 import { RaceControl } from './control.ts'
 import { HybridBank, type DriveCmd } from './hybrid.ts'
 
@@ -27,6 +27,14 @@ export class Rng {
   next() { let t = (this.s = (this.s + 0x6d2b79f5) >>> 0); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
   gauss() { const u = Math.max(1e-9, this.next()), v = this.next(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) }
   pick<T>(a: T[]) { return a[Math.floor(this.next() * a.length)] }
+}
+/** Risque d’incident du modèle, après intégration sur l’exposition piste et réglages de course (pas une statistique FIA). */
+export function incidentProbability(ratePerLap: number, exposure: number, situation: number, consistency: number, difficulty: number) {
+  const values = [ratePerLap, exposure, situation, consistency, difficulty]
+  if (!values.every(Number.isFinite)) return 0
+  const skillRisk = Math.max(0, (1 - consistency) / 0.1)
+  const level = Math.max(0.4, Math.min(1, difficulty / 100))
+  return Math.min(0.05, Math.max(0, ratePerLap * exposure * situation * skillRisk * (1.5 - 0.95 * level)))
 }
 export type AiMode = 'garage' | 'grid' | 'formation' | 'race' | 'out' | 'push' | 'cool' | 'in' | 'pit' | 'spun' | 'dnf' | 'redq' | 'sc'
 export interface TeamProf { v: Float64Array; vD: Float64Array; T: number; mu: number; aMax: number }
@@ -40,7 +48,7 @@ export interface Racer {
   mode: AiMode; prevMode: AiMode; out: string | null
   kq: number; prof: TeamProf
   off: number | null; side: number; attackT: number; defMoved: boolean; yieldT: number; weave: number
-  err: { kind: string; t: number } | null; stopT: number
+  err: { kind: string; t: number } | null; stopT: number; incidentCooldown: number
   drs: boolean; drsArmed: number
   pitP: number; pitT: number; pitWhy: string; wantPit: string | null; plan: { lap: number; c: Comp }[]; boxP: number; stops: number
   pen: number; dtPend: number; sgPend: number; penServed: number; warnings: number; bw: boolean; gridPen: number
@@ -115,7 +123,7 @@ export class RaceSim {
       dist: 0, s: 0, d: 0, v: 0, lat: 0, idx: 0, lastS: 0, laps: 0, lapT0: NaN, secT0: NaN, sector: 0, sectors: [], last: NaN, best: NaN, lapValid: true, lapTimes: [], bestBy: {},
       tyre: { c: this.kind === 'race' ? 'M' : 'S', age: 0, temp: 0.8, flat: 0, punct: 0, used: [] }, fuel,
       dmg: { fw: 0, rw: 0, floor: 0 }, mode: 'race', prevMode: 'race', out: null, kq, prof,
-      off: null, side: 0, attackT: 0, defMoved: false, yieldT: 0, weave: this.rng.next() * 6, err: null, stopT: 0, drs: false, drsArmed: -1,
+      off: null, side: 0, attackT: 0, defMoved: false, yieldT: 0, weave: this.rng.next() * 6, err: null, stopT: 0, incidentCooldown: 0, drs: false, drsArmed: -1,
       pitP: 0, pitT: 0, pitWhy: '', wantPit: null, plan: [], boxP: 0, stops: 0,
       pen: 0, dtPend: 0, sgPend: 0, penServed: 0, warnings: 0, bw: false, gridPen: 0,
       gap: 0, int: 0, pos: 0, finished: false, finishT: 0, blueT: 0, slot: 0, runs: [], runIdx: 0, pushLeft: 0,
@@ -428,37 +436,64 @@ export class RaceSim {
     }
     return true
   }
-  /** erreurs RARES, aux freinages et gros virages, selon le pilote et la situation (E, voir docs/RESEARCH_RACE_2020.md) */
+  /** Probabilité par pas : nulle avant 60 % d’usure, puis modulée par l’usure et la charge latérale. */
+  private punctureChance(r: Racer, i: number, ds: number) {
+    if (this.kind !== 'race' || ds <= 0 || r.tyre.punct > 0 || r.out) return 0
+    const compound = TYRE[r.tyre.c], wear = r.tyre.age * this.wearScale / compound.cliff
+    if (wear < 0.6) return 0
+    const wearRisk = Math.min(2.8, 0.08 + (wear - 0.6) * 2.5)
+    const lateralG = Math.min(6, Math.max(0, r.v) ** 2 * Math.abs(this.line.k[i] ?? 0) / 9.81)
+    const loadRisk = Math.min(1.9, 1 + Math.max(0, lateralG - 2.4) * 0.3)
+    const flatRisk = 1 + Math.min(1, Math.max(0, r.tyre.flat)) * 0.6
+    const driverRisk = 0.85 + (1 - r.sk.tyre) * 1.5
+    const cautionRisk = this.ctrl.sc.active || this.ctrl.vsc || r.mode === 'sc' ? 0.2 : 1
+    const rate = PUNCTURE_RATE_PER_LAP * wearRisk * loadRisk * flatRisk * driverRisk * cautionRisk
+    return 1 - Math.exp(-rate * ds / this.L)
+  }
+  private puncture(r: Racer) {
+    if (r.tyre.punct > 0 || r.out) return
+    r.tyre.punct = 1
+    r.wantPit = 'crevaison'
+    r.v = Math.min(r.v, (r.prof.v[r.idx] ?? r.v) * 0.6)
+    r.incidentCooldown = Math.max(r.incidentCooldown, 8)
+    this.ctrl.incident(r, r.s, 'debris', 22)
+  }
+  /** erreurs rares aux freinages et gros virages, selon pilote, situation et taux par voiture-tour */
   private errors(r: Racer, i: number, ds: number, ahead: Racer | null, gA: number, behind: Racer | null, gB: number, dt: number) {
+    r.incidentCooldown = Math.max(0, r.incidentCooldown - dt)
     if (r.err) { r.err.t -= dt; if (r.err.t <= 0) { if (r.err.kind === 'spin') { r.mode = 'spun'; r.stopT = 4 + this.rng.next() * 8 } r.err = null } }
     if (r.mode === 'spun') { r.v = Math.max(0, r.v - 12 * dt); r.spin += dt * (r.v > 3 ? 6 : 0); r.stopT -= dt
       // repart quand la voie est libre (≥ 3 s devant la prochaine voiture)
       if (r.stopT <= 0) { const clear = r.stopT < -15 || !this.cars.some(o => o !== r && this.onTrack(o) && o.v > 8 && this.road(o.s, r.s) > 0 && this.road(o.s, r.s) < Math.max(60, o.v * 3)); if (clear) { r.mode = this.kind === 'race' ? 'race' : 'in'; r.spin = 0; this.ctrl.clearIncident(r) } }
       return }
     if (r.mode === 'formation' || r.mode === 'grid') return
+    if (r.err?.kind === 'mech' || r.incidentCooldown > 0) return
     // panne mécanique (par tour, indépendante du lieu)
     if (this.kind === 'race' && this.rng.next() < (RELIAB[r.team] ?? 0.0005) * ds / this.L) {
+      r.incidentCooldown = 8
       if (this.rng.next() < 0.55) { r.err = { kind: 'mech', t: 1e9 }; r.wantPit = 'panne'; this.ctrl.msg(`${r.code} : problème mécanique, rentre au ralenti`, 'info') }
       else { this.retire(r, 'Panne moteur'); this.ctrl.incident(r, r.s, 'stopped') }
       return
     }
+    const punctureP = this.punctureChance(r, i, ds)
+    if (punctureP > 0 && this.rng.next() < punctureP) { this.puncture(r); return }
     const w = this.crit[i] * ds / this.ds / this.critSum
-    if (w <= 0) return
-    const f = (1 - r.sk.cons) / 0.1, wet = this.wetness()
+    if (this.critSum <= 1e-6 || this.crit[i] <= 0 || !Number.isFinite(w) || w <= 0) return
+    const wet = this.wetness()
     let M = 1
     if (wet > 0.25) M *= 1 + wet * 4 * (1.6 - r.sk.wet)
     if (r.tyre.temp < 0.75) M *= 2.5
     if (r.tyre.age * this.wearScale > TYRE[r.tyre.c].cliff) M *= 2
     if ((ahead && gA < r.v * 0.6) || (behind && gB < r.v * 0.5)) M *= 1.8
     if (r.dmg.fw > 0.3) M *= 1.5
+    if (r.laps === 0 || this.ctrl.restartHold) M *= 1.25 * (1 + (1 - r.sk.craft) * 0.35)
     const late = r.attackT > 0 ? 2.5 : 1, push = r.mode === 'push' ? 1.4 : 1
     if (r.mode === 'sc' || this.ctrl.sc.active || this.ctrl.vsc) M *= 0.15
-    const diffM = 1.5 - 0.95 * (this.difficulty / 100)
-    const p = (x: number) => this.rng.next() < x * w * M * f * diffM
-    if (p(0.0003 * (wet > 0.3 ? 2 : 1))) { this.crash(r); return }
-    if (p(0.0007)) { r.err = { kind: 'spin', t: 0.8 }; r.v *= 0.7; this.ctrl.incident(r, r.s, 'spin'); r.tyre.flat = Math.min(1, r.tyre.flat + 0.5); return }
-    if (p(0.010 * late * push)) { r.err = { kind: 'lock', t: 0.9 }; r.tyre.flat = Math.min(1, r.tyre.flat + 0.08); if (r.tyre.flat > 0.6) r.wantPit = r.wantPit ?? 'plat'; return }
-    if (p(0.010 * late * push)) { r.err = { kind: 'wide', t: 1.6 }; r.side = Math.sign(this.line.e[(i + Math.round(80 / this.ds)) % this.N]) || 1; return }
+    const p = (x: number) => this.rng.next() < incidentProbability(x, w, M, r.sk.cons, this.difficulty)
+    if (p(INCIDENT_RATE_PER_LAP.crash * (wet > 0.3 ? 2 : 1))) { this.crash(r); r.incidentCooldown = 8; return }
+    if (p(INCIDENT_RATE_PER_LAP.spin)) { r.err = { kind: 'spin', t: 0.8 }; r.incidentCooldown = 5; r.v *= 0.7; this.ctrl.incident(r, r.s, 'spin'); r.tyre.flat = Math.min(1, r.tyre.flat + 0.5); return }
+    if (p(INCIDENT_RATE_PER_LAP.lock * late * push)) { r.err = { kind: 'lock', t: 0.9 }; r.incidentCooldown = 2; r.tyre.flat = Math.min(1, r.tyre.flat + 0.08); if (r.tyre.flat > 0.6) r.wantPit = r.wantPit ?? 'plat'; return }
+    if (p(INCIDENT_RATE_PER_LAP.wide * late * push)) { r.err = { kind: 'wide', t: 1.6 }; r.incidentCooldown = 2; r.side = Math.sign(this.line.e[(i + Math.round(80 / this.ds)) % this.N]) || 1; return }
   }
   crash(r: Racer) {
     const heavy = this.rng.next() < 0.7
@@ -639,7 +674,8 @@ export class RaceSim {
     if (wet > 0.75 && r.tyre.c !== 'W' && left > 1) r.wantPit = 'pluie forte'
     else if (wet > 0.35 && slick && left > 1) r.wantPit = 'pluie'
     if (wet < 0.18 && !slick && left > 2) r.wantPit = 'piste sèche'
-    if (r.dmg.fw > 0.3 || r.tyre.punct) r.wantPit = 'dégâts'
+    if (r.tyre.punct) r.wantPit = 'crevaison'
+    else if (r.dmg.fw > 0.3) r.wantPit = 'dégâts'
     if (r.dtPend > 0) r.wantPit = 'drive'
     if (r.sgPend > 0) r.wantPit = 'stop-go'
     if (this.ctrl.sc.active && r.plan.some(p => p.lap - r.laps <= 8 && p.lap >= r.laps - 1) && left > 1) r.wantPit = r.wantPit ?? 'safety car'
@@ -731,6 +767,9 @@ export class RaceSim {
   private contactDamage(rear: Racer, front: Racer, dv: number, side: boolean) {
     if ((globalThis as any).process?.env?.CDBG && dv > 2.5) console.log('CONTACT', this.t.toFixed(2), rear.code, front.code, 'dv', dv.toFixed(1), 'side', side, 's', rear.s.toFixed(0), front.s.toFixed(0), 'd', rear.d.toFixed(2), front.d.toFixed(2), 'v', rear.v.toFixed(1), front.v.toFixed(1), rear.mode, front.mode, rear.off?.toFixed(1), front.off?.toFixed(1), rear.err?.kind, front.err?.kind)
     if (dv < 2.5) return
+    const a = Math.min(rear.i, front.i), b = Math.max(rear.i, front.i), key = a * 100 + b
+    if (this.t - (this.contactDamageAt.get(key) ?? -Infinity) < 0.5) { this.ctrl.collision(rear, front, dv, side); return }
+    this.contactDamageAt.set(key, this.t)
     const sev = Math.min(1, (dv - 2.5) / 14)
     if (!side) { if (!rear.player) rear.dmg.fw = Math.min(1, rear.dmg.fw + sev * 1.2); if (!front.player && this.rng.next() < sev * 0.6) front.tyre.punct = 1 }
     else for (const r of [rear, front]) if (!r.player && this.rng.next() < sev * 0.5) r.tyre.punct = 1
@@ -738,6 +777,7 @@ export class RaceSim {
     this.ctrl.collision(rear, front, dv, side)
   }
   private pAhead = new Map<Racer, number>()
+  private contactDamageAt = new Map<number, number>()
   /** règles appliquées au joueur : dépassement sous drapeau jaune / SC / VSC, delta VSC (vitesse), drapeau bleu ignoré */
   private playerRules(p: Racer, c: Vehicle) {
     const C = this.ctrl

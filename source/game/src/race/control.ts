@@ -344,22 +344,30 @@ export class RaceControl {
   // ───────────── incidents
   incident(r: Racer | null, s: number, kind: Incident['kind'], dur?: number) {
     const S = this.sim, onTrack = r ? Math.abs(r.d) < (r.d < 0 ? S.track.wl[r.idx] : S.track.wr[r.idx]) + 1 : true
-    const sev: Incident['sev'] = kind === 'crash' || (kind === 'stopped' && onTrack) || (kind === 'spin' && onTrack) ? 'double' : 'yellow'
+    const sev: Incident['sev'] = (kind === 'crash' || kind === 'stopped' || kind === 'spin') && onTrack ? 'double' : 'yellow'
     const until = S.t + (dur ?? (kind === 'crash' ? 120 + S.rng.next() * 90 : kind === 'stopped' ? 60 + S.rng.next() * 40 : 12))
     this.incidents.push({ r, s, kind, sev, until, t: S.t })
     const where = `poste ${this.postBefore(s).n}`
     if (kind === 'spin') this.msg(`${r?.code ?? ''} en tête-à-queue (${where}) · ${sev === 'double' ? 'double drapeau jaune' : 'drapeau jaune'}`, 'flag')
     if (kind === 'crash' || kind === 'stopped') {
-      this.msg(`${kind === 'crash' ? 'ACCIDENT' : 'VOITURE ARRÊTÉE'} : ${r?.code ?? ''} (${where}) · double drapeau jaune`, 'flag')
-      // décision de la direction de course (E) : course → SC / VSC / jaunes ; essais-qualif → drapeau rouge pour une voiture dans le mur
+      this.msg(`${kind === 'crash' ? 'ACCIDENT' : 'VOITURE ARRÊTÉE'} : ${r?.code ?? ''} (${where}) · ${sev === 'double' ? 'double drapeau jaune' : 'drapeau jaune'}`, 'flag')
+      // SC si épave/voiture à récupérer sur la piste; VSC si récupération moins risquée; le rouge exige un blocage ou plusieurs accidents rapprochés.
       const x = S.rng.next()
       if (S.kind === 'race' && this.phase === 'racing') {
-        const bad = this.incidents.filter(q => q.kind === 'crash' && S.t - q.t < 30).length
-        if (kind === 'crash' && (bad >= 2 || x < 0.04)) this.redFlag(bad >= 2 ? 'plusieurs voitures accidentées' : 'barrière endommagée')
-        else if (kind === 'crash' && x < 0.6) this.scDeploy(`accident de ${r?.code}`)
-        else if (x < 0.85) this.vscDeploy(`${r?.code} arrêté en bord de piste`)
+        const pileup = this.incidents.filter(q => q.kind === 'crash' && S.t - q.t < 30 && Math.abs(S.road(q.s, s)) <= 120).length >= 2
+        const edge = r ? (r.d < 0 ? S.track.wl[r.idx] : S.track.wr[r.idx]) : 0
+        const wall = r ? (r.d < 0 ? S.track.WL[r.idx] : S.track.WR[r.idx]) : 0
+        const blocked = kind === 'crash' && !!r && onTrack && wall - edge <= 2.5
+        if (kind === 'crash' && (pileup || blocked)) this.redFlag(pileup ? 'plusieurs voitures accidentées au même endroit' : 'épave bloquant la piste')
+        else if (kind === 'crash' && onTrack && x < 0.55) this.scDeploy(`accident de ${r?.code}`)
+        else if (kind === 'crash' && onTrack && x < 0.95) this.vscDeploy(`${r?.code} accidenté sur la piste`)
+        else if (kind === 'crash' && !onTrack && x < 0.7) this.vscDeploy(`${r?.code} accidenté en dégagement`)
+        else if (kind === 'stopped' && onTrack && x < 0.32) this.scDeploy(`${r?.code} arrêté sur la piste`)
+        else if (kind === 'stopped' && onTrack && x < 0.9) this.vscDeploy(`${r?.code} arrêté sur la piste`)
+        else if (kind === 'stopped' && !onTrack && x < 0.6) this.vscDeploy(`${r?.code} arrêté en dégagement`)
       } else if (S.kind !== 'race' && kind === 'crash') this.redFlag(`${r?.code} dans le mur`)
     }
+    if (kind === 'debris') this.msg(`${r?.code ?? ''} : crevaison / débris (${where}) · drapeau jaune local`, 'flag')
   }
   clearIncident(r: Racer) { for (const inc of this.incidents.slice()) if (inc.r === r && inc.kind === 'spin') this.endIncident(inc) }
   private endIncident(inc: Incident) { this.incidents.splice(this.incidents.indexOf(inc), 1); if (inc.r?.mode === 'dnf') { inc.r.out = inc.r.out ?? 'Accident'; (inc.r as Racer & { _goneAt?: number })._goneAt = this.sim.t + 8 } if (!this.sc.active && !this.vsc && !this.red) this.msg(`Poste ${this.postBefore(inc.s).n} : piste dégagée, drapeau vert`, 'flag') }
@@ -386,18 +394,19 @@ export class RaceControl {
     this.msg(`DÉCISION — ${r.code} : ${P[c.pen] ?? c.pen} (${c.reason})`, c.pen === 'none' ? 'rc' : 'pen')
     void S
   }
-  /** collision : responsabilité (E, logique des commissaires 2020) — accrochage par l'arrière à forte vitesse relative,
-   *  ou changement de trajectoire vers une voiture déjà à côté ; sinon incident de course */
+  /** collision : responsabilité (E, logique des commissaires 2020) — accrochage par l’arrière à forte vitesse relative,
+   *  ou changement de trajectoire latéral net vers une voiture déjà à côté ; sinon incident de course. */
   collision(rear: Racer, front: Racer, dv: number, side: boolean) {
     const S = this.sim
     if (S.kind !== 'race' || this.phase !== 'racing' && this.phase !== 'chequered') return
-    const key = rear.i * 100 + front.i, last = (this as RaceControl & { _ck?: Map<number, number> })._ck ?? new Map<number, number>(); (this as RaceControl & { _ck?: Map<number, number> })._ck = last
-    if ((last.get(key) ?? -99) > S.t - 5) return; last.set(key, S.t)
+    const key = Math.min(rear.i, front.i) * 100 + Math.max(rear.i, front.i), last = (this as RaceControl & { _ck?: Map<number, number> })._ck ?? new Map<number, number>(); (this as RaceControl & { _ck?: Map<number, number> })._ck = last
+    if ((last.get(key) ?? -99) > S.t - 5) return
     const hurt = (r: Racer) => r.dmg.fw > 0.3 || r.tyre.punct > 0 || r.mode === 'spun' || !!r.out
     let culprit: Racer | null = null, victim: Racer | null = null
     if (!side && dv > 4 && !front.err) { culprit = rear; victim = front }
-    else if (side) { const toward = (a: Racer, b: Racer) => (a.player ? a.lat : ((a as Racer & { _dr?: number })._dr ?? 0)) * Math.sign(b.d - a.d); const ta = toward(rear, front), tb = toward(front, rear); if (Math.max(ta, tb) > 0.9) { culprit = ta > tb ? rear : front; victim = culprit === rear ? front : rear } }
-    if (!culprit) { if (dv > 5 || hurt(rear) || hurt(front)) this.caseNew(rear, front, 'contact', 'none', 'incident de course', 12); return }
+    else if (side) { const toward = (a: Racer, b: Racer) => (a.player ? a.lat : ((a as Racer & { _dr?: number })._dr ?? 0)) * Math.sign(b.d - a.d); const ta = toward(rear, front), tb = toward(front, rear); if (Math.max(ta, tb) > 1.4 && Math.abs(ta - tb) > 0.5) { culprit = ta > tb ? rear : front; victim = culprit === rear ? front : rear } }
+    if (!culprit) { if (dv > 5 || hurt(rear) || hurt(front)) { last.set(key, S.t); this.caseNew(rear, front, 'contact', 'none', 'incident de course', 12) } return }
+    last.set(key, S.t)
     setTimeout(() => void 0, 0)
     const pen = hurt(victim!) ? '10s' : '5s'
     this.caseNew(culprit, victim, side ? 'collision (changement de trajectoire)' : 'collision par l’arrière', pen, 'a provoqué une collision')

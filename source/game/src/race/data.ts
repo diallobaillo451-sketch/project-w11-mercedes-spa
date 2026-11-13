@@ -23,8 +23,12 @@ export const SKILL: Record<string, Skill> = {
 }
 /** temps d'immobilisation moyen à l'arrêt (s) — E d'après le classement DHL des arrêts 2020 (Red Bull et Mercedes devant) */
 export const PIT_CREW: Record<string, number> = { redbull: 2.25, mercedes: 2.4, mclaren: 2.5, ferrari: 2.6, renault: 2.7, alphatauri: 2.65, racingpoint: 2.75, alfaromeo: 2.7, williams: 2.85, haas: 2.95 }
-/** fiabilité (pannes / tour de course, E) : 2020 ≈ 1 abandon mécanique par course pour tout le plateau */
+/** fiabilité (pannes / voiture-tour, E) : ≈0,5 événement mécanique par course complète de 20 voitures × 52 tours */
 export const RELIAB: Record<string, number> = { mercedes: 0.0003, redbull: 0.0005, ferrari: 0.0004, mclaren: 0.0005, renault: 0.0006, alphatauri: 0.0005, racingpoint: 0.0004, alfaromeo: 0.0006, haas: 0.0008, williams: 0.0006 }
+/** taux de base par voiture-tour avant compétence, météo, trafic et pression (E; un gros crash reste rare) */
+export const INCIDENT_RATE_PER_LAP = { crash: 0.001, spin: 0.0025, lock: 0.006, wide: 0.0065 }
+/** crevaisons indépendantes par voiture-tour (E), ensuite modulées par usure et charge latérale */
+export const PUNCTURE_RATE_PER_LAP = 0.00024
 /** ordre des garages à Spa 2020 depuis l'entrée (FIA, plan du directeur de course ; repris de New Bot RECHERCHE_GARAGE.md) */
 export const GARAGE_ORDER = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
 /** Pirelli Spa 2020 : C2 dur / C3 medium / C4 tendre — P. Rythme et usure : E (ordres de grandeur Pirelli/presse :
