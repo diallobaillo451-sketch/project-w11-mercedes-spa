@@ -4,7 +4,6 @@
  *  avant les feux. Ancres Ty consommées si elles sont dans la scène, ignorées sinon. */
 import * as THREE from 'three'
 import type { RaceSim, Racer } from '../race/sim.ts'
-import { CIRCUIT } from '../core/circuit.ts'
 import { loadGLB, type Renderer } from './renderer.ts'
 import { carOfTeam, teamAccent } from '../data/drivers.ts'
 import { dlog } from '../diag.ts'
@@ -209,8 +208,9 @@ export class FieldView {
   private async teamHi(team: string): Promise<THREE.Object3D> {
     const url = team === 'mercedes' ? './assets/w11_lh2020_high.glb' : `./cars/${carOfTeam(team)}_hi.glb`
     const ktx = this.ren.ktxAny()
-    // Cette copie HD compressée est une optimisation du démarrage Yas uniquement.
-    const g = team === 'mercedes' && CIRCUIT.id === 'yas'
+    // Même atlas HD compressé que le joueur : ne pas réintroduire une seconde
+    // copie RGBA de la W11 dans le plateau, juste après avoir allégé son boot.
+    const g = team === 'mercedes'
       ? await loadGLB('./assets/w11_lh2020_high_ktx2.glb', () => {}, ktx).catch(e => {
         dlog('IA mercedes KTX2 → repli WebP : ' + (e as Error).message)
         return loadGLB(url, () => {}, ktx)
