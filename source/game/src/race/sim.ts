@@ -9,6 +9,7 @@
  *  Choix assumé (E) : les IA ne font pas tourner le modèle de pneus/suspension complet du joueur (19 × 240 Hz serait
  *  trop lourd pour l'iPhone) ; leur dynamique est longitudinale + latérale dans le repère de la piste. */
 import type { TrackSurface } from '../track/surface.ts'
+import { clampToLegalCenterOffset, simulatedCarLegalEdges, simulatedCarOutsideTrack, TRACK_LIMIT_GRACE_SECONDS } from '../track/limits.ts'
 import { type RacingLine, speedProfile, profileLapTime } from '../track/racingLine.ts'
 import { CARS2020, applyCarPhysics, currentCar } from '../physics/cars2020.ts'
 import { W11 } from '../physics/params.ts'
@@ -17,7 +18,7 @@ import { DRIVERS, carOfTeam } from '../data/drivers.ts'
 import type { Pitlane } from '../track/pitlane.ts'
 import type { Vehicle } from '../physics/vehicle.ts'
 import { drsZones, type SessionKind } from '../core/session.ts'
-import { SPA_Q, POLE_2020, SKILL, PIT_CREW, RELIAB, INCIDENT_RATE_PER_LAP, PUNCTURE_RATE_PER_LAP, GARAGE_ORDER, TYRE, type Comp, type Skill } from './data.ts'
+import { SPA_Q, SPA_GRID, MONZA_Q, MONZA_GRID, POLE_2020, SKILL, PIT_CREW, RELIAB, INCIDENT_RATE_PER_LAP, PUNCTURE_RATE_PER_LAP, GARAGE_ORDER, TYRE, type Comp, type Skill } from './data.ts'
 import { RaceControl } from './control.ts'
 import { HybridBank, type DriveCmd } from './hybrid.ts'
 
@@ -48,7 +49,7 @@ export interface Racer {
   mode: AiMode; prevMode: AiMode; out: string | null
   kq: number; prof: TeamProf
   off: number | null; side: number; attackT: number; defMoved: boolean; yieldT: number; weave: number
-  err: { kind: string; t: number } | null; stopT: number; incidentCooldown: number
+  err: { kind: string; t: number } | null; stopT: number; incidentCooldown: number; trackLimitT: number; trackLimitReported: boolean
   drs: boolean; drsArmed: number
   pitP: number; pitT: number; pitWhy: string; wantPit: string | null; plan: { lap: number; c: Comp }[]; boxP: number; stops: number
   pen: number; dtPend: number; sgPend: number; penServed: number; warnings: number; bw: boolean; gridPen: number
@@ -113,8 +114,8 @@ export class RaceSim {
     // qualif : pilotes éliminés à la séance précédente (restent au garage, classés après)
     for (const id of o.exclude ?? []) { const r = this.cars.find(c => c.id === id && !c.player); if (r) { r.out = 'Éliminé'; r.mode = 'garage'; r.runs = [] } }
   }
-  /** ordre par défaut : temps réels de Spa 2020 (pilote du joueur à sa place réelle) */
-  defaultOrder(_p: string) { return Object.keys(SPA_Q).sort((a, b) => SPA_Q[a] - SPA_Q[b]) }
+  /** grille réellement qualifiée pour Spa ou Monza 2020, selon le circuit actif */
+  defaultOrder(_p: string) { return (this.circuit === 'ita' ? MONZA_GRID : SPA_GRID).slice() }
   private makeRacer(id: string, player: boolean): Racer {
     const d = DRIVERS.find(x => x.id === id)!, team = d.team, prof = this.profs.get(team)!
     const tq = this.targetQ(id), kq = Math.min(1.015, prof.T / tq * 1.0065) // C : compense la gomme qui vieillit et le suivi discret du profil
@@ -123,14 +124,14 @@ export class RaceSim {
       dist: 0, s: 0, d: 0, v: 0, lat: 0, idx: 0, lastS: 0, laps: 0, lapT0: NaN, secT0: NaN, sector: 0, sectors: [], last: NaN, best: NaN, lapValid: true, lapTimes: [], bestBy: {},
       tyre: { c: this.kind === 'race' ? 'M' : 'S', age: 0, temp: 0.8, flat: 0, punct: 0, used: [] }, fuel,
       dmg: { fw: 0, rw: 0, floor: 0 }, mode: 'race', prevMode: 'race', out: null, kq, prof,
-      off: null, side: 0, attackT: 0, defMoved: false, yieldT: 0, weave: this.rng.next() * 6, err: null, stopT: 0, incidentCooldown: 0, drs: false, drsArmed: -1,
+      off: null, side: 0, attackT: 0, defMoved: false, yieldT: 0, weave: this.rng.next() * 6, err: null, stopT: 0, incidentCooldown: 0, trackLimitT: 0, trackLimitReported: false, drs: false, drsArmed: -1,
       pitP: 0, pitT: 0, pitWhy: '', wantPit: null, plan: [], boxP: 0, stops: 0,
       pen: 0, dtPend: 0, sgPend: 0, penServed: 0, warnings: 0, bw: false, gridPen: 0,
       gap: 0, int: 0, pos: 0, finished: false, finishT: 0, blueT: 0, slot: 0, runs: [], runIdx: 0, pushLeft: 0,
       wx: 0, wy: 0, wz: 0, hx: 0, hz: -1, nx: 0, ny: 1, nz: 0, steer: 0, spin: 0, q: null, pitPhase: '', sepT: 0, pitLat: 0, inPit: false }
   }
-  /** temps de qualif visé (s) : réel Spa 2020 rapporté à la pole 2020 du circuit */
-  targetQ(id: string) { const pole = POLE_2020[this.circuit] ?? 101.252; return pole * (SPA_Q[id] ?? 104) / SPA_Q.ham }
+  /** temps de qualif visé (s) : données réelles Spa/Monza 2020, rapportées à la pole du circuit actif */
+  targetQ(id: string) { const q = this.circuit === 'ita' ? MONZA_Q : SPA_Q, pole = POLE_2020[this.circuit] ?? 101.252; return pole * (q[id] ?? 104) / q.ham }
   /** profils de vitesse par équipe : physique 2020 de l'équipe (moteur, ClA, CdA), adhérence calée par dichotomie
    *  pour retrouver le meilleur temps réel de l'équipe (C). DRS : traînée × 0,84 dans les zones. */
   static profCache = new Map<string, Map<string, TeamProf>>()
@@ -171,7 +172,7 @@ export class RaceSim {
   /** écart route (m) de a vers b, dans ]-L/2, L/2] */
   road(a: number, b: number) { let g = b - a; g -= Math.round(g / this.L) * this.L; return g }
   // ───────────── grille, garages, plans de séance
-  gridPos(k: number) { return { s: this.wrapS(-12 - 8 * k), d: k % 2 === 0 ? -2.2 : 2.2 } }
+  gridPos(k: number) { return { s: this.wrapS(-12 - 16 * k), d: k % 2 === 0 ? -2.2 : 2.2 } }
   placeOnGrid(r: Racer) {
     const g = this.gridPos(r.slot); r.s = g.s; r.d = g.d; r.v = 0; r.dist = -this.road(g.s, 0); r.lastS = r.s; r.mode = r.player ? 'race' : 'grid'; r.idx = this.idxOf(r.s)
     r.dist = -(this.L - r.s) // derrière la ligne : distance négative
@@ -259,7 +260,8 @@ export class RaceSim {
     const wet = this.wetness()
     if (wet > 0.15) { const slick = r.tyre.c === 'S' || r.tyre.c === 'M' || r.tyre.c === 'H'; dl += slick ? wet * 28 : r.tyre.c === 'W' && wet < 0.6 ? (0.6 - wet) * 10 : 0; dl += wet * (1.1 - r.sk.wet) * 8 - (r.tyre.c === 'I' || r.tyre.c === 'W' ? ty.delta * Math.min(1, wet * 1.6) : 0) }
     if (this.kind === 'race') dl += 2.0 + r.fuel * 0.035 * this.L / 7004 // mode moteur course + gestion pneus (≈2 s vs Q, Spa 2020 : tours de course 1:47,5–1:49 vs pole 1:41,25), carburant (E : 0,035 s/kg)
-    const diff = 0.88 + 0.14 * (this.difficulty / 100)
+    const level = Math.max(0.4, Math.min(1, this.difficulty / 100))
+    const diff = 0.88 + 0.14 * level
     return r.kq * T / (T + dl) * diff
   }
   /** vraie physique (Vehicle) pour cette IA ce pas-ci */
@@ -326,11 +328,13 @@ export class RaceSim {
     // évitement : ne pas se rabattre sur une voiture qui est à côté
     for (const o of this.cars) { if (o === r || !this.onTrack(o)) continue; const g = this.road(r.s, o.s); if (Math.abs(g) > CL + 0.8) continue
       const sd = o.d - r.d; if (Math.abs(sd) < 3.2) { if (sd > 0 && dT > o.d - 2.15) dT = o.d - 2.15; if (sd <= 0 && dT < o.d + 2.15) dT = o.d + 2.15 } }
+    const legal = simulatedCarLegalEdges(this.track, r.s)
+    if (r.err?.kind !== 'wide' && r.mode !== 'spun') dT = clampToLegalCenterOffset(dT, legal)
     const devT = dT - e0, dev0 = r.d - (this.lastE.get(r.i) ?? e0)
     const rate = 1.0 + 0.035 * r.v
     const dl = Math.max(-rate * dt, Math.min(rate * dt, (devT - dev0) * Math.min(1, dt * 2.5)))
     const nd = e0 + dev0 + dl
-    const ndc = r.err?.kind === 'wide' || r.mode === 'spun' ? nd : Math.max(-(eL + 0.5), Math.min(eR + 0.5, nd))
+    const ndc = r.err?.kind === 'wide' || r.mode === 'spun' ? nd : clampToLegalCenterOffset(nd, legal)
     if (ghost) this.cmd.set(r.i, { vt, dT })
     else { r.lat = (ndc - r.d) / dt * 0.3 + r.lat * 0.7; r.d = ndc }
     ;(r as Racer & { _dr?: number })._dr = dl / dt
@@ -352,9 +356,14 @@ export class RaceSim {
     }
     // ─ erreurs, pannes
     this.errors(r, i, ds, ahead, gA, behind, gB, dt)
-    // ─ limites de piste : 4 roues au-delà de la ligne blanche (bord asphalte + 1 m)
-    const edge = r.d < 0 ? Math.max(this.track.wl[i], this.track.wlR[i]) : Math.max(this.track.wr[i], this.track.wrR[i])
-    if (Math.abs(r.d) > edge + 1.0) { if (r.lapValid) { r.lapValid = false; C.trackLimits(r) } }
+    // ─ limites de piste : quatre centres de roues hors asphalte, débouncés et une fois par excursion
+    if (simulatedCarOutsideTrack(this.track, r.s, r.d)) {
+      r.trackLimitT += dt
+      if (r.trackLimitT > TRACK_LIMIT_GRACE_SECONDS && !r.trackLimitReported) {
+        r.trackLimitReported = true
+        if (r.lapValid) { r.lapValid = false; C.trackLimits(r) }
+      }
+    } else { r.trackLimitT = 0; r.trackLimitReported = false }
     // ─ zones DRS : détection (course : < 1 s de la voiture devant, dès le 3e tour)
     for (let z = 0; z < this.drsDet.length; z++) { const det = this.drsDet[z]; if (this.road(r.s - ds, det) > 0 && this.road(r.s, det) <= 0) r.drs = C.drsAllowed(r, ahead && gA < 200 ? gA / Math.max(10, r.v) : 9) }
     if (!this.inZone(r.s)) r.drs = r.drs && this.road(r.s, this.nextZoneStart(r.s)) < 150
@@ -384,7 +393,8 @@ export class RaceSim {
     }
     if (ahead && gA < 1.2 * Math.max(20, r.v) && C.mayOvertake(r, ahead)) {
       const pot = r.prof.v[(i + Math.round(gA / this.ds)) % this.N] * this.paceKCache(r) * (r.drs ? 1.03 : 1)
-      if (pot > ahead.v + 0.4 || C.isBlue(ahead, r) || ahead.mode === 'out' || ahead.mode === 'cool' || ahead.mode === 'in' || ahead.err) {
+      const level = Math.max(0.4, Math.min(1, this.difficulty / 100)), attackMargin = 0.4 + 1.2 * (1 - level)
+      if (pot > ahead.v + attackMargin || C.isBlue(ahead, r) || ahead.mode === 'out' || ahead.mode === 'cool' || ahead.mode === 'in' || ahead.err) {
         if (r.attackT === 0) {
           // côté : intérieur du prochain virage (point de corde de la trajectoire)
           let apex = i, vmin = 1e9; for (let j = 0; j < 300 / this.ds; j += 4) { const q = (i + j) % this.N; if (ln.v[q] < vmin) { vmin = ln.v[q]; apex = q } }
@@ -404,7 +414,8 @@ export class RaceSim {
       }
     }
     // défense : la voiture derrière attaque d'un côté → on couvre l'intérieur une seule fois, hors freinage
-    if (behind && this.kind === 'race' && behind.attackT > 0 && gB < 30 && !r.defMoved && C.mayOvertake(behind, r)) {
+    const level = Math.max(0.4, Math.min(1, this.difficulty / 100))
+    if (behind && this.kind === 'race' && behind.attackT > 0 && gB < 30 * (0.75 + 0.25 * level) && !r.defMoved && C.mayOvertake(behind, r)) {
       const braking = r.prof.v[(i + Math.round(60 / this.ds)) % this.N] < r.v - 6
       const target = Math.max(-edgeL + 0.2, Math.min(edgeR - 0.2, r.d + behind.side * 1.6))
       if (!braking && this.laneClear(r, target, Math.max(18, Math.min(40, gB + 12)), behind)) { r.off = target; r.defMoved = true }
@@ -512,7 +523,7 @@ export class RaceSim {
     const start = a + Math.max(20, (b - a - span) / 2)
     return Math.min(b - 15, start + (g - 0.5) * 6.4)
   }
-  enterPit(r: Racer) { r.prevMode = r.mode === 'in' || this.kind !== 'race' ? 'garage' : r.mode; r.mode = 'pit'; r.pitP = 0; r.pitT = 0; r.boxP = this.boxOf(r.team); r.off = null; r.attackT = 0; r.pitLat = 0
+  enterPit(r: Racer) { if (this.ctrl.sc.active) (r as Racer & { _scPitFor?: number })._scPitFor = this.ctrl.sc.tEnd; r.prevMode = r.mode === 'in' || this.kind !== 'race' ? 'garage' : r.mode; r.mode = 'pit'; r.pitP = 0; r.pitT = 0; r.boxP = this.boxOf(r.team); r.off = null; r.attackT = 0; r.pitLat = 0
     this.ctrl.pitEvent(r, 'in') }
   /** départ du garage (essais/qualif) : la voiture apparaît à son box, en voie de travail, et rejoint la voie rapide */
   leaveGarage(r: Racer) { r.mode = 'pit'; r.prevMode = 'out'; r.pitP = this.boxOf(r.team); r.boxP = -1; r.pitT = -1; r.v = 0; r.pitLat = 2.7; r.tyre.temp = 0.72; r.tyre.age = 0; r.tyre.flat = 0; r.lapValid = false
@@ -678,7 +689,9 @@ export class RaceSim {
     else if (r.dmg.fw > 0.3) r.wantPit = 'dégâts'
     if (r.dtPend > 0) r.wantPit = 'drive'
     if (r.sgPend > 0) r.wantPit = 'stop-go'
-    if (this.ctrl.sc.active && r.plan.some(p => p.lap - r.laps <= 8 && p.lap >= r.laps - 1) && left > 1) r.wantPit = r.wantPit ?? 'safety car'
+    // Une fenêtre favorable sous SC n'anticipe qu'un arrêt proche, et un seul par déploiement.
+    const scPitFor = (r as Racer & { _scPitFor?: number })._scPitFor
+    if (this.ctrl.sc.active && scPitFor !== this.ctrl.sc.tEnd && r.plan.some(p => p.lap >= r.laps && p.lap - r.laps <= 1) && left > 1) r.wantPit = r.wantPit ?? 'safety car'
     if (this.ctrl.vsc && age > ty.cliff * 0.72 && left > 2) r.wantPit = r.wantPit ?? 'vsc'
     const threat = this.cars.some(o => o !== r && !o.out && this.road(o.s, r.s) > 0 && this.road(o.s, r.s) < Math.max(40, o.v * 2.4) && o.v > r.v - 2)
     const planNear = r.plan.some(p => p.c !== r.tyre.c && p.lap >= r.laps && p.lap - r.laps <= 3)

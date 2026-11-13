@@ -11,6 +11,7 @@ import type { Pitlane, PitAnchors } from '../track/pitlane.ts'
 import { RaceSim } from '../race/sim.ts'
 import { PIT_CREW } from '../race/data.ts'
 import type { SurfaceSample } from '../track/surface.ts'
+import { CIRCUIT } from './circuit.ts'
 
 export const DT = 1 / 240
 const MAX_STEPS = 12 // au-delà : ralenti plutôt que spirale de la mort
@@ -56,6 +57,9 @@ export class Game {
   pitCommit = false
   private pitMark = 0
   private pitNear = false
+  private pitProbePrev = 0
+  private pitProbeValid = false
+  private pitPathPrev = false
   /** ancres Ty (pit_entry, pit_speed_*, pit_exit, pitlane_path). Sans rien d'exploitable, le pitlane.json reste en place. */
   adoptPitAnchors(a: PitAnchors) {
     const path = a.pitlane_path
@@ -110,7 +114,7 @@ export class Game {
       const l = E.pts[E.pts.length - 1]
       c.placeAtXZ(l[0], l[1], l[2], l[3], E.v); c.speed = E.v
       this.garageExit = null; this.events.garageOut = true
-      if (this.pit) { const q = this.pit.probe(l[0], l[1]); this.pitCommit = true; this.pitNear = true; this.pitMark = q.p }
+      if (this.pit) { const q = this.pit.probe(l[0], l[1]); this.pitCommit = true; this.pitNear = true; this.pitMark = q.p; this.pitProbePrev = q.p; this.pitProbeValid = true; this.pitPathPrev = this.pit.onLane(q, -c.R[6], -c.R[8]) }
       return
     }
     while (E.i < E.pts.length - 2 && E.cum[E.i + 1] <= E.s) E.i++
@@ -123,7 +127,8 @@ export class Game {
   /** météo vers laquelle le film d'eau converge (carrière, averse) ; null = figée */
   weatherTarget: Weather | null = null
   startField(o: { kind: SessionKind; laps: number; player: string; grid?: string[]; sessionLen?: number; seed?: number; posts?: unknown; exclude?: string[] }) {
-    const F = new RaceSim({ track: this.track, line: this.line, pit: this.pit, kind: o.kind, laps: o.laps, player: o.player, grid: o.grid, sessionLen: o.sessionLen, seed: o.seed, exclude: o.exclude })
+    const circuit = CIRCUIT.id === 'spa' ? 'bel' : 'ita'
+    const F = new RaceSim({ track: this.track, line: this.line, pit: this.pit, kind: o.kind, circuit, laps: o.laps, player: o.player, grid: o.grid, sessionLen: o.sessionLen, seed: o.seed, exclude: o.exclude })
     F.vehicle = this.car; F.wetness = () => this.env.wetness
     if (o.posts) F.ctrl.buildPosts(o.posts as Parameters<typeof F.ctrl.buildPosts>[0])
     if (o.kind === 'race') { const g = F.gridPos(F.player.slot); this.car.placeAt(g.s, g.d, 0); this.car.fuel = F.player.fuel; this.snapshot() }
@@ -144,6 +149,7 @@ export class Game {
   sessionId = 0
   start(kind: SessionKind = this.session.kind) {
     this.sessionId++; this.garageExit = null
+    this.pitCommit = false; this.pitNear = false; this.pitProbeValid = false; this.pitPathPrev = false; this.inPit = false
     this.session = new Session(this.track.length, kind)
     const L = this.track.length
     if (kind === 'timetrial') { const s0 = L - 200; this.car.placeAt(s0, this.lineOffset(s0), 55) }
@@ -175,7 +181,7 @@ export class Game {
     this.events = {}; this.shifts = 0; this.maxScrape = 0; this.maxImpact = 0
     if (this.paused) { this.alpha = 1; return }
     this.acc += Math.min(realDt, 0.1)
-    let n = 0
+    let n = 0, trackLimitPending = false, driveThrottle = 0
     while (this.acc >= DT && n < MAX_STEPS) {
       this.snapshot()
       if (this.garageExit) { this.stepGarageExit(); this.time += DT; this.acc -= DT; n++; continue }
@@ -184,11 +190,13 @@ export class Game {
       ctl.noReverse = false
       if (this.holdT > 0 && this.inPit && this.pitStopT > 0) { ctl.throttle = 0; ctl.brake = 1; ctl.noReverse = true }
       if (this.field && (this.field.ctrl.phase === 'lights' || this.field.ctrl.phase === 'gridding') && !this.autopilot && this.car.speed < 3) { ctl.throttle = Math.min(ctl.throttle, 0.25); ctl.brake = Math.max(ctl.brake, this.field.ctrl.phase === 'lights' ? 1 : 0); ctl.noReverse = true }
+      driveThrottle = ctl.throttle
       this.car.step(DT, ctl)
       if (this.car.shiftEvent) { this.shifts++; this.ctl.shiftUp = false; this.ctl.shiftDown = false }
       this.maxScrape = Math.max(this.maxScrape, this.car.scrape); this.maxImpact = Math.max(this.maxImpact, this.car.impact)
       this.time += DT
       this.session.update(this.car, this.time, DT)
+      if (this.session.trackLimitEvent) trackLimitPending = true
       const ev = this.session.timing.events
       if (ev.includes('lap')) {
         const r = this.session.timing.lastLap!
@@ -204,6 +212,10 @@ export class Game {
     if (this.field && n > 0) {
       const F = this.field, C = F.ctrl
       F.update(n * DT)
+      if (trackLimitPending && F.kind === 'race' && C.phase === 'racing' && F.player.lapValid) {
+        F.player.lapValid = false
+        C.trackLimits(F.player)
+      }
       // DRS : règle 2020 (course : < 1 s au point de détection, à partir du 3e tour ; jamais sous SC / VSC / drapeau rouge / pluie)
       if (this.car.drsAvailable) this.car.drsAvailable = C.drsGlobal() && (this.session.kind !== 'race' || (F.player.drs && C.phase === 'racing'))
       const f = C.playerFlag() as Flag | ''
@@ -231,7 +243,7 @@ export class Game {
     if (this.spectate) { this.spectateT += realDt; if (this.spectateT > 14) this.spectateHide = true; this.stuckT = 0 }
     else if (this.garageExit) this.stuckT = 0
     else if (this.raceOver()) this.enterSpectate()
-    else if (c.flipped > 1 || (c.offTrack && c.speed < 1 && this.ctl.throttle > 0.5)) this.stuckT += realDt
+    else if (c.flipped > 1 || (c.offTrack && c.speed < 1 && (this.autopilot ? driveThrottle > 0.1 : this.ctl.throttle > 0.5))) this.stuckT += realDt
     else this.stuckT = 0
     if (this.stuckT > 3 && !this.spectate) { this.stuckT = 0; this.resetCar() }
     this.steerVis += ((this.autopilot ? 0 : this.ctl.steer) - this.steerVis) * Math.min(1, realDt * 20)
@@ -245,11 +257,16 @@ export class Game {
     const P = this.pit
     const entryP = P.cum[P.iEntry], exitP = P.cum[P.iExit]
     const near = q.dist < 7 && q.p >= entryP - 4 && q.p <= exitP + 6
-    const limited = this.pit.inSpeedZone(c.pos[0], c.pos[2])
+    const hx = -c.R[6], hz = -c.R[8]
+    const onLane = P.onLane(q, hx, hz)
+    const limited = P.inSpeedZone(c.pos[0], c.pos[2], hx, hz)
     if (near) {
       if (!this.pitNear) this.pitMark = q.p
       this.pitNear = true
-      if (!this.pitCommit && q.p >= entryP && q.p < exitP - 1) {
+      const passedEntry = entryP <= 0.5
+        ? this.pitProbeValid && !this.pitPathPrev && q.p <= entryP + 3.5
+        : this.pitProbeValid && this.pitProbePrev < entryP && q.p >= entryP && q.p > this.pitProbePrev + 0.05
+      if (!this.pitCommit && onLane && passedEntry && q.p < exitP - 1) {
         this.pitCommit = true; this.events.pitEntry = true; this.bus.emit({ t: 'pitEntry', car: 0 }); this.field?.ctrl.pitEvent(this.field.player, 'in')
       }
       if (this.pitCommit && this.pitMark < exitP && q.p >= exitP) {
@@ -263,6 +280,7 @@ export class Game {
         this.field?.ctrl.pitLine(this.field.player, 'sortie'); this.pitCommit = false
       }
     }
+    this.pitProbePrev = q.p; this.pitProbeValid = true; this.pitPathPrev = onLane
     const was = this.inPit
     this.inPit = limited
     if (limited && !was) { this.pitSpeedT = -2; this.pitPenalised = false }

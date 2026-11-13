@@ -2,6 +2,7 @@
 import type { TrackSurface } from './surface.ts'
 import { W11 } from '../physics/params.ts'
 import { icePower } from '../physics/powertrain.ts'
+import { simulatedCarLegalEdges } from './limits.ts'
 
 export interface RacingLine { x: Float64Array; z: Float64Array; e: Float64Array; k: Float64Array; v: Float64Array; N: number; ds: number }
 
@@ -9,12 +10,17 @@ const O2MIN = Number((globalThis as any).process?.env?.O2MIN ?? 99)
 const MU_M = 2.35, MU_A = 1.75
 export function buildRacingLine(t: TrackSurface, iters = 1600, mu = 0.92): RacingLine {
   const N = t.N
-  const lim = (arr: Float32Array) => {
-    const o = new Float64Array(N)
-    for (let i = 0; i < N; i++) { let m = 99; for (let k = -4; k <= 4; k++) m = Math.min(m, arr[(i + k + N) % N]); o[i] = Math.max(0.3, Math.min(m, 9) - 0.95) }
-    return o
+  // Signed car-center bounds allow for circuits whose reference line is not centered between the white lines.
+  const legalMin = new Float64Array(N), legalMax = new Float64Array(N)
+  for (let i = 0; i < N; i++) { const [minimum, maximum] = simulatedCarLegalEdges(t, i * t.ds); legalMin[i] = minimum; legalMax[i] = maximum }
+  const lineMin = new Float64Array(N), lineMax = new Float64Array(N)
+  for (let i = 0; i < N; i++) {
+    let minimum = -Infinity, maximum = Infinity
+    for (let k = -4; k <= 4; k++) { const j = (i + k + N) % N; minimum = Math.max(minimum, legalMin[j]); maximum = Math.min(maximum, legalMax[j]) }
+    minimum = Math.max(-8.05, minimum + 0.95); maximum = Math.min(8.05, maximum - 0.95)
+    if (minimum > maximum) { const center = (minimum + maximum) / 2; minimum = maximum = center }
+    lineMin[i] = minimum; lineMax[i] = maximum
   }
-  const L = lim(t.wlR ?? t.wl), Rr = lim(t.wrR ?? t.wr)
   const e = new Float64Array(N)
   const rx = new Float64Array(N), rz = new Float64Array(N)
   for (let i = 0; i < N; i++) { rx[i] = -t.tz[i]; rz[i] = t.tx[i] }
@@ -33,7 +39,7 @@ export function buildRacingLine(t: TrackSurface, iters = 1600, mu = 0.92): Racin
         const o2 = st >= O2MIN
         const tx = o2 ? (x[a] + x[b]) * 0.5 : (-x[a2] + 4 * x[a] + 4 * x[b] - x[b2]) / 6, tz = o2 ? (z[a] + z[b]) * 0.5 : (-z[a2] + 4 * z[a] + 4 * z[b] - z[b2]) / 6
         let ne = e[i] + ((tx - x[i]) * rx[i] + (tz - z[i]) * rz[i]) * 0.9
-        ne = Math.max(-L[i], Math.min(Rr[i], ne))
+        ne = Math.max(lineMin[i], Math.min(lineMax[i], ne))
         e[i] = ne; x[i] = t.cx[i] + rx[i] * ne; z[i] = t.cz[i] + rz[i] * ne
       }
     }
@@ -41,7 +47,7 @@ export function buildRacingLine(t: TrackSurface, iters = 1600, mu = 0.92): Racin
       for (let q = 0; q < M; q++) {
         const i0 = q * st, i1 = q + 1 < M ? (q + 1) * st : N
         const e0 = e[i0], e1 = e[i1 % N]
-        for (let i = i0 + 1; i < i1; i++) { const u = (i - i0) / (i1 - i0); e[i] = Math.max(-L[i], Math.min(Rr[i], e0 + (e1 - e0) * u)) }
+        for (let i = i0 + 1; i < i1; i++) { const u = (i - i0) / (i1 - i0); e[i] = Math.max(lineMin[i], Math.min(lineMax[i], e0 + (e1 - e0) * u)) }
       }
       upd()
     }

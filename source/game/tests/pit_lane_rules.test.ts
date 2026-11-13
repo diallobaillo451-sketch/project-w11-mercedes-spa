@@ -4,6 +4,7 @@
 import { TrackSurface, type SurfaceMeta } from '../src/track/surface.ts'
 import { Pitlane } from '../src/track/pitlane.ts'
 import { RaceSim } from '../src/race/sim.ts'
+import { Game } from '../src/core/game.ts'
 import type { RacingLine } from '../src/track/racingLine.ts'
 import { PIT_LIMIT } from '../src/race/sim.ts'
 
@@ -49,6 +50,9 @@ function lineOf(t: TrackSurface): RacingLine {
   assert(p.x[p.iEntry] === 20 && p.x[p.iIn] === 40 && p.x[p.iOut] === 120 && p.x[p.iExit] === 180, 'lignes calées sur les ancres')
   assert(p.light.x === 176 && p.light.z === 2, 'feu de sortie à son ancre')
   assert(p.inSpeedZone(80, 0.2) && !p.inSpeedZone(15, 0.2) && !p.inSpeedZone(190, 0.2), '80 km/h seulement entre les deux lignes')
+  assert(p.inSpeedZone(80, 0.2, 1, 0), 'voie limitée dans le sens de la spline')
+  assert(!p.inSpeedZone(80, 0.2, 0, 1), 'pas de limiteur quand la voiture fait face à l’autre sens')
+  assert(!p.inSpeedZone(80, 5.5), 'la proximité à 5,5 m ne suffit pas à activer le limiteur')
   assert(p.probe(80, 0.3).lane === 'fast', 'voie rapide sur le chemin')
   assert(p.probe(80, 3).lane === 'work', 'voie de travail vers les garages')
   assert(p.probe(80, 30).lane === 'off', 'hors de la voie')
@@ -61,6 +65,35 @@ function lineOf(t: TrackSurface): RacingLine {
   })
   assert(p.n > n0 && Math.abs(p.cum[p.n - 1] - 50) < 1.5, 'spline rééchantillonnée, longueur conservée')
   assert(p.cum[p.iIn] < p.cum[p.iOut] && p.cum[p.iOut] < p.cum[p.iExit], 'ordre des lignes sur la spline')
+}
+
+// —— entrée joueur : une trajectoire parallèle ne déclenche ni radio, ni limiteur, ni pénalité
+{
+  const makePit = (x: number) => {
+    const xs: number[] = [], zs: number[] = [], ss: number[] = [], ds: number[] = []
+    for (let i = 0; i <= 40; i++) { xs.push(x); zs.push(-i * 2); ss.push(i * 2); ds.push(15) }
+    const p = new Pitlane({ x: xs, z: zs, s: ss, d: ds, length: 80 })
+    p.iEntry = 3; p.iIn = 6; p.iOut = 34; p.iExit = 40
+    return p
+  }
+  const driveTo = (g: Game, x: number, z: number, hz = -1) => {
+    g.car.placeAtXZ(x, z, 0, hz, 12); g.car.pos[0] = x; g.car.pos[2] = z
+    ;(g as unknown as { updatePit(dt: number): void }).updatePit(1 / 60)
+  }
+  const parallel = new Game(straight(), 'practice'); parallel.pit = makePit(4)
+  driveTo(parallel, 0, -4); driveTo(parallel, 0, -8); driveTo(parallel, 0, -14)
+  assert(!parallel.events.pitEntry && !parallel.pitCommit, 'frôler la spline à 4 m ne compte pas comme une entrée')
+  assert(!parallel.inPit && !parallel.events.pitSpeeding && parallel.penalties === 0, 'pas de limiteur ni de pénalité sur la trajectoire parallèle')
+
+  const reverse = new Game(straight(), 'practice'); reverse.pit = makePit(4)
+  driveTo(reverse, 4, -4, 1); driveTo(reverse, 4, -8, 1); driveTo(reverse, 4, -14, 1)
+  assert(!reverse.events.pitEntry && !reverse.pitCommit && !reverse.inPit, 'rouler à contresens près des stands ne déclenche pas l’entrée')
+
+  const real = new Game(straight(), 'practice'); real.pit = makePit(4)
+  driveTo(real, 4, -4); driveTo(real, 4, -8)
+  assert(real.events.pitEntry && real.pitCommit, 'le franchissement orienté de la ligne déclenche une seule entrée')
+  driveTo(real, 4, -14)
+  assert(real.inPit, 'le limiteur devient actif après la vraie ligne de début de limitation')
 }
 
 // —— IA : limiteur, arrêt au box, feu rouge, ligne de sortie, blend

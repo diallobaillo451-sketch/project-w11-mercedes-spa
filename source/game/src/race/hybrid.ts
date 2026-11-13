@@ -11,6 +11,20 @@ export interface DriveCmd { vt: number; dT: number; cap?: number }
 const MAX = 4
 const SUB = 1 / 240
 
+/** Sélection recalculée à chaque pas : les quatre plus proches devant le joueur, complétés par les plus proches derrière si nécessaire. */
+export function updateDetailedSelection(sim: RaceSim, near: Set<number>) {
+  const p = sim.player
+  const pool = sim.cars.filter(o => o !== p && sim.onTrack(o) && o.mode !== 'pit' && o.mode !== 'grid' && o.mode !== 'garage' && o.mode !== 'dnf' && o.mode !== 'redq' && o.mode !== 'spun')
+  const gap = (o: Racer) => sim.road(p.s, o.s)
+  const ahead = pool.filter(o => gap(o) >= 0).sort((a, b) => gap(a) - gap(b) || a.i - b.i)
+  const behind = pool.filter(o => gap(o) < 0).sort((a, b) => gap(b) - gap(a) || a.i - b.i)
+  const next = ahead.slice(0, MAX)
+  if (next.length < MAX) next.push(...behind.slice(0, MAX - next.length))
+  near.clear()
+  for (const r of next) near.add(r.i)
+  return next
+}
+
 export class HybridBank {
   private slots: { v: Vehicle; r: Racer | null }[] = []
   constructor(sim: RaceSim) {
@@ -22,28 +36,9 @@ export class HybridBank {
     }
   }
   active(r: Racer) { return this.slots.some(s => s.r === r) }
-  /** choisit 2 devant + 2 derrière, en gardant celles qui sont encore dans le top 6 */
+  /** affecte la physique détaillée à la sélection courante, sans conserver des adversaires dépassés */
   pick(sim: RaceSim, near: Set<number>) {
-    const p = sim.player
-    const pool = sim.cars.filter(o => o !== p && sim.onTrack(o) && o.mode !== 'pit' && o.mode !== 'grid' && o.mode !== 'garage' && o.mode !== 'dnf' && o.mode !== 'redq' && o.mode !== 'spun')
-    const gap = (o: Racer) => sim.road(p.s, o.s)
-    const ahead = pool.filter(o => gap(o) >= 0).sort((a, b) => gap(a) - gap(b))
-    const behind = pool.filter(o => gap(o) < 0).sort((a, b) => gap(b) - gap(a))
-    const ideal: Racer[] = [...ahead.slice(0, 2), ...behind.slice(0, 2)]
-    for (const o of [...ahead.slice(2), ...behind.slice(2)]) { if (ideal.length >= MAX) break; ideal.push(o) }
-    const ranked = pool.slice().sort((a, b) => Math.abs(gap(a)) - Math.abs(gap(b)))
-    const keep: Racer[] = []
-    for (const id of near) {
-      const r = sim.cars[id]
-      if (!r) continue
-      const rank = ranked.indexOf(r)
-      if (rank >= 0 && rank < 6) keep.push(r)
-    }
-    const next: Racer[] = []
-    for (const r of keep) { if (next.length < MAX) next.push(r) }
-    for (const r of ideal) { if (next.length >= MAX) break; if (!next.includes(r)) next.push(r) }
-    near.clear()
-    for (const r of next) near.add(r.i)
+    const next = updateDetailedSelection(sim, near)
     const want = new Set(next)
     for (const s of this.slots) if (s.r && !want.has(s.r)) { s.r.q = null; s.r = null }
     for (const r of next) {
@@ -52,7 +47,10 @@ export class HybridBank {
         s = this.slots.find(x => !x.r)
         if (!s) continue
         s.r = r
-        s.v.env = sim.vehicle?.env ?? s.v.env
+        // Un slot réaffecté à une autre voiture ne doit pas lui transmettre pneus, dégâts ou énergie.
+        s.v = new Vehicle(sim.track)
+        s.v.damageMode = 'real'
+        s.v.env = sim.vehicle?.env ?? null
         s.v.placeAt(r.s, r.d, Math.max(0, r.v))
         s.v.fuel = r.fuel
         s.v.damage.frontWing = r.dmg.fw; s.v.damage.rearWing = r.dmg.rw; s.v.damage.floor = r.dmg.floor

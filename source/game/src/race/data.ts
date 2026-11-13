@@ -7,6 +7,13 @@ export const SPA_Q: Record<string, number> = {
 }
 /** grille réelle de Spa 2020 (ordre de qualification) — P */
 export const SPA_GRID = ['ham', 'bot', 'ver', 'ric', 'alb', 'oco', 'sai', 'per', 'str', 'nor', 'kvy', 'gas', 'lec', 'vet', 'rus', 'rai', 'gro', 'gio', 'lat', 'mag']
+/** meilleurs temps officiels de qualification à Monza 2020 (Q3 pour le top 10, meilleur segment sinon) — P */
+export const MONZA_Q: Record<string, number> = {
+  ham: 78.887, bot: 78.956, sai: 79.695, per: 79.720, ver: 79.795, nor: 79.820, ric: 79.864, str: 80.049, alb: 80.090, gas: 80.177,
+  kvy: 80.169, oco: 80.234, lec: 80.273, rai: 80.926, mag: 81.573, gro: 81.139, vet: 81.151, gio: 81.206, rus: 81.587, lat: 81.717,
+}
+/** grille officielle du GP d’Italie 2020 — source : https://www.formula1.com/en/results.html/2020/races/1052/italy/qualifying.html */
+export const MONZA_GRID = ['ham', 'bot', 'sai', 'per', 'ver', 'nor', 'ric', 'str', 'alb', 'gas', 'kvy', 'oco', 'lec', 'rai', 'mag', 'gro', 'vet', 'gio', 'rus', 'lat']
 /** pole position réelle 2020 par circuit (référence de rythme) — P */
 export const POLE_2020: Record<string, number> = { bel: 101.252, ita: 78.887 }
 /** profil pilote (E) : cons = régularité (erreurs), craft = science de la course (attaque/défense/départ),

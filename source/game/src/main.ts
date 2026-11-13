@@ -115,14 +115,14 @@ function setCam(m: CamMode) { ren.cams.setMode(m); $('bCam').textContent = CAM_S
 /** lot 8 C : plateau de 19 IA + direction de course pour la séance (course rapide, séances du week-end) */
 function setupField(k: SessionKind | 'demo') {
   game.field = null; tower?.bind(null); show('bSkipF', false)
-  if (!run || k === 'demo' || k === 'timetrial') { if (fview) fview.root.visible = false; return }
+  if (k === 'demo' || k === 'timetrial') { if (fview) fview.root.visible = false; return }
   const kind = k as SessionKind, player = settings.profile.driver
   let grid: string[] | undefined, exclude: string[] | undefined
-  if (run.kind === 'weekend' && wk) {
+  if (run?.kind === 'weekend' && wk) {
     if (kind === 'race') { const g = startingGrid(wk, player); if (g.length) grid = g }
     if (run.id === 'Q2' || run.id === 'Q3') exclude = excludedFor(wk, run.id)
   }
-  const F = game.startField({ kind, laps: run.laps, player, grid, exclude, sessionLen: kind === 'race' ? undefined : run.remaining, posts: marshals })
+  const F = game.startField({ kind, laps: run?.laps ?? settings.profile.laps, player, grid, exclude, sessionLen: kind === 'race' ? undefined : run?.remaining ?? 900, posts: marshals })
   F.difficulty = settings.profile.difficulty
   F.hybridOn = new URLSearchParams(location.search).get('hybrid') !== '0' // ?hybrid=0 : IA en 1D seule (comparer la fluidité)
   if (kind === 'race') F.planRace()
@@ -130,7 +130,7 @@ function setupField(k: SessionKind | 'demo') {
     F.ctrl.startFormation()
     // règle 2020 : le top 10 part avec les pneus du meilleur tour de Q2
     const q2t = wk?.result('Q2')?.q2tyre
-    if (q2t && run.kind === 'weekend' && F.player.slot < 10) { settings.setup.compound = q2t as typeof settings.setup.compound; hud.toast('Top 10 : départ avec les pneus de Q2 (' + q2t + ')', 2600) }
+    if (q2t && run?.kind === 'weekend' && F.player.slot < 10) { settings.setup.compound = q2t as typeof settings.setup.compound; hud.toast('Top 10 : départ avec les pneus de Q2 (' + q2t + ')', 2600) }
   }
   tower?.bind(F)
   fview ??= new FieldView(ren); fview.root.visible = true
@@ -619,7 +619,8 @@ function runPost(dt: number) {
     if (r.lightsDone) r.raceT += dt
     const txt = !r.lightsDone ? 'Tour de formation' : `P${p.pos} · Tour ${Math.min(p.laps + 1, r.laps)}/${r.laps}`; if (sc.textContent !== txt) sc.textContent = txt; sc.hidden = false
     if (p.laps !== r.lapsSeen) { r.lapsSeen = p.laps; if (p.laps === r.laps - 1 && r.laps > 1 && !F.chequered) hud.toast('Dernier tour !', 2000) }
-    if (F.chequered && !r.chequered && (p.finished || p.laps >= r.laps)) { r.chequered = true; game.session.setFlag('chequered', 999); hud.toast(`Drapeau à damier · P${p.pos}`, 3000); setTimeout(endSession, 2600) }
+    if (F.chequered && !r.chequered) { r.chequered = true; game.session.setFlag('chequered', 999); hud.toast(`Drapeau à damier · P${p.pos}`, 3000) }
+    if (F.chequered && !r.ending && F.cars.every(x => x.finished || x.out)) { r.ending = true; setTimeout(endSession, 2600) }
   } else if (k === 'race') {
     if (r.lightsDone) r.raceT += dt
     const done = game.session.timing.laps.length

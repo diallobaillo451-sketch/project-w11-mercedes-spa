@@ -31,6 +31,7 @@ function makeSim(kind: 'race' | 'qualifying', opts: { pit?: Pitlane | null; laps
 }
 const internal = (s: RaceSim) => s as unknown as {
   tactics: (r: Racer, ahead: Racer | null, gA: number, behind: Racer | null, gB: number, dt: number) => void
+  paceK: (r: Racer) => number
   runLogic: (r: Racer) => void
   lapPlan: (r: Racer) => void
   stepPit: (r: Racer, dt: number) => void
@@ -40,6 +41,11 @@ const internal = (s: RaceSim) => s as unknown as {
 {
   const s = makeSim('race')
   assert(s.difficulty === 100, 'difficulté par défaut = 100 %')
+  const r = s.cars[1]
+  s.difficulty = 40; const novice = internal(s).paceK(r)
+  s.difficulty = 70; const balanced = internal(s).paceK(r)
+  s.difficulty = 100; const expert = internal(s).paceK(r)
+  assert(novice < balanced && balanced < expert, 'la difficulté modifie progressivement le rythme IA')
 }
 
 // Une libération de box attend le passage d’une voiture qui arrive dans la voie rapide.
@@ -90,6 +96,23 @@ const internal = (s: RaceSim) => s as unknown as {
   leftBlock.idx = rightBlock.idx = s.idxOf(leftBlock.s)
   internal(s).tactics(attacker, ahead, 30, null, 1e9, 1 / 60)
   assert(attacker.attackT === 0 && attacker.off === null, 'deux voies occupées : pas de plongeon ni de déplacement risqué')
+}
+
+// Le niveau de difficulté ajuste aussi le seuil d’attaque, pas seulement la vitesse.
+{
+  function attempts(level: number) {
+    const s = makeSim('race'); s.difficulty = level; s.ctrl.phase = 'racing'
+    const [attacker, ahead] = s.cars
+    for (const r of s.cars) { r.mode = 'garage'; r.off = null; r.attackT = 0 }
+    attacker.mode = ahead.mode = 'race'; attacker.v = 48; attacker.s = 1000; ahead.s = 1030
+    attacker.d = ahead.d = 0; attacker.idx = s.idxOf(attacker.s); ahead.idx = s.idxOf(ahead.s)
+    const gA = 30, pot = attacker.prof.v[(attacker.idx + Math.round(gA / s.ds)) % s.N] * internal(s).paceK(attacker)
+    ahead.v = pot - 0.8
+    internal(s).tactics(attacker, ahead, gA, null, 1e9, 1 / 60)
+    return attacker.attackT > 0
+  }
+  assert(attempts(100), 'difficulté expert : attaque sur un avantage de rythme modéré')
+  assert(!attempts(40), 'difficulté novice : évite cette attaque marginale')
 }
 
 // En qualification, le pilote lent cède systématiquement et ne gêne pas par distraction aléatoire.

@@ -13,7 +13,7 @@ export interface PitAnchors {
   pitlane_path?: { x: number[]; z: number[] }
 }
 export type PitLaneName = 'fast' | 'work' | 'off'
-export interface PitProbe { i: number; dist: number; p: number; lat: number; lane: PitLaneName }
+export interface PitProbe { i: number; dist: number; p: number; lat: number; lane: PitLaneName; tx: number; tz: number }
 export class Pitlane {
   x: Float32Array; z: Float32Array; d: Float32Array; s: Int32Array; n: number
   /** distance cumulée le long du chemin (m) */
@@ -68,6 +68,7 @@ export class Pitlane {
     const i1 = Math.min(this.n - 1, i + 1)
     const tx = this.x[i1] - this.x[i], tz = this.z[i1] - this.z[i]
     const tn = Math.hypot(tx, tz) || 1
+    const dirX = tx / tn, dirZ = tz / tn
     const dx = x - this.x[i], dz = z - this.z[i]
     const along = (dx * tx + dz * tz) / tn
     const lat = (tx * dz - tz * dx) / tn
@@ -75,11 +76,18 @@ export class Pitlane {
     const p = Math.max(0, Math.min(this.cum[this.n - 1], this.cum[i] + along))
     let lane: PitLaneName = 'off'
     if (dist < 7) lane = lat * this.workSign > 1.35 ? 'work' : 'fast'
-    return { i, dist, p, lat, lane }
+    return { i, dist, p, lat, lane, tx: dirX, tz: dirZ }
   }
-  inSpeedZone(x: number, z: number) {
+  /** Présence physique dans une voie, et non simple proximité de la spline. */
+  onLane(q: PitProbe, hx?: number, hz?: number, corridor = 3.8) {
+    if (q.dist > corridor || q.lane === 'off') return false
+    if (hx === undefined || hz === undefined) return true
+    const hn = Math.hypot(hx, hz)
+    return hn > 1e-6 && (q.tx * hx + q.tz * hz) / hn >= 0.65
+  }
+  inSpeedZone(x: number, z: number, hx?: number, hz?: number) {
     const q = this.probe(x, z)
-    return q.dist < 6 && q.p >= this.cum[this.iIn] - 1 && q.p <= this.cum[this.iOut] + 1
+    return this.onLane(q, hx, hz) && q.p >= this.cum[this.iIn] - 1 && q.p <= this.cum[this.iOut] + 1
   }
   /** point le plus proche (recherche locale autour du dernier, puis globale si loin) */
   nearest(x: number, z: number) {
@@ -90,8 +98,8 @@ export class Pitlane {
     this.last = best
     return { i: best, dist: Math.sqrt(bd) }
   }
-  /** la voiture est-elle dans la zone limitée (à moins de 6 m du chemin, entre les lignes) ? */
-  inLimitZone(x: number, z: number) { const r = this.nearest(x, z); return r.dist < 6 && r.i >= this.iIn && r.i <= this.iOut }
+  /** La voiture est-elle réellement dans le couloir limité, entre les deux lignes ? */
+  inLimitZone(x: number, z: number) { const q = this.probe(x, z); return this.onLane(q) && q.p >= this.cum[this.iIn] - 1 && q.p <= this.cum[this.iOut] + 1 }
   /** mât du feu de sortie : dernier point encore dans la voie (pas sur l'asphalte de course), décalé vers les garages */
   exitStand(): { x: number; z: number; yaw: number } {
     let i = Math.min(this.iExit, this.n - 1)

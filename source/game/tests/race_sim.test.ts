@@ -6,6 +6,7 @@ import { buildRacingLine } from '../src/track/racingLine.ts'
 import { Pitlane } from '../src/track/pitlane.ts'
 import { RaceSim } from '../src/race/sim.ts'
 import { fmtT } from '../src/race/control.ts'
+import { simulatedCarLegalEdges } from '../src/track/limits.ts'
 const meta = JSON.parse(readFileSync(new URL('../public/track/surface.json', import.meta.url), 'utf8'))
 const buf = readFileSync(new URL('../public/track/surface.bin', import.meta.url))
 const track = new TrackSurface(meta, new Uint16Array(buf.buffer, buf.byteOffset, buf.byteLength / 2))
@@ -14,6 +15,8 @@ const kind = (process.argv[2] ?? 'race') === 'race' ? 'race' : 'qualifying'
 const laps = Number(process.argv[3] ?? 10), seed = Number(process.argv[4] ?? 7)
 const t0 = Date.now()
 const line = buildRacingLine(track, 1600, 1.0)
+for (let i = 0; i < track.N; i++) { const [minimum, maximum] = simulatedCarLegalEdges(track, i * track.ds); if (line.e[i] < minimum - 0.01 || line.e[i] > maximum + 0.01) throw new Error(`ligne de course hors enveloppe légale à s=${(i * track.ds).toFixed(0)} m`) }
+console.log('OK : ligne de course Spa dans l’enveloppe des quatre pneus et des lignes blanches')
 const sim = new RaceSim({ track, line, pit, kind, laps, player: 'ham', seed, sessionLen: 720, playerAi: true })
 console.log('profils', Date.now() - t0, 'ms ; T équipe', [...sim.profs].map(([k, v]) => k + ' ' + fmtT(v.T) + ' mu ' + v.mu.toFixed(3)).join(' | '))
 const log: string[] = []

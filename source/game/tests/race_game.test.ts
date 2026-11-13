@@ -15,9 +15,11 @@ F.ctrl.startFormation(); F.ctrl.skipFormation()
 const p = F.player; let t0 = -1
 for (let k = 0; k < 240 * (SEC + 20); k++) {
   if (F.ctrl.placePlayerRequest) { F.ctrl.placePlayerRequest = false; const gp = F.gridPos(p.slot); g.car.placeAt(gp.s, gp.d, 0); g.snapshot(); F.syncPlayer(g.car); F.ctrl.jumpRef = { s: g.car.s, ok: F.ctrl.phase === 'lights' } }
-  g.autopilot = F.ctrl.phase === 'racing'
+  g.autopilot = F.ctrl.phase === 'racing' || F.ctrl.phase === 'chequered'
   g.advance(1 / 240)
   if (F.ctrl.phase === 'racing' && t0 < 0) t0 = F.t
   if (t0 >= 0 && k % 240 === 0) console.log(`t+${(F.t - t0).toFixed(0)} joueur s ${p.s.toFixed(0)} d ${p.d.toFixed(1)} v ${(p.v * 3.6).toFixed(0)} P${p.pos} dmg ${g.car.damage.total.toFixed(2)} | ` + F.ordered().slice(0, 4).map(r => r.code + ' ' + r.s.toFixed(0) + '/' + r.d.toFixed(1)).join(' '))
   if (t0 >= 0 && F.t - t0 > SEC) break
+  if (p.finished || p.out) break
 }
+console.log('résultat joueur', p.code, 'tours', p.laps, 'arrivé', p.finished, 'P' + p.pos, 'vitesse', (p.v * 3.6).toFixed(0), 'km/h', p.out ?? '')

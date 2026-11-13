@@ -242,7 +242,8 @@ export class RaceControl {
       // annonce au passage de la ligne
       if (S.road(C.s, 0) > 0 && S.road(C.s, 0) < 200) { C.inThisLap = true; this.msg('SAFETY CAR RENTRE À LA FIN DE CE TOUR', 'rc') }
     }
-    if (C.inThisLap) { C.lights = false; const toPit = S.road(C.s, S.pitEntryS); if (toPit > 0 && toPit < C.v * dt + 1) { C.mode = 'in'; C.pitP = 0 } }
+    // Once the SC has entered the pit lane, do not re-trigger the entry check and reset pitP each tick.
+    if (C.inThisLap && C.mode !== 'in') { C.lights = false; const toPit = S.road(C.s, S.pitEntryS); if (toPit > 0 && toPit < C.v * dt + 1) { C.mode = 'in'; C.pitP = 0 } }
     if (C.mode === 'in') { C.pitP += 22 * dt; C.v = 22; if (S.pitLen && C.pitP > S.pitLen * 0.4) { C.active = false; C.mode = 'park'; this.restartHold = true; this.drsResumeT = S.t + 2 * S.leader().prof.T; this.msg('Reprise : dépassements autorisés après la ligne de contrôle', 'rc') }
       this.scPose(); return }
     C.v = Math.max(0, C.v + Math.max(-12 * dt, Math.min(5.5 * dt, vt - C.v)))
@@ -264,7 +265,7 @@ export class RaceControl {
     }
     if (S.t > this.resumeAt && S.cars.every(r => r.player || r.out || r.mode === 'redq' || r.mode === 'pit' || r.mode === 'garage')) {
       const playerIn = S.player.out || S.player.inPit || S.player.mode === 'pit' || S.player.mode === 'redq'
-      if (!playerIn && S.t < this.resumeAt + 70) return
+      if (!playerIn) return
       // reprise : départ arrêté sur la grille, dans l'ordre figé. Pas de tour de formation.
       this.red = false
       this.frozenOrder = null
