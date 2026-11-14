@@ -21,6 +21,10 @@ const expectedTeams = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', '
 assert.equal(config.circuit, 'monza_2020')
 assert.deepEqual(config.garages.map(g => g.team), expectedTeams, 'les dix équipes 2020 doivent avoir une case')
 assert.ok(config.player_garage.npc_spots.length > 0, 'les postes PNJ locaux du garage doivent exister')
+const pitCrewIds = new Set(config.player_garage.npc_spots.filter(s => /^mech_(jack|tyre)_/.test(s.id)).map(s => s.id))
+for (const id of ['mech_jack_front', 'mech_jack_rear', ...['FL', 'FR', 'RL', 'RR'].flatMap(w => [`mech_tyre_${w}`, `mech_tyre_${w}_off`])]) {
+  assert.ok(pitCrewIds.has(id), `spot exact du pit crew joueur absent : ${id}`)
+}
 const readGlbNames = file => {
   const bytes = fs.readFileSync(file)
   assert.equal(bytes.toString('ascii', 0, 4), 'glTF', `${path.basename(file)} doit être binaire et assemblé`)
