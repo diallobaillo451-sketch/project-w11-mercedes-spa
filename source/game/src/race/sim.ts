@@ -513,7 +513,7 @@ export class RaceSim {
     // âge perçu : un biais propre à chaque voiture étale les arrêts (les équipes ne rentrent pas toutes au même tour)
     const a0 = (r.tyre.age + ((r as Racer & { _sb?: number })._sb ?? 0)) * ws
     const loss = this.pitLoss()
-    const used = new Set(r.tyre.used.filter(u => u !== 'I' && u !== 'W'))
+    const used = new Set<Comp>(r.tyre.used.filter(u => u !== 'I' && u !== 'W'))
     const noStop = used.size >= 2 ? this.stintCost(cur, a0, left, sk) : Infinity
     let nowBest = Infinity, nowC: Comp = 'M', laterBest = Infinity
     for (const c of ['S', 'M', 'H'] as Comp[]) {
