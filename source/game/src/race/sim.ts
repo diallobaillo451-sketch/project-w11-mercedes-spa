@@ -29,7 +29,7 @@ export class Rng {
   pick<T>(a: T[]) { return a[Math.floor(this.next() * a.length)] }
 }
 export type AiMode = 'garage' | 'grid' | 'formation' | 'race' | 'out' | 'push' | 'cool' | 'in' | 'pit' | 'spun' | 'dnf' | 'redq' | 'sc'
-export interface TeamProf { v: Float64Array; vD: Float64Array; T: number; mu: number; aMax: number }
+export interface TeamProf { v: Float64Array; vD: Float64Array; /** plafond physique (voitures hybrides) : profil μ = 1 × PHYS_K, sans / avec DRS */ vP: Float64Array; vPD: Float64Array; T: number; mu: number; aMax: number }
 export interface Racer {
   i: number; id: string; code: string; num: number; team: string; car: string; player: boolean; sk: Skill
   dist: number; s: number; d: number; v: number; lat: number; idx: number; lastS: number
@@ -59,6 +59,8 @@ export const PIT_LIMIT = 80 / 3.6
 /** facteur de puissance effective par équipe (C : calé sur l'I1 de Spa 2020, voir tests/race_sim.test.ts CALPOW=1) */
 export const AI_POW: Record<string, number> = {}
 const CALIB_POW = true
+/** marge « physique » : ce que le pilote physique tient sans sortir de piste (l'autopilote de calibrage, W11, fait le tour de référence à 1,06 × profil μ = 1 ; 1,05 = petite réserve pour le trafic et l'air sale) */
+const PHYS_K = 1.05
 
 export class RaceSim {
   track: TrackSurface; line: RacingLine; L: number; N: number; ds: number
@@ -81,11 +83,12 @@ export class RaceSim {
   private hybridBank: HybridBank | null = null
   wetness = () => 0
   sessionLen = 0; chequered = false; wearScale = 1
-  playerOnHot = false
-  constructor(o: { track: TrackSurface; line: RacingLine; pit: Pitlane | null; kind: SessionKind; circuit?: string; laps?: number; player: string; seed?: number; sessionLen?: number; grid?: string[]; playerAi?: boolean; exclude?: string[] }) {
+  playerOnHot = false; hotK = 0; private tk = 1; gates: [number, number] = [2050, 5000]
+  constructor(o: { track: TrackSurface; line: RacingLine; pit: Pitlane | null; kind: SessionKind; circuit?: string; laps?: number; player: string; seed?: number; sessionLen?: number; grid?: string[]; playerAi?: boolean; exclude?: string[]; gates?: [number, number] }) {
     this.track = o.track; this.line = o.line; this.L = o.track.length; this.N = o.line.N; this.ds = o.track.ds
     this.kind = o.kind; this.circuit = o.circuit ?? 'bel'; this.laps = o.laps ?? 10; this.rng = new Rng(o.seed ?? (Date.now() & 0xffffff))
     this.pit = o.pit; this.sessionLen = o.sessionLen ?? 0
+    this.gates = o.gates ?? [2050 * this.L / 7004, 5000 * this.L / 7004]
     this.wearScale = this.kind === 'race' ? Math.max(1, Math.min(4.4, 44 / Math.max(1, this.laps))) : 1
     this.zones = drsZones(this.L); this.drsDet = this.zones.filter(z => z[0] > 1).map(z => (z[0] - 120 + this.L) % this.L)
     this.leaderT = new Float64Array(Math.ceil((this.laps + 3) * this.L / this.binW) + 8).fill(NaN)
@@ -147,7 +150,10 @@ export class RaceSim {
       for (let k = 0; k < 16; k++) { const mu = (lo + hi) / 2; v = speedProfile(this.track, this.line, P, mu, drs); if (profileLapTime(v, this.ds) > tgt) lo = mu; else hi = mu }
       const mu = (lo + hi) / 2, vN = speedProfile(this.track, this.line, P, mu), vD = speedProfile(this.track, this.line, P, mu, drs)
       const aMax = 735000 * cp.ice / (W11.massMin + 60)
-      this.profs.set(team, { v: vN, vD, T: profileLapTime(vD, this.ds), mu, aMax })
+      // plafond « physique » (voitures hybrides) : profil à μ = 1 × PHYS_K, sans et avec DRS
+      const vP = speedProfile(this.track, this.line, P, 1), vPD = speedProfile(this.track, this.line, P, 1, drs)
+      for (let q = 0; q < this.N; q++) { vP[q] *= PHYS_K; vPD[q] *= PHYS_K }
+      this.profs.set(team, { v: vN, vD, vP, vPD, T: profileLapTime(vD, this.ds), mu, aMax })
     }
     applyCarPhysics(keep)
   }
@@ -233,6 +239,9 @@ export class RaceSim {
     r.tyre.c = (c.setup.compound === 'C4' ? 'S' : c.setup.compound === 'C3' || c.setup.compound === 'C1' ? 'M' : c.setup.compound === 'C2' ? 'H' : c.setup.compound) as Comp
     // voie des stands du joueur (même zone que l'IA) : pour la file, le trafic et le chronométrage
     r.inPit = !!this.pit && this.pit.inLimitZone(c.pos[0], c.pos[2])
+    // essais / qualif : le joueur est « en tour lancé » (les IA lui cèdent le passage) quand il roule près du rythme de la trajectoire, hors voie des stands
+    if (this.kind !== 'race') { this.hotK += (Math.min(1.3, r.v / Math.max(25, this.line.v[r.idx] * 1.04)) - this.hotK) * 0.025; this.playerOnHot = !r.inPit && r.v > 35 && this.hotK > 0.74 }
+    else this.playerOnHot = false
     // aspiration pour la physique du joueur : voiture devant la plus proche (même voie)
     let best: { gap: number; lat: number } | null = null
     for (const o of this.cars) { if (o === r || !this.onTrack(o)) continue; const g = this.road(r.s, o.s); if (g > 0 && g < 120 && (!best || g < best.gap)) best = { gap: g - CL, lat: o.d - r.d } }
@@ -263,7 +272,8 @@ export class RaceSim {
     // ─ décision de rentrer
     if (r.wantPit && this.pit && this.road(r.s, this.pitEntryS) > 0 && this.road(r.s, this.pitEntryS) < r.v * dt + 0.5 && C.pitOpenFor(r)) { this.enterPit(r); return }
     // ─ vitesse cible
-    const late = r.attackT > 0 ? Math.round((3 + r.sk.craft * 7) / this.ds) : 0
+    const phys = this.drives(r)
+    const late = !phys && r.attackT > 0 ? Math.round((3 + r.sk.craft * 7) / this.ds) : 0
     const useD = r.drs && this.inZone(r.s)
     const P = useD ? r.prof.vD : r.prof.v
     const nx = Math.ceil(r.v / 60 / this.ds) + 1
@@ -288,11 +298,15 @@ export class RaceSim {
     vt = C.speedCap(r, i, vt)
     if (C.vsc && r.mode === 'race') C.vscOver(r, r.v, r.prof.v[i] * 0.62, dt)
     // ─ suivre (pas de place à côté) : on ne rentre pas dans la voiture devant
-    if (ahead) { const v0 = ahead.v, gmin = 2.5 + r.v * 0.09, gg = gA - CL; vt = Math.min(vt, Math.max(0, v0 + (gg - gmin) * 0.9)); if (gg < 1) vt = Math.min(vt, v0 - 2)
+    if (ahead) { const v0 = ahead.v, gmin = phys ? 3.5 + r.v * 0.14 : 2.5 + r.v * 0.09, gg = gA - CL; vt = Math.min(vt, Math.max(0, v0 + (gg - gmin) * 0.9)); if (gg < 1) vt = Math.min(vt, v0 - 2)
       // freinage d'urgence (le pilote voit la voiture devant ralentir) : jamais de rapprochement sous la marge
       if (gg < gmin * 0.6 && r.v > v0 && !r.err) r.v = Math.max(v0, r.v - 60 * dt) }
     // ─ tactique (attaque, défense, bleus, trafic) toutes les ~0,2 s
+    // qualif / essais : tour de sortie ou de refroidissement = on prépare le tour lancé → écart propre (≈ 3 s) à la voiture qui précède, pas de train de voitures
+    if (this.kind !== 'race' && ahead && (r.mode === 'out' || r.mode === 'cool') && (ahead.mode === 'out' || ahead.mode === 'cool' || ahead.mode === 'push' || ahead.player) && gA < Math.max(45, r.v * 3.2)) vt = Math.min(vt, Math.max(6, ahead.v * 0.94))
+    this.tk = 1
     this.tactics(r, ahead, gA, behind, gB, dt)
+    if (phys) vt *= this.tk
     // ─ intégration longitudinale
     const pa = P[i], pb = P[(i + nx) % this.N], aProf = Math.max(0, (pb * pb - pa * pa) / (2 * nx * this.ds))
     const aAcc = Math.max(aProf * 1.03, Math.min(r.v < 25 ? 11 : 14, r.prof.aMax * 0.8 / Math.max(8, r.v) - 0.0009 * r.v * r.v)) * (r.err?.kind === 'mech' ? 0.4 : 1)
@@ -316,8 +330,17 @@ export class RaceSim {
     const rate = 1.0 + 0.035 * r.v
     const dl = Math.max(-rate * dt, Math.min(rate * dt, (devT - dev0) * Math.min(1, dt * 2.5)))
     const nd = e0 + dev0 + dl
-    const ndc = r.err?.kind === 'wide' || r.mode === 'spun' ? nd : Math.max(-(eL + 0.5), Math.min(eR + 0.5, nd))
-    if (ghost) this.cmd.set(r.i, { vt, dT })
+    // une voiture hors de la bande utilisable (retour de tête-à-queue, sortie des stands) y revient à vitesse latérale limitée au lieu d'être téléportée
+    const inBand = r.d >= -(eL + 0.55) && r.d <= eR + 0.55
+    const ndc = r.err?.kind === 'wide' || r.mode === 'spun' || !inBand ? nd : Math.max(-(eL + 0.5), Math.min(eR + 0.5, nd))
+    if (ghost) {
+      // consigne au pilote physique : vitesse plafonnée à ce que la voiture sait tenir, vitesse 0,25 s plus loin (freinage anticipé), trajectoire voulue (lissée par le pilote)
+      const cap = useD ? r.prof.vPD : r.prof.vP, NN = this.N
+      const iL = (i + Math.ceil((r.v * 0.22 + 3) / this.ds)) % NN
+      const bH = Math.max(1, Math.min(P[i], P[(i + nx) % NN])), bL = P[iL]
+      const vH = Math.min(vt, cap[i]), vL = Math.min(vH, vt * Math.min(1, bL / bH), cap[iL])
+      this.cmd.set(r.i, { vt: vH, vtLook: vL, dT })
+    }
     else { r.lat = (ndc - r.d) / dt * 0.3 + r.lat * 0.7; r.d = ndc }
     ;(r as Racer & { _dr?: number })._dr = dl / dt
     // ─ avance (la physique hybride écrit s / d / v ensuite)
@@ -360,12 +383,22 @@ export class RaceSim {
     r.attackT = Math.max(0, r.attackT - dt); r.yieldT = Math.max(0, r.yieldT - dt); r.sepT = Math.max(0, r.sepT - dt)
     const edgeL = this.track.wlR[i] - 0.9, edgeR = this.track.wrR[i] - 0.9
     // céder le passage (bleu en course, trafic en qualif) : on se range du côté opposé à la trajectoire et on lève le pied
-    const mustYield = behind && gB < Math.max(25, behind.v * 1.2) && (C.isBlue(r, behind) || (this.kind !== 'race' && behind.mode === 'push' && r.mode !== 'push') || (this.kind !== 'race' && behind.player && this.playerOnHot && r.mode !== 'push'))
+    // trafic de qualif / essais : on repère la voiture en tour lancé (ou le joueur) qui arrive derrière, jusqu'à ~400 m, pour se ranger à temps
+    if (this.kind !== 'race' && r.mode !== 'push') {
+      let hot: Racer | null = null, gH = 1e9
+      for (const o of this.cars) {
+        if (o === r || !this.onTrack(o) || !(o.mode === 'push' || (o.player && this.playerOnHot))) continue
+        const g = -this.road(r.s, o.s)
+        if (g > 0 && g < 420 && g < gH) { gH = g; hot = o }
+      }
+      if (hot && hot !== behind) { behind = hot; gB = gH }
+    }
+    const mustYield = behind && gB < Math.max(35, Math.min(420, (behind.v - r.v) * 6)) && (C.isBlue(r, behind) || (this.kind !== 'race' && behind.mode === 'push' && r.mode !== 'push') || (this.kind !== 'race' && behind.player && this.playerOnHot && r.mode !== 'push'))
     if (mustYield) {
       // une fois sur ~25 (pilote distrait), l'IA ne voit pas la voiture arriver → gêne (enquête)
       const rk = r as Racer & { _yr?: number }, key = behind!.i * 1e6 + Math.floor(behind!.dist / this.L)
-      if (rk._yr !== key) { rk._yr = key; if (this.rng.next() < 0.03 * (1.15 - r.sk.cons) / 0.25) { r.yieldT = 4; if (behind!.mode === 'push' || behind!.player) C.impeding(r, behind!) } }
-      if (r.yieldT === 0) { const side = ln.e[i] > 0 ? -1 : 1; r.off = side < 0 ? -edgeL + 0.3 : edgeR - 0.3; r.v *= 1 - 0.02 * dt * 10 }
+      if (rk._yr !== key) { rk._yr = key; if (this.rng.next() < 0.008 * (1.15 - r.sk.cons) / 0.25) { r.yieldT = 4; if (behind!.mode === 'push' || behind!.player) C.impeding(r, behind!) } }
+      if (r.yieldT === 0) { const side = ln.e[i] > 0 ? -1 : 1; r.off = side < 0 ? -edgeL + 0.3 : edgeR - 0.3; r.v *= 1 - 0.02 * dt * 10; this.tk = 0.82 }
       return
     }
     if (ahead && gA < 1.2 * Math.max(20, r.v) && C.mayOvertake(r, ahead)) {
@@ -431,10 +464,66 @@ export class RaceSim {
     if (r.mode === 'sc' || this.ctrl.sc.active || this.ctrl.vsc) M *= 0.15
     const diffM = 1.5 - 0.95 * (this.difficulty / 100)
     const p = (x: number) => this.rng.next() < x * w * M * f * diffM
-    if (p(0.0003 * (wet > 0.3 ? 2 : 1))) { this.crash(r); return }
-    if (p(0.0007)) { r.err = { kind: 'spin', t: 0.8 }; r.v *= 0.7; this.ctrl.incident(r, r.s, 'spin'); r.tyre.flat = Math.min(1, r.tyre.flat + 0.5); return }
+    const phys = this.drives(r) // voiture physique : ses vrais accidents viennent de la physique (driver.ts), pas de tirages au sort
+    if (!phys && p(0.0003 * (wet > 0.3 ? 2 : 1))) { this.crash(r); return }
+    if (!phys && p(0.0007)) { r.err = { kind: 'spin', t: 0.8 }; r.v *= 0.7; this.ctrl.incident(r, r.s, 'spin'); r.tyre.flat = Math.min(1, r.tyre.flat + 0.5); return }
     if (p(0.010 * late * push)) { r.err = { kind: 'lock', t: 0.9 }; r.tyre.flat = Math.min(1, r.tyre.flat + 0.08); if (r.tyre.flat > 0.6) r.wantPit = r.wantPit ?? 'plat'; return }
-    if (p(0.010 * late * push)) { r.err = { kind: 'wide', t: 1.6 }; r.side = Math.sign(this.line.e[(i + Math.round(80 / this.ds)) % this.N]) || 1; return }
+    if (!phys && p(0.010 * late * push)) { r.err = { kind: 'wide', t: 1.6 }; r.side = Math.sign(this.line.e[(i + Math.round(80 / this.ds)) % this.N]) || 1; return }
+  }
+  /** voiture physique (hybride) : tête-à-queue, immobilisée ou détruite → retour au modèle 1D avec incident (drapeaux jaunes, SC / VSC / rouge selon la gravité) */
+  physIncident(r: Racer, kind: 'spin' | 'stuck' | 'wreck', yaw: number) {
+    if (r.mode === 'dnf' || r.mode === 'spun' || r.out) return
+    r.err = null; r.off = null; r.attackT = 0; r.spin = yaw
+    if (kind === 'wreck') { this.retire(r, 'Accident'); this.ctrl.incident(r, r.s, 'crash'); return }
+    r.mode = 'spun'; r.stopT = kind === 'stuck' ? 5 + this.rng.next() * 6 : 2 + this.rng.next() * 4
+    this.ctrl.incident(r, r.s, 'spin')
+  }
+  /** essais / qualif : à la sortie des stands on laisse passer une voiture en tour lancé (ou le joueur) ; au plus 20 s d'attente */
+  private exitBusy(r: Racer, dt: number) {
+    const k = r as Racer & { _xh?: number }, P = this.pit
+    if (this.kind === 'race' || !P || !this.pitCum || r.pitP < this.pitCum[P.iExit] - 40) { k._xh = 0; return false }
+    if ((k._xh ?? 0) > 20) return false
+    const ex = this.wrapS(P.s[P.n - 1])
+    for (const o of this.cars) {
+      if (o === r || !this.onTrack(o) || !(o.mode === 'push' || (o.player && this.playerOnHot))) continue
+      const g = this.road(o.s, ex)
+      if (g > -20 && g < Math.max(110, o.v * 6.5)) { k._xh = (k._xh ?? 0) + dt; return true }
+    }
+    return false
+  }
+  /** temps perdu à un arrêt (s) : voie des stands à 80 km/h moins le même tronçon au rythme de course, plus service et freinage / relance */
+  private pitLoss() {
+    const vAvg = this.L / Math.max(60, this.profs.get('mercedes')?.T ?? 100)
+    const transit = this.pitLen > 0 ? Math.max(6, this.pitLen / PIT_LIMIT - this.pitLen / Math.max(30, vAvg)) : 11
+    return transit + 2.6 + 4.2
+  }
+  /** coût (s) de n tours sur la gomme c en partant de l'âge a0 (tours d'usure équivalents) : même loi que paceK */
+  private stintCost(c: Comp, a0: number, n: number, sk: number) {
+    const ty = TYRE[c], ws = this.wearScale
+    let s = 0
+    for (let k = 0; k < n; k++) { const a = a0 + k * ws; s += ty.delta + ty.deg * a * (1.05 - sk * 0.1) + Math.max(0, a - ty.cliff) ** 2 * 0.02 }
+    return s
+  }
+  /** stratégie d'arrêt (sec) : relais optimal sur l'horizon restant : arrêt à la fin de ce tour, plus tard ou jamais (règle des 2 gommes comprise).
+   *  k = part du temps d'arrêt réellement perdue si on rentre maintenant (safety car 0,45, VSC 0,62, course 1) */
+  private stratDecide(r: Racer, k: number): { pit: boolean; c: Comp } | null {
+    const left = this.laps - r.laps
+    if (left < 3 || r.tyre.c === 'I' || r.tyre.c === 'W') return null
+    const ws = this.wearScale, sk = r.sk.tyre, cur = r.tyre.c
+    // âge perçu : un biais propre à chaque voiture étale les arrêts (les équipes ne rentrent pas toutes au même tour)
+    const a0 = (r.tyre.age + ((r as Racer & { _sb?: number })._sb ?? 0)) * ws
+    const loss = this.pitLoss()
+    const used = new Set(r.tyre.used.filter(u => u !== 'I' && u !== 'W'))
+    const noStop = used.size >= 2 ? this.stintCost(cur, a0, left, sk) : Infinity
+    let nowBest = Infinity, nowC: Comp = 'M', laterBest = Infinity
+    for (const c of ['S', 'M', 'H'] as Comp[]) {
+      if (used.size === 1 && used.has(c)) continue
+      const now = this.stintCost(cur, a0, 1, sk) + loss * k + this.stintCost(c, 0, left - 1, sk)
+      if (now < nowBest) { nowBest = now; nowC = c }
+      for (let m = 2; m <= left - 2; m++) { const later = this.stintCost(cur, a0, m, sk) + loss + this.stintCost(c, 0, left - m, sk); if (later < laterBest) laterBest = later }
+    }
+    const margin = 0.8 + (100 - this.difficulty) / 100 * 2.5
+    return { pit: nowBest + margin < noStop && nowBest <= laterBest, c: nowC }
   }
   crash(r: Racer) {
     const heavy = this.rng.next() < 0.7
@@ -472,7 +561,7 @@ export class RaceSim {
     for (const o of this.cars) if (o !== r && o.mode === 'pit') { const g = o.pitP - r.pitP; if (g > 0 && g < 14) vt = Math.min(vt, Math.max(0, o.v + (g - 8) * 0.8)) }
     // feu de sortie : on s'arrête sur la ligne tant qu'il est rouge (drapeau rouge compris)
     const exitP = c[P.iExit]
-    if (!this.ctrl.pitExitGreen() && r.pitP < exitP) vt = Math.min(vt, Math.sqrt(2 * 8 * Math.max(0, exitP - r.pitP - 1.2)))
+    if ((!this.ctrl.pitExitGreen() || this.exitBusy(r, dt)) && r.pitP < exitP) vt = Math.min(vt, Math.sqrt(2 * 8 * Math.max(0, exitP - r.pitP - 1.2)))
     // drapeau rouge : file dans la voie rapide à la sortie, dans l'ordre
     if (this.ctrl.red) { const q = this.ctrl.redSlot(r); if (q !== null) { const tgt = exitP - 8 - q * 8; vt = Math.min(vt, Math.sqrt(2 * 6 * Math.max(0, tgt - r.pitP))); if (tgt - r.pitP < 0.5) { r.v = 0; r.mode = 'redq'; r.pitLat = 0; return } } }
     r.v = Math.max(0, r.v + Math.max(-30 * dt, Math.min(10 * dt, vt - r.v)))
@@ -557,7 +646,7 @@ export class RaceSim {
     if (this.kind === 'race' && b >= 0 && b < this.leaderT.length && isNaN(this.leaderT[b])) this.leaderT[b] = this.t
     if (this.kind === 'race' && b >= 0 && b < this.leaderT.length) r.gap = this.t - this.leaderT[b]
     const lapNow = Math.floor(r.dist / this.L)
-    const gates = [2050 * this.L / 7004, 5000 * this.L / 7004]
+    const gates = this.gates
     const prevDist = (r as Racer & { _pd?: number })._pd ?? r.dist; (r as Racer & { _pd?: number })._pd = r.dist
     for (let g = 0; g < 2; g++) { const gd = Math.floor(prevDist / this.L) * this.L + gates[g]; if (prevDist < gd && r.dist >= gd && r.sector === g && !isNaN(r.secT0)) { r.sectors[g] = this.t - r.secT0; r.secT0 = this.t; r.sector = g + 1 } }
     if (lapNow > Math.floor(prevDist / this.L) && r.dist > 0) {
@@ -592,14 +681,18 @@ export class RaceSim {
     const ty = TYRE[r.tyre.c], age = r.tyre.age * this.wearScale, left = this.laps - r.laps
     if (left <= 0) return
     const wet = this.wetness(), slick = !(r.tyre.c === 'I' || r.tyre.c === 'W')
-    if (r.plan.some(p => p.lap === r.laps) && left > 1) r.wantPit = r.wantPit ?? 'plan'
+    // stratégie : relais optimal sur l'horizon restant (usure, temps perdu à l'arrêt, règle des 2 gommes) ; une équipe n'empile pas ses deux voitures
+    const strat = slick && r.wantPit === null ? this.stratDecide(r, 1) : null
+    const mate = this.cars.some(o => o !== r && o.team === r.team && !o.out && (o.mode === 'pit' || o.wantPit !== null))
+    if (strat?.pit && (!mate || age > ty.cliff)) { r.plan = [{ lap: r.laps + 1, c: strat.c }]; r.wantPit = 'stratégie' }
     if (age > ty.cliff + 4 && left * this.wearScale > 4) r.wantPit = r.wantPit ?? 'pneus usés'
     if (wet > 0.35 && slick && left > 1) r.wantPit = 'pluie'
     if (wet < 0.18 && !slick && left > 2) r.wantPit = 'piste sèche'
     if (r.dmg.fw > 0.3 || r.tyre.punct) r.wantPit = 'dégâts'
     if (r.dtPend > 0) r.wantPit = 'drive'
     if (r.sgPend > 0) r.wantPit = 'stop-go'
-    if (this.ctrl.sc.active && r.plan.some(p => p.lap - r.laps <= 8 && p.lap >= r.laps - 1) && left > 1) r.wantPit = r.wantPit ?? 'safety car'
+    // SC / VSC : arrêt « bon marché » quand le calcul de relais le préfère à un arrêt normal plus tard
+    if ((this.ctrl.sc.active || this.ctrl.vsc) && slick && r.wantPit === null && left > 2) { const d = this.stratDecide(r, this.ctrl.sc.active ? 0.45 : 0.62); if (d?.pit) { r.plan = [{ lap: r.laps + 1, c: d.c }]; r.wantPit = this.ctrl.sc.active ? 'safety car' : 'vsc' } }
     if (this.ctrl.vsc && age > ty.cliff * 0.72 && left > 2) r.wantPit = r.wantPit ?? 'vsc'
     const threat = this.cars.some(o => o !== r && !o.out && this.road(o.s, r.s) > 0 && this.road(o.s, r.s) < Math.max(40, o.v * 2.4) && o.v > r.v - 2)
     if (threat && age > ty.cliff * (this.difficulty > 70 ? 0.62 : 0.85) && left > 6 && this.difficulty > 55) r.wantPit = r.wantPit ?? 'undercut'
@@ -612,7 +705,7 @@ export class RaceSim {
       if (r.player) continue
       const top10 = r.slot < 10
       r.tyre.c = top10 ? 'S' : this.rng.next() < 0.7 ? 'M' : this.rng.next() < 0.6 ? 'H' : 'S'
-      r.tyre.used = [r.tyre.c]
+      r.tyre.used = [r.tyre.c]; (r as Racer & { _sb?: number })._sb = (this.rng.next() - 0.5) * 2 * (1 + (100 - this.difficulty) / 100 * 2)
       const life = TYRE[r.tyre.c].cliff / this.wearScale
       const agg = 0.55 + 0.4 * (this.difficulty / 100)
       const two = this.laps >= 20 && this.rng.next() < (this.difficulty > 60 ? 0.45 : 0.15)
