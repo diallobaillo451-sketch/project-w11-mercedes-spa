@@ -31,7 +31,7 @@ import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, s
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
 import { marshalBoardFallbackAllowed, pitExitLampFallbackAllowed } from './render/signals.ts'
-import { loadMonzaPits, loadSpaPits, openGarageDoors, updateGarageAnims } from './render/pitYard.ts'
+import { loadMonzaPits, loadSpaPits, monzaGarageAnimationState, openGarageDoors, updateGarageAnims } from './render/pitYard.ts'
 import { readPitAnchors } from './render/anchors.ts'
 import { PitScreens } from './render/pitScreens.ts'
 import { Engineer } from './race/engineer.ts'
@@ -336,8 +336,8 @@ function frame(now: number) {
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
   menuMusic.update(dt)
-  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase); screens?.update(game.field, game.car, settings.weather) } return }
-  updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase)
+  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase, game.pitShow.lift); screens?.update(game.field, game.car, settings.weather) } return }
+  updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase, CIRCUIT.id === 'monza' ? game.pitShow.lift : 0)
   if (screen === 'garage') { garageTick(); if (game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt) }
   const st = input.poll(dt, settings.setup.autoGear)
   const c = game.car
@@ -777,7 +777,7 @@ async function main() {
     $('bootGo').addEventListener('click', go)
     last = performance.now(); requestAnimationFrame(frame)
     if (params.has('auto')) { await go(); const k = params.get('auto') as SessionKind | 'demo'; if (k) startSession(k) }
-    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, menu, startQuick, startWeekend, endSession, openGarage, get run() { return run }, get wk() { return wk }, get fview() { return fview }, get tower() { return tower }, skipFormation, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
+    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, menu, startQuick, startWeekend, endSession, openGarage, monzaGarageAnimationState, updateGarageAnims, get run() { return run }, get wk() { return wk }, get fview() { return fview }, get tower() { return tower }, skipFormation, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
     ;(window as unknown as { __w11diag: unknown }).__w11diag = diag
   } catch (e) {
     console.error(e)
