@@ -13,9 +13,12 @@ Le fichier `sepang_international_circuit_2025_layout.glb` (42 Mo) dans CE dossie
 - `track_sepang/surface.json` + `surface.bin` : grille physique (s, d) au format de `source/game/src/track/surface.ts` (N × 361 cellules, pas de 0,25 m, hauteur relative au centre en cm sur 13 bits + type sur 3 bits) ;
 - `track_sepang/grassmask.bin` : herbe 3D ;
 - `assets/sepang/tiles.json` + `base.gltf` + `base.bin` : scène (une seule tuile « base » chargée avant le départ, `hasLods: false`) ;
+- `assets/sepang/tex/ktx2.json` : manifeste vide, car les 97 images WebP sont intégrées en `bufferView` dans `base.bin`. Il permet de garder KTX2 actif pour la W11 compressée sur mobile, sans chercher de variantes KTX2 pour les textures de piste ;
 - `assets/sepang/CREDITS.txt` : attribution CC BY 4.0.
 
 Puis `.assemble` copie le tout dans `public/` (ligne « SEPANG OK » dans le journal) et construit le jeu avec `VITE_SEPANG=1`, ce qui ajoute Sepang au bouton de bascule des circuits (`?circuit=sepang` marche toujours).
+
+Le manifeste KTX2 vide est intentionnel : un index de textures de piste absent ne doit pas faire désactiver KTX2 pour les autres assets, notamment la voiture (sinon son chargement WebP peut provoquer un pic de mémoire GPU sur téléphone).
 
 ## Règle d'or : aucun nom de matériau n'est modifié
 

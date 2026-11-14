@@ -277,7 +277,17 @@ export class Renderer {
     const cu = `./assets/w11_lh2020_${q.car}.glb`, cuK = `./assets/w11_lh2020_${q.car}_ktx2.glb`
     const man = await (await fetch(TRACK_DIR + 'tiles.json')).json() as TileManifest
     this.tiles = { man, loaded: new Set(), total: man.tiles.length, bytes: 0 }
-    if (KTX) { try { KTX_LIST = await (await fetch(TRACK_DIR + 'tex/ktx2.json')).json(); diag.ktx = true; dlog('KTX2 actif (' + Object.keys(KTX_LIST).length + ' textures)') } catch { KTX = null; dlog('ktx2.json absent → WebP') } }
+    if (KTX) {
+      try {
+        KTX_LIST = await (await fetch(TRACK_DIR + 'tex/ktx2.json')).json()
+        diag.ktx = true; dlog('KTX2 actif (' + Object.keys(KTX_LIST).length + ' textures)')
+      } catch {
+        // Manifeste absent = textures de piste en WebP, pas absence de support KTX2.
+        // Garder KTX pour la W11 et les textures communes évite un pic mémoire sur mobile.
+        KTX_LIST = {}; diag.ktx = true
+        dlog('ktx2.json absent → piste WebP; KTX2 voiture conservée')
+      }
+    }
     const pos = game.pose(this.pose).pos, d = (t: TileInfo) => t.id === 'base' ? -1e9 : Math.hypot(t.cx - pos[0], t.cz - pos[2]) - t.r
     const srt = [...man.tiles].sort((a, b) => d(a) - d(b)), first = srt.filter((t, i) => this.mobile ? i < 3 : (i < 4 || d(t) < NEAR_M)) /* mobile : décor + tuile du départ seulement → démarrage plus rapide, le reste en flux */, w = (t: TileInfo) => t.geoBytes + t.tex.reduce((a, u) => a + (man.texSizes[u] ?? 0), 0)
     const W = first.reduce((a, t) => a + w(t), 0) * 1.15
