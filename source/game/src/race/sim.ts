@@ -497,11 +497,11 @@ export class RaceSim {
     const transit = this.pitLen > 0 ? Math.max(6, this.pitLen / PIT_LIMIT - this.pitLen / Math.max(30, vAvg)) : 11
     return transit + 2.6 + 4.2
   }
-  /** coût (s) de n tours sur la gomme c en partant de l'âge a0 (tours d'usure équivalents) : même loi que paceK */
+  /** coût (s) de n tours sur la gomme c en partant de l'âge a0 (tours d'usure équivalents) : même loi que paceK + prime de risque (0,5 s par tour au-delà de 85 % de la falaise : on ne planifie pas un relais au bord de la falaise) */
   private stintCost(c: Comp, a0: number, n: number, sk: number) {
     const ty = TYRE[c], ws = this.wearScale
     let s = 0
-    for (let k = 0; k < n; k++) { const a = a0 + k * ws; s += ty.delta + ty.deg * a * (1.05 - sk * 0.1) + Math.max(0, a - ty.cliff) ** 2 * 0.02 }
+    for (let k = 0; k < n; k++) { const a = a0 + k * ws; s += ty.delta + ty.deg * a * (1.05 - sk * 0.1) + Math.max(0, a - ty.cliff) ** 2 * 0.02 + 0.5 * Math.max(0, a - 0.85 * ty.cliff) }
     return s
   }
   /** stratégie d'arrêt (sec) : relais optimal sur l'horizon restant : arrêt à la fin de ce tour, plus tard ou jamais (règle des 2 gommes comprise).

@@ -31,6 +31,7 @@ Mise à jour du 2026-11-14 (branche claude/ia-pilotes). Code : race/driver.ts (n
 
 ### Stratégie (sim.ts, stratDecide)
 - Chaque tour, chaque IA compare : arrêt à la fin de ce tour, arrêt plus tard, ou pas d'arrêt (si la règle des 2 gommes est remplie), avec la même loi d'usure que paceK et le temps perdu à un arrêt calculé sur la voie des stands (pitLoss). Choisit aussi la gomme.
+- Prime de risque : 0,5 s par tour au-delà de 85 % de la falaise de la gomme (on ne planifie pas un relais au bord de la falaise). Vérifié hors jeu sur 44 / 30 / 20 / 10 tours : départ M → arrêt vers T19-22 en H ; départ S → T14-15 en H ; départ H → arrêt tardif en S / M ; sous SC, M de 10 tours et plus rentre en H.
 - Sous SC : 45 % du temps perdu ; sous VSC : 62 %. Une équipe n'empile pas ses deux voitures. Un biais par voiture (plus ou moins 1 à 3 tours) étale les arrêts.
 - Les déclencheurs existants restent (pluie, piste sèche, dégâts, pénalités, undercut, gomme obligatoire, usure extrême).
 
