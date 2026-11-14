@@ -1,0 +1,48 @@
+{
+ "note": "Monza 2020 (modèle Sketchfab Dave Love) : AUCUN panneau lumineux de commissaire (jaune/bleu/rouge/vert) ni poste de commissaire modélisé — vérifié sur les 58 matériaux et 60 textures. Liste « posts » vide ; à créer (voir MANQUANTS.md). Coordonnées glTF (Y haut, origine ligne de départ), s = distance le long de la ligne centrale en m.",
+ "posts": [],
+ "signals": [
+  {
+   "id": "signal_1",
+   "type": "feu 3 lampes (rouge, rouge, vert) existant dans le modèle — probablement feu de sortie des stands / départ (E)",
+   "position": [
+    -4.768,
+    4.999,
+    -36.394
+   ],
+   "s": 35.7,
+   "d": -6.12,
+   "facing": "vers l'arrivée des voitures (normale ≈ +Z glTF)",
+   "lamps": [
+    {
+     "node": "signal_1_red_top",
+     "color": "red_top",
+     "center": [
+      -4.791,
+      5.392,
+      -36.361
+     ]
+    },
+    {
+     "node": "signal_1_red_mid",
+     "color": "red_mid",
+     "center": [
+      -4.791,
+      4.999,
+      -36.395
+     ]
+    },
+    {
+     "node": "signal_1_green",
+     "color": "green",
+     "center": [
+      -4.722,
+      4.606,
+      -36.425
+     ]
+    }
+   ],
+   "material": "un matériau émissif par lampe (même nom que le nœud), émission 0 = éteint ; couleur d'allumage dans extras.w11_lamp_rgb"
+  }
+ ]
+}

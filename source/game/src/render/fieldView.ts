@@ -10,6 +10,7 @@ import { dlog } from '../diag.ts'
 import { bindLivery, readableLivery } from './livery.ts'
 import { collectAnchors, type Anchor } from './anchors.ts'
 import { cloneTyreMaterials, setTyreCompoundColor } from './tyreColor.ts'
+import { paintLight, shouldCreateFallbackMarshalBoards } from './signals.ts'
 
 type Mat = THREE.MeshStandardMaterial
 interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean; spin0: number; steer0: number }
@@ -128,22 +129,26 @@ export class FieldView {
   root = new THREE.Group()
   views: CarView[] = []
   sc: THREE.Object3D | null = null
+  private marshalBoardFallback = true
+  private pitExitLampFallback = true
   private scLights: THREE.Object3D[] = []
   private scBar: THREE.Mesh[] = []
   scLodUrl = SAFETY_CAR_LOD
   scHiUrl = SAFETY_CAR_HI
   lamps = new Map<number, Record<string, THREE.Mesh>>()
   anchors: Map<string, Anchor> = new Map()
-  private monzaSignalNodes = new Set<THREE.Object3D>()
   private jack0 = new Map<string, number>()
   private pitGantry: THREE.Group | null = null
   private pitRed: THREE.MeshStandardMaterial | null = null
   private pitGreen: THREE.MeshStandardMaterial | null = null
   private boards: { n: number; mat: THREE.MeshStandardMaterial }[] | null = null
+  setMarshalBoardFallback(enabled: boolean) { this.marshalBoardFallback = enabled }
+  setPitExitLampFallback(enabled: boolean) { this.pitExitLampFallback = enabled }
   /** feu de sortie : mât à côté de la voie, hors piste, lampe rouge et lampe verte. L'ancre de Ty remplace ce mât. */
   private paintExitLamp(sim: RaceSim) {
     const named = this.anchors.get('anchor_pit_exit_light') ?? this.anchors.get('pit_exit_light')
     if (named) { if (this.pitGantry) this.pitGantry.visible = false; return }
+    if (!this.pitExitLampFallback) { if (this.pitGantry) this.pitGantry.visible = false; return }
     const pit = sim.pit; if (!pit) return
     if (!this.pitGantry) {
       const dark = new THREE.MeshStandardMaterial({ color: 0x2c3136, roughness: 0.55, metalness: 0.35 })
@@ -181,7 +186,7 @@ export class FieldView {
   }
   /** panneaux de repli si le GLB des commissaires n'est pas là : un feu par poste, hors piste */
   private ensureBoards(sim: RaceSim) {
-    if (this.lamps.size || this.boards) return
+    if (!shouldCreateFallbackMarshalBoards(this.marshalBoardFallback, this.lamps.size, !!this.boards)) return
     this.boards = []
     const smp = { h: 0, nx: 0, ny: 1, nz: 0, type: 1, s: 0, d: 0, i: 0 }
     const poleM = new THREE.MeshStandardMaterial({ color: 0x242424, roughness: 0.7 })
@@ -314,14 +319,11 @@ export class FieldView {
       dlog('panneaux commissaires : ' + this.lamps.size + ' postes · ancres ' + this.anchors.size)
     } catch (e) { dlog('panneaux commissaires : ' + (e as Error).message) }
   }
-  /** scène du circuit : on relève les ancres et les trois lampes pit-exit natives de Monza. */
+  /** scène du circuit : on relève les ancres mesurées; les signaux de rôle ambigu restent non pilotés. */
   adoptScene(root: THREE.Object3D) {
     collectAnchors(root, this.anchors)
-    root.traverse(o => { if (/^signal_1_(red_top|red_mid|green)$/.test(o.name)) this.monzaSignalNodes.add(o) })
     dlog('ancres circuit : ' + this.anchors.size)
   }
-  /** Sur Monza, commande le signal déjà présent dans le tile t06, au lieu d’ajouter un modèle Spa. */
-  setMonzaSignal(green: boolean) { for (const node of this.monzaSignalNodes) paintLight(node, green) }
   private setLamp(n: number, col: string, on: boolean) {
     const rec = this.lamps.get(n); if (!rec) return
     for (const [k, o] of Object.entries(rec)) {
@@ -428,18 +430,4 @@ export class FieldView {
     for (const g of geos) g.dispose(); for (const t of tx) t.dispose()
     this.root.removeFromParent(); this.views = []; this.ready = false
   }
-}
-function paintLight(node: THREE.Object3D | undefined, green: boolean) {
-  if (!node) return
-  node.traverse(o => {
-    const m = o as THREE.Mesh; if (!m.isMesh) return
-    const mt = m.material as Mat
-    if (!mt?.emissive) return
-    const name = o.name + (mt.name ?? '')
-    const isG = /green/i.test(name), isR = /red/i.test(name)
-    const on = green ? isG : isR
-    if (!isG && !isR) return
-    mt.emissive.set(on ? (isG ? 0x20ff60 : 0xff2208) : 0x000000)
-    mt.emissiveIntensity = on ? 4 : 0
-  })
 }
