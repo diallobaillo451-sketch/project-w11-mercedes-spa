@@ -30,7 +30,7 @@ import { applyCarPhysics, CARS2020 } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
-import { loadSpaPits, openGarageDoors, updateGarageAnims } from './render/pitYard.ts'
+import { loadMonzaPits, loadSpaPits, openGarageDoors, updateGarageAnims } from './render/pitYard.ts'
 import { readPitAnchors } from './render/anchors.ts'
 import { PitScreens } from './render/pitScreens.ts'
 import { Engineer } from './race/engineer.ts'
@@ -331,7 +331,7 @@ function frame(now: number) {
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
   menuMusic.update(dt)
-  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); return }
+  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { screens?.update(game.field, game.car, settings.weather); fview?.setMonzaSignal(game.field?.ctrl.pitExitGreen() ?? true) } return }
   updateGarageAnims(dt)
   if (screen === 'garage') { garageTick(); if (game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt) }
   const st = input.poll(dt, settings.setup.autoGear)
@@ -364,7 +364,9 @@ function frame(now: number) {
   const spd = c.speed
   const shake = Math.min(1, kerb * Math.min(1, spd / 30) * 0.8 + gravel * Math.min(1, spd / 20) + game.maxImpact * 0.3)
   ren.frame(game, dt, shake)
+  if (CIRCUIT.id === 'monza') screens?.update(game.field, game.car, settings.weather)
   if (fview && game.field) fview.update(game.field, dt, ren.cams.cam)
+  if (CIRCUIT.id === 'monza') fview?.setMonzaSignal(game.field?.ctrl.pitExitGreen() ?? true)
   tower?.update(dt)
   // audio : position de la voiture relative à la caméra
   const cam = ren.cams.cam
@@ -707,8 +709,10 @@ async function main() {
     void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
     fview = new FieldView(ren)
     if (ren.track) { bindPit(ren.track); fview.adoptScene(ren.track) }
-    if (CIRCUIT.spaPits) void loadSpaPits(game, ren, fview, carOfTeam(driverById(settings.profile.driver).team)).catch(e => dlog('stands : ' + (e as Error).message))
+    if (CIRCUIT.id === 'monza') await loadMonzaPits(game, ren, fview, driverById(settings.profile.driver).team).catch(e => dlog('stands Monza : ' + (e as Error).message))
+    else if (CIRCUIT.spaPits) void loadSpaPits(game, ren, fview, carOfTeam(driverById(settings.profile.driver).team)).catch(e => dlog('stands : ' + (e as Error).message))
     screens = new PitScreens()
+    if (CIRCUIT.id === 'monza') dlog('écrans garage Monza : ' + screens.bind(fview.anchors) + '/3 ancres 3D')
     engineer = new Engineer()
     career = loadCareer()
     bootProgress('Plateau 2020…', 0.9)

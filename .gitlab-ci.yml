@@ -24,17 +24,28 @@
     - |
       monza() {
         M=shared/assets/monza_2020
+        P=shared/assets/spa_pits
         git fetch --depth 1 origin newbot-shared || return 1
-        git checkout FETCH_HEAD -- $M || return 1
+        git checkout FETCH_HEAD -- $M "$P/pits.json" "$P/garage_player.glb.part001" "$P/garage_player.glb.part002" "$P/garage_player.glb.part003" "$P/garage_player.glb.part004" "$P/textures" || return 1
         find $M -type f \( -name '*.bin' -o -name '*.ktx2' -o -name '*.webp' \) ! -path "$M/preview/*" | while read -r f; do base64 -d "$f" > "$f.dec" && mv "$f.dec" "$f" || exit 1; done || return 1
         for p in $(find $M -name '*.part001' ! -path "$M/preview/*"); do b="${p%.part001}"; : > "$b"; for q in "$b".part*; do base64 -d "$q" >> "$b" || return 1; done; rm -f "$b".part*; done
-        mkdir -p public/assets/monza public/track_monza
+        b=$P/garage_player.glb; : > "$b"
+        for q in "$b".part*; do base64 -d "$q" >> "$b" || return 1; done
+        rm -f "$b".part*
+        test "$(stat -c%s "$b")" -eq 11140772 || return 1
+        printf '426dca21e567b2de58c692c3ec0d2282321b56b942f3834406f77871f1df0914  %s\n' "$b" | sha256sum -c - >/dev/null || return 1
+        for f in "$P"/textures/team_*.ktx2; do base64 -d "$f" > "$f.dec" && mv "$f.dec" "$f" || return 1; done
+        mkdir -p public/assets/monza public/track_monza public/assets/monza_pits/textures
         cp -r $M/scene/. public/assets/monza/ || return 1
         for f in surface.json surface.bin barriers.bin pitlane.json crowd.bin crowd.json grassmask.bin meta.json; do cp $M/track/$f public/track_monza/ || return 1; done
         cp $M/marshals.json public/track_monza/marshals.json || return 1
+        cp "$b" public/assets/monza_pits/garage_player.glb || return 1
+        cp "$P"/textures/team_*.ktx2 public/assets/monza_pits/textures/ || return 1
+        node source/tools/circuit_pipeline/generate_monza_pits.mjs "$M/track" "$M/scene" "$P/pits.json" public/track_monza/pits.json || return 1
         test "$(stat -c%s public/track_monza/surface.bin)" -eq 4177492 && test "$(stat -c%s public/assets/monza/t01.bin)" -eq 5278344 && test "$(stat -c%s public/track_monza/barriers.bin)" -eq 1964848
+        node source/game/tests/monza-pits.test.mjs || return 1
       }
-      if monza; then echo 'MONZA OK'; du -sh public/assets/monza public/track_monza; else echo 'ATTENTION : Monza non assemblé'; [ -z "$MONZA_STRICT" ] || exit 1; fi
+      if monza; then echo 'MONZA OK'; du -sh public/assets/monza public/track_monza public/assets/monza_pits; else echo 'ATTENTION : Monza non assemblé'; [ -z "$MONZA_STRICT" ] || exit 1; fi
     - du -sh public
 
 pages:
