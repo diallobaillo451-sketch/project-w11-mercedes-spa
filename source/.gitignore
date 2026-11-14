@@ -13,8 +13,10 @@ assets-work/audio/
 game/dist/
 game/dist-single/
 game/public/assets/
+game/public/track_barcelona/
 out/PROJECT_W11_single.html
 out/PROJECT_W11_dist.zip
 out/dist/
+out/app/
 publish/
 assets-raw/hdri/

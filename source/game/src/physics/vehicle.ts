@@ -116,7 +116,7 @@ export class Vehicle {
     const rx = -c.tz, rz = c.tx
     const x = c.x + rx * d, z = c.z + rz * d
     const smp = this.surface.sample(x, z, c.i, tmp)
-    this.hint = smp.i
+    this.hint = smp.i; this.s = smp.s; this.d = smp.d; this.trackIdx = smp.i
     // repère aligné sur la normale locale de la piste (pente + dévers)
     const n = [smp.nx, smp.ny, smp.nz]
     let f = [c.tx, 0, c.tz]; const fd = f[0] * n[0] + f[2] * n[2]
@@ -140,14 +140,13 @@ export class Vehicle {
       this.pos[0] += R[3] * m; this.pos[1] += R[4] * m; this.pos[2] += R[5] * m
     }
     this.vel = [f[0] * speed, f[1] * speed, f[2] * speed]; this.wb = [0, 0, 0]
-    for (const w of this.wheels) { w.omega = speed / w.r; w.c = 0; w.cPrev = 0; w.cdot = 0; w.alpha = 0; w.kappa = 0; w.fx = 0; w.fy = 0 }
+    this.resetPlacementDynamics()
     this.gear = speed > 1 ? Math.max(1, GEAR_RATIOS.findIndex(gr => speed / W11.wheelRadiusR * gr * 60 / (2 * Math.PI) < 11500) + 1) : 1
-    this.scrape = 0; this.impact = 0; this.flipped = 0; this.bInit = false
   }
   /** Place la voiture en (x, z) avec le cap (hx, hz) : garage, voie des stands. Même pose que placeAt (repère aligné sur le sol). */
   placeAtXZ(x: number, z: number, hx: number, hz: number, speed = 0) {
     const smp = this.surface.sample(x, z, -1, tmp)
-    this.hint = smp.i
+    this.hint = smp.i; this.s = smp.s; this.d = smp.d; this.trackIdx = smp.i
     const n = [smp.nx, smp.ny, smp.nz]
     let f = [hx, 0, hz]; const fd = f[0] * n[0] + f[2] * n[2]
     f = [f[0] - fd * n[0], -fd * n[1], f[2] - fd * n[2]]; const fl = Math.hypot(f[0], f[1], f[2]) || 1; f = f.map(v => v / fl)
@@ -169,8 +168,24 @@ export class Vehicle {
       this.pos[0] += R[3] * m; this.pos[1] += R[4] * m; this.pos[2] += R[5] * m
     }
     this.vel = [f[0] * speed, f[1] * speed, f[2] * speed]; this.wb = [0, 0, 0]
-    for (const w of this.wheels) { w.omega = speed / w.r; w.c = 0; w.cPrev = 0; w.cdot = 0; w.alpha = 0; w.kappa = 0; w.fx = 0; w.fy = 0 }
-    this.scrape = 0; this.impact = 0; this.flipped = 0; this.bInit = false; this.offTrack = false
+    this.resetPlacementDynamics()
+  }
+  /** Retourne les variables dynamiques aux valeurs d'une pose neuve sans remplacer les pneus ni les dégâts. */
+  private resetPlacementDynamics() {
+    const forward = this.forwardSpeed()
+    this.speed = Math.hypot(this.vel[0], this.vel[1], this.vel[2])
+    this.gLat = 0; this.gLong = 0; this.downforce = 0; this.drag = 0
+    this.scrape = 0; this.scrapePos = [...this.pos]; this.impact = 0; this.impactPos = [...this.pos]
+    this.offTrack = false; this.wheelsOut = 0; this.flipped = 0
+    this.aqua = 0; this.wetGrip = 1; this.lead = null
+    this.hitKind = 0; this.damageEvent = 0; this.wasOff.fill(false); this.prevVel = [...this.vel]; this.bInit = false
+    for (const w of this.wheels) {
+      w.I = w.front ? W11.wheelInertiaF : W11.wheelInertiaR; w.omega = forward / w.r; w.angle = 0
+      w.c = 0; w.cPrev = 0; w.cdot = 0; w.contact = true; w.fz = 0; w.fx = 0; w.fy = 0
+      w.kappa = 0; w.alpha = 0; w.steer = 0; w.type = 1
+      w.brakeTq = 0; w.driveTq = 0; w.absF = 1; w.px = 0; w.py = 0; w.pz = 0
+      w.slipVel = 0; w.groundH = 0; w.sample = newSample(); delete w.sink
+    }
   }
   updateR() {
     const [x, y, z, w] = this.q, R = this.R
@@ -733,6 +748,19 @@ export class Vehicle {
   }
   /** réparation complète (stand / redémarrage) : pièces neuves */
   repair() { this.damage = newDamage(); this.lost.clear(); this.plankWear = 0 }
+  /** état thermique, ERS et aides propre au début d'une démo/course redémarrée. */
+  resetSessionState() {
+    this.ers.soc = 4e6; this.ers.deployedLap = 0; this.ers.harvestedLap = 0; this.ers.hToK = 0
+    this.ers.kPower = 0; this.ers.hPower = 0; this.ers.mode = 'hotlap'; this.ers.last = { deployed: 0, harvested: 0, hToK: 0 }
+    this.shiftTimer = 0; this.clutchSlip = false; this.limiter = false; this.throttleApplied = 0; this.brakeApplied = 0; this.tcCut = 0
+    this.drsOpen = false; this.drsPos = 0; this.dasPulled = false; this.dasPos = 0; this.drsAvailable = false
+    this.reverseHold = 0; this.ebCut = 0; this.shiftEvent = 0; this.lastShiftDir = 0; this.time = 0
+    this.mass = W11.massMin + this.fuel; this.oilT = 105; this.waterT = 95; this.heatDerate = 0
+    for (const w of this.wheels) { w.brakeT = w.front ? 420 : 380; w.brakeTq = 0; w.driveTq = 0; w.absF = 1; w.angle = 0 }
+    const ratio = this.gear === -1 ? REVERSE_RATIO : this.gear > 0 ? GEAR_RATIOS[this.gear - 1] : 0
+    const wheelRate = Math.max(Math.abs((this.wheels[2].omega + this.wheels[3].omega) / 2), Math.abs(this.forwardSpeed()) / W11.wheelRadiusR)
+    this.rpm = Math.max(4000, wheelRate * ratio * 60 / (2 * Math.PI)); this.rpmVis = this.rpm
+  }
   private collideWalls(dt: number) {
     this.impact = Math.max(0, this.impact - dt * 4)
     const pts: [number, number, number][] = [[-0.98, 0.25, -2.55], [0.98, 0.25, -2.55], [-1.0, 0.3, 0.1], [1.0, 0.3, 0.1], [-0.55, 0.4, 2.55], [0.55, 0.4, 2.55], [-0.95, 0.3, 1.6], [0.95, 0.3, 1.6]]
