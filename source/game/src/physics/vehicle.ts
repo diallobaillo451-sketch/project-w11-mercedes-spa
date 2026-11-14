@@ -111,7 +111,7 @@ export class Vehicle {
     for (const w of this.wheels) { const po = (w.front ? this.setup.pressF : this.setup.pressR) ?? 0; w.tyre.pOff = po; w.tyre.pressure += po }
   }
   /** Place la voiture sur la ligne centrale à l'abscisse s (m), décalage latéral d, cap = tangente. */
-  placeAt(s: number, d = 0, speed = 0) {
+  placeAt(s: number, d = 0, speed = 0, yaw = 0) {
     const c = this.surface.centre(s)
     const rx = -c.tz, rz = c.tx
     const x = c.x + rx * d, z = c.z + rz * d
@@ -119,7 +119,7 @@ export class Vehicle {
     this.hint = smp.i; this.s = smp.s; this.d = smp.d; this.trackIdx = smp.i
     // repère aligné sur la normale locale de la piste (pente + dévers)
     const n = [smp.nx, smp.ny, smp.nz]
-    let f = [c.tx, 0, c.tz]; const fd = f[0] * n[0] + f[2] * n[2]
+    let f = [c.tx * Math.cos(yaw) + rx * Math.sin(yaw), 0, c.tz * Math.cos(yaw) + rz * Math.sin(yaw)]; const fd = f[0] * n[0] + f[2] * n[2]
     f = [f[0] - fd * n[0], -fd * n[1], f[2] - fd * n[2]]; const fl = Math.hypot(f[0], f[1], f[2]); f = f.map(v => v / fl)
     const back = [-f[0], -f[1], -f[2]]
     const right = [n[1] * back[2] - n[2] * back[1], n[2] * back[0] - n[0] * back[2], n[0] * back[1] - n[1] * back[0]]
