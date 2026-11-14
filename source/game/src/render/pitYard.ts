@@ -20,8 +20,38 @@ interface PitFile {
 const mixers: THREE.AnimationMixer[] = []
 interface PitCrewActor { id: string; root: THREE.Object3D; actions: Map<string, THREE.AnimationAction>; active: string }
 const pitCrewActors: PitCrewActor[] = []
+interface AmbientActor { id: string; actions: Map<string, THREE.AnimationAction>; active: string; sequence: string[]; timer: number }
+interface JackPivot { node: THREE.Object3D; restX: number }
+const ambientActors: AmbientActor[] = []
+const jackPivots: JackPivot[] = []
+function stable01(value: string) {
+  let h = 2166136261
+  for (let i = 0; i < value.length; i++) h = Math.imul(h ^ value.charCodeAt(i), 16777619)
+  return (h >>> 0) / 4294967296
+}
+function addActivityActor(root: THREE.Object3D, clips: THREE.AnimationClip[], id: string, preferred: string, sequence: string[]) {
+  const byName = new Map(clips.map(clip => [clip.name, clip]))
+  const available = [...new Set(sequence)].filter(name => byName.has(name))
+  if (!available.length) return
+  const active = available.includes(preferred) ? preferred : available[0]
+  const mixer = new THREE.AnimationMixer(root)
+  const actions = new Map(available.map(name => [name, mixer.clipAction(byName.get(name)!)]))
+  const first = actions.get(active)!
+  first.time = stable01(id) * byName.get(active)!.duration
+  first.play()
+  mixers.push(mixer)
+  ambientActors.push({ id, actions, active, sequence: available, timer: 3.4 + stable01(id + ':cycle') * 3.2 })
+}
+/** État consulté par le test visuel Monza; il ne crée aucun clip ni ancrage. */
+export function monzaGarageAnimationState() {
+  return {
+    ambient: ambientActors.map(a => ({ id: a.id, active: a.active, sequence: a.sequence })),
+    crew: pitCrewActors.map(a => ({ id: a.id, active: a.active, visible: a.root.visible })),
+    jacks: jackPivots.map(p => ({ name: p.node.name, rotationX: p.node.rotation.x, restX: p.restX })),
+  }
+}
 /** PNJ du garage (clips Mixamo) : à appeler à chaque image */
-export function updateGarageAnims(dt: number, phase = '') {
+export function updateGarageAnims(dt: number, phase = '', lift = 0) {
   const active = new Set(['jack', 'guns', 'off', 'on', 'drop'])
   for (const actor of pitCrewActors) {
     const jack = actor.id.startsWith('mech_jack_'), offHelper = actor.id.endsWith('_off')
@@ -34,6 +64,19 @@ export function updateGarageAnims(dt: number, phase = '') {
     if (next) next.reset().fadeIn(0.12).play()
     actor.active = clip
   }
+  for (const actor of ambientActors) {
+    if (actor.sequence.length < 2) continue
+    actor.timer -= dt
+    if (actor.timer > 0) continue
+    const index = actor.sequence.indexOf(actor.active), name = actor.sequence[(index + 1) % actor.sequence.length]
+    actor.actions.get(actor.active)?.fadeOut(0.24)
+    actor.actions.get(name)?.reset().fadeIn(0.24).play()
+    actor.active = name
+    actor.timer = 3.4 + stable01(actor.id + ':' + name) * 3.2
+  }
+  const liftAngle = lift > 0 ? THREE.MathUtils.degToRad(9) : 0
+  const settle = 1 - Math.exp(-Math.max(0, dt) * 12)
+  for (const pivot of jackPivots) pivot.node.rotation.x += (pivot.restX + liftAngle - pivot.node.rotation.x) * settle
   for (const m of mixers) m.update(dt)
 }
 
@@ -163,9 +206,34 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
   const mine = pits.garages.find(g => g.team === team) ?? pits.garages[0]
   if (!mine.frame || !mine.car_park?.[0] || !mine.pit_stop) { dlog('garage Monza sans ancres joueur'); return }
   const textureCache = new Map<string, Promise<THREE.Texture>>()
+  const ktx2Id = [0xab, 0x4b, 0x54, 0x58, 0x20, 0x32, 0x30, 0xbb, 0x0d, 0x0a, 0x1a, 0x0a]
+  const hasKtx2Id = (bytes: Uint8Array) => ktx2Id.every((byte, i) => bytes[i] === byte)
   const textureFor = (url: string) => {
     let promise = textureCache.get(url)
-    if (!promise) { promise = ktx.loadAsync(url).then(texture => { texture.flipY = false; texture.colorSpace = THREE.SRGBColorSpace; return texture }); textureCache.set(url, promise) }
+    if (!promise) {
+      promise = (async () => {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        let bytes = new Uint8Array(await response.arrayBuffer()), repaired = false
+        if (!hasKtx2Id(bytes)) {
+          const text = new TextDecoder().decode(bytes).trim()
+          if (!/^[A-Za-z0-9+/=\s]+$/.test(text)) throw new Error('KTX2 absent ou encodage invalide')
+          const binary = atob(text.replace(/\s/g, ''))
+          bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0))
+          repaired = true
+        }
+        if (!hasKtx2Id(bytes)) throw new Error('KTX2 invalide après décodage Monza')
+        const payload = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+        const blobUrl = URL.createObjectURL(new Blob([payload], { type: 'image/ktx2' }))
+        try {
+          const texture = await ktx.loadAsync(blobUrl)
+          texture.flipY = false; texture.colorSpace = THREE.SRGBColorSpace
+          if (repaired) dlog('texture Monza décodée · ' + url)
+          return texture
+        } finally { URL.revokeObjectURL(blobUrl) }
+      })()
+      textureCache.set(url, promise)
+    }
     return promise
   }
   const replaceMap = async (obj: THREE.Object3D, url: string, materialName: string) => {
@@ -236,7 +304,7 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
         root.add(npc)
         const wanted = seatIndex % 2 ? 'pitwall_watch' : 'pitwall_talk'
         const clip = THREE.AnimationClip.findByName(anims, wanted) ?? THREE.AnimationClip.findByName(anims, 'idle')
-        if (clip) { const mx = new THREE.AnimationMixer(npc), act = mx.clipAction(clip); act.time = Math.random() * clip.duration; act.play(); mixers.push(mx) }
+        if (clip) addActivityActor(npc, anims, `pitwall_${g.team}_${seatIndex}`, wanted, ['pitwall_watch', 'pitwall_talk'])
         crew++
       }
     }
@@ -250,11 +318,20 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
     garage.rotation.y = mine.frame.yaw
     if (/^[a-z0-9_-]+$/i.test(mine.team)) await replaceMap(garage, `./assets/monza_pits/textures/team_${mine.team}.ktx2`, 'team')
     fview.adoptScene(garage)
+    garage.updateMatrixWorld(true)
     const fr = mine.frame, h = mine.pit_stop.heading ?? [-Math.cos(fr.yaw), 0, Math.sin(fr.yaw)]
-    const cam = [fr.pos[0] + 3.0 * Math.cos(fr.yaw) - 11.6 * Math.sin(fr.yaw), fr.pos[1] + 1.7, fr.pos[2] - 3.0 * Math.sin(fr.yaw) - 11.6 * Math.cos(fr.yaw)]
-    game.garage = { x: fr.pos[0], y: fr.pos[1], z: fr.pos[2], yaw: fr.yaw, park: mine.car_park[0], stop: mine.pit_stop.pos, lane: [h[0], h[2]], cam }
-    ren.cams.gPos.set(cam[0], cam[1], cam[2])
-    dlog('garage Monza : sortie guidée prête (' + mine.team + ')')
+    const car1 = garage.getObjectByName('car1_park'), car2 = garage.getObjectByName('car2_park')
+    const cam = car1 && car2
+      ? car1.getWorldPosition(new THREE.Vector3()).add(car2.getWorldPosition(new THREE.Vector3())).multiplyScalar(0.5).add(new THREE.Vector3(0, 1.7, 0))
+      : new THREE.Vector3(fr.pos[0], fr.pos[1] + 1.7, fr.pos[2])
+    if (!car1 || !car2) dlog('caméra intérieure Monza : repères car1/car2 absents, repli sur le cadre mesuré')
+    game.garage = { x: fr.pos[0], y: fr.pos[1], z: fr.pos[2], yaw: fr.yaw, park: mine.car_park[0], stop: mine.pit_stop.pos, lane: [h[0], h[2]], cam: cam.toArray() }
+    ren.cams.gPos.copy(cam)
+    for (const id of ['jack_front_pivot', 'jack_rear_pivot']) {
+      const pivot = garage.getObjectByName(id)
+      if (pivot && !jackPivots.some(p => p.node === pivot)) jackPivots.push({ node: pivot, restX: pivot.rotation.x })
+    }
+    dlog('garage Monza : caméra calée au milieu des deux ancres voiture (' + mine.team + ')')
   } catch (e) { dlog('garage Monza : ' + (e as Error).message) }
   if (game.garage) openGarageDoors(ren.scene, game.garage)
   if (garage) {
@@ -281,8 +358,10 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
           }
           const clip = THREE.AnimationClip.findByName(anims, s.clip ?? 'idle') ?? THREE.AnimationClip.findByName(anims, 'idle')
           if (!clip) continue
-          const mx = new THREE.AnimationMixer(npc), act = mx.clipAction(clip)
-          act.time = Math.random() * clip.duration; act.play(); mixers.push(mx)
+          const routine = kind === 'engineer'
+            ? ['look_screen', 'type_laptop', 'idle_var']
+            : s.id.startsWith('crew_front_') ? ['clap', 'idle_var'] : ['idle', 'idle_var', 'tyre_change']
+          addActivityActor(npc, anims, s.id, clip.name, routine)
         }
       } catch (e) { dlog('PNJ garage Monza ' + kind + ' : ' + (e as Error).message) }
     }
