@@ -398,7 +398,7 @@ export class RaceSim {
       // une fois sur ~25 (pilote distrait), l'IA ne voit pas la voiture arriver → gêne (enquête)
       const rk = r as Racer & { _yr?: number }, key = behind!.i * 1e6 + Math.floor(behind!.dist / this.L)
       if (rk._yr !== key) { rk._yr = key; if (this.rng.next() < 0.008 * (1.15 - r.sk.cons) / 0.25) { r.yieldT = 4; if (behind!.mode === 'push' || behind!.player) C.impeding(r, behind!) } }
-      if (r.yieldT === 0) { const side = ln.e[i] > 0 ? -1 : 1; r.off = side < 0 ? -edgeL + 0.3 : edgeR - 0.3; r.v *= 1 - 0.02 * dt * 10; this.tk = 0.82 }
+      if (r.yieldT === 0) { const side = ln.e[i] > 0 ? -1 : 1; r.off = side < 0 ? -edgeL + 0.3 : edgeR - 0.3; if (gB < 160) { r.v *= 1 - 0.02 * dt * 10; this.tk = 0.82 } }
       return
     }
     if (ahead && gA < 1.2 * Math.max(20, r.v) && C.mayOvertake(r, ahead)) {
