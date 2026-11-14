@@ -45,7 +45,7 @@ sepang_build:
   script:
     - python3 -m py_compile source/sepang/*.py
     - |
-      G=$(ls source/sepang/*.glb 2>/dev/null | head -n 1)
+      G=$(find source/sepang -maxdepth 1 -name '*.glb' | head -n 1)
       if [ -z "$G" ]; then echo 'GLB Sepang absent de source/sepang/ : conversion ignorée'; exit 0; fi
       pip install --quiet --no-cache-dir numpy scipy opencv-python-headless pillow
       python3 source/sepang/build_sepang.py "$G" public_sepang
