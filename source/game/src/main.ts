@@ -331,8 +331,8 @@ function frame(now: number) {
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
   menuMusic.update(dt)
-  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { updateGarageAnims(dt); screens?.update(game.field, game.car, settings.weather); fview?.setMonzaSignal(game.field?.ctrl.pitExitGreen() ?? true) } return }
-  updateGarageAnims(dt)
+  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase); screens?.update(game.field, game.car, settings.weather); fview?.setMonzaSignal(game.field?.ctrl.pitExitGreen() ?? true) } return }
+  updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase)
   if (screen === 'garage') { garageTick(); if (game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt) }
   const st = input.poll(dt, settings.setup.autoGear)
   const c = game.car

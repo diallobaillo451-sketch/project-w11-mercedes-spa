@@ -49,6 +49,8 @@ export class Game {
   field: RaceSim | null = null
   /** cric procédural (pas une vidéo) : hauteur de caisse pendant l'arrêt */
   pitShow = { lift: 0 }
+  /** phase chronométrée du service au box, consommée par les PNJ visuels */
+  pitCrewPhase = ''
   /** course terminée pour le joueur : id de la voiture suivie, ou 'tv' */
   spectate: string | null = null
   spectateT = 0
@@ -284,11 +286,13 @@ export class Game {
       const crew = PIT_CREW[this.field?.player.team ?? 'mercedes'] ?? 2.6
       const u = crew > 0 ? this.pitStopT / (crew + Math.max(0, this.holdT)) : 0
       this.pitShow.lift = u > 0.12 && u < 0.88 ? 0.085 : 0
-      if (this.field) { const ph = u < 0.12 ? 'stop' : u < 0.28 ? 'jack' : u < 0.4 ? 'guns' : u < 0.62 ? 'off' : u < 0.84 ? 'on' : u < 0.94 ? 'drop' : 'go'; this.field.player.pitPhase = this.pitStopT > 0.15 ? ph : '' }
+      const ph = u < 0.12 ? 'stop' : u < 0.28 ? 'jack' : u < 0.4 ? 'guns' : u < 0.62 ? 'off' : u < 0.84 ? 'on' : u < 0.94 ? 'drop' : 'go'
+      this.pitCrewPhase = this.pitStopT > 0.15 ? ph : ''
+      if (this.field) this.field.player.pitPhase = this.pitCrewPhase
       if (this.pitStopT > 0.4 && !this.pitServed && this.field) { const p = this.field.player, C = this.field.ctrl
         const hold = p.pen + (p.sgPend > 0 ? 10 : 0)
         if (hold > 0 && this.session.kind === 'race') { this.holdT = hold; C.msg(`${p.code} purge ${p.sgPend > 0 ? 'son stop-and-go' : 'sa pénalité de ' + p.pen + ' s'}`, 'pen'); p.penServed += p.pen; p.pen = 0; if (p.sgPend > 0) p.sgPend-- } }
-      if (this.pitStopT > crew + this.holdT && !this.pitServed) { this.pitServed = true; this.holdT = 0; this.pitShow.lift = 0; if (this.field) { this.field.player.pitPhase = 'go'; this.field.ctrl.boxLight = 'green'; this.field.ctrl.release(this.field.player) } const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
+      if (this.pitStopT > crew + this.holdT && !this.pitServed) { this.pitServed = true; this.holdT = 0; this.pitShow.lift = 0; this.pitCrewPhase = 'go'; if (this.field) { this.field.player.pitPhase = 'go'; this.field.ctrl.boxLight = 'green'; this.field.ctrl.release(this.field.player) } const dmg = c.damage.total > 0 || c.wheels.some(w => w.tyre.puncture > 0)
         this.events.pitStop = true; c.repair(); c.fitTyres(); this.lastDmg = 0
         if (dmg) { this.events.repair = true; this.bus.emit({ t: 'repair', car: 0 }) } }
       if (c.speed > 2) this.pitServed = false
@@ -302,7 +306,7 @@ export class Game {
           else { this.penalties += 5; if (this.session.kind === 'timetrial') this.session.timing.invalidate() }
         }
       }
-    } else { this.pitShow.lift = 0; if (this.field && this.field.player.pitPhase) this.field.player.pitPhase = '' }
+    } else { this.pitCrewPhase = ''; this.pitShow.lift = 0; if (this.field && this.field.player.pitPhase) this.field.player.pitPhase = '' }
   }
   /** la voiture ne peut plus rentrer : la course du joueur s'arrête, sans respawn */
   private raceOver() {

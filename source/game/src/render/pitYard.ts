@@ -18,8 +18,24 @@ interface PitFile {
 }
 
 const mixers: THREE.AnimationMixer[] = []
+interface PitCrewActor { id: string; root: THREE.Object3D; actions: Map<string, THREE.AnimationAction>; active: string }
+const pitCrewActors: PitCrewActor[] = []
 /** PNJ du garage (clips Mixamo) : à appeler à chaque image */
-export function updateGarageAnims(dt: number) { for (const m of mixers) m.update(dt) }
+export function updateGarageAnims(dt: number, phase = '') {
+  const active = new Set(['jack', 'guns', 'off', 'on', 'drop'])
+  for (const actor of pitCrewActors) {
+    const jack = actor.id.startsWith('mech_jack_'), offHelper = actor.id.endsWith('_off')
+    const shown = jack ? active.has(phase) : offHelper ? phase === 'off' || phase === 'on' : phase === 'guns' || phase === 'off' || phase === 'on'
+    const clip = !shown ? '' : jack ? 'jack_push' : offHelper ? 'idle_var' : 'tyre_change'
+    actor.root.visible = shown
+    if (clip === actor.active) continue
+    actor.actions.get(actor.active)?.fadeOut(0.12)
+    const next = actor.actions.get(clip)
+    if (next) next.reset().fadeIn(0.12).play()
+    actor.active = clip
+  }
+  for (const m of mixers) m.update(dt)
+}
 
 const doneDoors = new WeakSet<THREE.Object3D>()
 const isDoor = (o: THREE.Object3D) => { let p: THREE.Object3D | null = o; for (let i = 0; p && i < 3; i++, p = p.parent) if (/box-door/i.test(p.name)) return true; return false }
@@ -243,9 +259,11 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
   if (game.garage) openGarageDoors(ren.scene, game.garage)
   if (garage) {
     const skip = /^(mech_jack|mech_tyre|crew_front_4)/
-    const spots = (pits.player_garage?.npc_spots ?? []).filter(s => !skip.test(s.id))
+    const allSpots = pits.player_garage?.npc_spots ?? []
+    const spots = allSpots.filter(s => !skip.test(s.id))
     for (const kind of ['engineer', 'mechanic']) {
-      const list = spots.filter(s => s.kind === kind)
+      const dynamic = kind === 'mechanic' ? allSpots.filter(s => /^mech_(jack|tyre)_/.test(s.id)) : []
+      const list = [...spots.filter(s => s.kind === kind), ...dynamic]
       if (!list.length) continue
       try {
         const src = await loadGLB(`./assets/spa_pits/npc_${kind}.glb`, () => {}, ktx)
@@ -254,6 +272,13 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
         for (const s of list) {
           const npc = SkeletonUtils.clone(src.scene) as THREE.Object3D
           npc.position.set(s.pos[0], s.pos[1], s.pos[2]); npc.rotation.y = s.yaw; garage.add(npc)
+          if (dynamic.includes(s)) {
+            npc.visible = false
+            const mx = new THREE.AnimationMixer(npc), actions = new Map<string, THREE.AnimationAction>()
+            for (const clip of anims) actions.set(clip.name, mx.clipAction(clip))
+            pitCrewActors.push({ id: s.id, root: npc, actions, active: '' }); mixers.push(mx)
+            continue
+          }
           const clip = THREE.AnimationClip.findByName(anims, s.clip ?? 'idle') ?? THREE.AnimationClip.findByName(anims, 'idle')
           if (!clip) continue
           const mx = new THREE.AnimationMixer(npc), act = mx.clipAction(clip)
