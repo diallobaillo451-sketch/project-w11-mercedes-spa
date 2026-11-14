@@ -1,7 +1,7 @@
-/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|barcelona, mémorisé dans le navigateur) : changer de circuit = recharger la page.
+/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|barcelona|sepang, mémorisé dans le navigateur) : changer de circuit = recharger la page.
  *  Hors navigateur (tests Node) : Spa. */
 export interface Circuit {
-  id: 'spa' | 'monza' | 'barcelona'
+  id: 'spa' | 'monza' | 'barcelona' | 'sepang'
   name: string
   /** surface, barrières, voie des stands, herbe, public */
   trackDir: string
@@ -44,21 +44,30 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
     // DRS approximés depuis les portions rectilignes de la trace GP 2023, pas un relevé officiel de lignes de détection.
     drs: length => { const k = length / 4668.6; return [[4437 * k, length], [0, 558 * k], [2982 * k, 3284 * k]] },
   },
+  sepang: {
+    id: 'sepang', name: 'Sepang', trackDir: './track_sepang/', sceneDir: './assets/sepang/', marshals: null, spaPits: false,
+    optionalAssets: { barriers: false, pitlane: false, grassmask: true, crowd: false }, hasLods: false,
+    pit: { limitFromS: 5260, limitToS: 360 }, gates: [1790, 3690],
+    // Sepang (E : positions déduites de notre ligne centrale, s = 0 sur la ligne de départ ; 2 zones : ligne droite des stands, ligne droite arrière)
+    drs: length => [[4290, 5040], [5250, length], [0, 520]],
+  },
 }
 const KEY = 'w11.circuit'
+/** Sepang n'est proposé par le bouton de bascule que si la CI l'a assemblé (VITE_SEPANG=1) ; ?circuit=sepang reste toujours accepté. */
+const SEPANG = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SEPANG === '1'
 function pick(): Circuit['id'] {
   try {
     const q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('circuit') : null
-    if (q === 'spa' || q === 'monza' || q === 'barcelona') { localStorage.setItem(KEY, q); return q }
+    if (q === 'spa' || q === 'monza' || q === 'barcelona' || q === 'sepang') { localStorage.setItem(KEY, q); return q }
     const s = typeof localStorage !== 'undefined' ? localStorage.getItem(KEY) : null
-    if (s === 'spa' || s === 'monza' || s === 'barcelona') return s
+    if (s === 'spa' || s === 'monza' || s === 'barcelona' || (s === 'sepang' && SEPANG)) return s
   } catch { /* stockage indisponible : Spa */ }
   return 'spa'
 }
 export const CIRCUIT: Circuit = CIRCUITS[pick()]
-/** bascule Spa → Monza → Barcelone puis recharge la page (surface et tuiles sont chargées au démarrage) */
+/** bascule Spa → Monza → Barcelone → Sepang puis recharge la page (surface et tuiles sont chargées au démarrage) */
 export function switchCircuit() {
-  const ids: Circuit['id'][] = ['spa', 'monza', 'barcelona']
+  const ids: Circuit['id'][] = SEPANG ? ['spa', 'monza', 'barcelona', 'sepang'] : ['spa', 'monza', 'barcelona']
   const next = ids[(ids.indexOf(CIRCUIT.id) + 1) % ids.length]
   try { localStorage.setItem(KEY, next) } catch { /* ignoré */ }
   const u = new URL(location.href); u.searchParams.set('circuit', next); location.href = u.toString()

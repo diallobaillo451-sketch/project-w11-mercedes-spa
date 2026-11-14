@@ -137,6 +137,14 @@ function tileLoader(): GLTFLoader {
     if (mid == null) return null
     let p = SHARED_MATS.get(mid); if (!p) { p = parser.loadMaterial(i); SHARED_MATS.set(mid, p) }
     return p
+  },
+  // alias d'exécution : le fichier garde ses noms de matériaux d'origine (la physique en dépend, on ne les renomme jamais) ;
+  // extras.w11_alias demande au jeu de traiter le matériau comme un autre (herbe / gravier de Sepang → GRASS / sand_new de Monza : mêmes détails de proche)
+  afterRoot(g: { scene: THREE.Object3D }) {
+    g.scene.traverse(o => {
+      const m = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined
+      for (const mt of Array.isArray(m) ? m : m ? [m] : []) { const a = (mt.userData as { w11_alias?: string } | undefined)?.w11_alias; if (a) mt.name = a }
+    })
   } } as never })
   return l
 }
