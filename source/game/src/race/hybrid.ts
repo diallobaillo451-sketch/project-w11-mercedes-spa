@@ -76,7 +76,7 @@ export class HybridBank {
     const lx = L.x[a] - L.x[b], lz = L.z[a] - L.z[b]
     const yaw = r.v > 5 ? Math.atan2(T.tx[i] * lz - T.tz[i] * lx, T.tx[i] * lx + T.tz[i] * lz) : 0
     v.placeAt(r.s, r.d, Math.max(0, r.v), yaw)
-    v.fuel = r.fuel
+    v.fuel = sim.kind === 'race' ? r.fuel : W11.fuelQuali
     v.ers.soc = 3.4e6; v.ers.newLap()
     s.d.reset()
   }
@@ -89,7 +89,7 @@ export class HybridBank {
       if (!r) continue
       if (!sim.near.has(r.i) || !sim.onTrack(r)) { r.q = null; s.r = null; continue }
       const v = s.v
-      v.fuel = r.fuel
+      v.fuel = sim.kind === 'race' ? r.fuel : W11.fuelQuali // qualif / essais : la masse du profil de vitesse (essence de qualif), pas les 30 kg du modèle 1D
       v.damage.frontWing = Math.max(v.damage.frontWing, r.dmg.fw)
       v.damage.rearWing = Math.max(v.damage.rearWing, r.dmg.rw)
       v.damage.floor = Math.max(v.damage.floor, r.dmg.floor)
