@@ -1,7 +1,7 @@
-/** Circuit actif. Choisi au démarrage (?circuit=spa|monza, mémorisé dans le navigateur) : changer de circuit = recharger la page.
+/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|sepang, mémorisé dans le navigateur) : changer de circuit = recharger la page.
  *  Hors navigateur (tests Node) : Spa. */
 export interface Circuit {
-  id: 'spa' | 'monza'
+  id: 'spa' | 'monza' | 'sepang'
   name: string
   /** surface, barrières, voie des stands, herbe, public */
   trackDir: string
@@ -31,21 +31,30 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
     // FIA 2020 : zone 1 après Lesmo 2 jusqu'au freinage d'Ascari, zone 2 de la Parabolica à la Variante del Rettifilo (E)
     drs: length => [[2738, 3560], [5589, length], [0, 480]],
   },
+  sepang: {
+    id: 'sepang', name: 'Sepang', trackDir: './track_sepang/', sceneDir: './assets/sepang/', marshals: null, spaPits: false,
+    pit: { limitFromS: 5260, limitToS: 360 }, gates: [1790, 3690],
+    // Sepang (E : positions déduites de notre ligne centrale, s = 0 sur la ligne de départ ; 2 zones : ligne droite des stands, ligne droite arrière)
+    drs: length => [[4290, 5040], [5250, length], [0, 520]],
+  },
 }
 const KEY = 'w11.circuit'
+/** Sepang n'est proposé par le bouton de bascule que si la CI l'a assemblé (VITE_SEPANG=1) ; ?circuit=sepang reste toujours accepté. */
+const SEPANG = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SEPANG === '1'
+const IDS: Circuit['id'][] = SEPANG ? ['spa', 'monza', 'sepang'] : ['spa', 'monza']
 function pick(): Circuit['id'] {
   try {
     const q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('circuit') : null
-    if (q === 'spa' || q === 'monza') { localStorage.setItem(KEY, q); return q }
+    if (q === 'spa' || q === 'monza' || q === 'sepang') { localStorage.setItem(KEY, q); return q }
     const s = typeof localStorage !== 'undefined' ? localStorage.getItem(KEY) : null
-    if (s === 'spa' || s === 'monza') return s
+    if (s === 'spa' || s === 'monza' || (s === 'sepang' && SEPANG)) return s
   } catch { /* stockage indisponible : Spa */ }
   return 'spa'
 }
 export const CIRCUIT: Circuit = CIRCUITS[pick()]
-/** bascule Spa ⇄ Monza puis recharge la page (surface et tuiles ne sont chargées qu'une fois, au démarrage) */
+/** bascule Spa → Monza → Sepang → Spa puis recharge la page (surface et tuiles ne sont chargées qu'une fois, au démarrage) */
 export function switchCircuit() {
-  const next = CIRCUIT.id === 'spa' ? 'monza' : 'spa'
+  const next = IDS[(IDS.indexOf(CIRCUIT.id) + 1) % IDS.length] ?? 'spa'
   try { localStorage.setItem(KEY, next) } catch { /* ignoré */ }
   const u = new URL(location.href); u.searchParams.set('circuit', next); location.href = u.toString()
 }
