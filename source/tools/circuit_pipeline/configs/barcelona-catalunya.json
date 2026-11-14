@@ -9,23 +9,35 @@
     "preserve_source_geometry": true
   },
   "tiles": {
-    "enabled": false,
+    "enabled": true,
     "count": 12,
     "color_quality": 92,
     "normal_quality": 95,
     "material_alpha_modes": {}
   },
+  "lod": {
+    "enabled": true,
+    "ratio": 0.35,
+    "error": 0.01
+  },
   "game_integration": {
-    "enabled": false,
-    "status": "asset_import_and_roundtrip_only",
-    "missing_verified_inputs": [
-      "centreline and circuit length",
-      "physical surface grid and terrain types",
-      "barriers and collision configuration",
-      "pit-lane entry, exit, and speed-limit coordinates",
-      "sector gates and DRS zones",
-      "verified circuit-specific environment and infrastructure placement",
-      "runtime tile configuration and game selector entry"
-    ]
+    "enabled": true,
+    "status": "implemented_pending_validation",
+    "runtime_id": "barcelona",
+    "runtime_scene_dir": "./assets/barcelona/",
+    "runtime_track_dir": "./track_barcelona/",
+    "gameplay_worker": "source/tools/circuit_pipeline/barcelona_gameplay_blender.py",
+    "telemetry_fit": "source/tools/circuit_pipeline/data/barcelona_2023_lap61_fit.json",
+    "limitations": [
+      "No verified pitlane data; pit stops are unavailable on Barcelona.",
+      "No circuit-specific barrier mesh; virtual walls are placed 25 m from the centerline.",
+      "The GLB has no usable terrain collision mesh in the track verge; type 4 is a flat fallback at centerline height.",
+      "DRS zones are estimated from straight portions of the fitted 2023 telemetry, not an official zone survey.",
+      "Marshal posts, a verified start grid, and circuit-specific collision tests remain incomplete."
+    ],
+    "validation": {
+      "gameplay": "pending",
+      "visual": "pending"
+    }
   }
 }

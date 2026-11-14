@@ -27,7 +27,8 @@ REPO_ROOT = SOURCE_ROOT.parent
 TOOLS_ROOT = SOURCE_ROOT / "tools"
 BLENDER_WORKER = HERE / "blender_worker.py"
 TILE_BUILDER = TOOLS_ROOT / "build_track_tiles.mjs"
-PIPELINE_VERSION = "1.0.0"
+LOD_BUILDER = SOURCE_ROOT / "game" / "tools" / "make_track_lods.mjs"
+PIPELINE_VERSION = "1.1.0"
 
 
 def sha256_file(path: Path) -> str:
@@ -64,6 +65,16 @@ def tile_stage_key(scene_hash: str, builder_hash: str, config: dict[str, Any]) -
             "normal_quality": tiles.get("normal_quality", 95),
             "material_alpha_modes": tiles.get("material_alpha_modes", {}),
         },
+    })
+
+
+def lod_stage_key(tiles_hash: str, builder_hash: str, config: dict[str, Any]) -> str:
+    lod = config.get("lod", {})
+    return stable_sha256({
+        "tiles_sha256": tiles_hash,
+        "lod_builder_sha256": builder_hash,
+        "ratio": lod.get("ratio", 0.35),
+        "error": lod.get("error", 0.01),
     })
 
 
@@ -133,6 +144,14 @@ def load_config(path: Path) -> dict[str, Any]:
     modes = tiles.get("material_alpha_modes", {})
     if not isinstance(modes, dict) or any(v not in {"OPAQUE", "MASK", "BLEND"} for v in modes.values()):
         raise ValueError("tiles.material_alpha_modes doit associer chaque matériau à OPAQUE, MASK ou BLEND")
+    lod = config.setdefault("lod", {})
+    if not isinstance(lod.get("enabled", True), bool):
+        raise ValueError("lod.enabled doit être booléen")
+    ratio, error = lod.get("ratio", 0.35), lod.get("error", 0.01)
+    if isinstance(ratio, bool) or not isinstance(ratio, (int, float)) or not (0 < ratio < 1):
+        raise ValueError("lod.ratio doit être un nombre entre 0 et 1")
+    if isinstance(error, bool) or not isinstance(error, (int, float)) or error <= 0:
+        raise ValueError("lod.error doit être strictement positif")
     return config
 
 
@@ -237,8 +256,27 @@ def run_tile_builder(node: str, scene: Path, tiles_dir: Path, config: dict[str, 
             rules_file.unlink()
 
 
+def run_lod_builder(node: str, tiles_dir: Path, config: dict[str, Any], log_path: Path, timeout: int, force: bool) -> None:
+    lod = config.get("lod", {})
+    command = [node, str(LOD_BUILDER), "--tiles", str(tiles_dir), "--ratio", str(lod.get("ratio", 0.35)), "--error", str(lod.get("error", 0.01))]
+    if force:
+        command.append("--force")
+    result = subprocess.run(command, cwd=SOURCE_ROOT / "game", text=True, capture_output=True, timeout=timeout)
+    log_path.write_text(result.stdout + "\n--- STDERR ---\n" + result.stderr, encoding="utf-8", errors="replace")
+    if result.returncode:
+        raise RuntimeError(f"Le générateur LOD a échoué ({result.returncode}); voir {log_path}.\n{(result.stdout + result.stderr)[-5000:]}")
+
+
 def collect_tree_files(root: Path, folder: Path) -> list[str]:
-    return sorted(p.relative_to(root).as_posix() for p in folder.rglob("*") if p.is_file())
+    return sorted(p.relative_to(root).as_posix() for p in folder.rglob("*") if p.is_file() and "_lod." not in p.name)
+
+
+def collect_lod_files(root: Path, tiles_dir: Path) -> list[str]:
+    paths = [p for p in tiles_dir.rglob("*") if p.is_file() and "_lod." in p.name]
+    cache = tiles_dir.parent / f"{tiles_dir.name}_lod_manifest.json"
+    if cache.is_file():
+        paths.append(cache)
+    return sorted(p.relative_to(root).as_posix() for p in paths)
 
 
 def atomic_json(path: Path, data: Any) -> None:
@@ -262,6 +300,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
     log_path = output_dir / "blender.log"
     inspect_only = args.inspect_only or not config.get("blender", {}).get("export_roundtrip", True)
     tiles_enabled = bool(args.build_tiles or config.get("tiles", {}).get("enabled", False))
+    lod_enabled = tiles_enabled and bool(config.get("lod", {}).get("enabled", True))
     if tiles_enabled and inspect_only:
         raise ValueError("Le tuilage exige blender.export_roundtrip=true et une sortie GLB.")
     if source == scene_out.resolve():
@@ -274,6 +313,9 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
     config_hash = sha256_file(config_path)
     worker_hash = sha256_file(BLENDER_WORKER)
     builder_hash = sha256_file(TILE_BUILDER) if tiles_enabled else None
+    if lod_enabled and not LOD_BUILDER.is_file():
+        raise ValueError(f"Générateur LOD introuvable: {LOD_BUILDER}")
+    lod_builder_hash = sha256_file(LOD_BUILDER) if lod_enabled else None
     prior = read_json(manifest_path, {})
     stages = dict(prior.get("stages", {})) if isinstance(prior, dict) else {}
 
@@ -319,6 +361,28 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             tile_record = {"status": "passed", "key": t_key, "outputs": outputs}
             stages["spatial_tiles"] = tile_record
 
+    lod_record: dict[str, Any] | None = None
+    lod_cache = False
+    if lod_enabled:
+        node = shutil.which("node")
+        if not node:
+            raise ValueError("Node.js introuvable pour exécuter make_track_lods.mjs.")
+        tile_files = collect_tree_files(output_dir, tiles_dir)
+        tile_hash = stable_sha256(output_hashes(output_dir, tile_files))
+        l_key = lod_stage_key(tile_hash, lod_builder_hash or "", config)
+        lod_record = stages.get("meshopt_lods")
+        lod_cache = not args.force and stage_cache_valid(output_dir, lod_record, l_key)
+        if lod_cache:
+            print("CACHE HIT: LOD meshopt")
+        else:
+            run_lod_builder(node, tiles_dir, config, output_dir / "lods.log", args.timeout, args.force)
+            lod_files = collect_lod_files(output_dir, tiles_dir)
+            outputs = output_hashes(output_dir, lod_files)
+            if not outputs:
+                raise RuntimeError("Le générateur n’a produit aucun fichier LOD.")
+            lod_record = {"status": "passed", "key": l_key, "outputs": outputs}
+            stages["meshopt_lods"] = lod_record
+
     source_validation = validate_glb(source)
     output_validation = validate_glb(scene_out) if not inspect_only else None
     applied = ["headless_glb_import", "scene_inventory", "sha256_manifest"]
@@ -326,6 +390,8 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         applied.append("non_destructive_glb_roundtrip_export")
     if tiles_enabled:
         applied.append("spatial_tiling_webp_meshopt")
+    if lod_enabled:
+        applied.append("meshopt_lod_simplification")
     manifest = {
         "schema_version": 1,
         "pipeline_version": PIPELINE_VERSION,
@@ -343,7 +409,8 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         },
         "scripts_executed": [
             {"path": str(BLENDER_WORKER.relative_to(REPO_ROOT)), "sha256": worker_hash},
-        ] + ([{"path": str(TILE_BUILDER.relative_to(REPO_ROOT)), "sha256": builder_hash}] if tiles_enabled else []),
+        ] + ([{"path": str(TILE_BUILDER.relative_to(REPO_ROOT)), "sha256": builder_hash}] if tiles_enabled else [])
+          + ([{"path": str(LOD_BUILDER.relative_to(REPO_ROOT)), "sha256": lod_builder_hash}] if lod_enabled else []),
         "enhancements_applied": applied,
         "asset_versions": {"blender": version, "pipeline": PIPELINE_VERSION},
         "sha256": {
@@ -352,6 +419,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             "blender_worker": worker_hash,
             "roundtrip_glb": sha256_file(scene_out) if not inspect_only else None,
             "tile_builder": builder_hash,
+            "lod_builder": lod_builder_hash,
         },
         "stages": stages,
         "test_results": {
@@ -359,6 +427,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             "blender_import": {"status": "passed", "mesh_objects": report.get("mesh_objects"), "triangles": report.get("triangles")},
             "roundtrip_glb_container": output_validation,
             "tiles": {"status": "passed" if tile_cache or (tiles_enabled and tile_record) else "not_run"},
+            "lods": {"status": "passed" if lod_cache or (lod_enabled and lod_record) else "not_run"},
             "visual_validation": "not_performed",
             "gameplay_validation": "not_performed",
         },
@@ -368,7 +437,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "status": "passed",
         "circuit_id": circuit["id"],
-        "cache": {"blender_import_export": b_cache, "spatial_tiles": tile_cache if tiles_enabled else None},
+        "cache": {"blender_import_export": b_cache, "spatial_tiles": tile_cache if tiles_enabled else None, "meshopt_lods": lod_cache if lod_enabled else None},
         "manifest": str(manifest_path),
         "scene": str(scene_out) if not inspect_only else None,
         "tiles_dir": str(tiles_dir) if tiles_enabled else None,

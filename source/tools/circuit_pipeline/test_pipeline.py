@@ -44,6 +44,12 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(blender_key, blender_key_changed)
         self.assertNotEqual(tile_key, tile_key_changed)
 
+    def test_lod_options_invalidate_only_lod_stage(self):
+        base = {"tiles": {"count": 12}, "lod": {"ratio": 0.35, "error": 0.01}}
+        changed = {"tiles": {"count": 12}, "lod": {"ratio": 0.25, "error": 0.01}}
+        self.assertEqual(cli.tile_stage_key("scene", "builder", base), cli.tile_stage_key("scene", "builder", changed))
+        self.assertNotEqual(cli.lod_stage_key("tiles", "lod-builder", base), cli.lod_stage_key("tiles", "lod-builder", changed))
+
     def test_cache_requires_matching_output_hash(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

@@ -43,6 +43,8 @@ import { fmtT } from './race/control.ts'
 const $ = (id: string) => document.getElementById(id)!
 const show = (id: string, on: boolean) => { $(id).hidden = !on }
 const settings = loadSettings()
+document.title = 'PROJECT W11 — ' + CIRCUIT.name
+const brandSub = document.getElementById('brandSub'); if (brandSub) brandSub.textContent = 'Mercedes-AMG F1 W11 EQ Performance · ' + CIRCUIT.name
 let game: Game, ren: Renderer
 const input = new Input(settings.input)
 const audio = new AudioEngine()
@@ -71,7 +73,7 @@ function bootProgress(label: string, f: number) {
   $('bootText').textContent = label + (diag.safe ? ' · mode sans échec' : ''); ($('bootBar') as HTMLElement).style.width = Math.round(f * 100) + '%' }
 
 let pitData: PitlaneData | null = null
-/** bouton Circuit (menu) : Spa ⇄ Monza, recharge la page */
+/** bouton Circuit (menu) : Spa → Monza → Barcelone, recharge la page */
 function mountCircuitButton() {
   const b = document.createElement('button'); b.id = 'bCircuit'; b.type = 'button'; b.hidden = true
   b.textContent = 'Circuit : ' + CIRCUIT.name + ' ⇄'
@@ -82,9 +84,9 @@ function mountCircuitButton() {
 async function loadTrack(): Promise<TrackSurface> {
   bootProgress('Surface de piste…', 0.02)
   const [meta, bin, bar] = await Promise.all([fetch(CIRCUIT.trackDir + 'surface.json').then(r => r.json()), fetch(CIRCUIT.trackDir + 'surface.bin').then(r => r.arrayBuffer()),
-    fetch(CIRCUIT.trackDir + 'barriers.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)])
+    CIRCUIT.optionalAssets.barriers ? fetch(CIRCUIT.trackDir + 'barriers.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null) : Promise.resolve(null)])
   const t = new TrackSurface(meta, new Uint16Array(bin)); if (bar) t.barriers = new Barriers(bar)
-  pitData = await fetch(CIRCUIT.trackDir + 'pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null)
+  pitData = CIRCUIT.optionalAssets.pitlane ? await fetch(CIRCUIT.trackDir + 'pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null) : null
   return t
 }
 let appliedTyres = '', lastPunct = '00000000'

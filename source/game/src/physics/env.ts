@@ -74,6 +74,12 @@ export class TrackEnv {
     // la pluie lave la gomme et disperse les marbles
     if (w === 'wet' || w === 'rain') for (let k = 0; k < this.rubber.length; k++) { this.rubber[k] *= 0.6; this.marbles[k] *= 0.3 }
   }
+  /** Repart d'un vent et d'un bruit reproductibles pour une nouvelle démo. */
+  resetWind() {
+    this.gust[0] = 0; this.gust[1] = 0
+    this.wind[0] = this.windBase[0]; this.wind[1] = 0; this.wind[2] = this.windBase[1]
+    this.seed = 1; this.lapsTraffic = 0
+  }
   /** la pluie arrive ou s'en va : le film d'eau rejoint la cible sans saut (k ≈ 0,02 à 0,08 par pas de 0,1 s) */
   approach(target: Weather, k: number) {
     const W = WEATHER[target]
@@ -123,7 +129,7 @@ export class TrackEnv {
     const k = this.idx(s, d)
     const hot = 0.6 + 0.4 * Math.min(1.5, this.trackT / 30)
     this.rubber[k] = Math.min(1, this.rubber[k] + slipPower * 2.2e-9 * hot * dt * (this.water[k] > 0.3 ? 0.2 : 1))
-    if (worn > 0.3 && Math.random() < dt * 0.4) { const j = this.idx(s, d + (Math.random() < 0.5 ? -3 : 3)); this.marbles[j] = Math.min(1, this.marbles[j] + 0.01) }
+    if (worn > 0.3 && this.rnd() < dt * 0.4) { const j = this.idx(s, d + (this.rnd() < 0.5 ? -3 : 3)); this.marbles[j] = Math.min(1, this.marbles[j] + 0.01) }
     if (speed > 10) { this.water[k] *= 1 - Math.min(0.5, dt * 0.25); this.dirt[k] *= 1 - Math.min(0.5, dt * 0.6) }
   }
   /** sortie dans l'herbe / le gravier : terre ramenée sur la piste à l'endroit du retour */

@@ -3,13 +3,20 @@
 .assemble:
   image: node:22
   script:
-    - find public parts -type f | while read f; do base64 -d "$f" > "$f.bin" && mv "$f.bin" "$f"; done
+    - |
+      find public parts -type f | while IFS= read -r f; do
+        tmp=$(mktemp)
+        if base64 -d "$f" > "$tmp" 2>/dev/null; then mv "$tmp" "$f"; else rm -f "$tmp"; fi
+      done
     - mkdir -p "$(dirname public/assets/spa/t04.bin)" && cat parts/assets__spa__t04.bin.part00 parts/assets__spa__t04.bin.part01 > public/assets/spa/t04.bin
     - mkdir -p "$(dirname public/assets/spa/t05.bin)" && cat parts/assets__spa__t05.bin.part00 parts/assets__spa__t05.bin.part01 > public/assets/spa/t05.bin
     - mkdir -p "$(dirname public/assets/spa/t05_lod.bin)" && cat parts/assets__spa__t05_lod.bin.part00 parts/assets__spa__t05_lod.bin.part01 > public/assets/spa/t05_lod.bin
     - mkdir -p "$(dirname public/assets/spa/tex/c5ff7d9bfd57bb78.ktx2)" && cat parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part00 parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part01 parts/assets__spa__tex__c5ff7d9bfd57bb78.ktx2.part02 > public/assets/spa/tex/c5ff7d9bfd57bb78.ktx2
     - mkdir -p "$(dirname public/assets/w11_lh2020_high_ktx2.glb)" && cat parts/assets__w11_lh2020_high_ktx2.glb.part00 parts/assets__w11_lh2020_high_ktx2.glb.part01 parts/assets__w11_lh2020_high_ktx2.glb.part02 parts/assets__w11_lh2020_high_ktx2.glb.part03 > public/assets/w11_lh2020_high_ktx2.glb
     - mkdir -p "$(dirname public/assets/spa_pits/garage_player.glb)" && cat parts/assets__spa_pits__garage_player.glb.part00 parts/assets__spa_pits__garage_player.glb.part01 parts/assets__spa_pits__garage_player.glb.part02 > public/assets/spa_pits/garage_player.glb
+    - mkdir -p "$(dirname public/assets/barcelona/t06.bin)" && cat parts/assets__barcelona__t06.bin.part00 parts/assets__barcelona__t06.bin.part01 parts/assets__barcelona__t06.bin.part02 > public/assets/barcelona/t06.bin
+    - mkdir -p "$(dirname public/assets/barcelona/t09.bin)" && cat parts/assets__barcelona__t09.bin.part00 parts/assets__barcelona__t09.bin.part01 > public/assets/barcelona/t09.bin
+    - test "$(stat -c%s public/assets/barcelona/t06.bin)" -eq 10161108 && test "$(stat -c%s public/assets/barcelona/t09.bin)" -eq 5622744
     - sha256sum -c SHA256SUMS
     - cd source/game && npm ci && npx vite build && cd ../..
     - rm -f public/assets/index-*.js public/assets/index-*.css

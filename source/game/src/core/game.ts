@@ -132,10 +132,11 @@ export class Game {
   }
   constructor(track: TrackSurface, kind: SessionKind = 'timetrial') {
     this.track = track
-    this.line = buildRacingLine(track, 1600, 1.0)
+    const isBarcelona = track.length < 5000
+    this.line = buildRacingLine(track, 1600, isBarcelona ? 0.9 : 1.0)
     this.car = new Vehicle(track)
     this.env = new TrackEnv(track.length, s => this.lineOffset(s)); this.car.env = this.env
-    this.auto = new Autopilot(this.line, 1.06) // E : marge pilote calée (après muX 0,67) → tour ≈ 1:41,75 (pole réelle 1:41,252)
+    this.auto = new Autopilot(this.line, isBarcelona ? 1.10 : 1.06) // Barcelone ajusté après reset reproductible; Spa/Monza conservent 1,06.
     this.session = new Session(track.length, kind)
     try { const b = localStorage.getItem(this.bestKey); this.storedBest = b ? Number(b) : null } catch { this.storedBest = null }
     this.start(kind)
@@ -144,6 +145,13 @@ export class Game {
   sessionId = 0
   start(kind: SessionKind = this.session.kind) {
     this.sessionId++; this.garageExit = null
+    this.time = 0; this.envAcc = 0
+    if (this.autopilot) {
+      this.ctl.throttle = 0; this.ctl.brake = 0; this.ctl.steer = 0
+      this.ctl.drs = false; this.ctl.das = false; this.ctl.pitLim = false; this.ctl.noReverse = false; this.ctl.shiftUp = false; this.ctl.shiftDown = false
+      this.stuckT = 0; this.weatherTarget = null; this.envAcc = 0
+      this.auto.reset(); this.env.resetWind()
+    }
     this.session = new Session(this.track.length, kind)
     const L = this.track.length
     if (kind === 'timetrial') { const s0 = L - 200; this.car.placeAt(s0, this.lineOffset(s0), 55) }
@@ -152,8 +160,10 @@ export class Game {
     else this.car.placeAt(L - 120, this.lineOffset(L - 120), 0)
     this.car.ers.soc = 4.0e6
     this.car.fuel = 12; this.car.repair(); this.car.fitTyres(); this.lastDmg = 0; this.debris = []
+    if (this.autopilot) this.car.resetSessionState()
     // piste de la session : contre-la-montre = piste déjà gommée (fin de qualif), essais = piste plus verte qui évolue
     this.env?.setEvolution(kind === 'timetrial' || kind === 'race' ? 0.75 : kind === 'qualifying' ? 0.6 : 0.35); this.env?.setWeather(this.env.weather)
+    if (this.env) { this.car.wind = [...this.env.wind]; this.car.airT = this.env.airT; this.car.trackT = this.env.trackT }
     this.snapshot(); this.acc = 0
   }
   lineOffset(s: number) { const i = Math.floor(((s % this.track.length) + this.track.length) % this.track.length / this.line.ds) % this.line.N; return this.line.e[i] }

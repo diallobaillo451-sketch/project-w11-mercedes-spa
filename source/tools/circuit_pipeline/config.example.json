@@ -15,6 +15,11 @@
     "normal_quality": 95,
     "material_alpha_modes": {}
   },
+  "lod": {
+    "enabled": true,
+    "ratio": 0.35,
+    "error": 0.01
+  },
   "game_integration": {
     "enabled": false,
     "note": "Do not enable until circuit-specific centerline, physical surface, barriers, pit lane, sectors, DRS, and runtime paths are verified."

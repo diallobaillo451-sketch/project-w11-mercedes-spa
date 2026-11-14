@@ -8,11 +8,19 @@ export class Autopilot {
   private bScale = 1
   private gS = 1
   constructor(line: RacingLine, pace = 1) { this.line = line; this.pace = pace }
+  reset() { this.yawI = 0; this.bScale = 1; this.gS = 1 }
   control(car: Vehicle): Controls {
     const L = this.line, N = L.N
     const v = Math.max(0, car.forwardSpeed())
     const i = car.trackIdx
-    const look = 5 + v * 0.30
+    const baseLook = 5 + v * 0.30
+    let curveAhead = 0
+    const samples = Math.max(1, Math.ceil(baseLook / 4))
+    for (let q = 0; q <= samples; q++) {
+      const k = (i + Math.round(q * baseLook / samples / L.ds)) % N
+      curveAhead = Math.max(curveAhead, Math.abs(L.k[k]))
+    }
+    const look = Math.min(baseLook, 6 + 2.4 / Math.sqrt(Math.max(curveAhead, 0.002)))
     const j = (i + Math.round(look / L.ds)) % N
     const tx = L.x[j] - car.pos[0], tz = L.z[j] - car.pos[2]
     const R = car.R

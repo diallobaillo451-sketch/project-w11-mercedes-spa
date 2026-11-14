@@ -306,13 +306,13 @@ export class Renderer {
     this.scene.add(this.skid.mesh, this.rain.mesh, this.debrisV.group)
     this.rig.onPartLost = (_w, p) => { for (let i = 0; i < 4; i++) this.fx.spark([p.x, p.y, p.z], game.car.vel, 2) }
     // herbe 3D en bord de piste (pas en qualité basse ; ?grass=0 pour comparer)
-    if (q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
+    if (CIRCUIT.optionalAssets.grassmask && q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
       const gm = await fetch(CIRCUIT.trackDir + 'grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
       if (gm) this.grass = new Grass(track, gm, q.name === 'medium' ? 0.6 : 1.0, q.name === 'medium' ? 8000 : 14000, 34, this.detail?.tex.grass ?? null); if (this.grass) { this.scene.add(this.grass.mesh)
       dlog(`herbe 3D : ${this.grass.n} touffes (fenêtre ≤ ${this.grass.cap})`) }
     }
     // public des tribunes (toutes qualités : ≤ 36 triangles par personne près, 4 loin)
-    if (new URLSearchParams(location.search).get('crowd') !== '0') {
+    if (CIRCUIT.optionalAssets.crowd && new URLSearchParams(location.search).get('crowd') !== '0') {
       const cb = await fetch(CIRCUIT.trackDir + 'crowd.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
       if (cb) { this.crowd = new Crowd(cb); this.scene.add(this.crowd.group); dlog(`public : ${this.crowd.chunks.length} blocs`) }
     }
@@ -590,7 +590,7 @@ export class Renderer {
    *  Une seule opération par pas (≥ 250 ms) → envois au GPU étalés sur plusieurs images. Le décor « base » reste. */
   private async streamNear(game: Game) {
     // pleine qualité < FULL m ; LOD (géométrie simplifiée, mêmes textures) jusqu'à AHEAD m devant / BEHIND m derrière ; au-delà retirée
-    const mobile = this.mobile
+    const mobile = this.mobile, hasLods = CIRCUIT.hasLods
     const FULL = mobile ? 600 : 850, AHEAD = mobile ? 1500 : 2000, BEHIND = mobile ? 800 : 1100, HYST = 200
     const T = this.tiles!, wait = (ms: number) => new Promise(r => setTimeout(r, ms))
     let prev: number[] | null = null, fx = 0, fz = 1
@@ -618,11 +618,11 @@ export class Renderer {
         continue
       }
       // 3) LOD pour les tuiles lointaines visibles qui n'ont rien
-      const lodT = tl.filter(t => !full(t) && !this.lodIn.has(t.id) && d(t) < lim(t)).sort((a, b) => d(a) - d(b))[0]
+      const lodT = hasLods ? tl.filter(t => !full(t) && !this.lodIn.has(t.id) && d(t) < lim(t)).sort((a, b) => d(a) - d(b))[0] : undefined
       if (lodT) { try { await this.loadTile(lodT, true) } catch (e) { dlog('LOD ' + lodT.id + ' : ' + (e as Error).message); await wait(3000) } continue }
       // 4) pleine qualité → LOD quand la tuile s'éloigne
       const dn = tl.find(t => full(t) && d(t) > FULL + HYST && d(t) < lim(t))
-      if (dn) { if (!this.lodIn.has(dn.id)) try { await this.loadTile(dn, true) } catch (e) { dlog('LOD ' + dn.id + ' : ' + (e as Error).message) }
+      if (hasLods && dn) { if (!this.lodIn.has(dn.id)) try { await this.loadTile(dn, true) } catch (e) { dlog('LOD ' + dn.id + ' : ' + (e as Error).message) }
         const r = this.track.getObjectByName('tile_' + dn.id); if (r) { drop(r); this.parked.set(dn.id, r) } this.memLog('tuile ' + dn.id + ' → LOD'); continue }
       await wait(750)
     }
