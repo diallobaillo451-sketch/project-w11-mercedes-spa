@@ -240,6 +240,7 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
     ren.cams.gPos.set(cam[0], cam[1], cam[2])
     dlog('garage Monza : sortie guidée prête (' + mine.team + ')')
   } catch (e) { dlog('garage Monza : ' + (e as Error).message) }
+  if (game.garage) openGarageDoors(ren.scene, game.garage)
   if (garage) {
     const skip = /^(mech_jack|mech_tyre|crew_front_4)/
     const spots = (pits.player_garage?.npc_spots ?? []).filter(s => !skip.test(s.id))

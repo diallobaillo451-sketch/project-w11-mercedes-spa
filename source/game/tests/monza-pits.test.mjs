@@ -7,7 +7,8 @@ import { TrackSurface } from '../src/track/surface.ts'
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const trackDir = process.env.MONZA_TRACK_DIR || path.join(repo, 'public/track_monza')
-const config = JSON.parse(fs.readFileSync(path.join(repo, 'public/track_monza/pits.json'), 'utf8'))
+const configPath = process.env.MONZA_PITS_CONFIG || path.join(repo, 'public/track_monza/pits.json')
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 const pitData = JSON.parse(fs.readFileSync(path.join(trackDir, 'pitlane.json'), 'utf8'))
 const surfaceMeta = JSON.parse(fs.readFileSync(path.join(trackDir, 'surface.json'), 'utf8'))
 const rawGrid = fs.readFileSync(path.join(trackDir, 'surface.bin'))
@@ -40,6 +41,26 @@ const wallNames = wallPath ? readGlbNames(wallPath) : null
 if (wallNames) for (const garage of config.garages) {
   assert.ok(wallNames.has(garage.pitwall.node), `${garage.team}: stand du muret manquant`)
   for (let i = 1; i <= 4; i++) assert.ok(wallNames.has(`${garage.pitwall.node}_seat_${i}`), `${garage.team}: siège ${i} manquant`)
+}
+if (process.env.CI || process.env.MONZA_REQUIRE_ASSETS === '1') {
+  const requiredFiles = [
+    'public/assets/spa_pits/garages_lod.glb',
+    'public/assets/spa_pits/pitwall_stands.glb',
+    'public/assets/spa_pits/npc_engineer.glb',
+    'public/assets/spa_pits/npc_mechanic.glb',
+    'public/assets/monza_pits/garage_player.glb',
+  ]
+  for (const team of expectedTeams) {
+    requiredFiles.push(`public/assets/monza_pits/textures/team_${team}.ktx2`)
+    for (const kind of ['engineer', 'mechanic']) for (const size of ['1024', '256']) {
+      requiredFiles.push(`public/assets/spa_pits/npc_tex/npc_${kind}_${team}_${size}.ktx2`)
+    }
+  }
+  for (const file of requiredFiles) assert.ok(fs.statSync(path.join(repo, file)).size > 0, `asset runtime absent ou vide : ${file}`)
+  const playerGarage = readGlbNames(process.env.MONZA_PLAYER_GARAGE_GLB || path.join(repo, 'public/assets/monza_pits/garage_player.glb'))
+  for (const node of ['jack_front_pivot', 'jack_rear_pivot', 'screen_1', 'screen_2', 'screen_3', 'pitbox_red', 'pitbox_green', 'pitbox_stop', 'car1_park']) {
+    assert.ok(playerGarage.has(node), `ancre garage joueur absente : ${node}`)
+  }
 }
 
 let lastStation = -Infinity
