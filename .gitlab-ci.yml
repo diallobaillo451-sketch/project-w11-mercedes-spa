@@ -18,6 +18,7 @@
     - mkdir -p "$(dirname public/assets/barcelona/t09.bin)" && cat parts/assets__barcelona__t09.bin.part00 parts/assets__barcelona__t09.bin.part01 > public/assets/barcelona/t09.bin
     - test "$(stat -c%s public/assets/barcelona/t06.bin)" -eq 10161108 && test "$(stat -c%s public/assets/barcelona/t09.bin)" -eq 5622744
     - sha256sum -c SHA256SUMS
+    - if [ -d public_sepang/assets/sepang ]; then echo 'VITE_SEPANG=1' > source/game/.env.production.local; fi
     - cd source/game && npm ci && npx vite build && cd ../..
     - rm -f public/assets/index-*.js public/assets/index-*.css
     - cp -r source/game/dist/. public/
