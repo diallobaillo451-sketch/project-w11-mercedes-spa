@@ -9,6 +9,7 @@ Types de surface physiques du jeu (3 bits dans surface.bin) :
 # indice de matériau → type physique (surfaces horizontales sur lesquelles on peut rouler)
 GROUND = {
     23: 1, 72: 1, 73: 1, 84: 1, 99: 1, 1: 1, 75: 1,      # asphalte / béton (piste, voie des stands, routes)
+    87: 1, 88: 1,                                         # surcouches de gomme (≈ 2 cm au-dessus de l'asphalte) : surface réellement visible
     7: 3, 81: 3, 79: 3, 93: 3,                            # zones de dégagement peintes (rouge/blanc/bleu…)
     92: 2, 90: 2,                                         # vibreurs
     5: 4, 86: 4, 96: 4, 97: 4, 77: 4, 80: 4,              # herbe
