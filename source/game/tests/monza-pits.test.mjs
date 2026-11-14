@@ -6,6 +6,8 @@ import { Pitlane } from '../src/track/pitlane.ts'
 import { TrackSurface } from '../src/track/surface.ts'
 import { marshalBoardFallbackAllowed, pitExitLampFallbackAllowed, shouldCreateFallbackMarshalBoards } from '../src/render/signals.ts'
 
+import { createServer } from 'vite'
+
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const trackDir = process.env.MONZA_TRACK_DIR || path.join(repo, 'public/track_monza')
 const configPath = process.env.MONZA_PITS_CONFIG || path.join(repo, 'public/track_monza/pits.json')
@@ -100,6 +102,39 @@ if (process.env.CI || process.env.MONZA_REQUIRE_ASSETS === '1') {
 }
 
 let lastStation = -Infinity
+const runtimeServer = await createServer({ root: path.join(repo, 'source/game'), configFile: path.join(repo, 'source/game/vite.config.ts'),
+  server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' })
+try {
+  const { Game: RuntimeGame } = await runtimeServer.ssrLoadModule('/src/core/game.ts')
+  const { TrackSurface: RuntimeTrackSurface } = await runtimeServer.ssrLoadModule('/src/track/surface.ts')
+  const { Pitlane: RuntimePitlane } = await runtimeServer.ssrLoadModule('/src/track/pitlane.ts')
+  const runtimeSurface = new RuntimeTrackSurface(surfaceMeta, new Uint16Array(grid))
+  const runtimePit = new RuntimePitlane(pitData, { limitFromS: 5405, limitToS: 70 })
+  for (const garage of config.garages) runtimePit.setTeamBox(garage.team, garage.pit_stop.pos[0], garage.pit_stop.pos[2])
+  const game = new RuntimeGame(runtimeSurface, 'race')
+  game.pit = runtimePit
+  const field = game.startField({ kind: 'race', laps: 2, player: 'ham' })
+  const playerGarage = config.garages.find(g => g.team === field.player.team)
+  assert.ok(playerGarage, 'garage de l’équipe du joueur de course présent')
+  const stop = playerGarage.pit_stop.pos
+  const stopProbe = runtimePit.probe(stop[0], stop[2])
+  assert.equal(stopProbe.lane, 'work', 'le joueur s’arrête sur la voie de travail Monza')
+  assert.ok(Math.abs(field.boxOf(field.player.team) - stopProbe.p) < 0.1, 'la case RaceSim correspond à la station mesurée')
+  game.car.pos = [...stop]; game.car.vel = [0, 0, 0]; game.car.speed = 0
+  game.car.damage.frontWing = 0.4; game.car.damage.total = 0.4
+  for (const wheel of game.car.wheels) wheel.tyre.wear = 0.8
+  const phases = new Set()
+  for (let i = 0; i < 100; i++) { game.updatePit(0.05); phases.add(game.pitCrewPhase) }
+  for (const phase of ['stop', 'jack', 'guns', 'off', 'on', 'drop', 'go']) assert.ok(phases.has(phase), `phase pit crew joueur manquante : ${phase}`)
+  assert.equal(game.pitServed, true, 'arrêt du joueur effectivement servi')
+  assert.equal(game.events.pitStop, true, 'événement pitStop émis par Game')
+  assert.equal(game.events.repair, true, 'événement réparation émis')
+  assert.equal(game.car.damage.total, 0, 'dégâts réparés au stand')
+  assert.deepEqual(game.car.wheels.map(w => w.tyre.wear), [0, 0, 0, 0], 'quatre trains de pneus remplacés')
+  assert.equal(field.player.pitPhase, 'go', 'phase RaceSim joueur relâchée')
+  assert.equal(field.ctrl.boxLight, 'green', 'feu de box vert après service')
+} finally { await runtimeServer.close() }
+
 for (const garage of config.garages) {
   assert.equal(garage.lod_node, `garage_lod_${garage.team}`, `${garage.team}: nœud LOD configuré`)
   const { pos, heading } = garage.pit_stop
