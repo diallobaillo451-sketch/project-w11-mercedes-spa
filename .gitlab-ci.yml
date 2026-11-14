@@ -36,7 +36,34 @@
         test "$(stat -c%s public/track_monza/surface.bin)" -eq 4177492 && test "$(stat -c%s public/assets/monza/t01.bin)" -eq 5278344 && test "$(stat -c%s public/track_monza/barriers.bin)" -eq 1964848
       }
       if monza; then echo 'MONZA OK'; du -sh public/assets/monza public/track_monza; else echo 'ATTENTION : Monza non assemblé'; [ -z "$MONZA_STRICT" ] || exit 1; fi
+    - |
+      if [ -d public_sepang/assets/sepang ] && [ -d public_sepang/track_sepang ]; then
+        mkdir -p public/assets/sepang public/track_sepang
+        cp -r public_sepang/assets/sepang/. public/assets/sepang/ && cp -r public_sepang/track_sepang/. public/track_sepang/ && echo 'SEPANG OK' && du -sh public/assets/sepang public/track_sepang
+      else
+        echo 'Sepang non assemblé (GLB absent ou conversion en échec) : circuit indisponible'
+      fi
     - du -sh public
+
+# Sepang : conversion du GLB déposé dans source/sepang/ (surface physique + scène 3D). Sans GLB, seule la syntaxe des scripts est vérifiée.
+sepang_build:
+  stage: build
+  image: python:3.12
+  script:
+    - python3 -m py_compile source/sepang/*.py
+    - |
+      G=$(find source/sepang -maxdepth 1 -name '*.glb' | head -n 1)
+      if [ -z "$G" ]; then echo 'GLB Sepang absent de source/sepang/ : conversion ignorée'; exit 0; fi
+      pip install --quiet --no-cache-dir numpy scipy opencv-python-headless pillow
+      python3 source/sepang/build_sepang.py "$G" public_sepang
+  artifacts:
+    paths:
+      - public_sepang
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH
 
 pages:
   extends: .assemble
