@@ -179,7 +179,7 @@ export class RaceControl {
     // reprise après SC : pas de dépassement avant la ligne
     if (this.phase === 'chequered' && r.finished) vt = Math.min(vt, r.prof.v[i] * 0.55)
     const y = this.yellowAt(r.s)
-    if (y === 'double') vt *= 0.86; else if (y === 'yellow') vt *= 0.96
+    if (y === 'double') vt *= 0.7; else if (y === 'yellow') vt *= 0.88
     return vt
   }
   weave(r: Racer) { return (this.sc.active && !this.isUnlapping(r)) || (this.red && r.mode !== 'pit') }
