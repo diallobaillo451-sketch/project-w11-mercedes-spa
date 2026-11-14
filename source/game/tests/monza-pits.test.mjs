@@ -4,11 +4,14 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Pitlane } from '../src/track/pitlane.ts'
 import { TrackSurface } from '../src/track/surface.ts'
+import { marshalBoardFallbackAllowed, pitExitLampFallbackAllowed, shouldCreateFallbackMarshalBoards } from '../src/render/signals.ts'
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const trackDir = process.env.MONZA_TRACK_DIR || path.join(repo, 'public/track_monza')
 const configPath = process.env.MONZA_PITS_CONFIG || path.join(repo, 'public/track_monza/pits.json')
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+const marshalsPath = process.env.MONZA_MARSHALS_JSON || path.join(trackDir, 'marshals.json')
+const marshals = JSON.parse(fs.readFileSync(marshalsPath, 'utf8'))
 const pitData = JSON.parse(fs.readFileSync(path.join(trackDir, 'pitlane.json'), 'utf8'))
 const surfaceMeta = JSON.parse(fs.readFileSync(path.join(trackDir, 'surface.json'), 'utf8'))
 const rawGrid = fs.readFileSync(path.join(trackDir, 'surface.bin'))
@@ -21,6 +24,35 @@ const expectedTeams = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', '
 assert.equal(config.circuit, 'monza_2020')
 assert.deepEqual(config.garages.map(g => g.team), expectedTeams, 'les dix équipes 2020 doivent avoir une case')
 assert.ok(config.player_garage.npc_spots.length > 0, 'les postes PNJ locaux du garage doivent exister')
+assert.deepEqual(marshals.posts, [], 'Monza source ne fournit aucun poste mesuré : ne pas inventer de placement')
+assert.equal(marshals.signals?.length, 1, 'un feu natif mesuré de Monza est documenté')
+const monzaSignal = marshals.signals[0]
+assert.deepEqual(monzaSignal.position, [-4.768, 4.999, -36.394], 'position issue du relevé Monza source')
+assert.deepEqual(monzaSignal.lamps.map(l => l.node), ['signal_1_red_top', 'signal_1_red_mid', 'signal_1_green'])
+const pitExitDistance = Math.hypot(monzaSignal.position[0] - pitData.x.at(-1), monzaSignal.position[2] - pitData.z.at(-1))
+assert.ok(pitExitDistance > 220, `le feu natif (${monzaSignal.s} m) est à ${pitExitDistance.toFixed(1)} m de la sortie pitlane mesurée : rôle non attribué`)
+assert.equal(marshalBoardFallbackAllowed('monza', marshals.posts), false, 'aucun panneau 3D synthétique sans postes Monza mesurés')
+assert.equal(marshalBoardFallbackAllowed('monza', [{}]), true, 'des postes Monza réellement documentés autorisent le rendu')
+assert.equal(marshalBoardFallbackAllowed('spa', []), true, 'ne pas changer le comportement des autres circuits')
+assert.equal(shouldCreateFallbackMarshalBoards(false, 0, false), false, 'le runtime ne fabrique aucun panneau sans placement autorisé')
+assert.equal(shouldCreateFallbackMarshalBoards(true, 0, false), true, 'les panneaux de repli restent possibles là où ils sont autorisés')
+assert.equal(pitExitLampFallbackAllowed('monza', false), false, 'pas de mât pit-exit Monza sans ancre mesurée')
+assert.equal(pitExitLampFallbackAllowed('monza', true), true, 'une vraie ancre pit-exit Monza peut être utilisée')
+assert.equal(pitExitLampFallbackAllowed('spa', false), true, 'le fallback des autres circuits reste inchangé')
+
+const sceneDir = process.env.MONZA_SCENE_DIR || path.join(repo, 'public/assets/monza')
+const monzaScenePath = path.join(sceneDir, 't06.gltf')
+if (fs.existsSync(monzaScenePath)) {
+  const scene = JSON.parse(fs.readFileSync(monzaScenePath, 'utf8'))
+  for (const lamp of monzaSignal.lamps) {
+    const node = scene.nodes.find(n => n.name === lamp.node)
+    assert.ok(node && node.extras?.w11_signal === 1, `nœud natif ${lamp.node} absent ou sans marqueur signal`)
+    const materials = scene.meshes[node.mesh].primitives.map(p => scene.materials[p.material])
+    assert.ok(materials.some(m => m.name === lamp.node && m.extras?.w11_emissive_off === 1), `${lamp.node}: matériau natif émissif manquant`)
+  }
+} else if (process.env.CI || process.env.MONZA_REQUIRE_ASSETS === '1') {
+  assert.fail(`scène Monza réelle absente : ${monzaScenePath}`)
+}
 const pitCrewIds = new Set(config.player_garage.npc_spots.filter(s => /^mech_(jack|tyre)_/.test(s.id)).map(s => s.id))
 for (const id of ['mech_jack_front', 'mech_jack_rear', ...['FL', 'FR', 'RL', 'RR'].flatMap(w => [`mech_tyre_${w}`, `mech_tyre_${w}_off`])]) {
   assert.ok(pitCrewIds.has(id), `spot exact du pit crew joueur absent : ${id}`)

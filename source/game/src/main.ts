@@ -30,6 +30,7 @@ import { applyCarPhysics, CARS2020 } from './physics/cars2020.ts'
 import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, sessionKind, sessionMinutes, type SessionResult, type Telemetry, type WkSessionId, type WeekendPlan } from './core/weekend.ts'
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
+import { marshalBoardFallbackAllowed, pitExitLampFallbackAllowed } from './render/signals.ts'
 import { loadMonzaPits, loadSpaPits, openGarageDoors, updateGarageAnims } from './render/pitYard.ts'
 import { readPitAnchors } from './render/anchors.ts'
 import { PitScreens } from './render/pitScreens.ts'
@@ -137,6 +138,10 @@ function setupField(k: SessionKind | 'demo') {
   tower?.bind(F)
   fview ??= new FieldView(ren); fview.root.visible = true
   const fv = fview
+  const marshalPosts = (marshals as { posts?: unknown[] } | null)?.posts
+  fv.setMarshalBoardFallback(marshalBoardFallbackAllowed(CIRCUIT.id, marshalPosts))
+  const hasMeasuredPitExitLight = fv.anchors.has('anchor_pit_exit_light') || fv.anchors.has('pit_exit_light')
+  fv.setPitExitLampFallback(pitExitLampFallbackAllowed(CIRCUIT.id, hasMeasuredPitExitLight))
   const pu = CARS2020[settings.profile.car]?.pu ?? 'mercedes'
   void audio.usePU(pu).catch(e => dlog('audio PU : ' + (e as Error).message))
   ren.releaseCarCache()
@@ -331,7 +336,7 @@ function frame(now: number) {
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
   menuMusic.update(dt)
-  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase); screens?.update(game.field, game.car, settings.weather); fview?.setMonzaSignal(game.field?.ctrl.pitExitGreen() ?? true) } return }
+  if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase); screens?.update(game.field, game.car, settings.weather) } return }
   updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase)
   if (screen === 'garage') { garageTick(); if (game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt) }
   const st = input.poll(dt, settings.setup.autoGear)
@@ -366,7 +371,6 @@ function frame(now: number) {
   ren.frame(game, dt, shake)
   if (CIRCUIT.id === 'monza') screens?.update(game.field, game.car, settings.weather)
   if (fview && game.field) fview.update(game.field, dt, ren.cams.cam)
-  if (CIRCUIT.id === 'monza') fview?.setMonzaSignal(game.field?.ctrl.pitExitGreen() ?? true)
   tower?.update(dt)
   // audio : position de la voiture relative à la caméra
   const cam = ren.cams.cam
