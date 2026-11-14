@@ -134,6 +134,7 @@ export class FieldView {
   scHiUrl = SAFETY_CAR_HI
   lamps = new Map<number, Record<string, THREE.Mesh>>()
   anchors: Map<string, Anchor> = new Map()
+  private monzaSignalNodes = new Set<THREE.Object3D>()
   private jack0 = new Map<string, number>()
   private pitGantry: THREE.Group | null = null
   private pitRed: THREE.MeshStandardMaterial | null = null
@@ -313,8 +314,14 @@ export class FieldView {
       dlog('panneaux commissaires : ' + this.lamps.size + ' postes · ancres ' + this.anchors.size)
     } catch (e) { dlog('panneaux commissaires : ' + (e as Error).message) }
   }
-  /** scène de stands livrée par Ty : on relève les ancres, on ne modifie pas l'art */
-  adoptScene(root: THREE.Object3D) { collectAnchors(root, this.anchors); dlog('ancres circuit : ' + this.anchors.size) }
+  /** scène du circuit : on relève les ancres et les trois lampes pit-exit natives de Monza. */
+  adoptScene(root: THREE.Object3D) {
+    collectAnchors(root, this.anchors)
+    root.traverse(o => { if (/^signal_1_(red_top|red_mid|green)$/.test(o.name)) this.monzaSignalNodes.add(o) })
+    dlog('ancres circuit : ' + this.anchors.size)
+  }
+  /** Sur Monza, commande le signal déjà présent dans le tile t06, au lieu d’ajouter un modèle Spa. */
+  setMonzaSignal(green: boolean) { for (const node of this.monzaSignalNodes) paintLight(node, green) }
   private setLamp(n: number, col: string, on: boolean) {
     const rec = this.lamps.get(n); if (!rec) return
     for (const [k, o] of Object.entries(rec)) {

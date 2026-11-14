@@ -1,0 +1,779 @@
+{
+  "circuit": "monza_2020",
+  "season": 2020,
+  "source": {
+    "garages_mesh": "scene/t01.gltf → box__0_-1 POSITION bounds",
+    "pitlane": "track/pitlane.json, interpolated along route entry→exit",
+    "elevation": "track/surface.json + surface.bin, same smoothing and height convention as TrackSurface.sample()",
+    "garage_anchor_template": "shared/assets/spa_pits/pits.json; only local model-space pit_stop/car_park/pitwall offsets and npc_spots are reused",
+    "note": "Aucune coordonnée monde Spa. Frames, arrêts et muret sont calculés depuis la pitlane/surface Monza; les dix nœuds garages_lod sont repositionnés et aucun triangle de porte Spa n’est réutilisé."
+  },
+  "conventions": {
+    "frame": "Repère circuit glTF Y-haut, mètres; origine au centre de façade, calculée depuis le bâtiment et la pitlane Monza.",
+    "yaw": "Rotation autour de +Y; node +Z orienté vers la voie; node +X orienté vers l’entrée de la voie.",
+    "work_lane": "Pit stop à 3.5 m sur lat positive de Pitlane.probe(); garage façade 4.5 m plus loin vers le bâtiment; stands du muret à l’emplacement opposé calculé depuis le même axe de pitlane.",
+    "s": "Abscisse curviligne de track/pitlane.json; les cases sont réparties dans l’emprise GLTF box__0_-1."
+  },
+  "geometry": {
+    "box_mesh": "box__0_-1",
+    "box_bounds_glTF": {
+      "min": [
+        -3.908599853515625,
+        -1.92864990234375,
+        63.34790802001953
+      ],
+      "max": [
+        40.683197021484375,
+        10.213668823242188,
+        315.1197814941406
+      ]
+    },
+    "row_z_m": [
+      295.12,
+      85.348
+    ],
+    "pitlane_station_range_m": [
+      193.339,
+      404.292
+    ],
+    "work_offset_m": 3.5,
+    "garage_front_offset_m": 4.5
+  },
+  "player_garage": {
+    "npc_spots": [
+      {
+        "id": "eng_desk_1",
+        "kind": "engineer",
+        "pos": [
+          -1.95,
+          0,
+          -7.65
+        ],
+        "yaw": 0,
+        "clip": "look_screen",
+        "note": "debout derrière le bureau, face à la voie des stands"
+      },
+      {
+        "id": "eng_desk_2",
+        "kind": "engineer",
+        "pos": [
+          -0.65,
+          0,
+          -7.65
+        ],
+        "yaw": 0,
+        "clip": "type_laptop",
+        "note": "debout derrière le bureau, face à la voie des stands"
+      },
+      {
+        "id": "eng_desk_3",
+        "kind": "engineer",
+        "pos": [
+          0.65,
+          0,
+          -7.65
+        ],
+        "yaw": 0,
+        "clip": "type_laptop",
+        "note": "debout derrière le bureau, face à la voie des stands"
+      },
+      {
+        "id": "eng_desk_4",
+        "kind": "engineer",
+        "pos": [
+          1.95,
+          0,
+          -7.65
+        ],
+        "yaw": 0,
+        "clip": "look_screen",
+        "note": "debout derrière le bureau, face à la voie des stands"
+      },
+      {
+        "id": "eng_telemetry",
+        "kind": "engineer",
+        "pos": [
+          0,
+          0,
+          -12.35
+        ],
+        "yaw": 3.1416,
+        "clip": "look_screen"
+      },
+      {
+        "id": "eng_timing",
+        "kind": "engineer",
+        "pos": [
+          2.7,
+          0,
+          -0.25
+        ],
+        "yaw": 3.1416,
+        "clip": "look_screen",
+        "note": "devant timing_tower"
+      },
+      {
+        "id": "mech_jack_front",
+        "kind": "mechanic",
+        "pos": [
+          -5.45,
+          0,
+          4.5
+        ],
+        "yaw": 1.5708,
+        "clip": "jack_push",
+        "attach": "jack_front_pivot"
+      },
+      {
+        "id": "mech_jack_rear",
+        "kind": "mechanic",
+        "pos": [
+          5.15,
+          0,
+          4.5
+        ],
+        "yaw": -1.5708,
+        "clip": "jack_push",
+        "attach": "jack_rear_pivot"
+      },
+      {
+        "id": "mech_tyre_FL",
+        "kind": "mechanic",
+        "pos": [
+          -1.85,
+          0,
+          5.85
+        ],
+        "yaw": 3.1416,
+        "clip": "tyre_change",
+        "wheelgun": "wheelgun_car1_*"
+      },
+      {
+        "id": "mech_tyre_FL_off",
+        "kind": "mechanic",
+        "pos": [
+          -1.1,
+          0,
+          6.2
+        ],
+        "yaw": 3.1416,
+        "clip": "idle_var",
+        "note": "retire la roue (statique / idle)"
+      },
+      {
+        "id": "mech_tyre_FR",
+        "kind": "mechanic",
+        "pos": [
+          -1.85,
+          0,
+          3.15
+        ],
+        "yaw": 0,
+        "clip": "tyre_change",
+        "wheelgun": "wheelgun_car1_*"
+      },
+      {
+        "id": "mech_tyre_FR_off",
+        "kind": "mechanic",
+        "pos": [
+          -1.1,
+          0,
+          2.8
+        ],
+        "yaw": 0,
+        "clip": "idle_var",
+        "note": "retire la roue (statique / idle)"
+      },
+      {
+        "id": "mech_tyre_RL",
+        "kind": "mechanic",
+        "pos": [
+          1.75,
+          0,
+          5.85
+        ],
+        "yaw": 3.1416,
+        "clip": "tyre_change",
+        "wheelgun": "wheelgun_car1_*"
+      },
+      {
+        "id": "mech_tyre_RL_off",
+        "kind": "mechanic",
+        "pos": [
+          1,
+          0,
+          6.2
+        ],
+        "yaw": 3.1416,
+        "clip": "idle_var",
+        "note": "retire la roue (statique / idle)"
+      },
+      {
+        "id": "mech_tyre_RR",
+        "kind": "mechanic",
+        "pos": [
+          1.75,
+          0,
+          3.15
+        ],
+        "yaw": 0,
+        "clip": "tyre_change",
+        "wheelgun": "wheelgun_car1_*"
+      },
+      {
+        "id": "mech_tyre_RR_off",
+        "kind": "mechanic",
+        "pos": [
+          1,
+          0,
+          2.8
+        ],
+        "yaw": 0,
+        "clip": "idle_var",
+        "note": "retire la roue (statique / idle)"
+      },
+      {
+        "id": "crew_front_1",
+        "kind": "mechanic",
+        "pos": [
+          -6,
+          0,
+          0.6
+        ],
+        "yaw": 0,
+        "clip": "clap",
+        "note": "bord du garage, applaudissements / attente"
+      },
+      {
+        "id": "crew_front_2",
+        "kind": "mechanic",
+        "pos": [
+          -3.5,
+          0,
+          0.6
+        ],
+        "yaw": 0,
+        "clip": "clap",
+        "note": "bord du garage, applaudissements / attente"
+      },
+      {
+        "id": "crew_front_3",
+        "kind": "mechanic",
+        "pos": [
+          3.5,
+          0,
+          0.6
+        ],
+        "yaw": 0,
+        "clip": "clap",
+        "note": "bord du garage, applaudissements / attente"
+      },
+      {
+        "id": "crew_front_4",
+        "kind": "mechanic",
+        "pos": [
+          6,
+          0,
+          0.6
+        ],
+        "yaw": 0,
+        "clip": "clap",
+        "note": "bord du garage, applaudissements / attente"
+      },
+      {
+        "id": "mech_car1",
+        "kind": "mechanic",
+        "pos": [
+          7.99,
+          0,
+          -4
+        ],
+        "yaw": -1.5708,
+        "clip": "idle"
+      },
+      {
+        "id": "mech_car2",
+        "kind": "mechanic",
+        "pos": [
+          -7.99,
+          0,
+          -4
+        ],
+        "yaw": 1.5708,
+        "clip": "idle"
+      }
+    ]
+  },
+  "garages": [
+    {
+      "team": "mercedes",
+      "name": "MERCEDES-AMG F1",
+      "lod_node": "garage_lod_mercedes",
+      "frame": {
+        "pos": [
+          -0.33,
+          -1.706,
+          285.307
+        ],
+        "yaw": -1.65592
+      },
+      "pitwall": {
+        "node": "pitwall_mercedes",
+        "pos": [
+          -14.678,
+          -0.96,
+          284.082
+        ],
+        "yaw": 1.485673
+      },
+      "pit_stop": {
+        "pos": [
+          -4.813,
+          -1.706,
+          284.924
+        ],
+        "heading": [
+          0.085021,
+          0,
+          -0.996379
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          4.707,
+          -1.706,
+          292.149
+        ]
+      ],
+      "box_station_m": 203.887
+    },
+    {
+      "team": "ferrari",
+      "name": "SCUDERIA FERRARI",
+      "lod_node": "garage_lod_ferrari",
+      "frame": {
+        "pos": [
+          1.796,
+          -1.626,
+          264.219
+        ],
+        "yaw": -1.642657
+      },
+      "pitwall": {
+        "node": "pitwall_ferrari",
+        "pos": [
+          -12.567,
+          -0.858,
+          263.185
+        ],
+        "yaw": 1.498935
+      },
+      "pit_stop": {
+        "pos": [
+          -2.693,
+          -1.626,
+          263.896
+        ],
+        "heading": [
+          0.071799,
+          0,
+          -0.997419
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          6.922,
+          -1.626,
+          270.994
+        ]
+      ],
+      "box_station_m": 224.982
+    },
+    {
+      "team": "redbull",
+      "name": "RED BULL RACING HONDA",
+      "lod_node": "garage_lod_redbull",
+      "frame": {
+        "pos": [
+          3.901,
+          -1.545,
+          243.453
+        ],
+        "yaw": -1.670221
+      },
+      "pitwall": {
+        "node": "pitwall_redbull",
+        "pos": [
+          -10.428,
+          -0.753,
+          242.023
+        ],
+        "yaw": 1.471372
+      },
+      "pit_stop": {
+        "pos": [
+          -0.577,
+          -1.545,
+          243.006
+        ],
+        "heading": [
+          0.099261,
+          0,
+          -0.995061
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          8.839,
+          -1.545,
+          250.366
+        ]
+      ],
+      "box_station_m": 246.077
+    },
+    {
+      "team": "mclaren",
+      "name": "MCLAREN",
+      "lod_node": "garage_lod_mclaren",
+      "frame": {
+        "pos": [
+          6.13,
+          -1.467,
+          222.341
+        ],
+        "yaw": -1.653125
+      },
+      "pitwall": {
+        "node": "pitwall_mclaren",
+        "pos": [
+          -8.221,
+          -0.653,
+          221.157
+        ],
+        "yaw": 1.488468
+      },
+      "pit_stop": {
+        "pos": [
+          1.645,
+          -1.467,
+          221.971
+        ],
+        "heading": [
+          0.082236,
+          0,
+          -0.996613
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          11.186,
+          -1.467,
+          229.17
+        ]
+      ],
+      "box_station_m": 267.173
+    },
+    {
+      "team": "renault",
+      "name": "RENAULT DP WORLD F1 TEAM",
+      "lod_node": "garage_lod_renault",
+      "frame": {
+        "pos": [
+          8.202,
+          -1.366,
+          201.551
+        ],
+        "yaw": -1.67755
+      },
+      "pitwall": {
+        "node": "pitwall_renault",
+        "pos": [
+          -6.116,
+          -0.538,
+          200.017
+        ],
+        "yaw": 1.464042
+      },
+      "pit_stop": {
+        "pos": [
+          3.727,
+          -1.366,
+          201.072
+        ],
+        "heading": [
+          0.106551,
+          0,
+          -0.994307
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          13.089,
+          -1.366,
+          208.501
+        ]
+      ],
+      "box_station_m": 288.268
+    },
+    {
+      "team": "alphatauri",
+      "name": "SCUDERIA ALPHATAURI",
+      "lod_node": "garage_lod_alphatauri",
+      "frame": {
+        "pos": [
+          10.273,
+          -1.28,
+          180.72
+        ],
+        "yaw": -1.696187
+      },
+      "pitwall": {
+        "node": "pitwall_alphatauri",
+        "pos": [
+          -4.014,
+          -0.433,
+          178.919
+        ],
+        "yaw": 1.445405
+      },
+      "pit_stop": {
+        "pos": [
+          5.808,
+          -1.28,
+          180.158
+        ],
+        "heading": [
+          0.125063,
+          0,
+          -0.992149
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          15.03,
+          -1.28,
+          187.76
+        ]
+      ],
+      "box_station_m": 309.363
+    },
+    {
+      "team": "racingpoint",
+      "name": "BWT RACING POINT F1 TEAM",
+      "lod_node": "garage_lod_racingpoint",
+      "frame": {
+        "pos": [
+          12.238,
+          -1.181,
+          159.787
+        ],
+        "yaw": -1.703881
+      },
+      "pitwall": {
+        "node": "pitwall_racingpoint",
+        "pos": [
+          -2.035,
+          -0.32,
+          157.876
+        ],
+        "yaw": 1.437711
+      },
+      "pit_stop": {
+        "pos": [
+          7.778,
+          -1.181,
+          159.19
+        ],
+        "heading": [
+          0.132692,
+          0,
+          -0.991157
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          16.941,
+          -1.181,
+          166.863
+        ]
+      ],
+      "box_station_m": 330.458
+    },
+    {
+      "team": "alfaromeo",
+      "name": "ALFA ROMEO RACING ORLEN",
+      "lod_node": "garage_lod_alfaromeo",
+      "frame": {
+        "pos": [
+          14.109,
+          -1.096,
+          139.108
+        ],
+        "yaw": -1.743112
+      },
+      "pitwall": {
+        "node": "pitwall_alfaromeo",
+        "pos": [
+          -0.078,
+          -0.211,
+          136.639
+        ],
+        "yaw": 1.398481
+      },
+      "pit_stop": {
+        "pos": [
+          9.676,
+          -1.096,
+          138.337
+        ],
+        "heading": [
+          0.171464,
+          0,
+          -0.98519
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          18.53,
+          -1.096,
+          146.363
+        ]
+      ],
+      "box_station_m": 351.554
+    },
+    {
+      "team": "haas",
+      "name": "HAAS F1 TEAM",
+      "lod_node": "garage_lod_haas",
+      "frame": {
+        "pos": [
+          16.23,
+          -1.011,
+          117.744
+        ],
+        "yaw": -1.693919
+      },
+      "pitwall": {
+        "node": "pitwall_haas",
+        "pos": [
+          1.939,
+          -0.096,
+          115.975
+        ],
+        "yaw": 1.447674
+      },
+      "pit_stop": {
+        "pos": [
+          11.764,
+          -1.011,
+          117.191
+        ],
+        "heading": [
+          0.122812,
+          0,
+          -0.99243
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          21.003,
+          -1.011,
+          124.772
+        ]
+      ],
+      "box_station_m": 372.649
+    },
+    {
+      "team": "williams",
+      "name": "WILLIAMS RACING",
+      "lod_node": "garage_lod_williams",
+      "frame": {
+        "pos": [
+          17.55,
+          -0.905,
+          95.727
+        ],
+        "yaw": -1.570796
+      },
+      "pitwall": {
+        "node": "pitwall_williams",
+        "pos": [
+          3.15,
+          1.158,
+          95.727
+        ],
+        "yaw": 1.570796
+      },
+      "pit_stop": {
+        "pos": [
+          13.05,
+          -0.905,
+          95.727
+        ],
+        "heading": [
+          0,
+          0,
+          -1
+        ],
+        "local": [
+          0,
+          0,
+          4.5
+        ]
+      },
+      "car_park": [
+        [
+          23.15,
+          -0.905,
+          102.116
+        ]
+      ],
+      "box_station_m": 393.744
+    }
+  ]
+}
