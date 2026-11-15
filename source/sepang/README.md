@@ -45,6 +45,11 @@ Secteurs, fins de zones DRS et limitation des stands de `circuit.ts` sont des es
 
 Ce convertisseur est indépendant du pipeline Blender (il n'utilise que numpy/scipy/opencv/Pillow). Son extraction de la physique (ligne centrale, largeurs, types de sol, murs) part du GLB brut avec une table de matériaux explicite : elle peut servir de base pour d'autres circuits dont on ne possède que le modèle visuel.
 
+## Réalisme ajouté (`build_extras.py`)
+
+- `track_sepang/crowd.bin` : ~8 000 spectateurs assis sur les marches des tribunes du modèle (matériau M8), tournés vers la piste ;
+- `track_sepang/barriers.bin` : ~17 800 segments de barrières réelles (glissières, murs, grillages, muret des stands) lus par `collideBarriers`, avec un garde-fou continu (contour « premier mur ») ; tout segment qui touche l'emprise de la piste est retiré (aucun mur sur la chaussée).
+
 ## Pas encore fait
 
-Voie des stands (`pitlane.json`), barrières réelles (`barriers.bin`), public (`crowd.bin`), commissaires, tuiles + LOD (la scène est une seule tuile de 35 Mo), validation visuelle et essai de course en jeu.
+Voie des stands (`pitlane.json`), commissaires, tuiles + LOD (la scène est une seule tuile de 35 Mo), validation visuelle et essai de course en jeu.

@@ -227,7 +227,7 @@ def build_physics(glb_path, trackdir, debugdir=None, log=print):
         os.makedirs(debugdir, exist_ok=True)
         np.save(os.path.join(debugdir, 'grid.npy'), grid)
         np.save(os.path.join(debugdir, 'C.npy'), np.stack([cx, cz], 1))
-    return dict(N=N, ds=ds, L=L, C=np.stack([cx, cz], 1), cy=cyo, wl=wl, wr=wr, wallL=wallL, wallR=wallR, origin=(ox, oy, oz), grid=grid, typ=typ, T=T)
+    return dict(N=N, ds=ds, L=L, C=np.stack([cx, cz], 1), cy=cyo, wl=wl, wr=wr, wallL=wallL, wallR=wallR, origin=(ox, oy, oz), grid=grid, typ=typ, T=T, Cglb=C, mi=mi, tm=tm)
 
 
 if __name__ == '__main__':

@@ -24,6 +24,12 @@ START = 51
 # murs, glissières, grillages (surfaces verticales) ; 3 = géométrie de collision invisible du modèle d'origine
 WALL = (3, 40, 41, 42, 49, 54, 55, 56, 59, 18)
 
+# tribunes : matériau des marches de tribune (le public s'assoit dessus, tourné vers la piste)
+SEATS = (8,)
+# barrières réelles (barriers.bin), du moins au plus prioritaire ; type du jeu : 1 pneus, 2 rail, 3 béton, 4 objet
+WALL_PRIORITY = (3, 18, 42, 59, 55, 40)
+BARRIER_KIND = {3: 3, 18: 4, 42: 3, 59: 3, 55: 3, 40: 2}
+
 # ── scène ──
 DROP = (3,)                                    # matériau invisible (alpha 0) : on ne l'affiche pas
 FOLIAGE = (11, 13, 14, 15, 16, 22)             # feuillages / arbres en cartes alpha → alphaMode MASK
