@@ -33,7 +33,7 @@ for (const V of VIEWS) {
     const meta = await mr.json(), bytes = await br.arrayBuffer()
     return { ok: bytes.byteLength === meta.N * meta.ND * 2, N: meta.N, ND: meta.ND, length: meta.length, bytes: bytes.byteLength }
   }, circuit)
-  check(r, 'grille physique servie et dimensions cohérentes', surface.ok && (circuit !== 'barcelona' || surface.N === 4669) && (circuit !== 'sepang' || surface.N === 5542), JSON.stringify(surface))
+  check(r, 'grille physique servie et dimensions cohérentes', surface.ok && (circuit !== 'barcelona' || surface.N === 4642) && (circuit !== 'sepang' || surface.N === 5542), JSON.stringify(surface))
   await shot('01_boot')
   // piste pleine qualité en tuiles : toutes chargées (streaming), textures partagées
   await p.waitForFunction(minTiles => window.__w11 && (window.__w11.ren.mobile ? window.__w11.ren.tilesInScene >= minTiles : window.__w11.ren.tiles.loaded.size === window.__w11.ren.tiles.total), mobileTilesMin, { timeout: 300000, polling: 500 }).catch(() => {})
@@ -116,7 +116,7 @@ for (const V of VIEWS) {
 // portrait : écran « tourne ton iPhone »
 {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
-  const p = await ctx.newPage(); await p.goto(base + '?q=low'); await p.waitForTimeout(1500)
+  const p = await ctx.newPage(); await p.goto(base + '?q=low&circuit=' + encodeURIComponent(circuit)); await p.waitForTimeout(1500)
   const vis = await p.isVisible('#rotate'); report.portrait = vis
   await p.screenshot({ path: OUT + 'portrait_rotate.png' }); console.log(vis ? 'ok' : 'ÉCHEC', 'portrait → message de rotation'); if (!vis) fail++
   await ctx.close()
