@@ -9,6 +9,7 @@ import { Vehicle } from '../physics/vehicle.ts'
 import { applyCarPhysics, currentCar } from '../physics/cars2020.ts'
 import { W11, type Compound } from '../physics/params.ts'
 import { AiDriver, type DriveCmd } from './driver.ts'
+import { AI_GRIP } from './tuning.ts'
 export type { DriveCmd } from './driver.ts'
 
 const MAX = 4
@@ -65,7 +66,7 @@ export class HybridBank {
     const v = s.v
     s.r = r
     v.env = sim.vehicle?.env ?? v.env
-    v.setup.engineMode = sim.kind === 'race' ? 'race' : 'quali'
+    v.setup.engineMode = 'quali' // IA : pleine puissance en course comme en qualif
     const comp = COMP[r.tyre.c] ?? 'C3'
     const t = W11.tyre.window[comp][0] + (Math.max(0.3, Math.min(1.05, r.tyre.temp)) - 1) * 40 // 1 = bas de la fenêtre de température
     v.fitTyres(comp, t, t)
@@ -76,20 +77,20 @@ export class HybridBank {
     const lx = L.x[a] - L.x[b], lz = L.z[a] - L.z[b]
     const yaw = r.v > 5 ? Math.atan2(T.tx[i] * lz - T.tz[i] * lx, T.tx[i] * lx + T.tz[i] * lz) : 0
     v.placeAt(r.s, r.d, Math.max(0, r.v), yaw)
-    v.fuel = sim.kind === 'race' ? r.fuel : W11.fuelQuali
+    v.fuel = W11.fuelQuali
     v.ers.soc = 3.4e6; v.ers.newLap()
     s.d.reset()
   }
   step(sim: RaceSim, dt: number) {
     const n = Math.max(1, Math.min(8, Math.round(dt / SUB)))
     const h = dt / n
-    const prev = currentCar()
+    const prev = currentCar(), mu0 = W11.tyre.mu0
     for (const s of this.slots) {
       const r = s.r
       if (!r) continue
       if (!sim.near.has(r.i) || !sim.onTrack(r)) { r.q = null; s.r = null; continue }
       const v = s.v
-      v.fuel = sim.kind === 'race' ? r.fuel : W11.fuelQuali // qualif / essais : la masse du profil de vitesse (essence de qualif), pas les 30 kg du modèle 1D
+      v.fuel = W11.fuelQuali // IA : masse d'essence du profil de vitesse, en course comme en qualif (même rythme) ; qualif / essais : la masse du profil de vitesse (essence de qualif), pas les 30 kg du modèle 1D
       v.damage.frontWing = Math.max(v.damage.frontWing, r.dmg.fw)
       v.damage.rearWing = Math.max(v.damage.rearWing, r.dmg.rw)
       v.damage.floor = Math.max(v.damage.floor, r.dmg.floor)
@@ -105,7 +106,9 @@ export class HybridBank {
       const cmd = sim.cmd.get(r.i) ?? { vt: r.v, dT: r.d }
       applyCarPhysics(r.car)
       const ctl = s.d.control(sim, r, v, cmd, dt)
+      W11.tyre.mu0 = mu0 * AI_GRIP // bonus d'adhérence des IA (tuning.ts), rendu juste après le pas physique
       for (let k = 0; k < n; k++) v.step(h, ctl)
+      W11.tyre.mu0 = mu0
       // physique en vrac (NaN) : voiture détruite plutôt que de contaminer la simulation
       if (!Number.isFinite(v.s) || !Number.isFinite(v.d) || !Number.isFinite(v.pos[0]) || !Number.isFinite(v.pos[2]) || !Number.isFinite(v.vel[0])) { sim.physIncident(r, 'wreck', 0); r.q = null; s.r = null; continue }
       const prevS = r.s
@@ -122,6 +125,7 @@ export class HybridBank {
       // tête-à-queue, immobilisée, épave : retour au modèle 1D avec incident (drapeaux jaunes, SC, abandon)
       if (s.d.event) { sim.physIncident(r, s.d.event, s.d.yaw); r.q = null; s.r = null }
     }
+    W11.tyre.mu0 = mu0
     applyCarPhysics(prev)
   }
   /** la séparation 1D a poussé la voiture : on décale le corps rigide pour que ça tienne */
