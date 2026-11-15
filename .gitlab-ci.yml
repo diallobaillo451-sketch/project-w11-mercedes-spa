@@ -128,3 +128,25 @@ typecheck:
     - npx tsc --noEmit
   rules:
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+# Silverstone : test navigateur du dépôt (Playwright + Chrome, rendu logiciel) après assemblage complet. Branches « silverstone » seulement, non bloquant.
+silverstone_app_test:
+  extends: .assemble
+  stage: test
+  allow_failure: true
+  script:
+    - !reference [.assemble, script]
+    - |
+      apt-get update -qq && apt-get install -y -qq wget ca-certificates > /dev/null
+      wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      apt-get install -y -qq ./google-chrome-stable_current_amd64.deb > /dev/null
+      (python3 -m http.server 5199 --directory public > /dev/null 2>&1 &)
+      sleep 2
+      cd source/game && CIRCUIT=silverstone node tests/app.mjs http://127.0.0.1:5199/
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - source/out/app/
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /silverstone/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
