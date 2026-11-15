@@ -58,6 +58,19 @@
       else
         echo 'Sepang non assemblé (GLB absent ou conversion en échec) : circuit indisponible'
       fi
+    - |
+      if [ -d public_silverstone/assets/silverstone ] && [ -d public_silverstone/track_silverstone ]; then
+        if [ -f public/assets/monza/tiles.json ]; then
+          rm -rf /tmp/silv_patch && cp -r public_silverstone/assets/silverstone /tmp/silv_patch \
+            && node source/tools/circuit_pipeline/reuse_circuit_textures.mjs /tmp/silv_patch public/assets/monza \
+            && rm -rf public_silverstone/assets/silverstone && mv /tmp/silv_patch public_silverstone/assets/silverstone \
+            || echo 'Textures de Monza non reutilisees : Silverstone garde les siennes'
+        fi
+        mkdir -p public/assets/silverstone public/track_silverstone
+        cp -r public_silverstone/assets/silverstone/. public/assets/silverstone/ && cp -r public_silverstone/track_silverstone/. public/track_silverstone/ && echo 'SILVERSTONE OK' && du -sh public/assets/silverstone public/track_silverstone
+      else
+        echo 'Silverstone non assemble : circuit indisponible'
+      fi
     - du -sh public
 
 # Sepang : conversion du GLB déposé dans source/sepang/ (surface physique + scène 3D). Sans GLB, seule la syntaxe des scripts est vérifiée.
