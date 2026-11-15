@@ -6,6 +6,7 @@
 | Mercedes F1 2020 (W11) | `car_w11.glb` | Kevin Love (Sketchfab Tyler_Kevin) | CC BY 4.0 | https://sketchfab.com/3d-models/mercedec-f1-2020-0d97207d829441ba95952598f84e8d63 |
 | Pilote « rhp_bell_hp77_driver_f1 » | `driver_bell.glb` | MattDoesBlender | **CC BY-NC-SA 4.0** (non commercial, partage à l'identique) | https://sketchfab.com/3d-models/rhp-bell-hp77-driver-f1-2916ac047ea84abe9394c38e4fa2d4bd |
 | Circuit de Spa-Francorchamps (tracé 2022) | `spa_part1..8.glb` | Dave Love (Sketchfab Tyler_Dave) | CC BY 4.0 | https://sketchfab.com/3d-models/circuit-de-spa-francorchamps-2022-layout-ac681fbf548144498c130c3aa0adeb54 |
+| Circuit de Silverstone (tracé 2024) | `silverstone_circuit_2024_layout.glb` | Dave Love (Sketchfab Tyler_Dave) | CC BY 4.0 | https://sketchfab.com/3d-models/silverstone-circuit-2024-layout-bbaf4b12d5244c76998fd44f771fc0b3 |
 
 Conséquence : à cause du pilote (NC-SA), le jeu doit rester **gratuit et non commercial**, et les dérivés du pilote (casque/combinaison retexturés) sont distribués sous **CC BY-NC-SA 4.0**.
 

@@ -27,7 +27,7 @@ for (const V of VIEWS) {
   await p.waitForSelector('#bootGo:not([hidden])', { timeout: 240000 })
   check(r, 'chargement', true, ((Date.now() - t0) / 1000).toFixed(1) + ' s')
   const surface = await p.evaluate(async id => {
-    const dir = ({ spa: './track/', monza: './track_monza/', barcelona: './track_barcelona/', sepang: './track_sepang/' })[id] || './track/'
+    const dir = ({ spa: './track/', monza: './track_monza/', barcelona: './track_barcelona/', sepang: './track_sepang/', silverstone: './track_silverstone/' })[id] || './track/'
     const [mr, br] = await Promise.all([fetch(dir + 'surface.json'), fetch(dir + 'surface.bin')])
     if (!mr.ok || !br.ok) return { ok: false, metaStatus: mr.status, binStatus: br.status }
     const meta = await mr.json(), bytes = await br.arrayBuffer()

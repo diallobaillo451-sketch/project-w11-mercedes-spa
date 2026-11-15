@@ -19,6 +19,25 @@
     - test "$(stat -c%s public/assets/barcelona/t06.bin)" -eq 10161108 && test "$(stat -c%s public/assets/barcelona/t09.bin)" -eq 5622744
     - sha256sum -c SHA256SUMS
     - if [ -d public_sepang/assets/sepang ]; then echo 'VITE_SEPANG=1' > source/game/.env.production.local; fi
+    - |
+      silverstone_fetch() {
+        S=shared/silverstone
+        P=
+        for B in silverstone-pack silverstone-assets; do
+          git fetch --depth 1 origin "$B" || continue
+          P=$(git ls-tree -r --name-only FETCH_HEAD | grep 'silverstone_pack.*\.tar$' | tail -n 1)
+          [ -n "$P" ] && break
+        done
+        [ -n "$P" ] || return 1
+        mkdir -p "$S" && git show "FETCH_HEAD:$P" > "$S/silverstone_pack.tar" || return 1
+        (cd "$S" && sha256sum -c silverstone_pack.sha256) || return 1
+        rm -rf public_silverstone /tmp/silv && mkdir -p public_silverstone/assets/silverstone public_silverstone/track_silverstone /tmp/silv || return 1
+        tar -xf "$S/silverstone_pack.tar" -C /tmp/silv || return 1
+        cp -r /tmp/silv/scene/. public_silverstone/assets/silverstone/ || return 1
+        for f in surface.json surface.bin meta.json; do cp "/tmp/silv/track/$f" public_silverstone/track_silverstone/ || return 1; done
+        test "$(stat -c%s public_silverstone/track_silverstone/surface.bin)" -eq 4264132
+      }
+      if silverstone_fetch; then echo 'SILVERSTONE : paquet verifie'; echo 'VITE_SILVERSTONE=1' >> source/game/.env.production.local; else echo 'ATTENTION : Silverstone non assemble (paquet absent ou invalide)'; case "$CI_COMMIT_BRANCH" in *silverstone*) exit 1;; esac; fi
     - cd source/game && npm ci && npx vite build && cd ../..
     - rm -f public/assets/index-*.js public/assets/index-*.css
     - cp -r source/game/dist/. public/
@@ -42,6 +61,19 @@
         cp -r public_sepang/assets/sepang/. public/assets/sepang/ && cp -r public_sepang/track_sepang/. public/track_sepang/ && echo 'SEPANG OK' && du -sh public/assets/sepang public/track_sepang
       else
         echo 'Sepang non assemblé (GLB absent ou conversion en échec) : circuit indisponible'
+      fi
+    - |
+      if [ -d public_silverstone/assets/silverstone ] && [ -d public_silverstone/track_silverstone ]; then
+        if [ -f public/assets/monza/tiles.json ]; then
+          rm -rf /tmp/silv_patch && cp -r public_silverstone/assets/silverstone /tmp/silv_patch \
+            && node source/tools/circuit_pipeline/reuse_circuit_textures.mjs /tmp/silv_patch public/assets/monza \
+            && rm -rf public_silverstone/assets/silverstone && mv /tmp/silv_patch public_silverstone/assets/silverstone \
+            || echo 'Textures de Monza non reutilisees : Silverstone garde les siennes'
+        fi
+        mkdir -p public/assets/silverstone public/track_silverstone
+        cp -r public_silverstone/assets/silverstone/. public/assets/silverstone/ && cp -r public_silverstone/track_silverstone/. public/track_silverstone/ && echo 'SILVERSTONE OK' && du -sh public/assets/silverstone public/track_silverstone
+      else
+        echo 'Silverstone non assemble : circuit indisponible'
       fi
     - du -sh public
 
@@ -100,3 +132,25 @@ typecheck:
     - npx tsc --noEmit
   rules:
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+# Silverstone : test navigateur du dépôt (Playwright + Chrome, rendu logiciel) après assemblage complet. Branches « silverstone » seulement, non bloquant.
+silverstone_app_test:
+  extends: .assemble
+  stage: test
+  allow_failure: true
+  script:
+    - !reference [.assemble, script]
+    - |
+      apt-get update -qq && apt-get install -y -qq wget ca-certificates > /dev/null
+      wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      apt-get install -y -qq ./google-chrome-stable_current_amd64.deb > /dev/null
+      (python3 -m http.server 5199 --directory public > /dev/null 2>&1 &)
+      sleep 2
+      cd source/game && CIRCUIT=silverstone node tests/app.mjs http://127.0.0.1:5199/
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - source/out/app/
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /silverstone/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
