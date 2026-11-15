@@ -1,4 +1,8 @@
 
+## 2026-11-15 — IA très rapides (même rythme en qualif et en course)
+- Bonus d'adhérence des IA physiques (× 1,08, race/tuning.ts) et plafond de vitesse commun 1D / physique (1,06 × √1,08), plateau 2,5 % plus rapide et écarts réels gardés à 50 %, plus de pénalité de course (+2 s), pleine puissance et essence de profil en course.
+- Réglage dans l'URL : ?aigrip= ?aik= ?aispread= ?aiboost= ; menu : Difficulté IA (85 rapide, 100 très rapide). Détails : source/docs/IA_PILOTES.md. Non testé sur iPhone.
+
 ## 2026-11-14 — IA : vrai pilotage (voitures physiques), qualif / essais courtois, règles, stratégie
 - Voitures physiques : nouveau pilote race/driver.ts (base autopilote validé, écart latéral lissé, freinage anticipé, gouverneur d'adhérence, détection tête-à-queue / immobilisée / épave renvoyée à la sim : jaunes, SC, abandon), ERS rechargé à chaque tour, gomme / cap / dégâts à la promotion.
 - Circuit (Monza, Barcelone) et portes de secteurs transmis à la sim IA (les profils étaient calés sur Spa) ; joueur en tour lancé détecté (les IA lui cèdent le passage) ; attente à la sortie des stands ; écart propre en tour de sortie ; stratégie d'arrêt optimale (SC / VSC compris) ; jaunes plus marqués.

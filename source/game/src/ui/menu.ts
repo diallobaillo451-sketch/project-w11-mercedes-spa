@@ -191,7 +191,7 @@ export class Menu {
         this.conditions(el)
         el.append(header('Adversaires'), group(
           row({ title: 'Plateau', sub: '19 monoplaces 2020 · course, essais et qualifications', value: '20 voitures' }),
-          ctl('Difficulté IA', stepper(P.difficulty, { min: 40, max: 100, step: 5 }, v => `${v} %`, v => { P.difficulty = v; save() }), '40 novice · 100 réaliste'),
+          ctl('Difficulté IA', stepper(P.difficulty, { min: 40, max: 100, step: 5 }, v => `${v} %`, v => { P.difficulty = v; save() }), '40 novice · 85 rapide · 100 très rapide'),
         ))
         el.append(footnote('Aides au pilotage et commandes : Accueil → Options.'))
         return { id, el, title: 'Course rapide', shot: 'rear' }
