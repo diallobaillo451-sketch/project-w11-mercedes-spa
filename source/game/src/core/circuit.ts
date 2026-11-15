@@ -46,7 +46,7 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
   },
   sepang: {
     id: 'sepang', name: 'Sepang', trackDir: './track_sepang/', sceneDir: './assets/sepang/', marshals: null, spaPits: false,
-    optionalAssets: { barriers: false, pitlane: false, grassmask: true, crowd: false }, hasLods: false,
+    optionalAssets: { barriers: true, pitlane: false, grassmask: true, crowd: true }, hasLods: false,
     pit: { limitFromS: 5260, limitToS: 360 }, gates: [1790, 3690],
     // Sepang (E : positions déduites de notre ligne centrale, s = 0 sur la ligne de départ ; 2 zones : ligne droite des stands, ligne droite arrière)
     drs: length => [[4290, 5040], [5250, length], [0, 520]],
