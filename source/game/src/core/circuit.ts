@@ -39,10 +39,10 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
   },
   barcelona: {
     id: 'barcelona', name: 'Barcelone-Catalogne', trackDir: './track_barcelona/', sceneDir: './assets/barcelona/', marshals: null, spaPits: false,
-    optionalAssets: { barriers: false, pitlane: false, grassmask: false, crowd: false }, hasLods: true,
-    pit: { limitFromS: 0, limitToS: 0 }, gates: [1619, 3403],
-    // DRS approximés depuis les portions rectilignes de la trace GP 2023, pas un relevé officiel de lignes de détection.
-    drs: length => { const k = length / 4668.6; return [[4437 * k, length], [0, 558 * k], [2982 * k, 3284 * k]] },
+    optionalAssets: { barriers: true, pitlane: true, grassmask: true, crowd: true }, hasLods: true,
+    pit: { limitFromS: 4245, limitToS: 329 }, gates: [1610, 3384],
+    // Positions de l'archive 2023 : secteurs, DRS et limites de stands restent des estimations, pas des relevés officiels.
+    drs: length => { const k = length / 4642.814; return [[4412 * k, length], [0, 555 * k], [2966 * k, 3266 * k]] },
   },
 }
 const KEY = 'w11.circuit'
