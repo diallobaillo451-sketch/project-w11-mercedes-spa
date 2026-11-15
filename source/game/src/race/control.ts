@@ -168,19 +168,35 @@ export class RaceControl {
     }
     if (this.red) { const vp = r.prof.v[i] * 0.45; return Math.min(vt, vp) }
     if (this.vsc) vt = Math.min(vt, r.prof.v[i] * 0.6)
-    if (this.sc.active && !(this as RaceControl).isUnlapping(r) && r.wantPit === null) {
-      vt = Math.min(vt, r.prof.v[i] * 0.66)
+    if (this.sc.active && !(this as RaceControl).isUnlapping(r)) {
+      // (plafond de vitesse sous SC : voir plus bas, selon l'écart à la voiture devant ; les voitures qui vont aux stands le respectent aussi)
       const ah = this.carAheadAny(r, true)
       const gSC = this.sc.mode !== 'park' ? S.road(r.s, this.sc.s) : 1e9
+      // on se serre derrière la voiture devant : plafond relevé (0,85 du rythme) tant qu'elle est à plus de 60 m, 0,66 près d'elle ou de la SC
+      const gAh = ah ? S.road(r.s, ah.s) : 1e9
+      vt = Math.min(vt, r.prof.v[i] * ((gSC > 0 && gSC < 600 && gSC < gAh) || gAh < 60 ? 0.66 : 0.85))
       if (gSC > 0 && gSC < 600 && (!ah || S.road(r.s, ah.s) > gSC)) vt = Math.min(vt, Math.max(0, this.sc.v + (gSC - 45) * 0.5))
       else if (ah) { const g = S.road(r.s, ah.s); vt = Math.min(vt, Math.max(0, ah.v + (g - 28) * 0.5)) }
     }
-    if (this.sc.active && this.isUnlapping(r)) vt = Math.min(vt, r.prof.v[i] * 0.8)
+    if (this.sc.active && this.isUnlapping(r)) vt = Math.min(vt, r.prof.v[i] * 0.9)
+    // reprise : tant que le leader n'a pas franchi la ligne de contrôle, on reste groupé derrière lui (pas de départ lancé avant la ligne)
+    if (this.restartHold && !this.sc.active) { const toLine = S.road(r.s, 0); if (toLine > 0 && toLine < 2500) vt = Math.min(vt, r.prof.v[i] * 0.8) }
     // reprise après SC : pas de dépassement avant la ligne
     if (this.phase === 'chequered' && r.finished) vt = Math.min(vt, r.prof.v[i] * 0.55)
     const y = this.yellowAt(r.s)
     if (y === 'double') vt *= 0.7; else if (y === 'yellow') vt *= 0.88
+    if (this.nearStopped(r)) vt = Math.min(vt, 30)
     return vt
+  }
+  /** voiture arrêtée / accidentée sur la piste à moins de ~150 m devant (ou tout juste dépassée) : prudence maximale, 108 km/h */
+  nearStopped(r: Racer) {
+    const S = this.sim
+    for (const inc of this.incidents) {
+      if (inc.sev !== 'double' || !inc.r || inc.r === r || !(inc.r.mode === 'spun' || inc.r.mode === 'dnf' || inc.r.v < 3)) continue
+      const d = S.road(r.s, inc.r.s)
+      if (d > -25 && d < 150) return true
+    }
+    return false
   }
   weave(r: Racer) { return (this.sc.active && !this.isUnlapping(r)) || (this.red && r.mode !== 'pit') }
   /** voiture devant sur la route, toutes voies confondues (pas de dépassement) */
@@ -201,7 +217,7 @@ export class RaceControl {
   restartHold = false
   drsGlobal() { return !this.red && !this.vsc && !this.sc.active && this.sim.wetness() < 0.3 && !this.restartHold }
   drsAllowed(r: Racer, gapT: number) {
-    if (!this.drsGlobal()) return false
+    if (!this.drsGlobal() || this.yellowAt(r.s)) return false
     if (this.sim.kind !== 'race') return r.mode === 'push'
     // course : à partir du 3e tour (2 tours après le départ ou une reprise), moins d'1 s à la détection (art. 22.2 / 2020)
     if (r.laps < 2 || this.sim.t - this.drsResumeT < 0) return false
@@ -222,7 +238,7 @@ export class RaceControl {
     if (ld) { const gl = S.road(ld.s, C.s); if (gl > 0 && gl < 120) C.caught = true; if (C.mode === 'out' && gl > 0 && gl < 1500 && !C.caught) vt *= 0.75 }
     if (C.caught && C.mode === 'out') { C.mode = 'lead'; this.msg('La safety car a pris la tête de la course', 'rc') }
     // dédoublement : une fois la file formée (≥ ~1 tour derrière la SC)
-    if (C.mode === 'lead' && !this.unlap && S.t > C.tEnd - 70) {
+    if (C.mode === 'lead' && !this.unlap && S.t > C.tEnd - 110) {
       const lead = S.leader(); let any = false
       for (const r of S.cars) { const lapped = !r.out && r !== lead && r.dist < lead.dist - S.L * 0.5 && S.road(lead.s, r.s) > 0 && S.road(lead.s, r.s) < 1500; (r as Racer & { _unlap?: boolean })._unlap = lapped && !r.player; if (lapped) any = true }
       this.unlap = true

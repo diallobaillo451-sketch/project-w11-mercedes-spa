@@ -48,6 +48,15 @@ Retour du joueur : les IA conduisent bien mais restent trop lentes (il les doubl
 - Freinage : le regard sur la vitesse visée s'allonge avec le plafond (0,22 s + 6 × (K − 1,06)).
 - Réglage en direct dans l'URL : ?aigrip=1.05 (adhérence IA), ?aik=1.09 (plafond), ?aispread=0.3, ?aiboost=1.03.
 
+## Direction de course : drapeaux, SC, rouge, arrêts (3e lot, 2026-11-15)
+Retour du joueur : les IA doivent respecter les drapeaux jaunes et rouges, les retardataires doivent se dédoubler sous SC puis la course est relancée, et tout le monde doit rentrer aux stands de façon plus intelligente.
+- Bug corrigé (control.ts, speedCap) : une voiture qui avait décidé de rentrer (wantPit) n'était plus limitée du tout sous SC et roulait à plein rythme jusqu'à l'entrée des stands. Toutes les voitures respectent maintenant le plafond SC.
+- Sous SC la file se resserre : plafond 0,85 du rythme tant que la voiture de devant est à plus de 60 m (0,66 près d'elle ou de la SC), loi d'approche vers 28 m ; le leader rattrape la SC plus vite.
+- Dédoublement : démarre plus tôt (110 s avant la fin prévue au lieu de 70 s) et les retardataires roulent à 0,9 du rythme (avant 0,8) ; la SC ne rentre qu'une fois la file reformée. Reprise : tant que le leader n'a pas franchi la ligne, tout le monde reste groupé derrière lui (0,8 du rythme sur les 2,5 km avant la ligne).
+- Jaune : DRS interdit dans la zone jaune ; double jaune avec voiture arrêtée / accidentée sur la piste : 108 km/h maximum entre 150 m avant et 25 m après elle ; en qualif / essais, double jaune dans le secteur = tour lancé abandonné (refroidissement, relance au tour suivant).
+- Arrêts sous SC / VSC : l'arrêt doit rapporter plus qu'un seuil (4 s sous SC, 6 s sous VSC) plus la valeur de la place en piste (8 s pour le leader, décroissante : les voitures de tête restent dehors sauf pneus très usés), plus un biais propre à chaque voiture ; au plus 6 voitures à la fois dans la voie des stands. L'ancienne règle VSC (toute voiture à plus de 72 % de la falaise rentre) est supprimée.
+- Drapeau rouge : tout le monde rentre et change de pneus (service normal au box) ; la gomme est maintenant choisie par le calcul de relais (la moins chère sur la distance restante, règle des 2 gommes comprise) au lieu de H / M selon le nombre de tours.
+
 ## Retour arrière / comparaison
 - ?hybrid=0 : toutes les IA en 1D (aucune physique, aucun accident), pour comparer.
 - Annuler la fusion de la demande de fusion de claude/ia-pilotes dans main.
