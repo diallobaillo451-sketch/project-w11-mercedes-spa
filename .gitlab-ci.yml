@@ -19,6 +19,21 @@
     - test "$(stat -c%s public/assets/barcelona/t06.bin)" -eq 10161108 && test "$(stat -c%s public/assets/barcelona/t09.bin)" -eq 5622744
     - sha256sum -c SHA256SUMS
     - if [ -d public_sepang/assets/sepang ]; then echo 'VITE_SEPANG=1' > source/game/.env.production.local; fi
+    - |
+      silverstone_fetch() {
+        S=shared/silverstone
+        git fetch --depth 1 origin silverstone-assets || return 1
+        P=$(git ls-tree -r --name-only FETCH_HEAD | grep 'silverstone_pack.*\.tar$' | tail -n 1)
+        [ -n "$P" ] || return 1
+        mkdir -p "$S" && git show "FETCH_HEAD:$P" > "$S/silverstone_pack.tar" || return 1
+        (cd "$S" && sha256sum -c silverstone_pack.sha256) || return 1
+        rm -rf public_silverstone /tmp/silv && mkdir -p public_silverstone/assets/silverstone public_silverstone/track_silverstone /tmp/silv || return 1
+        tar -xf "$S/silverstone_pack.tar" -C /tmp/silv || return 1
+        cp -r /tmp/silv/scene/. public_silverstone/assets/silverstone/ || return 1
+        for f in surface.json surface.bin meta.json; do cp "/tmp/silv/track/$f" public_silverstone/track_silverstone/ || return 1; done
+        test "$(stat -c%s public_silverstone/track_silverstone/surface.bin)" -eq 4264132
+      }
+      if silverstone_fetch; then echo 'SILVERSTONE : paquet verifie'; echo 'VITE_SILVERSTONE=1' >> source/game/.env.production.local; else echo 'ATTENTION : Silverstone non assemble (paquet absent ou invalide)'; case "$CI_COMMIT_BRANCH" in *silverstone*) exit 1;; esac; fi
     - cd source/game && npm ci && npx vite build && cd ../..
     - rm -f public/assets/index-*.js public/assets/index-*.css
     - cp -r source/game/dist/. public/
