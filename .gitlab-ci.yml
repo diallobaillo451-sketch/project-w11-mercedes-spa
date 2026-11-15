@@ -22,8 +22,12 @@
     - |
       silverstone_fetch() {
         S=shared/silverstone
-        git fetch --depth 1 origin silverstone-assets || return 1
-        P=$(git ls-tree -r --name-only FETCH_HEAD | grep 'silverstone_pack.*\.tar$' | tail -n 1)
+        P=
+        for B in silverstone-pack silverstone-assets; do
+          git fetch --depth 1 origin "$B" || continue
+          P=$(git ls-tree -r --name-only FETCH_HEAD | grep 'silverstone_pack.*\.tar$' | tail -n 1)
+          [ -n "$P" ] && break
+        done
         [ -n "$P" ] || return 1
         mkdir -p "$S" && git show "FETCH_HEAD:$P" > "$S/silverstone_pack.tar" || return 1
         (cd "$S" && sha256sum -c silverstone_pack.sha256) || return 1
