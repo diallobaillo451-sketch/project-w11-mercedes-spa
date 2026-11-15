@@ -20,6 +20,7 @@ import { drsZones, type SessionKind } from '../core/session.ts'
 import { SPA_Q, POLE_2020, SKILL, PIT_CREW, RELIAB, GARAGE_ORDER, TYRE, type Comp, type Skill } from './data.ts'
 import { RaceControl } from './control.ts'
 import { HybridBank, type DriveCmd } from './hybrid.ts'
+import { AI_GRIP, AI_SPREAD, AI_BOOST_T, physKFor } from './tuning.ts'
 
 export class Rng {
   s: number
@@ -59,8 +60,10 @@ export const PIT_LIMIT = 80 / 3.6
 /** facteur de puissance effective par équipe (C : calé sur l'I1 de Spa 2020, voir tests/race_sim.test.ts CALPOW=1) */
 export const AI_POW: Record<string, number> = {}
 const CALIB_POW = true
-/** marge « physique » : ce que le pilote physique tient sans sortir de piste (l'autopilote de calibrage, W11, fait le tour de référence à 1,06 × profil μ = 1 ; 1,05 = petite réserve pour le trafic et l'air sale) */
-const PHYS_K = 1.05
+/** marge « physique » : ce que le pilote physique tient sans sortir de piste (l'autopilote de calibrage, W11, fait le tour de référence à 1,06 × profil μ = 1 ; avec le bonus d'adhérence des IA : × √AI_GRIP, voir tuning.ts) */
+const PHYS_BASE = 1.06 // marge de l'autopilote de calibrage (Spa, Monza) ; RaceSim.physK = base × √AI_GRIP
+/** temps de tour cible des IA : temps réels 2020 → écarts resserrés (AI_SPREAD) et plateau plus rapide (AI_BOOST_T), voir tuning.ts */
+const aiTime = (t: number, pole: number) => (pole + (t - pole) * AI_SPREAD) / AI_BOOST_T
 
 export class RaceSim {
   track: TrackSurface; line: RacingLine; L: number; N: number; ds: number
@@ -83,12 +86,13 @@ export class RaceSim {
   private hybridBank: HybridBank | null = null
   wetness = () => 0
   sessionLen = 0; chequered = false; wearScale = 1
-  playerOnHot = false; hotK = 0; private tk = 1; gates: [number, number] = [2050, 5000]
-  constructor(o: { track: TrackSurface; line: RacingLine; pit: Pitlane | null; kind: SessionKind; circuit?: string; laps?: number; player: string; seed?: number; sessionLen?: number; grid?: string[]; playerAi?: boolean; exclude?: string[]; gates?: [number, number] }) {
+  playerOnHot = false; hotK = 0; private tk = 1; gates: [number, number] = [2050, 5000]; physK = PHYS_BASE * Math.sqrt(AI_GRIP)
+  constructor(o: { track: TrackSurface; line: RacingLine; pit: Pitlane | null; kind: SessionKind; circuit?: string; laps?: number; player: string; seed?: number; sessionLen?: number; grid?: string[]; playerAi?: boolean; exclude?: string[]; gates?: [number, number]; physBase?: number }) {
     this.track = o.track; this.line = o.line; this.L = o.track.length; this.N = o.line.N; this.ds = o.track.ds
     this.kind = o.kind; this.circuit = o.circuit ?? 'bel'; this.laps = o.laps ?? 10; this.rng = new Rng(o.seed ?? (Date.now() & 0xffffff))
     this.pit = o.pit; this.sessionLen = o.sessionLen ?? 0
     this.gates = o.gates ?? [2050 * this.L / 7004, 5000 * this.L / 7004]
+    this.physK = physKFor(o.physBase ?? PHYS_BASE)
     this.wearScale = this.kind === 'race' ? Math.max(1, Math.min(4.4, 44 / Math.max(1, this.laps))) : 1
     this.zones = drsZones(this.L); this.drsDet = this.zones.filter(z => z[0] > 1).map(z => (z[0] - 120 + this.L) % this.L)
     this.leaderT = new Float64Array(Math.ceil((this.laps + 3) * this.L / this.binW) + 8).fill(NaN)
@@ -125,7 +129,7 @@ export class RaceSim {
       wx: 0, wy: 0, wz: 0, hx: 0, hz: -1, nx: 0, ny: 1, nz: 0, steer: 0, spin: 0, q: null, pitPhase: '', sepT: 0, pitLat: 0, inPit: false }
   }
   /** temps de qualif visé (s) : réel Spa 2020 rapporté à la pole 2020 du circuit */
-  targetQ(id: string) { const pole = POLE_2020[this.circuit] ?? 101.252; return pole * (SPA_Q[id] ?? 104) / SPA_Q.ham }
+  targetQ(id: string) { const pole = POLE_2020[this.circuit] ?? 101.252; return aiTime(pole * (SPA_Q[id] ?? 104) / SPA_Q.ham, pole) }
   /** profils de vitesse par équipe : physique 2020 de l'équipe (moteur, ClA, CdA), adhérence calée par dichotomie
    *  pour retrouver le meilleur temps réel de l'équipe (C). DRS : traînée × 0,84 dans les zones. */
   static profCache = new Map<string, Map<string, TeamProf>>()
@@ -141,7 +145,7 @@ export class RaceSim {
       applyCarPhysics(id)
       let pk = AI_POW[team] ?? 1
       const P = { m: W11.massMin + 12, ClA: W11.ClA, CdA: W11.CdA, power: (v: number) => pk * (icePower(Math.min(12000, 9000 + v * 40), 1, 'quali') + W11.mgukPower * 0.9) }
-      const tgt = (POLE_2020[this.circuit] ?? 101.252) * cp.spaQ / CARS2020.w11.spaQ
+      const pole = POLE_2020[this.circuit] ?? 101.252, tgt = aiTime(pole * cp.spaQ / CARS2020.w11.spaQ, pole)
       // puissance « effective » calée (Spa) sur la vitesse réelle en fin de Kemmel (I1, DRS ouvert, qualif 2020)
       if (this.circuit === 'bel' && CALIB_POW) { const a = Math.floor(1380 / this.ds), b = Math.floor(2230 / this.ds); let lo = 0.5, hi = 1.2
         for (let k = 0; k < 14; k++) { pk = (lo + hi) / 2; const v = speedProfile(this.track, this.line, P, 1, drs); let m = 0; for (let i = a; i < b; i++) m = Math.max(m, v[i]); if (m * 3.6 > cp.spaI1) hi = pk; else lo = pk }
@@ -152,7 +156,7 @@ export class RaceSim {
       const aMax = 735000 * cp.ice / (W11.massMin + 60)
       // plafond « physique » (voitures hybrides) : profil à μ = 1 × PHYS_K, sans et avec DRS
       const vP = speedProfile(this.track, this.line, P, 1), vPD = speedProfile(this.track, this.line, P, 1, drs)
-      for (let q = 0; q < this.N; q++) { vP[q] *= PHYS_K; vPD[q] *= PHYS_K }
+      for (let q = 0; q < this.N; q++) { vP[q] *= this.physK; vPD[q] *= this.physK }
       this.profs.set(team, { v: vN, vD, vP, vPD, T: profileLapTime(vD, this.ds), mu, aMax })
     }
     applyCarPhysics(keep)
@@ -255,7 +259,7 @@ export class RaceSim {
     dl += (1 - r.tyre.temp) * 2.2 + r.tyre.flat * 0.6 + r.dmg.fw * 2.5 + r.dmg.rw * 1.8 + r.dmg.floor * 1.5 + (r.tyre.punct ? 20 : 0)
     const wet = this.wetness()
     if (wet > 0.15) { const slick = r.tyre.c === 'S' || r.tyre.c === 'M' || r.tyre.c === 'H'; dl += slick ? wet * 28 : r.tyre.c === 'W' && wet < 0.6 ? (0.6 - wet) * 10 : 0; dl += wet * (1.1 - r.sk.wet) * 8 - (r.tyre.c === 'I' || r.tyre.c === 'W' ? ty.delta * Math.min(1, wet * 1.6) : 0) }
-    if (this.kind === 'race') dl += 2.0 + r.fuel * 0.035 * this.L / 7004 // mode moteur course + gestion pneus (≈2 s vs Q, Spa 2020 : tours de course 1:47,5–1:49 vs pole 1:41,25), carburant (E : 0,035 s/kg)
+    if (this.kind === 'race') dl += r.fuel * 0.008 * this.L / 7004 // IA : même rythme en course qu'en qualif (plus de pénalité mode moteur / gestion de pneus, carburant ÷ 4) ; ancien réglage : // mode moteur course + gestion pneus (≈2 s vs Q, Spa 2020 : tours de course 1:47,5–1:49 vs pole 1:41,25), carburant (E : 0,035 s/kg)
     const diff = 0.88 + 0.14 * (this.difficulty / 100)
     return r.kq * T / (T + dl) * diff
   }
@@ -278,6 +282,9 @@ export class RaceSim {
     const P = useD ? r.prof.vD : r.prof.v
     const nx = Math.ceil(r.v / 60 / this.ds) + 1
     let vt = Math.min(P[(i + this.N - late) % this.N], P[(i + nx + this.N - late) % this.N]) * (this.paceKCache(r))
+    // plafond « physique » : personne ne roule au-delà de ce que le modèle physique de sa voiture sait tenir (même rythme pour les voitures 1D et physiques)
+    const cap = useD ? r.prof.vPD : r.prof.vP
+    vt = Math.min(vt, cap[i])
     const modeK = r.mode === 'out' ? 0.86 : r.mode === 'cool' ? 0.78 : r.mode === 'in' ? 0.8 : 1
     vt *= modeK
     if (r.mode === 'spun') vt = 0
@@ -335,10 +342,10 @@ export class RaceSim {
     const ndc = r.err?.kind === 'wide' || r.mode === 'spun' || !inBand ? nd : Math.max(-(eL + 0.5), Math.min(eR + 0.5, nd))
     if (ghost) {
       // consigne au pilote physique : vitesse plafonnée à ce que la voiture sait tenir, vitesse 0,25 s plus loin (freinage anticipé), trajectoire voulue (lissée par le pilote)
-      const cap = useD ? r.prof.vPD : r.prof.vP, NN = this.N
-      const iL = (i + Math.ceil((r.v * 0.22 + 3) / this.ds)) % NN
+      const NN = this.N
+      const iL = (i + Math.ceil((r.v * (0.22 + Math.max(0, this.physK - 1.06) * 6) + 3) / this.ds)) % NN
       const bH = Math.max(1, Math.min(P[i], P[(i + nx) % NN])), bL = P[iL]
-      const vH = Math.min(vt, cap[i]), vL = Math.min(vH, vt * Math.min(1, bL / bH), cap[iL])
+      const vH = Math.min(vt, cap[i] * 1.03), vL = Math.min(vH, vt * Math.min(1, bL / bH), cap[iL] * 1.03)
       this.cmd.set(r.i, { vt: vH, vtLook: vL, dT })
     }
     else { r.lat = (ndc - r.d) / dt * 0.3 + r.lat * 0.7; r.d = ndc }
@@ -402,7 +409,7 @@ export class RaceSim {
       return
     }
     if (ahead && gA < 1.2 * Math.max(20, r.v) && C.mayOvertake(r, ahead)) {
-      const pot = r.prof.v[(i + Math.round(gA / this.ds)) % this.N] * this.paceKCache(r) * (r.drs ? 1.03 : 1)
+      const qi = (i + Math.round(gA / this.ds)) % this.N, pot = Math.min(r.prof.v[qi] * this.paceKCache(r), r.prof.vP[qi]) * (r.drs ? 1.03 : 1)
       if (pot > ahead.v + 0.4 || C.isBlue(ahead, r) || ahead.mode === 'out' || ahead.mode === 'cool' || ahead.mode === 'in' || ahead.err) {
         if (r.attackT === 0) {
           // côté : intérieur du prochain virage (point de corde de la trajectoire)

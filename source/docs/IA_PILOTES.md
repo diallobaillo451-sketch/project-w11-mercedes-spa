@@ -39,6 +39,15 @@ Mise à jour du 2026-11-14 (branche claude/ia-pilotes). Code : race/driver.ts (n
 - startField transmet circuit (spa : bel, monza : ita, barcelona : esp) et portes de secteurs ; pole 2020 de Barcelone ajoutée (1:15,584).
 - Une voiture hors de la bande utilisable revient à vitesse latérale limitée au lieu d'être téléportée.
 
+## Rythme : IA très rapides (2e lot, 2026-11-14)
+Retour du joueur : les IA conduisent bien mais restent trop lentes (il les double à fond d'accélérateur) ; il veut le même rythme en qualif et en course.
+- Cause : les cibles de vitesse étaient les temps réels 2020 (Spa : 1:41,252 à 1:43,8), moins une pénalité de course (+2 s mode moteur / gestion de pneus, + 0,035 s/kg d'essence) ; les voitures physiques étaient en plus plafonnées à ce que l'autopilote W11 tient (1,06 × profil μ = 1, tour 1:41,75), en mode moteur course et avec l'essence de course.
+- Bonus d'adhérence des IA physiques (AI_GRIP = 1,08, tuning.ts) : μ0 des pneus × 1,08 pendant leur pas physique (rendu juste après). À utilisation d'adhérence égale à celle de l'autopilote validé, la vitesse en courbe monte de √1,08 = +3,9 % (environ −2,3 s au tour à Spa). Le plafond physique de tout le plateau (1D comme physique) devient 1,06 × √1,08 = 1,10 (Barcelone : 1,10 × √0,9 × √1,08).
+- Temps cibles : écarts réels entre équipes / pilotes gardés à 50 % (AI_SPREAD) et plateau 2,5 % plus vite (AI_BOOST_T) ; même transformation pour les cibles d'équipe et de pilote (kq reste cohérent).
+- Course = qualif : plus de pénalité de +2 s ; essence 0,008 s/kg (au lieu de 0,035) ; voitures physiques en pleine puissance (mode moteur qualif) et avec l'essence du profil de vitesse en course aussi.
+- Freinage : le regard sur la vitesse visée s'allonge avec le plafond (0,22 s + 6 × (K − 1,06)).
+- Réglage en direct dans l'URL : ?aigrip=1.05 (adhérence IA), ?aik=1.09 (plafond), ?aispread=0.3, ?aiboost=1.03.
+
 ## Retour arrière / comparaison
 - ?hybrid=0 : toutes les IA en 1D (aucune physique, aucun accident), pour comparer.
 - Annuler la fusion de la demande de fusion de claude/ia-pilotes dans main.

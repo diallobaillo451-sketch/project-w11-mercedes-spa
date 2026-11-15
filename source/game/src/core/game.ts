@@ -124,7 +124,7 @@ export class Game {
   /** météo vers laquelle le film d'eau converge (carrière, averse) ; null = figée */
   weatherTarget: Weather | null = null
   startField(o: { kind: SessionKind; laps: number; player: string; grid?: string[]; sessionLen?: number; seed?: number; posts?: unknown; exclude?: string[] }) {
-    const F = new RaceSim({ track: this.track, line: this.line, pit: this.pit, kind: o.kind, circuit: CIRCUIT.id === 'monza' ? 'ita' : CIRCUIT.id === 'barcelona' ? 'esp' : 'bel', gates: CIRCUIT.gates, laps: o.laps, player: o.player, grid: o.grid, sessionLen: o.sessionLen, seed: o.seed, exclude: o.exclude })
+    const F = new RaceSim({ track: this.track, line: this.line, pit: this.pit, kind: o.kind, circuit: CIRCUIT.id === 'monza' ? 'ita' : CIRCUIT.id === 'barcelona' ? 'esp' : 'bel', gates: CIRCUIT.gates, physBase: this.track.length < 5000 ? 1.10 * Math.sqrt(0.9) : 1.06, laps: o.laps, player: o.player, grid: o.grid, sessionLen: o.sessionLen, seed: o.seed, exclude: o.exclude })
     F.vehicle = this.car; F.wetness = () => this.env.wetness
     if (o.posts) F.ctrl.buildPosts(o.posts as Parameters<typeof F.ctrl.buildPosts>[0])
     if (o.kind === 'race') { const g = F.gridPos(F.player.slot); this.car.placeAt(g.s, g.d, 0); this.car.fuel = F.player.fuel; this.snapshot() }
