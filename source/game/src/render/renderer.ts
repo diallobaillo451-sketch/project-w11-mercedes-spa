@@ -264,7 +264,7 @@ export class Renderer {
     let skyOk = false
     if (P0.get('sky') !== '0') {
       try {
-        const { tex, meta } = await loadSky(CIRCUIT.skyDir ?? './assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), KTX)
+        const { tex, meta } = await loadSky(CIRCUIT.skyDir ?? './assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), CIRCUIT.skyDir ? null : KTX /* ciel dédié (nuit) : WebP seulement, pas de .ktx2 à essayer */)
         const NT = CIRCUIT.night
         this.dome = new SkyDome(tex, meta, 215, n0('skyI', NT?.skyI ?? 3.2))
         if (NT) this.dome.mat.uniforms.uSunI.value = n0('moonDisk', NT.moonDisk) // disque lunaire (même direction que la lumière directionnelle)

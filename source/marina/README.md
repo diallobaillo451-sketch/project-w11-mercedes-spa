@@ -59,6 +59,12 @@ Pour que l'herbe, le gravier et les arbres aient le rendu de Monza (détail de p
 - L'éclairage de nuit a été réglé dans un banc d'essai three.js 0.187 (mêmes lumières, même dôme, même chaîne HDR que le jeu) et pas dans le jeu complet :
   à ajuster en conditions réelles (voiture, GTAO, météo) avec les paramètres d'URL ci-dessus.
 
+## Test dans la CI
+
+`marina_app_test` (branches « marina » seulement, non bloquant) lance le vrai jeu dans Chrome (rendu logiciel) sur `?circuit=marina` : grille physique,
+tuiles, commandes tactiles, tour de démo chronométré, captures dans les artefacts. `shotstats.py` imprime dans le journal la luminance de ces captures
+(moyenne, percentiles, pixels écrasés / brûlés, vignette ASCII) pour juger l'exposition de nuit sans voir les images.
+
 ## En local
 
 ```

@@ -19,7 +19,7 @@ for (const V of VIEWS) {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' })
   const p = await ctx.newPage()
   p.on('pageerror', e => r.errors.push('pageerror: ' + e))
-  p.on('console', m => { if (m.type() === 'error') r.errors.push('console: ' + m.text()) })
+  p.on('console', m => { if (m.type() === 'error') r.errors.push('console: ' + m.text() + (m.location()?.url ? ' [' + m.location().url + ']' : '')) })
   const carRequests = []; p.on('request', q => { if (q.url().includes('w11_lh2020_high')) carRequests.push(q.url()) })
   const shot = async (n) => { const f = `${OUT}${V.name}_${n}.png`; await p.screenshot({ path: f }); r.shots.push(f) }
   const t0 = Date.now()
