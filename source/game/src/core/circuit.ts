@@ -1,7 +1,8 @@
-/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|barcelona|sepang|silverstone, mémorisé dans le navigateur) : changer de circuit = recharger la page.
+/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|barcelona|sepang|silverstone|marina, mémorisé dans le navigateur) : changer de circuit = recharger la page.
  *  Hors navigateur (tests Node) : Spa. */
+import type { NightLook } from '../render/night.ts'
 export interface Circuit {
-  id: 'spa' | 'monza' | 'barcelona' | 'sepang' | 'silverstone'
+  id: 'spa' | 'monza' | 'barcelona' | 'sepang' | 'silverstone' | 'marina'
   name: string
   /** surface, barrières, voie des stands, herbe, public */
   trackDir: string
@@ -21,6 +22,10 @@ export interface Circuit {
   gates: [number, number]
   /** zones DRS [début, fin] en s piste (une zone qui passe la ligne est coupée en deux) */
   drs: (length: number) => [number, number][]
+  /** dossier du ciel (sky.json, sky_4k.webp) ; absent : ./assets/sky/ (ciel de jour commun) */
+  skyDir?: string
+  /** circuit de nuit (Marina Bay) : lune, ciel, lampadaires (src/render/night.ts) ; absent : jour */
+  night?: NightLook
 }
 export const CIRCUITS: Record<Circuit['id'], Circuit> = {
   spa: {
@@ -58,27 +63,39 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
     // Silverstone GP 2024 (E : secteurs et DRS estimés sur notre ligne centrale de 5 905,6 m, s = 0 au milieu de la voie des stands ; 2 zones : Wellington Straight, ligne droite des stands)
     drs: length => { const k = length / 5905.6; return [[5700 * k, length], [0, 200 * k], [1150 * k, 1700 * k]] },
   },
+  marina: {
+    id: 'marina', name: 'Marina Bay (nuit)', trackDir: './track_marina/', sceneDir: './assets/marina/', marshals: null, spaPits: false,
+    optionalAssets: { barriers: false, pitlane: false, grassmask: true, crowd: false }, hasLods: false,
+    pit: { limitFromS: 0, limitToS: 0 }, gates: [1600, 3350],
+    // Marina Bay Street Circuit, de nuit (E : secteurs et DRS estimés sur notre ligne centrale de 5 022,6 m, s = 0 sur la ligne de départ ; 3 zones, la première chevauche la ligne)
+    drs: length => { const k = length / 5022.6; return [[4880 * k, length], [0, 255 * k], [2985 * k, 3400 * k], [945 * k, 1290 * k]] },
+    skyDir: './assets/marina/sky/',
+    night: { moon: 0.5, moonColor: 0xa9bfff, exp: 0.8, env: 0.65, hemi: 0.1, skyI: 0.4, fog: 0.0008, moonDisk: 0.35, glow: 1.0, glowSize: 1.6, lampI: 350, lampRange: 60 },
+  },
 }
 const KEY = 'w11.circuit'
 /** Sepang n'est proposé par le bouton de bascule que si la CI l'a assemblé (VITE_SEPANG=1) ; ?circuit=sepang reste toujours accepté. */
 const SEPANG = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SEPANG === '1'
 /** Silverstone n'est proposé par le bouton de bascule que si la CI a assemblé son paquet de données (VITE_SILVERSTONE=1) ; ?circuit=silverstone reste toujours accepté. */
 const SILVERSTONE = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SILVERSTONE === '1'
+/** Marina Bay (nuit) n'est proposé par le bouton de bascule que si la CI a assemblé ses données (VITE_MARINA=1) ; ?circuit=marina reste toujours accepté. */
+const MARINA = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_MARINA === '1'
 function pick(): Circuit['id'] {
   try {
     const q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('circuit') : null
-    if (q === 'spa' || q === 'monza' || q === 'barcelona' || q === 'sepang' || q === 'silverstone') { localStorage.setItem(KEY, q); return q }
+    if (q === 'spa' || q === 'monza' || q === 'barcelona' || q === 'sepang' || q === 'silverstone' || q === 'marina') { localStorage.setItem(KEY, q); return q }
     const s = typeof localStorage !== 'undefined' ? localStorage.getItem(KEY) : null
-    if (s === 'spa' || s === 'monza' || s === 'barcelona' || (s === 'sepang' && SEPANG) || (s === 'silverstone' && SILVERSTONE)) return s
+    if (s === 'spa' || s === 'monza' || s === 'barcelona' || (s === 'sepang' && SEPANG) || (s === 'silverstone' && SILVERSTONE) || (s === 'marina' && MARINA)) return s
   } catch { /* stockage indisponible : Spa */ }
   return 'spa'
 }
 export const CIRCUIT: Circuit = CIRCUITS[pick()]
-/** bascule Spa → Monza → Barcelone → Sepang → Silverstone (ceux qui sont assemblés) puis recharge la page (surface et tuiles sont chargées au démarrage) */
+/** bascule Spa → Monza → Barcelone → Sepang → Silverstone → Marina Bay (ceux qui sont assemblés) puis recharge la page (surface et tuiles sont chargées au démarrage) */
 export function switchCircuit() {
   const ids: Circuit['id'][] = ['spa', 'monza', 'barcelona']
   if (SEPANG) ids.push('sepang')
   if (SILVERSTONE) ids.push('silverstone')
+  if (MARINA) ids.push('marina')
   const next = ids[(ids.indexOf(CIRCUIT.id) + 1) % ids.length]
   try { localStorage.setItem(KEY, next) } catch { /* ignoré */ }
   const u = new URL(location.href); u.searchParams.set('circuit', next); location.href = u.toString()
