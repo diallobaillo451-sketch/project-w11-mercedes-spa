@@ -171,9 +171,13 @@ silverstone_sessions:
     - !reference [.assemble, script]
     - |
       cd source/game
+      echo '--- controle : Spa, course de 3 tours (meme reglage)'
+      TRACK_DIR=../../../public/track/ PIT_FROM=6790 PIT_TO=200 LAP_MIN=60 LAP_MAX=200 npx --yes tsx tests/circuit_sessions.test.ts race 3 7 || true
+      echo '--- controle : Silverstone, course de 3 tours'
+      TRACK_DIR=../../../public/track_silverstone/ PIT_FROM=5678 PIT_TO=320 LAP_MIN=75 LAP_MAX=135 npx --yes tsx tests/circuit_sessions.test.ts race 3 7 || true
       export TRACK_DIR=../../../public/track_silverstone/ PIT_FROM=5678 PIT_TO=320 LAP_MIN=75 LAP_MAX=135
       npx --yes tsx tests/circuit_sessions.test.ts quali 0 7
-      npx --yes tsx tests/circuit_sessions.test.ts race 3 7
+      npx --yes tsx tests/circuit_sessions.test.ts race 10 7
   artifacts:
     when: always
     expire_in: 1 week
