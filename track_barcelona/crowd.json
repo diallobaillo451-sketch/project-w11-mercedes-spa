@@ -1,0 +1,11 @@
+{
+ "objets": 14,
+ "marches": 1768,
+ "places": 15709,
+ "par_materiau": {
+  "MOTOROLA_97": 12925,
+  "MOTOROLA_19": 2784
+ },
+ "occupees": 11373,
+ "note": "public complet livré (décision utilisateur : tribunes pleines sur tous les circuits) ; optimisation iPhone côté Opi"
+}

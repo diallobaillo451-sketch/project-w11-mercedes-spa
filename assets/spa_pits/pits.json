@@ -1,0 +1,4187 @@
+{
+ "circuit": "spa",
+ "season": 2020,
+ "version": "2026-11-09",
+ "conventions": {
+  "frame": "repère circuit glTF Y-haut, mètres (identique aux tuiles assets/spa et track/*.json)",
+  "yaw": "rotation autour de +Y (rad), node +Z = direction du regard / sortie",
+  "garage_local": "origine = centre de la façade équipe au sol ; +Z = vers la voie des stands ; +X = vers l’entrée de la voie (= -heading) ; profondeur du garage vers -Z (0 à -14 m)",
+  "s": "abscisse curviligne (m) de spa_centerline_v4 / track/surface.json, longueur 6998.256 m ; d>0 = à droite du sens de course"
+ },
+ "files": {
+  "player_garage": "garage_player.glb",
+  "lod_garages": "garages_lod.glb",
+  "pitwall_stands": "pitwall_stands.glb",
+  "pit_exit_lights": "pit_exit_lights.glb",
+  "npc": {
+   "engineer": "npc_engineer.glb",
+   "mechanic": "npc_mechanic.glb",
+   "marshal": "npc_marshal.glb"
+  },
+  "marshal_lamps": "marshal_lamps.glb",
+  "marshal_platforms": "marshal_platforms.glb",
+  "brakeboards": "brakeboards.glb",
+  "marshals": "marshals.json"
+ },
+ "player_garage": {
+  "root": "garage_player",
+  "placement": "appliquer garages[i].frame (pos + yaw) au nœud racine ; masquer garage_lod_<team> de la même équipe",
+  "team_texture_swap": "matériau 'team' (image team_mercedes embarquée) -> textures/team_<id>.ktx2",
+  "screens": [
+   {
+    "node": "screen_1",
+    "local": [
+     5.53,
+     1.42,
+     -2.72
+    ],
+    "yaw_local": 0.2443,
+    "uv": "0..1 plein écran (flipY=false, convention glTF)",
+    "material": "screen_live",
+    "size_m": [
+     0.8,
+     0.45
+    ]
+   },
+   {
+    "node": "screen_2",
+    "local": [
+     6.39,
+     1.42,
+     -2.62
+    ],
+    "yaw_local": 0,
+    "uv": "0..1 plein écran (flipY=false, convention glTF)",
+    "material": "screen_live",
+    "size_m": [
+     0.8,
+     0.45
+    ]
+   },
+   {
+    "node": "screen_3",
+    "local": [
+     7.25,
+     1.42,
+     -2.72
+    ],
+    "yaw_local": -0.2443,
+    "uv": "0..1 plein écran (flipY=false, convention glTF)",
+    "material": "screen_live",
+    "size_m": [
+     0.8,
+     0.45
+    ]
+   }
+  ],
+  "jacks": {
+   "front": {
+    "node": "jack_front",
+    "pivot": "jack_front_pivot",
+    "local": [
+     -4.447,
+     0.09,
+     4.5
+    ],
+    "axis": "rotation autour de l’axe local X du pivot (bascule du levier)"
+   },
+   "rear": {
+    "node": "jack_rear",
+    "pivot": "jack_rear_pivot",
+    "local": [
+     3.312,
+     0.09,
+     4.5
+    ]
+   }
+  },
+  "wheelguns": [
+   "wheelgun_car1_1",
+   "wheelgun_car1_2",
+   "wheelgun_car1_3",
+   "wheelgun_car1_4",
+   "wheelgun_car2_1",
+   "wheelgun_car2_2",
+   "wheelgun_car2_3",
+   "wheelgun_car2_4"
+  ],
+  "tyre_blankets": [
+   "tyre_blanket_car1_FL",
+   "tyre_blanket_car1_FR",
+   "tyre_blanket_car1_RL",
+   "tyre_blanket_car1_RR",
+   "tyre_blanket_car2_FL",
+   "tyre_blanket_car2_FR",
+   "tyre_blanket_car2_RL",
+   "tyre_blanket_car2_RR"
+  ],
+  "pitbox_light": {
+   "red": "pitbox_red",
+   "green": "pitbox_green",
+   "note": "émissifs éteints ; extras.w11_on_color"
+  },
+  "empties": {
+   "pit_stop": "pitbox_stop",
+   "car1_park": "car1_park",
+   "car2_park": "car2_park"
+  },
+  "npc_spots": [
+   {
+    "id": "eng_desk_1",
+    "kind": "engineer",
+    "pos": [
+     -1.95,
+     0.0,
+     -7.65
+    ],
+    "yaw": 0.0,
+    "clip": "look_screen",
+    "note": "debout derrière le bureau, face à la voie des stands"
+   },
+   {
+    "id": "eng_desk_2",
+    "kind": "engineer",
+    "pos": [
+     -0.65,
+     0.0,
+     -7.65
+    ],
+    "yaw": 0.0,
+    "clip": "type_laptop",
+    "note": "debout derrière le bureau, face à la voie des stands"
+   },
+   {
+    "id": "eng_desk_3",
+    "kind": "engineer",
+    "pos": [
+     0.65,
+     0.0,
+     -7.65
+    ],
+    "yaw": 0.0,
+    "clip": "type_laptop",
+    "note": "debout derrière le bureau, face à la voie des stands"
+   },
+   {
+    "id": "eng_desk_4",
+    "kind": "engineer",
+    "pos": [
+     1.95,
+     0.0,
+     -7.65
+    ],
+    "yaw": 0.0,
+    "clip": "look_screen",
+    "note": "debout derrière le bureau, face à la voie des stands"
+   },
+   {
+    "id": "eng_telemetry",
+    "kind": "engineer",
+    "pos": [
+     0.0,
+     0.0,
+     -12.35
+    ],
+    "yaw": 3.1416,
+    "clip": "look_screen"
+   },
+   {
+    "id": "eng_timing",
+    "kind": "engineer",
+    "pos": [
+     2.7,
+     0.0,
+     -0.25
+    ],
+    "yaw": 3.1416,
+    "clip": "look_screen",
+    "note": "devant timing_tower"
+   },
+   {
+    "id": "mech_jack_front",
+    "kind": "mechanic",
+    "pos": [
+     -5.45,
+     0.0,
+     4.5
+    ],
+    "yaw": 1.5708,
+    "clip": "jack_push",
+    "attach": "jack_front_pivot"
+   },
+   {
+    "id": "mech_jack_rear",
+    "kind": "mechanic",
+    "pos": [
+     5.15,
+     0.0,
+     4.5
+    ],
+    "yaw": -1.5708,
+    "clip": "jack_push",
+    "attach": "jack_rear_pivot"
+   },
+   {
+    "id": "mech_tyre_FL",
+    "kind": "mechanic",
+    "pos": [
+     -1.85,
+     0.0,
+     5.85
+    ],
+    "yaw": 3.1416,
+    "clip": "tyre_change",
+    "wheelgun": "wheelgun_car1_*"
+   },
+   {
+    "id": "mech_tyre_FL_off",
+    "kind": "mechanic",
+    "pos": [
+     -1.1,
+     0.0,
+     6.2
+    ],
+    "yaw": 3.1416,
+    "clip": "idle_var",
+    "note": "retire la roue (statique / idle)"
+   },
+   {
+    "id": "mech_tyre_FR",
+    "kind": "mechanic",
+    "pos": [
+     -1.85,
+     0.0,
+     3.15
+    ],
+    "yaw": 0.0,
+    "clip": "tyre_change",
+    "wheelgun": "wheelgun_car1_*"
+   },
+   {
+    "id": "mech_tyre_FR_off",
+    "kind": "mechanic",
+    "pos": [
+     -1.1,
+     0.0,
+     2.8
+    ],
+    "yaw": 0.0,
+    "clip": "idle_var",
+    "note": "retire la roue (statique / idle)"
+   },
+   {
+    "id": "mech_tyre_RL",
+    "kind": "mechanic",
+    "pos": [
+     1.75,
+     0.0,
+     5.85
+    ],
+    "yaw": 3.1416,
+    "clip": "tyre_change",
+    "wheelgun": "wheelgun_car1_*"
+   },
+   {
+    "id": "mech_tyre_RL_off",
+    "kind": "mechanic",
+    "pos": [
+     1.0,
+     0.0,
+     6.2
+    ],
+    "yaw": 3.1416,
+    "clip": "idle_var",
+    "note": "retire la roue (statique / idle)"
+   },
+   {
+    "id": "mech_tyre_RR",
+    "kind": "mechanic",
+    "pos": [
+     1.75,
+     0.0,
+     3.15
+    ],
+    "yaw": 0.0,
+    "clip": "tyre_change",
+    "wheelgun": "wheelgun_car1_*"
+   },
+   {
+    "id": "mech_tyre_RR_off",
+    "kind": "mechanic",
+    "pos": [
+     1.0,
+     0.0,
+     2.8
+    ],
+    "yaw": 0.0,
+    "clip": "idle_var",
+    "note": "retire la roue (statique / idle)"
+   },
+   {
+    "id": "crew_front_1",
+    "kind": "mechanic",
+    "pos": [
+     -6.0,
+     0.0,
+     0.6
+    ],
+    "yaw": 0.0,
+    "clip": "clap",
+    "note": "bord du garage, applaudissements / attente"
+   },
+   {
+    "id": "crew_front_2",
+    "kind": "mechanic",
+    "pos": [
+     -3.5,
+     0.0,
+     0.6
+    ],
+    "yaw": 0.0,
+    "clip": "clap",
+    "note": "bord du garage, applaudissements / attente"
+   },
+   {
+    "id": "crew_front_3",
+    "kind": "mechanic",
+    "pos": [
+     3.5,
+     0.0,
+     0.6
+    ],
+    "yaw": 0.0,
+    "clip": "clap",
+    "note": "bord du garage, applaudissements / attente"
+   },
+   {
+    "id": "crew_front_4",
+    "kind": "mechanic",
+    "pos": [
+     6.0,
+     0.0,
+     0.6
+    ],
+    "yaw": 0.0,
+    "clip": "clap",
+    "note": "bord du garage, applaudissements / attente"
+   },
+   {
+    "id": "mech_car1",
+    "kind": "mechanic",
+    "pos": [
+     7.99,
+     0.0,
+     -4.0
+    ],
+    "yaw": -1.5708,
+    "clip": "idle"
+   },
+   {
+    "id": "mech_car2",
+    "kind": "mechanic",
+    "pos": [
+     -7.99,
+     0.0,
+     -4.0
+    ],
+    "yaw": 1.5708,
+    "clip": "idle"
+   }
+  ]
+ },
+ "garages": [
+  {
+   "team": "mercedes",
+   "name": "MERCEDES-AMG F1",
+   "garages": [
+    6,
+    7,
+    8
+   ],
+   "doors_to_remove": [
+    5,
+    6,
+    7
+   ],
+   "drivers": [
+    {
+     "code": "ham",
+     "number": 44,
+     "name": "L. HAMILTON"
+    },
+    {
+     "code": "bot",
+     "number": 77,
+     "name": "V. BOTTAS"
+    }
+   ],
+   "colors": {
+    "c1": "#111111",
+    "c2": "#00D2BE",
+    "c3": "#C0C0C0",
+    "dark": "#0A0A0A"
+   },
+   "frame": {
+    "pos": [
+     -234.478,
+     20.061,
+     -655.909
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -238.29,
+     20.061,
+     -653.518
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -226.339,
+     20.061,
+     -653.472
+    ],
+    [
+     -233.13,
+     20.061,
+     -664.298
+    ]
+   ],
+   "lod_node": "garage_lod_mercedes",
+   "textures": {
+    "garage": "textures/team_mercedes.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_mercedes_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_mercedes_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_mercedes_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_mercedes_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_mercedes",
+    "pos": [
+     -246.677,
+     20.711,
+     -648.257
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_mercedes_seat_1",
+      "pos": [
+       -244.785,
+       20.711,
+       -647.496
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_mercedes_seat_2",
+      "pos": [
+       -245.369,
+       20.711,
+       -648.428
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_mercedes_seat_3",
+      "pos": [
+       -245.954,
+       20.711,
+       -649.36
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_mercedes_seat_4",
+      "pos": [
+       -246.538,
+       20.711,
+       -650.292
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "ferrari",
+   "name": "SCUDERIA FERRARI",
+   "garages": [
+    9,
+    10,
+    11
+   ],
+   "doors_to_remove": [
+    8,
+    9,
+    10
+   ],
+   "drivers": [
+    {
+     "code": "lec",
+     "number": 16,
+     "name": "C. LECLERC"
+    },
+    {
+     "code": "vet",
+     "number": 5,
+     "name": "S. VETTEL"
+    }
+   ],
+   "colors": {
+    "c1": "#C00000",
+    "c2": "#FFD700",
+    "c3": "#111111",
+    "dark": "#3A0000"
+   },
+   "frame": {
+    "pos": [
+     -246.814,
+     20.245,
+     -675.574
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -250.626,
+     20.245,
+     -673.183
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -238.675,
+     20.245,
+     -673.137
+    ],
+    [
+     -245.466,
+     20.245,
+     -683.963
+    ]
+   ],
+   "lod_node": "garage_lod_ferrari",
+   "textures": {
+    "garage": "textures/team_ferrari.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_ferrari_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_ferrari_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_ferrari_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_ferrari_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_ferrari",
+    "pos": [
+     -259.013,
+     20.895,
+     -667.922
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_ferrari_seat_1",
+      "pos": [
+       -257.121,
+       20.895,
+       -667.161
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_ferrari_seat_2",
+      "pos": [
+       -257.705,
+       20.895,
+       -668.093
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_ferrari_seat_3",
+      "pos": [
+       -258.29,
+       20.895,
+       -669.025
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_ferrari_seat_4",
+      "pos": [
+       -258.874,
+       20.895,
+       -669.957
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "redbull",
+   "name": "RED BULL RACING HONDA",
+   "garages": [
+    12,
+    13,
+    14
+   ],
+   "doors_to_remove": [
+    11,
+    12,
+    13
+   ],
+   "drivers": [
+    {
+     "code": "ver",
+     "number": 33,
+     "name": "M. VERSTAPPEN"
+    },
+    {
+     "code": "alb",
+     "number": 23,
+     "name": "A. ALBON"
+    }
+   ],
+   "colors": {
+    "c1": "#1E2350",
+    "c2": "#DB0A40",
+    "c3": "#FFC906",
+    "dark": "#10142E"
+   },
+   "frame": {
+    "pos": [
+     -257.015,
+     20.432,
+     -691.836
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -260.827,
+     20.432,
+     -689.445
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -248.876,
+     20.432,
+     -689.399
+    ],
+    [
+     -255.667,
+     20.432,
+     -700.225
+    ]
+   ],
+   "lod_node": "garage_lod_redbull",
+   "textures": {
+    "garage": "textures/team_redbull.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_redbull_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_redbull_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_redbull_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_redbull_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_redbull",
+    "pos": [
+     -269.214,
+     21.082,
+     -684.184
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_redbull_seat_1",
+      "pos": [
+       -267.322,
+       21.082,
+       -683.423
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_redbull_seat_2",
+      "pos": [
+       -267.906,
+       21.082,
+       -684.355
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_redbull_seat_3",
+      "pos": [
+       -268.491,
+       21.082,
+       -685.287
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_redbull_seat_4",
+      "pos": [
+       -269.075,
+       21.082,
+       -686.219
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "mclaren",
+   "name": "McLAREN F1 TEAM",
+   "garages": [
+    15,
+    16,
+    17
+   ],
+   "doors_to_remove": [
+    14,
+    15,
+    16
+   ],
+   "drivers": [
+    {
+     "code": "sai",
+     "number": 55,
+     "name": "C. SAINZ"
+    },
+    {
+     "code": "nor",
+     "number": 4,
+     "name": "L. NORRIS"
+    }
+   ],
+   "colors": {
+    "c1": "#FF8000",
+    "c2": "#2E9BDA",
+    "c3": "#1A1A1A",
+    "dark": "#2A2A2A"
+   },
+   "frame": {
+    "pos": [
+     -269.35,
+     20.587,
+     -711.5
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -273.162,
+     20.587,
+     -709.109
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -261.211,
+     20.587,
+     -709.063
+    ],
+    [
+     -268.002,
+     20.587,
+     -719.889
+    ]
+   ],
+   "lod_node": "garage_lod_mclaren",
+   "textures": {
+    "garage": "textures/team_mclaren.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_mclaren_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_mclaren_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_mclaren_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_mclaren_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_mclaren",
+    "pos": [
+     -281.549,
+     21.237,
+     -703.848
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_mclaren_seat_1",
+      "pos": [
+       -279.657,
+       21.237,
+       -703.087
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_mclaren_seat_2",
+      "pos": [
+       -280.241,
+       21.237,
+       -704.019
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_mclaren_seat_3",
+      "pos": [
+       -280.826,
+       21.237,
+       -704.951
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_mclaren_seat_4",
+      "pos": [
+       -281.41,
+       21.237,
+       -705.883
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "renault",
+   "name": "RENAULT DP WORLD F1",
+   "garages": [
+    18,
+    19,
+    20
+   ],
+   "doors_to_remove": [
+    17,
+    18,
+    19
+   ],
+   "drivers": [
+    {
+     "code": "ric",
+     "number": 3,
+     "name": "D. RICCIARDO"
+    },
+    {
+     "code": "oco",
+     "number": 31,
+     "name": "E. OCON"
+    }
+   ],
+   "colors": {
+    "c1": "#FFE600",
+    "c2": "#111111",
+    "c3": "#FFFFFF",
+    "dark": "#151515"
+   },
+   "frame": {
+    "pos": [
+     -279.555,
+     20.761,
+     -727.767
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -283.367,
+     20.761,
+     -725.376
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -271.416,
+     20.761,
+     -725.33
+    ],
+    [
+     -278.207,
+     20.761,
+     -736.156
+    ]
+   ],
+   "lod_node": "garage_lod_renault",
+   "textures": {
+    "garage": "textures/team_renault.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_renault_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_renault_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_renault_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_renault_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_renault",
+    "pos": [
+     -291.753,
+     21.411,
+     -720.115
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_renault_seat_1",
+      "pos": [
+       -289.86,
+       21.411,
+       -719.354
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_renault_seat_2",
+      "pos": [
+       -290.445,
+       21.411,
+       -720.286
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_renault_seat_3",
+      "pos": [
+       -291.03,
+       21.411,
+       -721.218
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_renault_seat_4",
+      "pos": [
+       -291.614,
+       21.411,
+       -722.15
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "alphatauri",
+   "name": "SCUDERIA ALPHATAURI",
+   "garages": [
+    22,
+    23,
+    24
+   ],
+   "doors_to_remove": [
+    21,
+    22,
+    23
+   ],
+   "drivers": [
+    {
+     "code": "gas",
+     "number": 10,
+     "name": "P. GASLY"
+    },
+    {
+     "code": "kvy",
+     "number": 26,
+     "name": "D. KVYAT"
+    }
+   ],
+   "colors": {
+    "c1": "#1B2A47",
+    "c2": "#FFFFFF",
+    "c3": "#C8102E",
+    "dark": "#0E1626"
+   },
+   "frame": {
+    "pos": [
+     -295.259,
+     20.95,
+     -752.802
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -299.071,
+     20.95,
+     -750.411
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -287.12,
+     20.95,
+     -750.365
+    ],
+    [
+     -293.911,
+     20.95,
+     -761.191
+    ]
+   ],
+   "lod_node": "garage_lod_alphatauri",
+   "textures": {
+    "garage": "textures/team_alphatauri.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_alphatauri_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_alphatauri_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_alphatauri_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_alphatauri_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_alphatauri",
+    "pos": [
+     -307.458,
+     21.6,
+     -745.15
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_alphatauri_seat_1",
+      "pos": [
+       -305.566,
+       21.6,
+       -744.389
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_alphatauri_seat_2",
+      "pos": [
+       -306.15,
+       21.6,
+       -745.321
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_alphatauri_seat_3",
+      "pos": [
+       -306.735,
+       21.6,
+       -746.253
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_alphatauri_seat_4",
+      "pos": [
+       -307.319,
+       21.6,
+       -747.185
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "racingpoint",
+   "name": "BWT RACING POINT",
+   "garages": [
+    25,
+    26,
+    27
+   ],
+   "doors_to_remove": [
+    24,
+    25,
+    26
+   ],
+   "drivers": [
+    {
+     "code": "per",
+     "number": 11,
+     "name": "S. PEREZ"
+    },
+    {
+     "code": "str",
+     "number": 18,
+     "name": "L. STROLL"
+    }
+   ],
+   "colors": {
+    "c1": "#F596C8",
+    "c2": "#1E5BC6",
+    "c3": "#FFFFFF",
+    "dark": "#1A2340"
+   },
+   "frame": {
+    "pos": [
+     -305.46,
+     21.137,
+     -769.064
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -309.272,
+     21.137,
+     -766.673
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -297.321,
+     21.137,
+     -766.627
+    ],
+    [
+     -304.112,
+     21.137,
+     -777.453
+    ]
+   ],
+   "lod_node": "garage_lod_racingpoint",
+   "textures": {
+    "garage": "textures/team_racingpoint.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_racingpoint_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_racingpoint_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_racingpoint_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_racingpoint_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_racingpoint",
+    "pos": [
+     -317.659,
+     21.787,
+     -761.412
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_racingpoint_seat_1",
+      "pos": [
+       -315.767,
+       21.787,
+       -760.651
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_racingpoint_seat_2",
+      "pos": [
+       -316.351,
+       21.787,
+       -761.583
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_racingpoint_seat_3",
+      "pos": [
+       -316.936,
+       21.787,
+       -762.515
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_racingpoint_seat_4",
+      "pos": [
+       -317.52,
+       21.787,
+       -763.447
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "alfaromeo",
+   "name": "ALFA ROMEO RACING ORLEN",
+   "garages": [
+    28,
+    29,
+    30
+   ],
+   "doors_to_remove": [
+    27,
+    28,
+    29
+   ],
+   "drivers": [
+    {
+     "code": "rai",
+     "number": 7,
+     "name": "K. RAIKKONEN"
+    },
+    {
+     "code": "gio",
+     "number": 99,
+     "name": "A. GIOVINAZZI"
+    }
+   ],
+   "colors": {
+    "c1": "#9B0000",
+    "c2": "#FFFFFF",
+    "c3": "#111111",
+    "dark": "#2B0000"
+   },
+   "frame": {
+    "pos": [
+     -317.822,
+     21.323,
+     -788.77
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -321.634,
+     21.323,
+     -786.379
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -309.683,
+     21.323,
+     -786.333
+    ],
+    [
+     -316.474,
+     21.323,
+     -797.159
+    ]
+   ],
+   "lod_node": "garage_lod_alfaromeo",
+   "textures": {
+    "garage": "textures/team_alfaromeo.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_alfaromeo_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_alfaromeo_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_alfaromeo_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_alfaromeo_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_alfaromeo",
+    "pos": [
+     -330.021,
+     21.973,
+     -781.119
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_alfaromeo_seat_1",
+      "pos": [
+       -328.129,
+       21.973,
+       -780.358
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_alfaromeo_seat_2",
+      "pos": [
+       -328.713,
+       21.973,
+       -781.29
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_alfaromeo_seat_3",
+      "pos": [
+       -329.298,
+       21.973,
+       -782.222
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_alfaromeo_seat_4",
+      "pos": [
+       -329.882,
+       21.973,
+       -783.154
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "haas",
+   "name": "HAAS F1 TEAM",
+   "garages": [
+    31,
+    32,
+    33
+   ],
+   "doors_to_remove": [
+    30,
+    31,
+    32
+   ],
+   "drivers": [
+    {
+     "code": "gro",
+     "number": 8,
+     "name": "R. GROSJEAN"
+    },
+    {
+     "code": "mag",
+     "number": 20,
+     "name": "K. MAGNUSSEN"
+    }
+   ],
+   "colors": {
+    "c1": "#5A5A5A",
+    "c2": "#E10600",
+    "c3": "#FFFFFF",
+    "dark": "#1C1C1C"
+   },
+   "frame": {
+    "pos": [
+     -328.025,
+     21.51,
+     -805.048
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -331.837,
+     21.51,
+     -802.657
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -319.886,
+     21.51,
+     -802.611
+    ],
+    [
+     -326.677,
+     21.51,
+     -813.437
+    ]
+   ],
+   "lod_node": "garage_lod_haas",
+   "textures": {
+    "garage": "textures/team_haas.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_haas_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_haas_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_haas_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_haas_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_haas",
+    "pos": [
+     -340.224,
+     22.16,
+     -797.396
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_haas_seat_1",
+      "pos": [
+       -338.332,
+       22.16,
+       -796.635
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_haas_seat_2",
+      "pos": [
+       -338.916,
+       22.16,
+       -797.567
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_haas_seat_3",
+      "pos": [
+       -339.501,
+       22.16,
+       -798.499
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_haas_seat_4",
+      "pos": [
+       -340.085,
+       22.16,
+       -799.431
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "team": "williams",
+   "name": "WILLIAMS RACING",
+   "garages": [
+    40,
+    41,
+    42
+   ],
+   "doors_to_remove": [
+    39,
+    40,
+    41
+   ],
+   "drivers": [
+    {
+     "code": "rus",
+     "number": 63,
+     "name": "G. RUSSELL"
+    },
+    {
+     "code": "lat",
+     "number": 6,
+     "name": "N. LATIFI"
+    }
+   ],
+   "colors": {
+    "c1": "#00205B",
+    "c2": "#00A3E0",
+    "c3": "#FFFFFF",
+    "dark": "#0A1430"
+   },
+   "frame": {
+    "pos": [
+     -362.882,
+     22.014,
+     -860.602
+    ],
+    "yaw": -1.01056,
+    "quat": [
+     0.0,
+     -0.484054,
+     0.0,
+     0.875038
+    ]
+   },
+   "pit_stop": {
+    "pos": [
+     -366.694,
+     22.014,
+     -858.211
+    ],
+    "heading": [
+     -0.53138,
+     0,
+     -0.84713
+    ],
+    "local": [
+     0,
+     0,
+     4.5
+    ]
+   },
+   "car_park": [
+    [
+     -354.743,
+     22.014,
+     -858.165
+    ],
+    [
+     -361.534,
+     22.014,
+     -868.991
+    ]
+   ],
+   "lod_node": "garage_lod_williams",
+   "textures": {
+    "garage": "textures/team_williams.ktx2",
+    "npc_engineer": "npc_tex/npc_engineer_williams_1024.ktx2",
+    "npc_mechanic": "npc_tex/npc_mechanic_williams_1024.ktx2",
+    "npc_engineer_far": "npc_tex/npc_engineer_williams_256.ktx2",
+    "npc_mechanic_far": "npc_tex/npc_mechanic_williams_256.ktx2"
+   },
+   "pitwall": {
+    "node": "pitwall_williams",
+    "pos": [
+     -375.081,
+     22.664,
+     -852.95
+    ],
+    "yaw": 2.13103,
+    "seats": [
+     {
+      "node": "pitwall_williams_seat_1",
+      "pos": [
+       -373.189,
+       22.664,
+       -852.189
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_williams_seat_2",
+      "pos": [
+       -373.773,
+       22.664,
+       -853.121
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_williams_seat_3",
+      "pos": [
+       -374.358,
+       22.664,
+       -854.053
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     },
+     {
+      "node": "pitwall_williams_seat_4",
+      "pos": [
+       -374.942,
+       22.664,
+       -854.985
+      ],
+      "npc_yaw": -1.0106,
+      "clips": [
+       "pitwall_watch",
+       "pitwall_talk"
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "doors": [
+  {
+   "garage": 1,
+   "door_index": 0,
+   "owner": "FIA",
+   "action": "keep_closed",
+   "center": [
+    -211.944,
+    21.111,
+    -619.986
+   ],
+   "width": 6.06,
+   "floor_y": 19.69,
+   "aabb_min": [
+    -213.808,
+    19.64,
+    -622.712
+   ],
+   "aabb_max": [
+    -210.08,
+    22.69,
+    -617.26
+   ]
+  },
+  {
+   "garage": 2,
+   "door_index": 1,
+   "owner": "FIA",
+   "action": "keep_closed",
+   "center": [
+    -215.334,
+    21.111,
+    -625.39
+   ],
+   "width": 6.09,
+   "floor_y": 19.69,
+   "aabb_min": [
+    -217.206,
+    19.64,
+    -628.129
+   ],
+   "aabb_max": [
+    -213.462,
+    22.69,
+    -622.651
+   ]
+  },
+  {
+   "garage": 3,
+   "door_index": 2,
+   "owner": "FIA",
+   "action": "keep_closed",
+   "center": [
+    -220.877,
+    21.291,
+    -634.227
+   ],
+   "width": 6.12,
+   "floor_y": 19.857,
+   "aabb_min": [
+    -222.757,
+    19.807,
+    -636.979
+   ],
+   "aabb_max": [
+    -218.997,
+    22.857,
+    -631.475
+   ]
+  },
+  {
+   "garage": 4,
+   "door_index": 3,
+   "owner": "FIA",
+   "action": "keep_closed",
+   "center": [
+    -224.278,
+    21.303,
+    -639.649
+   ],
+   "width": 6.08,
+   "floor_y": 19.883,
+   "aabb_min": [
+    -226.148,
+    19.833,
+    -642.384
+   ],
+   "aabb_max": [
+    -222.408,
+    22.883,
+    -636.914
+   ]
+  },
+  {
+   "garage": 5,
+   "door_index": 4,
+   "owner": "FIA",
+   "action": "keep_closed",
+   "center": [
+    -227.675,
+    21.363,
+    -645.063
+   ],
+   "width": 6.1,
+   "floor_y": 19.883,
+   "aabb_min": [
+    -229.55,
+    19.833,
+    -647.806
+   ],
+   "aabb_max": [
+    -225.8,
+    22.883,
+    -642.32
+   ]
+  },
+  {
+   "garage": 6,
+   "door_index": 5,
+   "owner": "mercedes",
+   "action": "remove",
+   "center": [
+    -231.083,
+    21.444,
+    -650.496
+   ],
+   "width": 6.12,
+   "floor_y": 20.044,
+   "aabb_min": [
+    -232.963,
+    19.994,
+    -653.248
+   ],
+   "aabb_max": [
+    -229.203,
+    23.044,
+    -647.744
+   ]
+  },
+  {
+   "garage": 7,
+   "door_index": 6,
+   "owner": "mercedes",
+   "action": "remove",
+   "center": [
+    -234.48,
+    21.456,
+    -655.912
+   ],
+   "width": 6.06,
+   "floor_y": 20.07,
+   "aabb_min": [
+    -236.344,
+    20.02,
+    -658.638
+   ],
+   "aabb_max": [
+    -232.616,
+    23.07,
+    -653.186
+   ]
+  },
+  {
+   "garage": 8,
+   "door_index": 7,
+   "owner": "mercedes",
+   "action": "remove",
+   "center": [
+    -237.871,
+    21.456,
+    -661.317
+   ],
+   "width": 6.09,
+   "floor_y": 20.069,
+   "aabb_min": [
+    -239.743,
+    20.019,
+    -664.056
+   ],
+   "aabb_max": [
+    -235.999,
+    23.069,
+    -658.578
+   ]
+  },
+  {
+   "garage": 9,
+   "door_index": 8,
+   "owner": "ferrari",
+   "action": "remove",
+   "center": [
+    -243.414,
+    21.632,
+    -670.155
+   ],
+   "width": 6.12,
+   "floor_y": 20.228,
+   "aabb_min": [
+    -245.294,
+    20.178,
+    -672.907
+   ],
+   "aabb_max": [
+    -241.534,
+    23.228,
+    -667.403
+   ]
+  },
+  {
+   "garage": 10,
+   "door_index": 9,
+   "owner": "ferrari",
+   "action": "remove",
+   "center": [
+    -246.815,
+    21.645,
+    -675.575
+   ],
+   "width": 6.08,
+   "floor_y": 20.254,
+   "aabb_min": [
+    -248.685,
+    20.204,
+    -678.31
+   ],
+   "aabb_max": [
+    -244.945,
+    23.254,
+    -672.84
+   ]
+  },
+  {
+   "garage": 11,
+   "door_index": 10,
+   "owner": "ferrari",
+   "action": "remove",
+   "center": [
+    -250.212,
+    21.734,
+    -680.991
+   ],
+   "width": 6.11,
+   "floor_y": 20.254,
+   "aabb_min": [
+    -252.09,
+    20.204,
+    -683.738
+   ],
+   "aabb_max": [
+    -248.334,
+    23.254,
+    -678.244
+   ]
+  },
+  {
+   "garage": 12,
+   "door_index": 11,
+   "owner": "redbull",
+   "action": "remove",
+   "center": [
+    -253.62,
+    21.814,
+    -686.424
+   ],
+   "width": 6.12,
+   "floor_y": 20.415,
+   "aabb_min": [
+    -255.5,
+    20.365,
+    -689.176
+   ],
+   "aabb_max": [
+    -251.74,
+    23.415,
+    -683.672
+   ]
+  },
+  {
+   "garage": 13,
+   "door_index": 12,
+   "owner": "redbull",
+   "action": "remove",
+   "center": [
+    -257.018,
+    21.827,
+    -691.84
+   ],
+   "width": 6.06,
+   "floor_y": 20.44,
+   "aabb_min": [
+    -258.882,
+    20.39,
+    -694.566
+   ],
+   "aabb_max": [
+    -255.154,
+    23.44,
+    -689.114
+   ]
+  },
+  {
+   "garage": 14,
+   "door_index": 13,
+   "owner": "redbull",
+   "action": "remove",
+   "center": [
+    -260.408,
+    21.827,
+    -697.245
+   ],
+   "width": 6.09,
+   "floor_y": 20.44,
+   "aabb_min": [
+    -262.28,
+    20.39,
+    -699.984
+   ],
+   "aabb_max": [
+    -258.536,
+    23.44,
+    -694.506
+   ]
+  },
+  {
+   "garage": 15,
+   "door_index": 14,
+   "owner": "mclaren",
+   "action": "remove",
+   "center": [
+    -265.957,
+    21.988,
+    -706.091
+   ],
+   "width": 6.07,
+   "floor_y": 20.57,
+   "aabb_min": [
+    -267.824,
+    20.52,
+    -708.821
+   ],
+   "aabb_max": [
+    -264.09,
+    23.57,
+    -703.361
+   ]
+  },
+  {
+   "garage": 16,
+   "door_index": 15,
+   "owner": "mclaren",
+   "action": "remove",
+   "center": [
+    -269.348,
+    22.001,
+    -711.496
+   ],
+   "width": 6.09,
+   "floor_y": 20.596,
+   "aabb_min": [
+    -271.22,
+    20.546,
+    -714.235
+   ],
+   "aabb_max": [
+    -267.476,
+    23.596,
+    -708.757
+   ]
+  },
+  {
+   "garage": 17,
+   "door_index": 16,
+   "owner": "mclaren",
+   "action": "remove",
+   "center": [
+    -272.745,
+    22.08,
+    -716.913
+   ],
+   "width": 6.09,
+   "floor_y": 20.596,
+   "aabb_min": [
+    -274.617,
+    20.546,
+    -719.652
+   ],
+   "aabb_max": [
+    -270.873,
+    23.596,
+    -714.174
+   ]
+  },
+  {
+   "garage": 18,
+   "door_index": 17,
+   "owner": "renault",
+   "action": "remove",
+   "center": [
+    -276.149,
+    22.16,
+    -722.337
+   ],
+   "width": 6.11,
+   "floor_y": 20.755,
+   "aabb_min": [
+    -278.027,
+    20.705,
+    -725.084
+   ],
+   "aabb_max": [
+    -274.271,
+    23.755,
+    -719.59
+   ]
+  },
+  {
+   "garage": 19,
+   "door_index": 18,
+   "owner": "renault",
+   "action": "remove",
+   "center": [
+    -279.557,
+    22.162,
+    -727.77
+   ],
+   "width": 6.12,
+   "floor_y": 20.759,
+   "aabb_min": [
+    -281.437,
+    20.709,
+    -730.522
+   ],
+   "aabb_max": [
+    -277.677,
+    23.759,
+    -725.018
+   ]
+  },
+  {
+   "garage": 20,
+   "door_index": 19,
+   "owner": "renault",
+   "action": "remove",
+   "center": [
+    -282.958,
+    22.166,
+    -733.193
+   ],
+   "width": 6.08,
+   "floor_y": 20.768,
+   "aabb_min": [
+    -284.828,
+    20.718,
+    -735.928
+   ],
+   "aabb_max": [
+    -281.088,
+    23.768,
+    -730.458
+   ]
+  },
+  {
+   "garage": 21,
+   "door_index": 20,
+   "owner": "spare",
+   "action": "keep_closed",
+   "center": [
+    -286.339,
+    22.166,
+    -738.582
+   ],
+   "width": 6.04,
+   "floor_y": 20.768,
+   "aabb_min": [
+    -288.198,
+    20.718,
+    -741.3
+   ],
+   "aabb_max": [
+    -284.48,
+    23.768,
+    -735.864
+   ]
+  },
+  {
+   "garage": 22,
+   "door_index": 21,
+   "owner": "alphatauri",
+   "action": "remove",
+   "center": [
+    -291.86,
+    22.345,
+    -747.383
+   ],
+   "width": 6.12,
+   "floor_y": 20.933,
+   "aabb_min": [
+    -293.74,
+    20.883,
+    -750.135
+   ],
+   "aabb_max": [
+    -289.98,
+    23.933,
+    -744.631
+   ]
+  },
+  {
+   "garage": 23,
+   "door_index": 22,
+   "owner": "alphatauri",
+   "action": "remove",
+   "center": [
+    -295.26,
+    22.358,
+    -752.803
+   ],
+   "width": 6.08,
+   "floor_y": 20.959,
+   "aabb_min": [
+    -297.13,
+    20.909,
+    -755.538
+   ],
+   "aabb_max": [
+    -293.39,
+    23.959,
+    -750.068
+   ]
+  },
+  {
+   "garage": 24,
+   "door_index": 23,
+   "owner": "alphatauri",
+   "action": "remove",
+   "center": [
+    -298.657,
+    22.428,
+    -758.219
+   ],
+   "width": 6.11,
+   "floor_y": 20.959,
+   "aabb_min": [
+    -300.535,
+    20.909,
+    -760.966
+   ],
+   "aabb_max": [
+    -296.779,
+    23.959,
+    -755.472
+   ]
+  },
+  {
+   "garage": 25,
+   "door_index": 24,
+   "owner": "racingpoint",
+   "action": "remove",
+   "center": [
+    -302.065,
+    22.509,
+    -763.652
+   ],
+   "width": 6.12,
+   "floor_y": 21.12,
+   "aabb_min": [
+    -303.945,
+    21.07,
+    -766.404
+   ],
+   "aabb_max": [
+    -300.185,
+    24.12,
+    -760.9
+   ]
+  },
+  {
+   "garage": 26,
+   "door_index": 25,
+   "owner": "racingpoint",
+   "action": "remove",
+   "center": [
+    -305.462,
+    22.521,
+    -769.067
+   ],
+   "width": 6.06,
+   "floor_y": 21.145,
+   "aabb_min": [
+    -307.326,
+    21.095,
+    -771.793
+   ],
+   "aabb_max": [
+    -303.598,
+    24.145,
+    -766.341
+   ]
+  },
+  {
+   "garage": 27,
+   "door_index": 26,
+   "owner": "racingpoint",
+   "action": "remove",
+   "center": [
+    -308.853,
+    22.521,
+    -774.473
+   ],
+   "width": 6.09,
+   "floor_y": 21.145,
+   "aabb_min": [
+    -310.725,
+    21.095,
+    -777.212
+   ],
+   "aabb_max": [
+    -306.981,
+    24.145,
+    -771.734
+   ]
+  },
+  {
+   "garage": 28,
+   "door_index": 27,
+   "owner": "alfaromeo",
+   "action": "remove",
+   "center": [
+    -314.423,
+    22.697,
+    -783.351
+   ],
+   "width": 6.12,
+   "floor_y": 21.306,
+   "aabb_min": [
+    -316.303,
+    21.256,
+    -786.103
+   ],
+   "aabb_max": [
+    -312.543,
+    24.306,
+    -780.599
+   ]
+  },
+  {
+   "garage": 29,
+   "door_index": 28,
+   "owner": "alfaromeo",
+   "action": "remove",
+   "center": [
+    -317.823,
+    22.71,
+    -788.773
+   ],
+   "width": 6.08,
+   "floor_y": 21.332,
+   "aabb_min": [
+    -319.693,
+    21.282,
+    -791.508
+   ],
+   "aabb_max": [
+    -315.953,
+    24.332,
+    -786.038
+   ]
+  },
+  {
+   "garage": 30,
+   "door_index": 29,
+   "owner": "alfaromeo",
+   "action": "remove",
+   "center": [
+    -321.22,
+    22.802,
+    -794.188
+   ],
+   "width": 6.1,
+   "floor_y": 21.332,
+   "aabb_min": [
+    -323.095,
+    21.282,
+    -796.931
+   ],
+   "aabb_max": [
+    -319.345,
+    24.332,
+    -791.445
+   ]
+  },
+  {
+   "garage": 31,
+   "door_index": 30,
+   "owner": "haas",
+   "action": "remove",
+   "center": [
+    -324.629,
+    22.882,
+    -799.62
+   ],
+   "width": 6.12,
+   "floor_y": 21.493,
+   "aabb_min": [
+    -326.509,
+    21.443,
+    -802.372
+   ],
+   "aabb_max": [
+    -322.749,
+    24.493,
+    -796.868
+   ]
+  },
+  {
+   "garage": 32,
+   "door_index": 31,
+   "owner": "haas",
+   "action": "remove",
+   "center": [
+    -328.031,
+    22.899,
+    -805.082
+   ],
+   "width": 5.98,
+   "floor_y": 21.518,
+   "aabb_min": [
+    -329.874,
+    21.468,
+    -807.774
+   ],
+   "aabb_max": [
+    -326.188,
+    24.518,
+    -802.39
+   ]
+  },
+  {
+   "garage": 33,
+   "door_index": 32,
+   "owner": "haas",
+   "action": "remove",
+   "center": [
+    -331.416,
+    22.895,
+    -810.442
+   ],
+   "width": 6.09,
+   "floor_y": 21.518,
+   "aabb_min": [
+    -333.288,
+    21.468,
+    -813.181
+   ],
+   "aabb_max": [
+    -329.544,
+    24.518,
+    -807.703
+   ]
+  },
+  {
+   "garage": 34,
+   "door_index": 33,
+   "owner": "spare",
+   "action": "keep_closed",
+   "center": [
+    -336.952,
+    23.053,
+    -819.265
+   ],
+   "width": 6.12,
+   "floor_y": 21.663,
+   "aabb_min": [
+    -338.832,
+    21.613,
+    -822.017
+   ],
+   "aabb_max": [
+    -335.072,
+    24.663,
+    -816.513
+   ]
+  },
+  {
+   "garage": 35,
+   "door_index": 34,
+   "owner": "spare",
+   "action": "keep_closed",
+   "center": [
+    -340.361,
+    23.071,
+    -824.737
+   ],
+   "width": 5.98,
+   "floor_y": 21.689,
+   "aabb_min": [
+    -342.204,
+    21.639,
+    -827.429
+   ],
+   "aabb_max": [
+    -338.518,
+    24.689,
+    -822.045
+   ]
+  },
+  {
+   "garage": 36,
+   "door_index": 35,
+   "owner": "spare",
+   "action": "keep_closed",
+   "center": [
+    -343.749,
+    23.142,
+    -830.101
+   ],
+   "width": 6.11,
+   "floor_y": 21.689,
+   "aabb_min": [
+    -345.627,
+    21.639,
+    -832.848
+   ],
+   "aabb_max": [
+    -341.871,
+    24.689,
+    -827.354
+   ]
+  },
+  {
+   "garage": 37,
+   "door_index": 36,
+   "owner": "spare",
+   "action": "keep_closed",
+   "center": [
+    -347.18,
+    23.244,
+    -835.608
+   ],
+   "width": 5.97,
+   "floor_y": 21.867,
+   "aabb_min": [
+    -349.02,
+    21.817,
+    -838.296
+   ],
+   "aabb_max": [
+    -345.34,
+    24.867,
+    -832.92
+   ]
+  },
+  {
+   "garage": 38,
+   "door_index": 37,
+   "owner": "spare",
+   "action": "keep_closed",
+   "center": [
+    -350.554,
+    23.235,
+    -840.949
+   ],
+   "width": 6.06,
+   "floor_y": 21.875,
+   "aabb_min": [
+    -352.418,
+    21.825,
+    -843.675
+   ],
+   "aabb_max": [
+    -348.69,
+    24.875,
+    -838.223
+   ]
+  },
+  {
+   "garage": 39,
+   "door_index": 38,
+   "owner": "spare",
+   "action": "keep_closed",
+   "center": [
+    -353.945,
+    23.235,
+    -846.355
+   ],
+   "width": 6.09,
+   "floor_y": 21.875,
+   "aabb_min": [
+    -355.817,
+    21.825,
+    -849.094
+   ],
+   "aabb_max": [
+    -352.073,
+    24.875,
+    -843.616
+   ]
+  },
+  {
+   "garage": 40,
+   "door_index": 39,
+   "owner": "williams",
+   "action": "remove",
+   "center": [
+    -359.481,
+    23.304,
+    -855.181
+   ],
+   "width": 6.1,
+   "floor_y": 22.014,
+   "aabb_min": [
+    -361.356,
+    21.964,
+    -857.924
+   ],
+   "aabb_max": [
+    -357.606,
+    25.014,
+    -852.438
+   ]
+  },
+  {
+   "garage": 41,
+   "door_index": 40,
+   "owner": "williams",
+   "action": "remove",
+   "center": [
+    -362.879,
+    23.304,
+    -860.598
+   ],
+   "width": 6.09,
+   "floor_y": 22.014,
+   "aabb_min": [
+    -364.751,
+    21.964,
+    -863.337
+   ],
+   "aabb_max": [
+    -361.007,
+    25.014,
+    -857.859
+   ]
+  },
+  {
+   "garage": 42,
+   "door_index": 41,
+   "owner": "williams",
+   "action": "remove",
+   "center": [
+    -366.285,
+    23.304,
+    -866.027
+   ],
+   "width": 6.13,
+   "floor_y": 22.014,
+   "aabb_min": [
+    -368.168,
+    21.964,
+    -868.783
+   ],
+   "aabb_max": [
+    -364.402,
+    25.014,
+    -863.271
+   ]
+  }
+ ],
+ "pitlane": {
+  "points_xyzs": [
+   [
+    -200.8,
+    9.484,
+    -383.76,
+    6561
+   ],
+   [
+    -199.78,
+    9.596,
+    -389.6,
+    6566
+   ],
+   [
+    -199.77,
+    9.794,
+    -395.6,
+    6572
+   ],
+   [
+    -198.34,
+    10.126,
+    -401.42,
+    6578
+   ],
+   [
+    -197.79,
+    10.436,
+    -407.38,
+    6584
+   ],
+   [
+    -197.28,
+    10.743,
+    -413.36,
+    6589
+   ],
+   [
+    -196.8,
+    11.046,
+    -419.34,
+    6595
+   ],
+   [
+    -196.3,
+    11.352,
+    -425.31,
+    6601
+   ],
+   [
+    -195.67,
+    11.659,
+    -431.28,
+    6607
+   ],
+   [
+    -195.21,
+    11.965,
+    -437.26,
+    6615
+   ],
+   [
+    -194.67,
+    12.289,
+    -443.23,
+    6640
+   ],
+   [
+    -191.93,
+    12.649,
+    -448.01,
+    6644
+   ],
+   [
+    -185.94,
+    12.988,
+    -448.21,
+    6650
+   ],
+   [
+    -179.94,
+    13.213,
+    -448.21,
+    6656
+   ],
+   [
+    -173.94,
+    13.443,
+    -448.21,
+    6662
+   ],
+   [
+    -167.95,
+    13.629,
+    -448.34,
+    6667
+   ],
+   [
+    -162.94,
+    13.682,
+    -451.46,
+    6672
+   ],
+   [
+    -158.69,
+    13.77,
+    -455.7,
+    6677
+   ],
+   [
+    -154.28,
+    13.986,
+    -459.75,
+    6683
+   ],
+   [
+    -148.54,
+    14.293,
+    -461.01,
+    6687
+   ],
+   [
+    -142.54,
+    14.47,
+    -461.01,
+    6688
+   ],
+   [
+    -136.56,
+    14.582,
+    -461.31,
+    6689
+   ],
+   [
+    -131.2,
+    14.707,
+    -463.87,
+    6690
+   ],
+   [
+    -127.59,
+    14.904,
+    -468.56,
+    6692
+   ],
+   [
+    -126.98,
+    15.027,
+    -474.5,
+    6695
+   ],
+   [
+    -127.84,
+    15.144,
+    -480.42,
+    6698
+   ],
+   [
+    -129.76,
+    15.258,
+    -486.1,
+    6701
+   ],
+   [
+    -132.27,
+    15.399,
+    -491.55,
+    6704
+   ],
+   [
+    -134.96,
+    15.539,
+    -496.91,
+    6708
+   ],
+   [
+    -137.78,
+    15.658,
+    -502.21,
+    6713
+   ],
+   [
+    -140.69,
+    15.766,
+    -507.45,
+    6719
+   ],
+   [
+    -143.6,
+    15.865,
+    -512.7,
+    6726
+   ],
+   [
+    -146.66,
+    15.966,
+    -517.86,
+    6732
+   ],
+   [
+    -149.69,
+    16.094,
+    -523.03,
+    6737
+   ],
+   [
+    -152.82,
+    16.24,
+    -528.15,
+    6743
+   ],
+   [
+    -155.88,
+    16.403,
+    -533.31,
+    6752
+   ],
+   [
+    -159.0,
+    16.576,
+    -538.44,
+    6757
+   ],
+   [
+    -162.16,
+    16.773,
+    -543.54,
+    6763
+   ],
+   [
+    -165.36,
+    16.999,
+    -548.61,
+    6769
+   ],
+   [
+    -168.48,
+    17.258,
+    -553.73,
+    6774
+   ],
+   [
+    -171.71,
+    17.539,
+    -558.79,
+    6780
+   ],
+   [
+    -174.95,
+    17.837,
+    -563.84,
+    6786
+   ],
+   [
+    -178.38,
+    18.167,
+    -568.76,
+    6792
+   ],
+   [
+    -182.23,
+    18.508,
+    -573.35,
+    6798
+   ],
+   [
+    -186.42,
+    18.808,
+    -577.65,
+    6804
+   ],
+   [
+    -190.6,
+    19.079,
+    -581.95,
+    6810
+   ],
+   [
+    -194.7,
+    19.309,
+    -586.33,
+    6816
+   ],
+   [
+    -198.94,
+    19.482,
+    -590.57,
+    6822
+   ],
+   [
+    -203.19,
+    19.616,
+    -594.81,
+    6828
+   ],
+   [
+    -207.29,
+    19.728,
+    -599.19,
+    6834
+   ],
+   [
+    -210.7,
+    19.771,
+    -604.09,
+    6840
+   ],
+   [
+    -212.94,
+    19.781,
+    -609.63,
+    6845
+   ],
+   [
+    -216.56,
+    19.816,
+    -614.4,
+    6851
+   ],
+   [
+    -219.94,
+    19.851,
+    -619.36,
+    6857
+   ],
+   [
+    -223.04,
+    19.9,
+    -624.5,
+    6863
+   ],
+   [
+    -226.24,
+    19.954,
+    -629.57,
+    6868
+   ],
+   [
+    -229.43,
+    20.003,
+    -634.65,
+    6874
+   ],
+   [
+    -232.61,
+    20.052,
+    -639.74,
+    6883
+   ],
+   [
+    -236.03,
+    20.107,
+    -644.66,
+    6888
+   ],
+   [
+    -239.71,
+    20.168,
+    -649.38,
+    6894
+   ],
+   [
+    -242.16,
+    20.206,
+    -654.86,
+    6899
+   ],
+   [
+    -245.29,
+    20.255,
+    -659.97,
+    6905
+   ],
+   [
+    -248.41,
+    20.305,
+    -665.09,
+    6911
+   ],
+   [
+    -251.58,
+    20.356,
+    -670.19,
+    6917
+   ],
+   [
+    -254.8,
+    20.408,
+    -675.25,
+    6923
+   ],
+   [
+    -258.03,
+    20.461,
+    -680.31,
+    6929
+   ],
+   [
+    -261.43,
+    20.519,
+    -685.24,
+    6935
+   ],
+   [
+    -265.3,
+    20.582,
+    -689.81,
+    6941
+   ],
+   [
+    -268.2,
+    20.628,
+    -695.05,
+    6947
+   ],
+   [
+    -270.73,
+    20.667,
+    -700.49,
+    6953
+   ],
+   [
+    -273.86,
+    20.719,
+    -705.61,
+    6959
+   ],
+   [
+    -277.07,
+    20.767,
+    -710.67,
+    6965
+   ],
+   [
+    -280.26,
+    20.816,
+    -715.76,
+    6971
+   ],
+   [
+    -283.45,
+    20.865,
+    -720.84,
+    6977
+   ],
+   [
+    -286.63,
+    20.9,
+    -725.93,
+    6983
+   ],
+   [
+    -289.81,
+    20.948,
+    -731.01,
+    6989
+   ],
+   [
+    -293.04,
+    20.999,
+    -736.06,
+    6995
+   ],
+   [
+    -296.29,
+    21.058,
+    -741.1,
+    3
+   ],
+   [
+    -299.75,
+    21.123,
+    -746.0,
+    9
+   ],
+   [
+    -303.34,
+    21.173,
+    -750.81,
+    15
+   ],
+   [
+    -306.79,
+    21.219,
+    -755.72,
+    21
+   ],
+   [
+    -309.21,
+    21.257,
+    -761.18,
+    27
+   ],
+   [
+    -312.02,
+    21.298,
+    -766.47,
+    33
+   ],
+   [
+    -315.19,
+    21.347,
+    -771.56,
+    39
+   ],
+   [
+    -318.46,
+    21.404,
+    -776.59,
+    45
+   ],
+   [
+    -321.59,
+    21.455,
+    -781.71,
+    51
+   ],
+   [
+    -324.79,
+    21.493,
+    -786.78,
+    57
+   ],
+   [
+    -327.99,
+    21.542,
+    -791.85,
+    63
+   ],
+   [
+    -331.18,
+    21.606,
+    -796.94,
+    69
+   ],
+   [
+    -334.38,
+    21.652,
+    -802.01,
+    75
+   ],
+   [
+    -337.82,
+    21.694,
+    -806.92,
+    81
+   ],
+   [
+    -341.28,
+    21.75,
+    -811.82,
+    87
+   ],
+   [
+    -344.1,
+    21.792,
+    -817.11,
+    93
+   ],
+   [
+    -346.93,
+    21.832,
+    -822.39,
+    99
+   ],
+   [
+    -350.3,
+    21.888,
+    -827.35,
+    105
+   ],
+   [
+    -353.55,
+    21.95,
+    -832.39,
+    111
+   ],
+   [
+    -356.73,
+    22.003,
+    -837.48,
+    117
+   ],
+   [
+    -359.89,
+    22.039,
+    -842.57,
+    123
+   ],
+   [
+    -363.16,
+    22.088,
+    -847.6,
+    129
+   ],
+   [
+    -366.24,
+    22.143,
+    -852.75,
+    135
+   ],
+   [
+    -369.39,
+    22.178,
+    -857.86,
+    141
+   ],
+   [
+    -372.72,
+    22.248,
+    -862.85,
+    147
+   ],
+   [
+    -375.89,
+    22.339,
+    -867.94,
+    153
+   ],
+   [
+    -379.53,
+    22.442,
+    -872.7,
+    159
+   ],
+   [
+    -383.3,
+    22.576,
+    -877.37,
+    165
+   ],
+   [
+    -387.1,
+    22.748,
+    -882.01,
+    171
+   ],
+   [
+    -390.94,
+    22.95,
+    -886.62,
+    177
+   ],
+   [
+    -394.55,
+    23.147,
+    -891.41,
+    183
+   ],
+   [
+    -397.86,
+    23.387,
+    -896.41,
+    189
+   ],
+   [
+    -401.02,
+    23.616,
+    -901.51,
+    195
+   ],
+   [
+    -404.08,
+    23.854,
+    -906.67,
+    201
+   ],
+   [
+    -405.91,
+    24.092,
+    -912.35,
+    206
+   ],
+   [
+    -406.12,
+    24.357,
+    -918.34,
+    212
+   ],
+   [
+    -404.79,
+    24.58,
+    -924.16,
+    216
+   ],
+   [
+    -401.67,
+    24.722,
+    -929.25,
+    323
+   ],
+   [
+    -397.54,
+    24.785,
+    -933.6,
+    326
+   ],
+   [
+    -392.12,
+    24.648,
+    -935.81,
+    330
+   ],
+   [
+    -386.23,
+    24.336,
+    -935.09,
+    336
+   ],
+   [
+    -380.57,
+    24.032,
+    -933.91,
+    342
+   ],
+   [
+    -374.68,
+    23.862,
+    -934.61,
+    347
+   ],
+   [
+    -368.68,
+    23.637,
+    -934.61,
+    353
+   ],
+   [
+    -362.68,
+    23.429,
+    -934.54,
+    358
+   ],
+   [
+    -357.57,
+    23.017,
+    -931.6,
+    364
+   ],
+   [
+    -353.33,
+    22.571,
+    -927.35,
+    370
+   ],
+   [
+    -349.08,
+    22.125,
+    -923.11,
+    375
+   ],
+   [
+    -344.56,
+    21.667,
+    -919.19,
+    381
+   ],
+   [
+    -339.18,
+    21.261,
+    -916.56,
+    386
+   ],
+   [
+    -333.66,
+    20.881,
+    -914.22,
+    392
+   ],
+   [
+    -328.14,
+    20.502,
+    -911.87,
+    398
+   ],
+   [
+    -322.65,
+    20.118,
+    -909.47,
+    405
+   ],
+   [
+    -317.15,
+    19.734,
+    -907.08,
+    411
+   ],
+   [
+    -311.65,
+    19.343,
+    -904.67,
+    417
+   ],
+   [
+    -306.2,
+    18.961,
+    -902.17,
+    423
+   ],
+   [
+    -300.78,
+    18.595,
+    -899.61,
+    429
+   ],
+   [
+    -295.34,
+    18.219,
+    -897.07,
+    435
+   ],
+   [
+    -289.97,
+    17.836,
+    -894.4,
+    441
+   ],
+   [
+    -284.62,
+    17.449,
+    -891.67,
+    447
+   ],
+   [
+    -279.31,
+    17.062,
+    -888.89,
+    454
+   ],
+   [
+    -274.07,
+    16.675,
+    -885.98,
+    460
+   ],
+   [
+    -268.81,
+    16.282,
+    -883.08,
+    466
+   ],
+   [
+    -263.58,
+    15.887,
+    -880.14,
+    472
+   ],
+   [
+    -258.43,
+    15.49,
+    -877.08,
+    478
+   ],
+   [
+    -253.28,
+    15.092,
+    -873.99,
+    484
+   ],
+   [
+    -248.17,
+    14.687,
+    -870.85,
+    490
+   ],
+   [
+    -243.14,
+    14.275,
+    -867.58,
+    496
+   ],
+   [
+    -238.12,
+    13.892,
+    -864.3,
+    502
+   ],
+   [
+    -233.15,
+    13.509,
+    -860.94,
+    508
+   ],
+   [
+    -228.28,
+    13.099,
+    -857.43,
+    515
+   ],
+   [
+    -223.57,
+    12.717,
+    -853.73,
+    521
+   ],
+   [
+    -219.28,
+    12.319,
+    -849.54,
+    527
+   ],
+   [
+    -215.31,
+    11.891,
+    -845.04,
+    533
+   ],
+   [
+    -210.93,
+    11.374,
+    -840.94,
+    539
+   ],
+   [
+    -206.21,
+    10.988,
+    -837.29,
+    545
+   ],
+   [
+    -200.69,
+    10.709,
+    -834.96,
+    551
+   ],
+   [
+    -195.4,
+    10.385,
+    -832.14,
+    557
+   ],
+   [
+    -190.24,
+    10.109,
+    -829.07,
+    563
+   ],
+   [
+    -185.19,
+    9.855,
+    -825.84,
+    569
+   ],
+   [
+    -180.27,
+    9.541,
+    -822.41,
+    575
+   ],
+   [
+    -175.89,
+    9.225,
+    -818.32,
+    581
+   ],
+   [
+    -171.65,
+    8.913,
+    -814.07,
+    587
+   ],
+   [
+    -167.4,
+    8.649,
+    -809.83,
+    593
+   ],
+   [
+    -163.16,
+    8.377,
+    -805.59,
+    599
+   ],
+   [
+    -158.92,
+    8.091,
+    -801.35,
+    605
+   ],
+   [
+    -154.68,
+    7.791,
+    -797.1,
+    612
+   ],
+   [
+    -150.44,
+    7.492,
+    -792.86,
+    618
+   ],
+   [
+    -146.34,
+    7.228,
+    -788.47,
+    624
+   ],
+   [
+    -142.19,
+    6.944,
+    -784.14,
+    630
+   ],
+   [
+    -138.1,
+    6.665,
+    -779.75,
+    636
+   ],
+   [
+    -133.87,
+    6.411,
+    -775.5,
+    642
+   ],
+   [
+    -129.68,
+    6.154,
+    -771.21,
+    648
+   ],
+   [
+    -125.88,
+    5.875,
+    -766.57,
+    654
+   ],
+   [
+    -121.92,
+    5.597,
+    -762.06,
+    660
+   ],
+   [
+    -117.94,
+    5.309,
+    -757.57,
+    666
+   ],
+   [
+    -113.7,
+    5.03,
+    -753.33,
+    672
+   ],
+   [
+    -109.58,
+    4.762,
+    -748.97,
+    679
+   ],
+   [
+    -105.54,
+    4.483,
+    -744.53,
+    685
+   ],
+   [
+    -101.51,
+    4.201,
+    -740.09,
+    690
+   ],
+   [
+    -97.36,
+    3.919,
+    -735.76,
+    696
+   ],
+   [
+    -93.42,
+    3.636,
+    -731.23,
+    702
+   ],
+   [
+    -89.27,
+    3.354,
+    -726.9,
+    708
+   ],
+   [
+    -85.03,
+    3.064,
+    -722.66,
+    714
+   ],
+   [
+    -81.04,
+    2.77,
+    -718.18,
+    720
+   ],
+   [
+    -77.17,
+    2.477,
+    -713.6,
+    726
+   ],
+   [
+    -73.05,
+    2.181,
+    -709.24,
+    732
+   ],
+   [
+    -69.08,
+    1.887,
+    -704.75,
+    738
+   ],
+   [
+    -65.19,
+    1.594,
+    -700.18,
+    744
+   ],
+   [
+    -61.08,
+    1.298,
+    -695.81,
+    750
+   ],
+   [
+    -57.16,
+    1.008,
+    -691.27,
+    756
+   ],
+   [
+    -52.96,
+    0.716,
+    -686.99,
+    762
+   ],
+   [
+    -48.85,
+    0.424,
+    -682.61,
+    768
+   ],
+   [
+    -44.89,
+    0.134,
+    -678.11,
+    774
+   ],
+   [
+    -40.79,
+    -0.158,
+    -673.74,
+    780
+   ],
+   [
+    -36.81,
+    -0.451,
+    -669.24,
+    786
+   ],
+   [
+    -32.57,
+    -0.737,
+    -665.0,
+    792
+   ],
+   [
+    -28.46,
+    -1.003,
+    -660.63,
+    798
+   ],
+   [
+    -24.41,
+    -1.269,
+    -656.2,
+    804
+   ],
+   [
+    -20.38,
+    -1.504,
+    -651.76,
+    810
+   ],
+   [
+    -16.36,
+    -1.74,
+    -647.31,
+    816
+   ],
+   [
+    -12.19,
+    -1.981,
+    -642.99,
+    822
+   ],
+   [
+    -8.11,
+    -2.22,
+    -638.59,
+    828
+   ],
+   [
+    -4.1,
+    -2.453,
+    -634.14,
+    834
+   ],
+   [
+    -0.21,
+    -2.684,
+    -629.57,
+    840
+   ],
+   [
+    3.93,
+    -2.92,
+    -625.23,
+    846
+   ],
+   [
+    8.03,
+    -3.155,
+    -620.84,
+    852
+   ],
+   [
+    12.25,
+    -3.387,
+    -616.58,
+    858
+   ],
+   [
+    16.5,
+    -3.609,
+    -612.35,
+    864
+   ],
+   [
+    20.89,
+    -3.793,
+    -608.25,
+    870
+   ],
+   [
+    25.17,
+    -4.043,
+    -604.05,
+    876
+   ],
+   [
+    29.4,
+    -4.247,
+    -599.8,
+    882
+   ],
+   [
+    33.27,
+    -4.428,
+    -595.22,
+    888
+   ],
+   [
+    36.4,
+    -4.552,
+    -590.11,
+    894
+   ],
+   [
+    40.39,
+    -4.717,
+    -585.64,
+    900
+   ],
+   [
+    44.63,
+    -4.849,
+    -581.4,
+    906
+   ],
+   [
+    48.88,
+    -4.976,
+    -577.16,
+    912
+   ],
+   [
+    53.62,
+    -5.123,
+    -573.5,
+    918
+   ],
+   [
+    58.81,
+    -5.283,
+    -570.5,
+    923
+   ],
+   [
+    64.11,
+    -5.419,
+    -567.71,
+    928
+   ],
+   [
+    70.03,
+    -5.54,
+    -567.01,
+    933
+   ],
+   [
+    76.03,
+    -5.664,
+    -567.01,
+    938
+   ],
+   [
+    82.01,
+    -5.736,
+    -566.8,
+    943
+   ],
+   [
+    86.93,
+    -5.656,
+    -563.5,
+    949
+   ]
+  ],
+  "entry_s": 6561,
+  "exit_s": 949,
+  "note": "ligne centrale de la voie des stands (de pitlane.json, y = sol) ; ordre entrée -> sortie"
+ },
+ "pit_exit_lights": {
+  "pos": [
+   -397.942,
+   23.85,
+   -903.376
+  ],
+  "yaw": 0.545,
+  "s": 195,
+  "nodes": {
+   "red": "pitexit_red",
+   "green": "pitexit_green",
+   "blue": "pitexit_blue"
+  },
+  "node_pos": {
+   "pitexit_blue": [
+    -398.612,
+    25.8,
+    -902.841
+   ],
+   "pitexit_green": [
+    -398.596,
+    26.32,
+    -902.816
+   ],
+   "pitexit_red": [
+    -398.596,
+    26.88,
+    -902.816
+   ]
+  },
+  "note": "matériaux séparés, émissif 0 par défaut, extras w11_on_color / w11_on_intensity"
+ }
+}

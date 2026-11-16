@@ -1,0 +1,6 @@
+Sepang International Circuit — modèle 3D « Sepang International Circuit 2025 layout »
+Auteur : Dave Love (Sketchfab) — licence Creative Commons Attribution 4.0 (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Modifications : recentrage sur la ligne de départ, retrait du matériau de collision invisible, réduction des textures,
+calcul de la surface physique (surface.bin) et du masque d'herbe. Les noms de matériaux d'origine sont conservés.
+Les logos de sponsors présents dans les textures appartiennent à leurs propriétaires respectifs.

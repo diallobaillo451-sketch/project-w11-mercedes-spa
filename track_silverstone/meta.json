@@ -1,0 +1,111 @@
+{
+ "id": "silverstone",
+ "name": "Silverstone",
+ "title": "Silverstone Circuit 2024 layout",
+ "source": {
+  "author": "Dave Love SketchFab (https://sketchfab.com/Tyler_Dave)",
+  "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+  "url": "https://sketchfab.com/3d-models/silverstone-circuit-2024-layout-bbaf4b12d5244c76998fd44f771fc0b3"
+ },
+ "length": 5905.632123081192,
+ "N": 5906,
+ "ds": 0.999937711324279,
+ "direction": "horaire",
+ "frame": "origine = milieu de la voie des stands (Hamilton Straight), avant = -Z, Y haut, 1 unité = 1 m (recalé depuis le GLB source)",
+ "centerline": "trajectoire de gomme du modèle (matériaux groove*), tracée par chemin le plus court sur le squelette puis recentrée sur la chaussée",
+ "gates": [
+  1750,
+  4500
+ ],
+ "drs": [
+  [
+   5700,
+   5905.632123081192
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   1150,
+   1700
+  ]
+ ],
+ "corners_approx": [
+  {
+   "s": 208,
+   "name": "Abbey"
+  },
+  {
+   "s": 406,
+   "name": "Farm"
+  },
+  {
+   "s": 691,
+   "name": "Village"
+  },
+  {
+   "s": 838,
+   "name": "The Loop"
+  },
+  {
+   "s": 1049,
+   "name": "Aintree"
+  },
+  {
+   "s": 1730,
+   "name": "Brooklands"
+  },
+  {
+   "s": 1921,
+   "name": "Luffield"
+  },
+  {
+   "s": 2244,
+   "name": "Woodcote"
+  },
+  {
+   "s": 2866,
+   "name": "Copse"
+  },
+  {
+   "s": 3433,
+   "name": "Maggotts / Becketts / Chapel"
+  },
+  {
+   "s": 4814,
+   "name": "Stowe"
+  },
+  {
+   "s": 5339,
+   "name": "Vale"
+  },
+  {
+   "s": 5564,
+   "name": "Club"
+  }
+ ],
+ "estimated": [
+  "position de la ligne de départ",
+  "fins de secteurs",
+  "zones DRS",
+  "noms et positions des virages"
+ ],
+ "absent": [
+  "barriers.bin",
+  "pitlane.json",
+  "grassmask.bin",
+  "crowd.bin",
+  "crowd.json",
+  "marshals.json",
+  "occlusion ambiante pré-calculée (COLOR_0)",
+  "LOD"
+ ],
+ "scene": {
+  "tiles": 13,
+  "triangles": 1197030,
+  "materials": "noms canoniques du jeu (asph, kerb_new, groove, GRASS, sand_new, trees1_2022, fences, concrete-barrie-raw)",
+  "textures": "WebP + KTX2 UASTC ; herbe et gravier remplacés par ceux de Monza à l'assemblage si Monza est présent"
+ },
+ "tools": "source/tools/silverstone"
+}

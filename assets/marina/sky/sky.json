@@ -1,0 +1,16 @@
+{
+ "scale": 0.02,
+ "encode": "x/(1+x), L=S*x",
+ "vMax": 0.533203125,
+ "sun": {
+  "u": 0.3,
+  "v": 0.19444444444444445,
+  "elev": 55.0
+ },
+ "horizon": [
+  0.17366,
+  0.13845,
+  0.10651
+ ],
+ "src": "Poly Haven moonless_golf (CC0) + \u00e9toiles proc\u00e9durales"
+}

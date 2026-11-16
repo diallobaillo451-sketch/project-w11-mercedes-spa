@@ -1,0 +1,7 @@
+Marina Bay Street Circuit — Dave Bored SketchFab (https://sketchfab.com/Tyler_Dave), licence CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+  https://sketchfab.com/3d-models/marina-bay-street-circuit-e665d831c57546609d4c15287a6107b7
+  La géométrie du modèle est recentrée sur la ligne de départ, découpée en tuiles et regroupée par matériau ; les noms de matériaux sont conservés ;
+  les textures sont converties en WebP ; les cartes à découpe passent en alphaMode MASK ; l'éclairage de nuit est une émission ajoutée aux matériaux.
+Ciel de nuit — Poly Haven « Moonless Golf » (Greg Zaal), CC0, https://polyhaven.com/a/moonless_golf (copie dans three.js/examples/textures/equirectangular) ;
+  l'horizon d'origine est remplacé par un halo de ville et des étoiles procédurales sont ajoutées. Sans ce fichier, le ciel est entièrement procédural.
+Physique, tuiles, lampadaires : générés par source/marina/build_marina.py à partir du modèle (aucune donnée officielle FIA ; secteurs et DRS estimés).

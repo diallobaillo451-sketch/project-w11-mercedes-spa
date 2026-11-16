@@ -1,0 +1,1162 @@
+{
+ "id": "barcelona",
+ "name": "Circuit de Barcelona-Catalunya (layout Grand Prix 2023)",
+ "source": {
+  "model": "Barcelona-Catalunya Grand Prix 2023 layout",
+  "author": "Dave Love (Sketchfab : Tyler_Dave)",
+  "license": "CC BY 4.0",
+  "url": "https://sketchfab.com/3d-models/barcelona-catalunya-grand-prix-2023-layout-60075d2b2d124fb18da7bfaa3b02fab1",
+  "changes": "conversion pour le jeu : tuiles, textures compressées, ombrage cuit, grille de physique, barrières, voie des stands"
+ },
+ "length": 4642.8,
+ "length_official": 4657,
+ "direction": "CW",
+ "start_blender_xy": [
+  336.3,
+  148.91
+ ],
+ "grid": {
+  "cells": 4642,
+  "depth": 361,
+  "D0": -45.0,
+  "step": 0.25
+ },
+ "game": {
+  "pit": {
+   "limitFromS": 4245,
+   "limitToS": 329
+  },
+  "gates": [
+   1610,
+   3384
+  ],
+  "drs": [
+   [
+    4412,
+    4643
+   ],
+   [
+    0,
+    555
+   ],
+   [
+    2966,
+    3266
+   ]
+  ]
+ },
+ "estimated": [
+  "gates (secteurs) et zones DRS : repris de la trace OpenF1 GP 2023, recalés sur la ligne centrale",
+  "ligne d'arrivée : alignée sur le point de départ de la trace OpenF1",
+  "voie des stands : chemin praticable calculé sur la géométrie réelle"
+ ],
+ "not_modelled": [
+  "feux de départ pilotables",
+  "postes de commissaires (marshals.json absent)"
+ ],
+ "visualParity": {
+  "note": "Parité visuelle Spa appliquée côté assets (voir /workspace/w11-shared/work/SPA_VISUAL_PARITY.md) : noms canoniques Spa → les shaders d'Opi s'appliquent sans modification ; albédo/spéculaire/rugosité déjà calibrés dans les matériaux (ALBEDO_FIX inutile, aucune clé ALBEDO_FIX de Spa n'est réutilisée).",
+  "runtime": {
+   "bakedAO.GROUND": "asph, kerb_new, line, carpet, groove, GRASS, sand_new",
+   "detail.gravel": "sand_new, construction_dirt",
+   "detail.grass": "GRASS, grass-side1B",
+   "trees.TREE_RE": "trees1_*, bushesB_*",
+   "weathering.BUILD": "houses1NN (0,78), concrete-barrie-raw (0,82)",
+   "weatherfx.ROAD (mouillé)": "asph, kerb_new, line, groove",
+   "grass3D": "track/grassmask.bin (classe 1 = GRASS)",
+   "crowd": "track/crowd.bin"
+  },
+  "materials": [
+   {
+    "src": "Merged_materials",
+    "name": "Merged_materials",
+    "class": "other",
+    "mean": 1,
+    "alphaFrac": null,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.6,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_0",
+    "name": "MOTOROLA_0",
+    "class": "other",
+    "mean": 0.658,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.2,
+    "metal": 1
+   },
+   {
+    "src": "MOTOROLA_1",
+    "name": "MOTOROLA_1",
+    "class": "other",
+    "mean": 0.339,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.5,
+    "metal": 1
+   },
+   {
+    "src": "MOTOROLA_2",
+    "name": "MOTOROLA_2",
+    "class": "other",
+    "mean": 0.093,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_3",
+    "name": "MOTOROLA_3",
+    "class": "other",
+    "mean": 0.118,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.859,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_4",
+    "name": "MOTOROLA_4",
+    "class": "other",
+    "mean": 0.124,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.859,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_5",
+    "name": "MOTOROLA_5",
+    "class": "other",
+    "mean": 0.159,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.859,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_6",
+    "name": "concrete-barrie-raw.001",
+    "class": "concrete",
+    "mean": 0.658,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.3,
+    "metal": 1
+   },
+   {
+    "src": "MOTOROLA_7",
+    "name": "MOTOROLA_7",
+    "class": "other",
+    "mean": 0.064,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.859,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_8",
+    "name": "MOTOROLA_8",
+    "class": "other",
+    "mean": 0.099,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_9",
+    "name": "asph-grv.001",
+    "class": "runoff",
+    "mean": 0.151,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_10",
+    "name": "GRASS.001",
+    "class": "grass",
+    "mean": 0.119,
+    "alphaFrac": 0,
+    "factor": 0.67,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_11",
+    "name": "GRASS.002",
+    "class": "grass",
+    "mean": 0.119,
+    "alphaFrac": 0,
+    "factor": 0.67,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_12",
+    "name": "sand_new.001",
+    "class": "gravel",
+    "mean": 0.27,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_13",
+    "name": "asph-grv.002",
+    "class": "runoff",
+    "mean": 0.196,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_14",
+    "name": "asph-grv.003",
+    "class": "runoff",
+    "mean": 0.604,
+    "alphaFrac": 0,
+    "factor": 0.37,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_15",
+    "name": "MOTOROLA_15",
+    "class": "other",
+    "mean": 0.09,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.827,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_16",
+    "name": "MOTOROLA_16",
+    "class": "other",
+    "mean": 0.06,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.859,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_17",
+    "name": "kerb_new.001",
+    "class": "kerb",
+    "mean": 0.122,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.86,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_18",
+    "name": "MOTOROLA_18",
+    "class": "other",
+    "mean": 0.153,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_19",
+    "name": "houses101",
+    "class": "building",
+    "mean": 0.504,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.447,
+    "metal": 1
+   },
+   {
+    "src": "MOTOROLA_20",
+    "name": "MOTOROLA_20",
+    "class": "other",
+    "mean": 0.105,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.2,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_21",
+    "name": "GRASS.003",
+    "class": "grass",
+    "mean": 0.062,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_22",
+    "name": "MOTOROLA_22",
+    "class": "other",
+    "mean": 0.274,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_23",
+    "name": "MOTOROLA_23",
+    "class": "other",
+    "mean": 0.327,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.827,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_24",
+    "name": "kerb_new.002",
+    "class": "kerb",
+    "mean": 0.242,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.86,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_25",
+    "name": "MOTOROLA_25",
+    "class": "other",
+    "mean": 0.101,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.755,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_26",
+    "name": "MOTOROLA_26",
+    "class": "other",
+    "mean": 0.209,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.4,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_27",
+    "name": "GRASS.004",
+    "class": "grass",
+    "mean": 0.119,
+    "alphaFrac": 0,
+    "factor": 0.67,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_28",
+    "name": "MOTOROLA_28",
+    "class": "other",
+    "mean": 0.098,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_29",
+    "name": "asph-grv.004",
+    "class": "runoff",
+    "mean": 0.171,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_30",
+    "name": "MOTOROLA_30",
+    "class": "other",
+    "mean": 0.124,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_31",
+    "name": "asph-grv.005",
+    "class": "runoff",
+    "mean": 0.169,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_32",
+    "name": "MOTOROLA_32",
+    "class": "other",
+    "mean": 0.119,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_33",
+    "name": "MOTOROLA_33",
+    "class": "other",
+    "mean": 0.051,
+    "alphaFrac": 0.876,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.2,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_34",
+    "name": "MOTOROLA_34",
+    "class": "other",
+    "mean": 0.106,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.684,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_35",
+    "name": "MOTOROLA_35",
+    "class": "other",
+    "mean": 0.196,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_36",
+    "name": "MOTOROLA_36",
+    "class": "other",
+    "mean": 0.02,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_37",
+    "name": "MOTOROLA_37",
+    "class": "other",
+    "mean": 0.134,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_38",
+    "name": "line.001",
+    "class": "line",
+    "mean": 0.144,
+    "alphaFrac": 0.797,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_39",
+    "name": "MOTOROLA_39",
+    "class": "other",
+    "mean": 0.131,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_40",
+    "name": "MOTOROLA_40",
+    "class": "other",
+    "mean": 0.018,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_41",
+    "name": "MOTOROLA_41",
+    "class": "other",
+    "mean": 0.161,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_42",
+    "name": "MOTOROLA_42",
+    "class": "other",
+    "mean": 0.275,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_43",
+    "name": "MOTOROLA_43",
+    "class": "other",
+    "mean": 0,
+    "alphaFrac": 1,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_44",
+    "name": "MOTOROLA_44",
+    "class": "other",
+    "mean": 0.118,
+    "alphaFrac": 0.969,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_45",
+    "name": "trees1_MOTOROLA_45.001",
+    "class": "trees",
+    "mean": 0.026,
+    "alphaFrac": 0.603,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_46",
+    "name": "bushesB_MOTOROLA_46.001",
+    "class": "bushes",
+    "mean": 0.141,
+    "alphaFrac": 0,
+    "factor": 0.5,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_47",
+    "name": "bushesB_MOTOROLA_47.002",
+    "class": "bushes",
+    "mean": 0.068,
+    "alphaFrac": 0.689,
+    "factor": 0.723,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_48",
+    "name": "MOTOROLA_48",
+    "class": "other",
+    "mean": 0.156,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_49",
+    "name": "MOTOROLA_49",
+    "class": "other",
+    "mean": 0.147,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_50",
+    "name": "MOTOROLA_50",
+    "class": "other",
+    "mean": 0.138,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_51",
+    "name": "MOTOROLA_51",
+    "class": "other",
+    "mean": 0.129,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_52",
+    "name": "trees1_MOTOROLA_52.002",
+    "class": "trees",
+    "mean": 0.04,
+    "alphaFrac": 0.616,
+    "factor": 0.623,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_53",
+    "name": "asph.001",
+    "class": "road",
+    "mean": 0.165,
+    "alphaFrac": 0,
+    "factor": 0.547,
+    "alpha": "OPAQUE",
+    "rough": 0.88,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_54",
+    "name": "MOTOROLA_54",
+    "class": "other",
+    "mean": 0.13,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_55",
+    "name": "MOTOROLA_55",
+    "class": "other",
+    "mean": 0.15,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_56",
+    "name": "MOTOROLA_56",
+    "class": "other",
+    "mean": 0.907,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.4,
+    "metal": 1
+   },
+   {
+    "src": "MOTOROLA_57",
+    "name": "MOTOROLA_57",
+    "class": "other",
+    "mean": 0.044,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_58",
+    "name": "MOTOROLA_58",
+    "class": "other",
+    "mean": 0.387,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_59",
+    "name": "MOTOROLA_59",
+    "class": "other",
+    "mean": 0.165,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_60",
+    "name": "MOTOROLA_60",
+    "class": "other",
+    "mean": 0.165,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_61",
+    "name": "MOTOROLA_61",
+    "class": "other",
+    "mean": 0.186,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_62",
+    "name": "MOTOROLA_62",
+    "class": "other",
+    "mean": 0.084,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_63",
+    "name": "line.002",
+    "class": "line",
+    "mean": 0.189,
+    "alphaFrac": 0.885,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_64",
+    "name": "line.003",
+    "class": "line",
+    "mean": 0.214,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_66",
+    "name": "bushesB_MOTOROLA_66.003",
+    "class": "bushes",
+    "mean": 0,
+    "alphaFrac": 1,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_67",
+    "name": "bushesB_MOTOROLA_67.004",
+    "class": "bushes",
+    "mean": 0,
+    "alphaFrac": 1,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_68",
+    "name": "MOTOROLA_68",
+    "class": "other",
+    "mean": 0.134,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_69",
+    "name": "MOTOROLA_69",
+    "class": "other",
+    "mean": 0.212,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.531,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_70",
+    "name": "asph-grv.006",
+    "class": "runoff",
+    "mean": 0.02,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_71",
+    "name": "MOTOROLA_71",
+    "class": "other",
+    "mean": 0.269,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_72",
+    "name": "MOTOROLA_72",
+    "class": "other",
+    "mean": 0.079,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_73",
+    "name": "MOTOROLA_73",
+    "class": "other",
+    "mean": 0.23,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_74",
+    "name": "MOTOROLA_74",
+    "class": "other",
+    "mean": 0.196,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_75",
+    "name": "asph-grv.007",
+    "class": "runoff",
+    "mean": 0.106,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_76",
+    "name": "groove.001",
+    "class": "groove",
+    "mean": 0.015,
+    "alphaFrac": 0.928,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_77",
+    "name": "line.004",
+    "class": "line",
+    "mean": 0.958,
+    "alphaFrac": 0,
+    "factor": 0.543,
+    "alpha": "OPAQUE",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_78",
+    "name": "construction_dirt.001",
+    "class": "dirt",
+    "mean": 0.341,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.92,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_79",
+    "name": "top-ext.001",
+    "class": "terrain",
+    "mean": 0.205,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_80",
+    "name": "line.005",
+    "class": "line",
+    "mean": 0.431,
+    "alphaFrac": 0.158,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_81",
+    "name": "asph-grv.008",
+    "class": "runoff",
+    "mean": 0.166,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_82",
+    "name": "asph-grv.009",
+    "class": "runoff",
+    "mean": 0.083,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_83",
+    "name": "line.006",
+    "class": "line",
+    "mean": 0.37,
+    "alphaFrac": 0.758,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_84",
+    "name": "line.007",
+    "class": "line",
+    "mean": 0.067,
+    "alphaFrac": 0.793,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_85",
+    "name": "line.008",
+    "class": "line",
+    "mean": 0.242,
+    "alphaFrac": 0.789,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.84,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_86",
+    "name": "MOTOROLA_86",
+    "class": "other",
+    "mean": 0.11,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_87",
+    "name": "MOTOROLA_87",
+    "class": "other",
+    "mean": 0.208,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_88",
+    "name": "MOTOROLA_88",
+    "class": "other",
+    "mean": 0.209,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_89",
+    "name": "MOTOROLA_89",
+    "class": "other",
+    "mean": 0.167,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_90",
+    "name": "MOTOROLA_90",
+    "class": "other",
+    "mean": 0.29,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_91",
+    "name": "MOTOROLA_91",
+    "class": "other",
+    "mean": 0.093,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_92",
+    "name": "MOTOROLA_92",
+    "class": "other",
+    "mean": 0.067,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.2,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_93",
+    "name": "MOTOROLA_93",
+    "class": "other",
+    "mean": 0.013,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.4,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_94",
+    "name": "MOTOROLA_94",
+    "class": "other",
+    "mean": 0.351,
+    "alphaFrac": 0.06,
+    "factor": 1,
+    "alpha": "BLEND",
+    "rough": 0.447,
+    "metal": 1
+   },
+   {
+    "src": "MOTOROLA_95",
+    "name": "MOTOROLA_95",
+    "class": "other",
+    "mean": 0.093,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.859,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_96",
+    "name": "asph.002",
+    "class": "road",
+    "mean": 0.165,
+    "alphaFrac": 0,
+    "factor": 0.547,
+    "alpha": "OPAQUE",
+    "rough": 0.88,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA_97",
+    "name": "MOTOROLA_97",
+    "class": "other",
+    "mean": 0.191,
+    "alphaFrac": 0.552,
+    "factor": 1,
+    "alpha": "MASK",
+    "rough": 0.9,
+    "metal": 0
+   },
+   {
+    "src": "MOTOROLA",
+    "name": "MOTOROLA",
+    "class": "other",
+    "mean": 0.907,
+    "alphaFrac": 0,
+    "factor": 1,
+    "alpha": "OPAQUE",
+    "rough": 0.9,
+    "metal": 0
+   }
+  ],
+  "autoAlpha": []
+ }
+}

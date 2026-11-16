@@ -1,0 +1,17 @@
+{
+  "name": "PROJECT W11 — Spa 2020",
+  "short_name": "W11",
+  "description": "Jeu de pilotage non officiel : Mercedes-AMG F1 W11 (2020) à Spa-Francorchamps. Projet de fan, gratuit.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050506",
+  "theme_color": "#050506",
+  "lang": "fr",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

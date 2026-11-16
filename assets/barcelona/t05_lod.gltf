@@ -1,0 +1,5637 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 213,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 183,
+      "max": [
+        -481.608154296875,
+        29.351736068725586,
+        1.4434051513671875
+      ],
+      "min": [
+        -523.5121459960938,
+        22.211841583251953,
+        -37.21549987792969
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 183,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 183,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 183,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 714,
+      "normalized": false,
+      "byteOffset": 426,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 490,
+      "max": [
+        -480.1014404296875,
+        26.57024383544922,
+        178.28060913085938
+      ],
+      "min": [
+        -539.8920288085938,
+        11.245931625366211,
+        -29.944488525390625
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 490,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 6
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 490,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 7
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 490,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 8
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 9,
+      "normalized": false,
+      "byteOffset": 1854,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 7,
+      "max": [
+        -501.3399353027344,
+        23.10603904724121,
+        15.048599243164062
+      ],
+      "min": [
+        -529.3487548828125,
+        21.932348251342773,
+        -18.198898315429688
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 9
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 7,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 10
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 7,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 11
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 7,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 12
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 432,
+      "normalized": false,
+      "byteOffset": 1872,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 288,
+      "max": [
+        -504.09515380859375,
+        24.623228073120117,
+        -0.23089599609375
+      ],
+      "min": [
+        -525.4164428710938,
+        22.461219787597656,
+        -24.505599975585938
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 13
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 288,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 14
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 288,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 15
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 288,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 16
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 156,
+      "normalized": false,
+      "byteOffset": 2736,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 106,
+      "max": [
+        -499.48974609375,
+        24.6055908203125,
+        -0.2281951904296875
+      ],
+      "min": [
+        -525.396240234375,
+        22.49161148071289,
+        -28.1322021484375
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 17
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 106,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 18
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 106,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 19
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 106,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 20
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1113,
+      "normalized": false,
+      "byteOffset": 3048,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 639,
+      "max": [
+        -497.026123046875,
+        45.4742546081543,
+        3.3126983642578125
+      ],
+      "min": [
+        -734.5281372070312,
+        18.947477340698242,
+        -455.097900390625
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 21
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 639,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 22
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 639,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 23
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 639,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 372,
+      "normalized": false,
+      "byteOffset": 5274,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 232,
+      "max": [
+        -481.4118347167969,
+        23.88187026977539,
+        0.673797607421875
+      ],
+      "min": [
+        -519.5380249023438,
+        21.38636016845703,
+        -35.496795654296875
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 25
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 232,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 26
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 232,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 27
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 232,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 28
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 342,
+      "normalized": false,
+      "byteOffset": 6018,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 216,
+      "max": [
+        -481.4118347167969,
+        23.88187026977539,
+        0.673797607421875
+      ],
+      "min": [
+        -519.5380249023438,
+        21.42072868347168,
+        -35.496795654296875
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 29
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 216,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 30
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 216,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 31
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 216,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 32
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 4668,
+      "normalized": false,
+      "byteOffset": 6702,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3138,
+      "max": [
+        -494.91455078125,
+        24.977333068847656,
+        192.43939208984375
+      ],
+      "min": [
+        -524.3621215820312,
+        6.822554588317871,
+        100.48934936523438
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 33
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 3138,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 34
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 3138,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 35
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 3138,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 36
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1152,
+      "normalized": false,
+      "byteOffset": 16038,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 836,
+      "max": [
+        -480.8409423828125,
+        30.19186782836914,
+        8.90460205078125
+      ],
+      "min": [
+        -523.5232543945312,
+        18.079357147216797,
+        -37.213897705078125
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 37
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 836,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 38
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 836,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 39
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 836,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 40
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 4548,
+      "normalized": false,
+      "byteOffset": 18342,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 3134,
+      "max": [
+        -486.780029296875,
+        27.770238876342773,
+        192.46649169921875
+      ],
+      "min": [
+        -539.9661254882812,
+        11.545929908752441,
+        -1.3802947998046875
+      ],
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 41
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 3134,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 42
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 3134,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 43
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 3134,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 44
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 27438,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 4644,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 13719
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 27440,
+      "byteLength": 2196,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 4644,
+          "byteLength": 1549,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 183
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 29636,
+      "byteLength": 1464,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 6196,
+          "byteLength": 1280,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 183
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 31100,
+      "byteLength": 732,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 7476,
+          "byteLength": 288,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 183
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 31832,
+      "byteLength": 732,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 7764,
+          "byteLength": 588,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 183
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 32564,
+      "byteLength": 5880,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 8352,
+          "byteLength": 4080,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 490
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 38444,
+      "byteLength": 3920,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 12432,
+          "byteLength": 3375,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 490
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 42364,
+      "byteLength": 1960,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 15808,
+          "byteLength": 832,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 490
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 44324,
+      "byteLength": 1960,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 16640,
+          "byteLength": 1547,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 490
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 46284,
+      "byteLength": 84,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 18188,
+          "byteLength": 145,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 7
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 46368,
+      "byteLength": 56,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 18336,
+          "byteLength": 101,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 7
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 46424,
+      "byteLength": 28,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 18440,
+          "byteLength": 64,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 7
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 46452,
+      "byteLength": 28,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 18504,
+          "byteLength": 64,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 7
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 46480,
+      "byteLength": 3456,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 18568,
+          "byteLength": 1990,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 288
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 49936,
+      "byteLength": 2304,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 20560,
+          "byteLength": 1717,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 288
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 52240,
+      "byteLength": 1152,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 22280,
+          "byteLength": 445,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 288
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 53392,
+      "byteLength": 1152,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 22728,
+          "byteLength": 881,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 288
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 54544,
+      "byteLength": 1272,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 23612,
+          "byteLength": 976,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 106
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 55816,
+      "byteLength": 848,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 24588,
+          "byteLength": 752,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 106
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 56664,
+      "byteLength": 424,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 25340,
+          "byteLength": 155,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 106
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 57088,
+      "byteLength": 424,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 25496,
+          "byteLength": 359,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 106
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 57512,
+      "byteLength": 7668,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 25856,
+          "byteLength": 5532,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 639
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 65180,
+      "byteLength": 5112,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 31388,
+          "byteLength": 4129,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 639
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 70292,
+      "byteLength": 2556,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 35520,
+          "byteLength": 1394,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 639
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 72848,
+      "byteLength": 2556,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 36916,
+          "byteLength": 1213,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 639
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 75404,
+      "byteLength": 2784,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 38132,
+          "byteLength": 1754,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 232
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 78188,
+      "byteLength": 1856,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 39888,
+          "byteLength": 1450,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 232
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 80044,
+      "byteLength": 928,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 41340,
+          "byteLength": 455,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 232
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 80972,
+      "byteLength": 928,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 41796,
+          "byteLength": 730,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 232
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 81900,
+      "byteLength": 2592,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 42528,
+          "byteLength": 1697,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 216
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 84492,
+      "byteLength": 1728,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 44228,
+          "byteLength": 1365,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 216
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 86220,
+      "byteLength": 864,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 45596,
+          "byteLength": 428,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 216
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 87084,
+      "byteLength": 864,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 46024,
+          "byteLength": 664,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 216
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 87948,
+      "byteLength": 37656,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 46688,
+          "byteLength": 23804,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 3138
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 125604,
+      "byteLength": 25104,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 70492,
+          "byteLength": 22334,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 3138
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 150708,
+      "byteLength": 12552,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 92828,
+          "byteLength": 4851,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 3138
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 163260,
+      "byteLength": 12552,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 97680,
+          "byteLength": 8798,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 3138
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 175812,
+      "byteLength": 10032,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 106480,
+          "byteLength": 7192,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 836
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 185844,
+      "byteLength": 6688,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 113672,
+          "byteLength": 4445,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 836
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 192532,
+      "byteLength": 3344,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 118120,
+          "byteLength": 1218,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 836
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 195876,
+      "byteLength": 3344,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 119340,
+          "byteLength": 2528,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 836
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 199220,
+      "byteLength": 37608,
+      "target": 34962,
+      "byteStride": 12,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 121868,
+          "byteLength": 25306,
+          "mode": "ATTRIBUTES",
+          "byteStride": 12,
+          "count": 3134
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 236828,
+      "byteLength": 25072,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 147176,
+          "byteLength": 17324,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 3134
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 261900,
+      "byteLength": 12536,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 164500,
+          "byteLength": 4542,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 3134
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 274436,
+      "byteLength": 12536,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 169044,
+          "byteLength": 9514,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 3134
+        }
+      }
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 4
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 3
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 6
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 5
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 8
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 7
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 10
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 9
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 13
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 12
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 15
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 14
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 18
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 17
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 20
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 23
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 25
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 27
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 29
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 28
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 31
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 30
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 32
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 34
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 33
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 36
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 38
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 37
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 40
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 41
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 42
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 43
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 44
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 45
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 46
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 47
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 48
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 49
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 50
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 51
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 52
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 53
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 54
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 55
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 56
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 57
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 58
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 59
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 60
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 61
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 62
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 63
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 64
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 65
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 66
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 67
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 68
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 69
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 70
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 71
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 72
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 73
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 74
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 75
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 76
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 77
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 78
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 79
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 80
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 81
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 82
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 83
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 84
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 85
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 86
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 87
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 88
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 89
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 90
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 91
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 92
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 94
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 95
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 96
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 97
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 98
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 99
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 100
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 101
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 102
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 103
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 104
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 105
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 106
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 107
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 108
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 109
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 110
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 111
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 113
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 93
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 11
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 16
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 19
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 21
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 22
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 24
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 26
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 35
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 39
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 112
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "C_0",
+      "mimeType": "image/webp",
+      "uri": "tex/178ff2dd22a27cb0.webp"
+    },
+    {
+      "name": "C_1",
+      "mimeType": "image/webp",
+      "uri": "tex/f0c9bc859efaf2d6.webp"
+    },
+    {
+      "name": "C_2",
+      "mimeType": "image/webp",
+      "uri": "tex/6330bd3f1f9d1028.webp"
+    },
+    {
+      "name": "N_3",
+      "mimeType": "image/webp",
+      "uri": "tex/0658d735e7c3e234.webp"
+    },
+    {
+      "name": "C_4",
+      "mimeType": "image/webp",
+      "uri": "tex/ef865bfe007b6792.webp"
+    },
+    {
+      "name": "N_5",
+      "mimeType": "image/webp",
+      "uri": "tex/2680e9cc043fb523.webp"
+    },
+    {
+      "name": "C_6",
+      "mimeType": "image/webp",
+      "uri": "tex/5ebc8e4197de3f47.webp"
+    },
+    {
+      "name": "N_7",
+      "mimeType": "image/webp",
+      "uri": "tex/719508af2b602527.webp"
+    },
+    {
+      "name": "C_8",
+      "mimeType": "image/webp",
+      "uri": "tex/20395fb4661bfff6.webp"
+    },
+    {
+      "name": "N_9",
+      "mimeType": "image/webp",
+      "uri": "tex/f29b97cbe4c636ec.webp"
+    },
+    {
+      "name": "C_10",
+      "mimeType": "image/webp",
+      "uri": "tex/0f3cd7b62b7395ee.webp"
+    },
+    {
+      "name": "C_11",
+      "mimeType": "image/webp",
+      "uri": "tex/aa74b89342e160da.webp"
+    },
+    {
+      "name": "N_12",
+      "mimeType": "image/webp",
+      "uri": "tex/044c141f41e0b2c2.webp"
+    },
+    {
+      "name": "C_13",
+      "mimeType": "image/webp",
+      "uri": "tex/fc19da157e9338e0.webp"
+    },
+    {
+      "name": "N_14",
+      "mimeType": "image/webp",
+      "uri": "tex/125e16ba041c4876.webp"
+    },
+    {
+      "name": "C_15",
+      "mimeType": "image/webp",
+      "uri": "tex/aae7f0d32738212f.webp"
+    },
+    {
+      "name": "C_16",
+      "mimeType": "image/webp",
+      "uri": "tex/56f268096218969f.webp"
+    },
+    {
+      "name": "N_17",
+      "mimeType": "image/webp",
+      "uri": "tex/5d4d9431d9c53592.webp"
+    },
+    {
+      "name": "C_18",
+      "mimeType": "image/webp",
+      "uri": "tex/e679a8ab80495107.webp"
+    },
+    {
+      "name": "C_19",
+      "mimeType": "image/webp",
+      "uri": "tex/99dfad151c43ae3b.webp"
+    },
+    {
+      "name": "C_20",
+      "mimeType": "image/webp",
+      "uri": "tex/08e646128bc6058a.webp"
+    },
+    {
+      "name": "C_21",
+      "mimeType": "image/webp",
+      "uri": "tex/aad1372dee2a3094.webp"
+    },
+    {
+      "name": "C_22",
+      "mimeType": "image/webp",
+      "uri": "tex/310e8b06dc692920.webp"
+    },
+    {
+      "name": "C_23",
+      "mimeType": "image/webp",
+      "uri": "tex/a4526c93f2a18fae.webp"
+    },
+    {
+      "name": "C_24",
+      "mimeType": "image/webp",
+      "uri": "tex/5a1bffc3b236089a.webp"
+    },
+    {
+      "name": "C_25",
+      "mimeType": "image/webp",
+      "uri": "tex/ac0bad8f6dc2934e.webp"
+    },
+    {
+      "name": "C_26",
+      "mimeType": "image/webp",
+      "uri": "tex/89e2ecad0ee0dea2.webp"
+    },
+    {
+      "name": "C_27",
+      "mimeType": "image/webp",
+      "uri": "tex/725b58d071ed6cf5.webp"
+    },
+    {
+      "name": "N_28",
+      "mimeType": "image/webp",
+      "uri": "tex/fa86e067f8cd2fd0.webp"
+    },
+    {
+      "name": "C_29",
+      "mimeType": "image/webp",
+      "uri": "tex/78f210a1599706ef.webp"
+    },
+    {
+      "name": "N_30",
+      "mimeType": "image/webp",
+      "uri": "tex/f684d20a838fd8cc.webp"
+    },
+    {
+      "name": "C_31",
+      "mimeType": "image/webp",
+      "uri": "tex/c47c7e1d498208bc.webp"
+    },
+    {
+      "name": "C_32",
+      "mimeType": "image/webp",
+      "uri": "tex/1d20445889cdceb5.webp"
+    },
+    {
+      "name": "N_33",
+      "mimeType": "image/webp",
+      "uri": "tex/eaede85bd242c91f.webp"
+    },
+    {
+      "name": "C_34",
+      "mimeType": "image/webp",
+      "uri": "tex/f3f7f3ed10a9238d.webp"
+    },
+    {
+      "name": "C_35",
+      "mimeType": "image/webp",
+      "uri": "tex/61f43154b7fdff08.webp"
+    },
+    {
+      "name": "C_36",
+      "mimeType": "image/webp",
+      "uri": "tex/05eb2624c241f1e1.webp"
+    },
+    {
+      "name": "N_37",
+      "mimeType": "image/webp",
+      "uri": "tex/fd57665b1d7a9698.webp"
+    },
+    {
+      "name": "C_38",
+      "mimeType": "image/webp",
+      "uri": "tex/72c901256765600a.webp"
+    },
+    {
+      "name": "C_39",
+      "mimeType": "image/webp",
+      "uri": "tex/3caa432e5bcd063d.webp"
+    },
+    {
+      "name": "C_40",
+      "mimeType": "image/webp",
+      "uri": "tex/8042cf5eb160295d.webp"
+    },
+    {
+      "name": "C_41",
+      "mimeType": "image/webp",
+      "uri": "tex/0e5c0339d458768b.webp"
+    },
+    {
+      "name": "C_42",
+      "mimeType": "image/webp",
+      "uri": "tex/47eb0f7f4685a0a6.webp"
+    },
+    {
+      "name": "C_43",
+      "mimeType": "image/webp",
+      "uri": "tex/a28d81c29902e174.webp"
+    },
+    {
+      "name": "C_44",
+      "mimeType": "image/webp",
+      "uri": "tex/b63960e7cc1d2943.webp"
+    },
+    {
+      "name": "C_45",
+      "mimeType": "image/webp",
+      "uri": "tex/3cf21f4d52a7808e.webp"
+    },
+    {
+      "name": "C_46",
+      "mimeType": "image/webp",
+      "uri": "tex/142f0cfccc81baa7.webp"
+    },
+    {
+      "name": "C_47",
+      "mimeType": "image/webp",
+      "uri": "tex/c558fd4672c18217.webp"
+    },
+    {
+      "name": "C_48",
+      "mimeType": "image/webp",
+      "uri": "tex/56c5e44513cfd55a.webp"
+    },
+    {
+      "name": "C_49",
+      "mimeType": "image/webp",
+      "uri": "tex/bf765a6aa14e8569.webp"
+    },
+    {
+      "name": "C_50",
+      "mimeType": "image/webp",
+      "uri": "tex/6a176c18a03d53eb.webp"
+    },
+    {
+      "name": "C_51",
+      "mimeType": "image/webp",
+      "uri": "tex/26dad964d575ec84.webp"
+    },
+    {
+      "name": "C_52",
+      "mimeType": "image/webp",
+      "uri": "tex/8210cf191280b286.webp"
+    },
+    {
+      "name": "C_53",
+      "mimeType": "image/webp",
+      "uri": "tex/9c5f20b92fa642cf.webp"
+    },
+    {
+      "name": "C_54",
+      "mimeType": "image/webp",
+      "uri": "tex/da725d90c83d761f.webp"
+    },
+    {
+      "name": "C_55",
+      "mimeType": "image/webp",
+      "uri": "tex/10c1f48eee1afe5e.webp"
+    },
+    {
+      "name": "C_56",
+      "mimeType": "image/webp",
+      "uri": "tex/b0391498888b0cb3.webp"
+    },
+    {
+      "name": "C_57",
+      "mimeType": "image/webp",
+      "uri": "tex/95cd546ebcedabf5.webp"
+    },
+    {
+      "name": "C_58",
+      "mimeType": "image/webp",
+      "uri": "tex/a805e7b1c44005ed.webp"
+    },
+    {
+      "name": "C_59",
+      "mimeType": "image/webp",
+      "uri": "tex/83290481e7cbc030.webp"
+    },
+    {
+      "name": "C_60",
+      "mimeType": "image/webp",
+      "uri": "tex/3ccf5c91a8f2d64c.webp"
+    },
+    {
+      "name": "C_61",
+      "mimeType": "image/webp",
+      "uri": "tex/5dc934d2e4bee1cf.webp"
+    },
+    {
+      "name": "C_62",
+      "mimeType": "image/webp",
+      "uri": "tex/a82ca744dba5d4de.webp"
+    },
+    {
+      "name": "C_63",
+      "mimeType": "image/webp",
+      "uri": "tex/885f8acd2ab2b09c.webp"
+    },
+    {
+      "name": "C_64",
+      "mimeType": "image/webp",
+      "uri": "tex/a0e0e4e1780a4fe2.webp"
+    },
+    {
+      "name": "C_65",
+      "mimeType": "image/webp",
+      "uri": "tex/48d45f400b69a853.webp"
+    },
+    {
+      "name": "C_66",
+      "mimeType": "image/webp",
+      "uri": "tex/77dde4beb32f6ad2.webp"
+    },
+    {
+      "name": "C_67",
+      "mimeType": "image/webp",
+      "uri": "tex/762b6c77978b587a.webp"
+    },
+    {
+      "name": "C_68",
+      "mimeType": "image/webp",
+      "uri": "tex/29b56fd03d4c2e04.webp"
+    },
+    {
+      "name": "C_69",
+      "mimeType": "image/webp",
+      "uri": "tex/972b9eca2e66f86f.webp"
+    },
+    {
+      "name": "C_70",
+      "mimeType": "image/webp",
+      "uri": "tex/1ee2d79fca32b0cf.webp"
+    },
+    {
+      "name": "C_71",
+      "mimeType": "image/webp",
+      "uri": "tex/ed9c3044d899148f.webp"
+    },
+    {
+      "name": "C_72",
+      "mimeType": "image/webp",
+      "uri": "tex/a42685f671d16323.webp"
+    },
+    {
+      "name": "C_73",
+      "mimeType": "image/webp",
+      "uri": "tex/fc063aed571c8c63.webp"
+    },
+    {
+      "name": "C_74",
+      "mimeType": "image/webp",
+      "uri": "tex/d4596ef1c20498f3.webp"
+    },
+    {
+      "name": "C_75",
+      "mimeType": "image/webp",
+      "uri": "tex/0381901e77beb802.webp"
+    },
+    {
+      "name": "C_76",
+      "mimeType": "image/webp",
+      "uri": "tex/5da54ec45db7a0c8.webp"
+    },
+    {
+      "name": "C_77",
+      "mimeType": "image/webp",
+      "uri": "tex/ad3f2498c3d24773.webp"
+    },
+    {
+      "name": "C_78",
+      "mimeType": "image/webp",
+      "uri": "tex/81cdce3d3ddbab57.webp"
+    },
+    {
+      "name": "C_79",
+      "mimeType": "image/webp",
+      "uri": "tex/6225c62f1b81ba2e.webp"
+    },
+    {
+      "name": "C_80",
+      "mimeType": "image/webp",
+      "uri": "tex/3e06a3c43f3e9037.webp"
+    },
+    {
+      "name": "C_81",
+      "mimeType": "image/webp",
+      "uri": "tex/e501ca8aab98b47a.webp"
+    },
+    {
+      "name": "C_82",
+      "mimeType": "image/webp",
+      "uri": "tex/bed271606c2d866e.webp"
+    },
+    {
+      "name": "C_83",
+      "mimeType": "image/webp",
+      "uri": "tex/9b968199fa1168ba.webp"
+    },
+    {
+      "name": "C_84",
+      "mimeType": "image/webp",
+      "uri": "tex/403b5a74a0325462.webp"
+    },
+    {
+      "name": "C_85",
+      "mimeType": "image/webp",
+      "uri": "tex/1ccda5fb7a191591.webp"
+    },
+    {
+      "name": "C_86",
+      "mimeType": "image/webp",
+      "uri": "tex/d9bc96e1f2f19397.webp"
+    },
+    {
+      "name": "C_87",
+      "mimeType": "image/webp",
+      "uri": "tex/e25403118948873e.webp"
+    },
+    {
+      "name": "C_88",
+      "mimeType": "image/webp",
+      "uri": "tex/85c2e00aedc515ef.webp"
+    },
+    {
+      "name": "C_89",
+      "mimeType": "image/webp",
+      "uri": "tex/1691d68c30c9cb04.webp"
+    },
+    {
+      "name": "C_90",
+      "mimeType": "image/webp",
+      "uri": "tex/1fb77912350a6570.webp"
+    },
+    {
+      "name": "C_91",
+      "mimeType": "image/webp",
+      "uri": "tex/6f16b03c0c791a5e.webp"
+    },
+    {
+      "name": "C_92",
+      "mimeType": "image/webp",
+      "uri": "tex/810c97ec9fe67ba8.webp"
+    },
+    {
+      "name": "C_93",
+      "mimeType": "image/webp",
+      "uri": "tex/ec7acafe548de932.webp"
+    },
+    {
+      "name": "C_94",
+      "mimeType": "image/webp",
+      "uri": "tex/acceac588197c298.webp"
+    },
+    {
+      "name": "C_95",
+      "mimeType": "image/webp",
+      "uri": "tex/718c562caea01931.webp"
+    },
+    {
+      "name": "C_96",
+      "mimeType": "image/webp",
+      "uri": "tex/161dd22f69812db6.webp"
+    },
+    {
+      "name": "C_97",
+      "mimeType": "image/webp",
+      "uri": "tex/3b03166a85517e8e.webp"
+    },
+    {
+      "name": "C_98",
+      "mimeType": "image/webp",
+      "uri": "tex/c4acf70c83785cd1.webp"
+    },
+    {
+      "name": "C_99",
+      "mimeType": "image/webp",
+      "uri": "tex/f533a43ea9fb528d.webp"
+    },
+    {
+      "name": "C_100",
+      "mimeType": "image/webp",
+      "uri": "tex/1c5ece2262742674.webp"
+    },
+    {
+      "name": "C_101",
+      "mimeType": "image/webp",
+      "uri": "tex/1d263b78802f97ca.webp"
+    },
+    {
+      "name": "C_102",
+      "mimeType": "image/webp",
+      "uri": "tex/2cbb61a21bde89cd.webp"
+    },
+    {
+      "name": "C_103",
+      "mimeType": "image/webp",
+      "uri": "tex/e07c87d2007d649b.webp"
+    },
+    {
+      "name": "C_104",
+      "mimeType": "image/webp",
+      "uri": "tex/0ae325551e08384b.webp"
+    },
+    {
+      "name": "C_105",
+      "mimeType": "image/webp",
+      "uri": "tex/955df65343dadf08.webp"
+    },
+    {
+      "name": "C_106",
+      "mimeType": "image/webp",
+      "uri": "tex/d82cf8503c522c9b.webp"
+    },
+    {
+      "name": "C_107",
+      "mimeType": "image/webp",
+      "uri": "tex/e82e1173c14e8e6c.webp"
+    },
+    {
+      "name": "C_108",
+      "mimeType": "image/webp",
+      "uri": "tex/adccee45214d0f05.webp"
+    },
+    {
+      "name": "C_109",
+      "mimeType": "image/webp",
+      "uri": "tex/be95771476d2de26.webp"
+    },
+    {
+      "name": "C_110",
+      "mimeType": "image/webp",
+      "uri": "tex/11101a9c84f5918d.webp"
+    },
+    {
+      "name": "C_111",
+      "mimeType": "image/webp",
+      "uri": "tex/5274411dd2f39168.webp"
+    },
+    {
+      "name": "C_112",
+      "mimeType": "image/webp",
+      "uri": "tex/f675bffb59fbe3ef.webp"
+    },
+    {
+      "name": "N_113",
+      "mimeType": "image/webp",
+      "uri": "tex/0415b0f8dcd222ea.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "t05_lod.bin",
+      "byteLength": 178560
+    },
+    {
+      "byteLength": 286972,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "Merged_materials",
+      "extras": {
+        "w11_src": "Merged_materials",
+        "w11_class": "other",
+        "w11_albedo_mean": 1,
+        "w11_albedo_factor": 1,
+        "mid": 0
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "roughnessFactor": 0.6000000238418579,
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "MOTOROLA_0",
+      "extras": {
+        "w11_src": "MOTOROLA_0",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.658,
+        "w11_albedo_factor": 1,
+        "mid": 1
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.20000000298023224,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularTexture": {
+            "index": 103
+          }
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_1",
+      "extras": {
+        "w11_src": "MOTOROLA_1",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.3391,
+        "w11_albedo_factor": 1,
+        "mid": 2
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5,
+          0.5,
+          0.5,
+          1
+        ],
+        "roughnessFactor": 0.5,
+        "baseColorTexture": {
+          "index": 1
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularTexture": {
+            "index": 103
+          }
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_2",
+      "extras": {
+        "w11_src": "MOTOROLA_2",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0929,
+        "w11_albedo_factor": 1,
+        "mid": 3
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 3,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_3",
+      "extras": {
+        "w11_src": "MOTOROLA_3",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1182,
+        "w11_albedo_factor": 1,
+        "mid": 4
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8585789799690247,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 4
+        }
+      },
+      "normalTexture": {
+        "index": 5,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_4",
+      "extras": {
+        "w11_src": "MOTOROLA_4",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1242,
+        "w11_albedo_factor": 1,
+        "mid": 5
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8585789799690247,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 6
+        }
+      },
+      "normalTexture": {
+        "index": 7,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_5",
+      "extras": {
+        "w11_src": "MOTOROLA_5",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1593,
+        "w11_albedo_factor": 1,
+        "mid": 6
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8585789799690247,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 8
+        }
+      },
+      "normalTexture": {
+        "index": 9,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "concrete-barrie-raw.001",
+      "extras": {
+        "w11_src": "MOTOROLA_6",
+        "w11_class": "concrete",
+        "w11_albedo_mean": 0.658,
+        "w11_albedo_factor": 1,
+        "mid": 7
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.30000001192092896,
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularTexture": {
+            "index": 104,
+            "texCoord": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_7",
+      "extras": {
+        "w11_src": "MOTOROLA_7",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.064,
+        "w11_albedo_factor": 1,
+        "mid": 8
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8585789799690247,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 10
+        }
+      },
+      "normalTexture": {
+        "index": 11,
+        "texCoord": 1,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_8",
+      "extras": {
+        "w11_src": "MOTOROLA_8",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0985,
+        "w11_albedo_factor": 1,
+        "mid": 9
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 12
+        }
+      },
+      "normalTexture": {
+        "index": 13
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.6000000238418579
+        }
+      }
+    },
+    {
+      "name": "asph-grv.001",
+      "extras": {
+        "w11_src": "MOTOROLA_9",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.1509,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 10
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.20000000298023224,
+          0.20000000298023224,
+          0.20000000298023224,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 14,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                0.10000000149011612,
+                0.10000000149011612
+              ]
+            }
+          }
+        }
+      },
+      "normalTexture": {
+        "index": 15,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.3,
+          "specularTexture": {
+            "index": 105
+          }
+        }
+      }
+    },
+    {
+      "name": "GRASS.001",
+      "extras": {
+        "w11_layer": 0,
+        "w11_src": "MOTOROLA_10",
+        "w11_class": "grass",
+        "w11_albedo_mean": 0.1194,
+        "w11_albedo_factor": 0.67,
+        "mid": 11
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6700227036904453,
+          0.6700227036904453,
+          0.6700227036904453,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 16,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                0.10000000149011612,
+                0.10000000149011612
+              ]
+            }
+          }
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0,
+          "specularTexture": {
+            "index": 106
+          }
+        }
+      }
+    },
+    {
+      "name": "GRASS.002",
+      "extras": {
+        "w11_layer": 0,
+        "w11_src": "MOTOROLA_11",
+        "w11_class": "grass",
+        "w11_albedo_mean": 0.1194,
+        "w11_albedo_factor": 0.67,
+        "mid": 12
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6700227036904453,
+          0.6700227036904453,
+          0.6700227036904453,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 16,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                0.10000000149011612,
+                0.10000000149011612
+              ]
+            }
+          }
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0,
+          "specularTexture": {
+            "index": 107,
+            "texCoord": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "sand_new.001",
+      "extras": {
+        "w11_layer": 0,
+        "w11_src": "MOTOROLA_12",
+        "w11_class": "gravel",
+        "w11_albedo_mean": 0.2698,
+        "w11_albedo_factor": 1,
+        "mid": 13
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 17,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                0.20000000298023224,
+                0.20000000298023224
+              ]
+            }
+          }
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.3,
+          "specularTexture": {
+            "index": 108
+          }
+        }
+      }
+    },
+    {
+      "name": "asph-grv.002",
+      "extras": {
+        "w11_src": "MOTOROLA_13",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.1965,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 14
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 18,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                0.02500000037252903,
+                0.02500000037252903
+              ]
+            }
+          }
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.3,
+          "specularTexture": {
+            "index": 109
+          }
+        }
+      }
+    },
+    {
+      "name": "asph-grv.003",
+      "extras": {
+        "w11_src": "MOTOROLA_14",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.6039,
+        "w11_albedo_factor": 0.37,
+        "w11_runtime_fix": 0.55,
+        "mid": 15
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.37033844320915676,
+          0.37033844320915676,
+          0.37033844320915676,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 19,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                0.10000000149011612,
+                0.10000000149011612
+              ]
+            }
+          }
+        }
+      },
+      "extensions": {
+        "KHR_materials_clearcoat": {
+          "clearcoatFactor": 1,
+          "clearcoatRoughnessFactor": 1
+        },
+        "KHR_materials_specular": {
+          "specularFactor": 0.3,
+          "specularTexture": {
+            "index": 110
+          }
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_15",
+      "extras": {
+        "w11_src": "MOTOROLA_15",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0896,
+        "w11_albedo_factor": 1,
+        "mid": 16
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8267949819564819,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 20
+        }
+      },
+      "normalTexture": {
+        "index": 21,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.6000000238418579
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_16",
+      "extras": {
+        "w11_src": "MOTOROLA_16",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0603,
+        "w11_albedo_factor": 1,
+        "mid": 17
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8585789799690247,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 22
+        }
+      },
+      "normalTexture": {
+        "index": 23,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "kerb_new.001",
+      "extras": {
+        "w11_layer": 5,
+        "w11_src": "MOTOROLA_17",
+        "w11_class": "kerb",
+        "w11_albedo_mean": 0.122,
+        "w11_albedo_factor": 1,
+        "mid": 18
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.86,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 24
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_18",
+      "extras": {
+        "w11_src": "MOTOROLA_18",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1532,
+        "w11_albedo_factor": 1,
+        "mid": 19
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 25
+        }
+      },
+      "normalTexture": {
+        "index": 26,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "houses101",
+      "extras": {
+        "w11_src": "MOTOROLA_19",
+        "w11_class": "building",
+        "w11_albedo_mean": 0.5042,
+        "w11_albedo_factor": 1,
+        "mid": 20
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.4472140073776245,
+        "baseColorTexture": {
+          "index": 27
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularTexture": {
+            "index": 111,
+            "texCoord": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_20",
+      "extras": {
+        "w11_src": "MOTOROLA_20",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1047,
+        "w11_albedo_factor": 1,
+        "mid": 21
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.20000000298023224,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 28
+        }
+      },
+      "normalTexture": {
+        "index": 29,
+        "texCoord": 1,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "GRASS.003",
+      "extras": {
+        "w11_layer": 0,
+        "w11_src": "MOTOROLA_21",
+        "w11_class": "grass",
+        "w11_albedo_mean": 0.0616,
+        "w11_albedo_factor": 1,
+        "mid": 22
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 30,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                0.5,
+                0.5
+              ]
+            }
+          }
+        }
+      },
+      "normalTexture": {
+        "index": 15,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0,
+          "specularTexture": {
+            "index": 112
+          }
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_22",
+      "extras": {
+        "w11_src": "MOTOROLA_22",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2736,
+        "w11_albedo_factor": 1,
+        "mid": 23
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 31
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.6000000238418579
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_23",
+      "extras": {
+        "w11_src": "MOTOROLA_23",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.3269,
+        "w11_albedo_factor": 1,
+        "mid": 24
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8267949819564819,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 32
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "kerb_new.002",
+      "extras": {
+        "w11_layer": 5,
+        "w11_src": "MOTOROLA_24",
+        "w11_class": "kerb",
+        "w11_albedo_mean": 0.2419,
+        "w11_albedo_factor": 1,
+        "mid": 25
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.86,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 33
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_25",
+      "extras": {
+        "w11_src": "MOTOROLA_25",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1007,
+        "w11_albedo_factor": 1,
+        "mid": 26
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.7550510168075562,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 34
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.6000000238418579
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_26",
+      "extras": {
+        "w11_src": "MOTOROLA_26",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2094,
+        "w11_albedo_factor": 1,
+        "mid": 27
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.4000000059604645,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 35
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.10000000149011612
+        }
+      }
+    },
+    {
+      "name": "GRASS.004",
+      "extras": {
+        "w11_layer": 0,
+        "w11_src": "MOTOROLA_27",
+        "w11_class": "grass",
+        "w11_albedo_mean": 0.1194,
+        "w11_albedo_factor": 0.67,
+        "mid": 28
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6700227036904453,
+          0.6700227036904453,
+          0.6700227036904453,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 16
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_28",
+      "extras": {
+        "w11_src": "MOTOROLA_28",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0982,
+        "w11_albedo_factor": 1,
+        "mid": 29
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 36
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "asph-grv.004",
+      "extras": {
+        "w11_src": "MOTOROLA_29",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.1707,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 30
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 37
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_30",
+      "extras": {
+        "w11_src": "MOTOROLA_30",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1242,
+        "w11_albedo_factor": 1,
+        "mid": 31
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 6
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "asph-grv.005",
+      "extras": {
+        "w11_src": "MOTOROLA_31",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.1692,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 32
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 38
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_32",
+      "extras": {
+        "w11_src": "MOTOROLA_32",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1189,
+        "w11_albedo_factor": 1,
+        "mid": 33
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 39
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_33",
+      "extras": {
+        "w11_src": "MOTOROLA_33",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0514,
+        "w11_albedo_factor": 1,
+        "mid": 34
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.20000000298023224,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 40
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_34",
+      "extras": {
+        "w11_src": "MOTOROLA_34",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.106,
+        "w11_albedo_factor": 1,
+        "mid": 35
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.6837720274925232,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 41
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_35",
+      "extras": {
+        "w11_src": "MOTOROLA_35",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1958,
+        "w11_albedo_factor": 1,
+        "mid": 36
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 42
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_36",
+      "extras": {
+        "w11_src": "MOTOROLA_36",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0195,
+        "w11_albedo_factor": 1,
+        "mid": 37
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 43
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_37",
+      "extras": {
+        "w11_src": "MOTOROLA_37",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1345,
+        "w11_albedo_factor": 1,
+        "mid": 38
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 44
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "line.001",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_38",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.144,
+        "w11_albedo_factor": 1,
+        "mid": 39
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.3822959363460541,
+          0.3822959363460541,
+          0.3822959363460541,
+          1
+        ],
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 45
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.2
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_39",
+      "extras": {
+        "w11_src": "MOTOROLA_39",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1311,
+        "w11_albedo_factor": 1,
+        "mid": 40
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 46
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_40",
+      "extras": {
+        "w11_src": "MOTOROLA_40",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0176,
+        "w11_albedo_factor": 1,
+        "mid": 41
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 47
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_41",
+      "extras": {
+        "w11_src": "MOTOROLA_41",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1613,
+        "w11_albedo_factor": 1,
+        "mid": 42
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 48
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_42",
+      "extras": {
+        "w11_src": "MOTOROLA_42",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2755,
+        "w11_albedo_factor": 1,
+        "mid": 43
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 49
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_43",
+      "extras": {
+        "w11_src": "MOTOROLA_43",
+        "w11_class": "other",
+        "w11_albedo_mean": 0,
+        "w11_albedo_factor": 1,
+        "mid": 44
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 50
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_44",
+      "extras": {
+        "w11_src": "MOTOROLA_44",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1177,
+        "w11_albedo_factor": 1,
+        "mid": 45
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 51
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "trees1_MOTOROLA_45.001",
+      "extras": {
+        "w11_src": "MOTOROLA_45",
+        "w11_class": "trees",
+        "w11_albedo_mean": 0.026,
+        "w11_albedo_factor": 1,
+        "mid": 46
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 52
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "bushesB_MOTOROLA_46.001",
+      "extras": {
+        "w11_src": "MOTOROLA_46",
+        "w11_class": "bushes",
+        "w11_albedo_mean": 0.1408,
+        "w11_albedo_factor": 0.5,
+        "mid": 47
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5,
+          0.5,
+          0.5,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 53
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "bushesB_MOTOROLA_47.002",
+      "extras": {
+        "w11_src": "MOTOROLA_47",
+        "w11_class": "bushes",
+        "w11_albedo_mean": 0.0678,
+        "w11_albedo_factor": 0.723,
+        "mid": 48
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.7229390779510124,
+          0.7229390779510124,
+          0.7229390779510124,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 54
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_48",
+      "extras": {
+        "w11_src": "MOTOROLA_48",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1565,
+        "w11_albedo_factor": 1,
+        "mid": 49
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 55
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_49",
+      "extras": {
+        "w11_src": "MOTOROLA_49",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1475,
+        "w11_albedo_factor": 1,
+        "mid": 50
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 56
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_50",
+      "extras": {
+        "w11_src": "MOTOROLA_50",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1382,
+        "w11_albedo_factor": 1,
+        "mid": 51
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 57
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_51",
+      "extras": {
+        "w11_src": "MOTOROLA_51",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1289,
+        "w11_albedo_factor": 1,
+        "mid": 52
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 58
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "trees1_MOTOROLA_52.002",
+      "extras": {
+        "w11_src": "MOTOROLA_52",
+        "w11_class": "trees",
+        "w11_albedo_mean": 0.0401,
+        "w11_albedo_factor": 0.623,
+        "mid": 53
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6228011263680039,
+          0.6228011263680039,
+          0.6228011263680039,
+          1
+        ],
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 59
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "asph.001",
+      "extras": {
+        "w11_layer": 2,
+        "w11_src": "MOTOROLA_53",
+        "w11_class": "road",
+        "w11_albedo_mean": 0.1646,
+        "w11_albedo_factor": 0.547,
+        "mid": 54
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.3828431797921663,
+          0.3828431797921663,
+          0.3828431797921663,
+          1
+        ],
+        "roughnessFactor": 0.88,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 60,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                1,
+                0.5
+              ]
+            }
+          }
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_54",
+      "extras": {
+        "w11_src": "MOTOROLA_54",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1302,
+        "w11_albedo_factor": 1,
+        "mid": 55
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 61
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_55",
+      "extras": {
+        "w11_src": "MOTOROLA_55",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1502,
+        "w11_albedo_factor": 1,
+        "mid": 56
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 62
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_56",
+      "extras": {
+        "w11_src": "MOTOROLA_56",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.9067,
+        "w11_albedo_factor": 1,
+        "mid": 57
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.4000000059604645,
+        "baseColorTexture": {
+          "index": 63
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_57",
+      "extras": {
+        "w11_src": "MOTOROLA_57",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0445,
+        "w11_albedo_factor": 1,
+        "mid": 58
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 64
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_58",
+      "extras": {
+        "w11_src": "MOTOROLA_58",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.3867,
+        "w11_albedo_factor": 1,
+        "mid": 59
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 65
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_59",
+      "extras": {
+        "w11_src": "MOTOROLA_59",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1649,
+        "w11_albedo_factor": 1,
+        "mid": 60
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 66
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_60",
+      "extras": {
+        "w11_src": "MOTOROLA_60",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1649,
+        "w11_albedo_factor": 1,
+        "mid": 61
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 66
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_61",
+      "extras": {
+        "w11_src": "MOTOROLA_61",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1862,
+        "w11_albedo_factor": 1,
+        "mid": 62
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 67
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_62",
+      "extras": {
+        "w11_src": "MOTOROLA_62",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0844,
+        "w11_albedo_factor": 1,
+        "mid": 63
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 68
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "line.002",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_63",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.1892,
+        "w11_albedo_factor": 1,
+        "mid": 64
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 69
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "line.003",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_64",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.2136,
+        "w11_albedo_factor": 1,
+        "mid": 65
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 70
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.2
+        }
+      }
+    },
+    {
+      "name": "bushesB_MOTOROLA_66.003",
+      "extras": {
+        "w11_src": "MOTOROLA_66",
+        "w11_class": "bushes",
+        "w11_albedo_mean": 0,
+        "w11_albedo_factor": 1,
+        "mid": 66
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 71
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "bushesB_MOTOROLA_67.004",
+      "extras": {
+        "w11_src": "MOTOROLA_67",
+        "w11_class": "bushes",
+        "w11_albedo_mean": 0,
+        "w11_albedo_factor": 1,
+        "mid": 67
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 72
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_68",
+      "extras": {
+        "w11_src": "MOTOROLA_68",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1338,
+        "w11_albedo_factor": 1,
+        "mid": 68
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 73
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_69",
+      "extras": {
+        "w11_src": "MOTOROLA_69",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2116,
+        "w11_albedo_factor": 1,
+        "mid": 69
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.5309579968452454,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 74
+        }
+      }
+    },
+    {
+      "name": "asph-grv.006",
+      "extras": {
+        "w11_src": "MOTOROLA_70",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.0201,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 70
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 75
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_71",
+      "extras": {
+        "w11_src": "MOTOROLA_71",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2693,
+        "w11_albedo_factor": 1,
+        "mid": 71
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 76
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_72",
+      "extras": {
+        "w11_src": "MOTOROLA_72",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0793,
+        "w11_albedo_factor": 1,
+        "mid": 72
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 77
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_73",
+      "extras": {
+        "w11_src": "MOTOROLA_73",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2298,
+        "w11_albedo_factor": 1,
+        "mid": 73
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 78
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_74",
+      "extras": {
+        "w11_src": "MOTOROLA_74",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1965,
+        "w11_albedo_factor": 1,
+        "mid": 74
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 18
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "asph-grv.007",
+      "extras": {
+        "w11_src": "MOTOROLA_75",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.1062,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 75
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 79
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "groove.001",
+      "extras": {
+        "w11_layer": 6,
+        "w11_src": "MOTOROLA_76",
+        "w11_class": "groove",
+        "w11_albedo_mean": 0.0146,
+        "w11_albedo_factor": 1,
+        "mid": 76
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 80
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "line.004",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_77",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.9579,
+        "w11_albedo_factor": 0.543,
+        "mid": 77
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5428437287461538,
+          0.5428437287461538,
+          0.5428437287461538,
+          1
+        ],
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 81
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "construction_dirt.001",
+      "extras": {
+        "w11_layer": 0,
+        "w11_src": "MOTOROLA_78",
+        "w11_class": "dirt",
+        "w11_albedo_mean": 0.3412,
+        "w11_albedo_factor": 1,
+        "mid": 78
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.92,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 82
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "top-ext.001",
+      "extras": {
+        "w11_layer": 0,
+        "w11_src": "MOTOROLA_79",
+        "w11_class": "terrain",
+        "w11_albedo_mean": 0.2052,
+        "w11_albedo_factor": 1,
+        "mid": 79
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 83
+        }
+      },
+      "extensions": {
+        "KHR_materials_clearcoat": {
+          "clearcoatFactor": 1,
+          "clearcoatRoughnessFactor": 1,
+          "clearcoatNormalTexture": {
+            "index": 102
+          }
+        },
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "line.005",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_80",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.4309,
+        "w11_albedo_factor": 1,
+        "mid": 80
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 84
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.2
+        }
+      }
+    },
+    {
+      "name": "asph-grv.008",
+      "extras": {
+        "w11_src": "MOTOROLA_81",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.1656,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 81
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 85
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "asph-grv.009",
+      "extras": {
+        "w11_src": "MOTOROLA_82",
+        "w11_class": "runoff",
+        "w11_albedo_mean": 0.083,
+        "w11_albedo_factor": 1,
+        "w11_runtime_fix": 0.55,
+        "mid": 82
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 86
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "line.006",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_83",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.37,
+        "w11_albedo_factor": 1,
+        "mid": 83
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 87
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.2
+        }
+      }
+    },
+    {
+      "name": "line.007",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_84",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.0666,
+        "w11_albedo_factor": 1,
+        "mid": 84
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 88
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.2
+        }
+      }
+    },
+    {
+      "name": "line.008",
+      "extras": {
+        "w11_layer": 7,
+        "w11_src": "MOTOROLA_85",
+        "w11_class": "line",
+        "w11_albedo_mean": 0.242,
+        "w11_albedo_factor": 1,
+        "mid": 85
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.84,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 89
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_86",
+      "extras": {
+        "w11_src": "MOTOROLA_86",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1096,
+        "w11_albedo_factor": 1,
+        "mid": 86
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 90
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_87",
+      "extras": {
+        "w11_src": "MOTOROLA_87",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2085,
+        "w11_albedo_factor": 1,
+        "mid": 87
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 91
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_88",
+      "extras": {
+        "w11_src": "MOTOROLA_88",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2087,
+        "w11_albedo_factor": 1,
+        "mid": 88
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 92
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_89",
+      "extras": {
+        "w11_src": "MOTOROLA_89",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1665,
+        "w11_albedo_factor": 1,
+        "mid": 89
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 93
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_90",
+      "extras": {
+        "w11_src": "MOTOROLA_90",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.2899,
+        "w11_albedo_factor": 1,
+        "mid": 90
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 94
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_91",
+      "extras": {
+        "w11_src": "MOTOROLA_91",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0932,
+        "w11_albedo_factor": 1,
+        "mid": 91
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 95
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_92",
+      "extras": {
+        "w11_src": "MOTOROLA_92",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0669,
+        "w11_albedo_factor": 1,
+        "mid": 92
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.20000000298023224,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 96
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_93",
+      "extras": {
+        "w11_src": "MOTOROLA_93",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0135,
+        "w11_albedo_factor": 1,
+        "mid": 93
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.4000000059604645,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 97
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_94",
+      "extras": {
+        "w11_src": "MOTOROLA_94",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.3515,
+        "w11_albedo_factor": 1,
+        "mid": 94
+      },
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.4472140073776245,
+        "baseColorTexture": {
+          "index": 98
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_95",
+      "extras": {
+        "w11_src": "MOTOROLA_95",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.0928,
+        "w11_albedo_factor": 1,
+        "mid": 95
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8585789799690247,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 99
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "name": "asph.002",
+      "extras": {
+        "w11_layer": 2,
+        "w11_src": "MOTOROLA_96",
+        "w11_class": "road",
+        "w11_albedo_mean": 0.1646,
+        "w11_albedo_factor": 0.547,
+        "mid": 96
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.3828431797921663,
+          0.3828431797921663,
+          0.3828431797921663,
+          1
+        ],
+        "roughnessFactor": 0.88,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 60,
+          "extensions": {
+            "KHR_texture_transform": {
+              "scale": [
+                1,
+                0.5
+              ]
+            }
+          }
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0.20000000298023224
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA_97",
+      "extras": {
+        "w11_src": "MOTOROLA_97",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.1912,
+        "w11_albedo_factor": 1,
+        "mid": 97
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.5,
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 100
+        }
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularFactor": 0
+        }
+      }
+    },
+    {
+      "name": "MOTOROLA",
+      "extras": {
+        "w11_src": "MOTOROLA",
+        "w11_class": "other",
+        "w11_albedo_mean": 0.9067,
+        "w11_albedo_factor": 1,
+        "mid": 98
+      },
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 63
+        }
+      },
+      "normalTexture": {
+        "index": 101,
+        "scale": 0
+      },
+      "extensions": {
+        "KHR_materials_specular": {
+          "specularTexture": {
+            "index": 113
+          }
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Object_5_t-2_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "TEXCOORD_0": 2,
+            "NORMAL": 3,
+            "COLOR_0": 4
+          },
+          "mode": 4,
+          "material": 5,
+          "indices": 0
+        }
+      ]
+    },
+    {
+      "name": "Object_5_t-2_-1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6,
+            "TEXCOORD_0": 7,
+            "NORMAL": 8,
+            "COLOR_0": 9
+          },
+          "mode": 4,
+          "material": 5,
+          "indices": 5
+        }
+      ]
+    },
+    {
+      "name": "Object_27_t-2_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 11,
+            "TEXCOORD_0": 12,
+            "NORMAL": 13,
+            "COLOR_0": 14
+          },
+          "mode": 4,
+          "material": 22,
+          "indices": 10
+        }
+      ]
+    },
+    {
+      "name": "Object_50_t-2_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 16,
+            "TEXCOORD_0": 17,
+            "NORMAL": 18,
+            "COLOR_0": 19
+          },
+          "mode": 4,
+          "material": 43,
+          "indices": 15
+        }
+      ]
+    },
+    {
+      "name": "Object_52_t-2_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 21,
+            "TEXCOORD_0": 22,
+            "NORMAL": 23,
+            "COLOR_0": 24
+          },
+          "mode": 4,
+          "material": 44,
+          "indices": 20
+        }
+      ]
+    },
+    {
+      "name": "Object_54_t-2_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 26,
+            "TEXCOORD_0": 27,
+            "NORMAL": 28,
+            "COLOR_0": 29
+          },
+          "mode": 4,
+          "material": 46,
+          "indices": 25
+        }
+      ]
+    },
+    {
+      "name": "Object_97_t-1_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 31,
+            "TEXCOORD_0": 32,
+            "NORMAL": 33,
+            "COLOR_0": 34
+          },
+          "mode": 4,
+          "material": 88,
+          "indices": 30
+        }
+      ]
+    },
+    {
+      "name": "Object_97_t-2_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 36,
+            "TEXCOORD_0": 37,
+            "NORMAL": 38,
+            "COLOR_0": 39
+          },
+          "mode": 4,
+          "material": 88,
+          "indices": 35
+        }
+      ]
+    },
+    {
+      "name": "Object_97_t-2_-1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 41,
+            "TEXCOORD_0": 42,
+            "NORMAL": 43,
+            "COLOR_0": 44
+          },
+          "mode": 4,
+          "material": 88,
+          "indices": 40
+        }
+      ]
+    },
+    {
+      "name": "Object_113_t-2_0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 46,
+            "TEXCOORD_0": 47,
+            "NORMAL": 48,
+            "COLOR_0": 49
+          },
+          "mode": 4,
+          "material": 97,
+          "indices": 45
+        }
+      ]
+    },
+    {
+      "name": "Object_113_t-2_-1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 51,
+            "TEXCOORD_0": 52,
+            "NORMAL": 53,
+            "COLOR_0": 54
+          },
+          "mode": 4,
+          "material": 97,
+          "indices": 50
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "MOTOROLA_4__-2_0",
+      "mesh": 0
+    },
+    {
+      "name": "MOTOROLA_4__-2_-1",
+      "mesh": 1
+    },
+    {
+      "name": "MOTOROLA_21__-2_0",
+      "extras": {
+        "w11_layer": 0
+      },
+      "mesh": 2
+    },
+    {
+      "name": "MOTOROLA_42__-2_0",
+      "mesh": 3
+    },
+    {
+      "name": "MOTOROLA_43__-2_0",
+      "mesh": 4
+    },
+    {
+      "name": "MOTOROLA_45__-2_0",
+      "mesh": 5
+    },
+    {
+      "name": "MOTOROLA_88__-1_0",
+      "mesh": 6
+    },
+    {
+      "name": "MOTOROLA_88__-2_0",
+      "mesh": 7
+    },
+    {
+      "name": "MOTOROLA_88__-2_-1",
+      "mesh": 8
+    },
+    {
+      "name": "MOTOROLA_97__-2_0",
+      "mesh": 9
+    },
+    {
+      "name": "MOTOROLA_97__-2_-1",
+      "mesh": 10
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_materials_clearcoat",
+    "KHR_materials_specular",
+    "KHR_texture_transform"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_texture_transform"
+  ]
+}
