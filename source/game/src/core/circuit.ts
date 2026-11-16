@@ -1,7 +1,7 @@
-/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|barcelona|sepang|silverstone, mémorisé dans le navigateur) : changer de circuit = recharger la page.
+/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|barcelona|sepang|silverstone|yas, mémorisé dans le navigateur) : changer de circuit = recharger la page.
  *  Hors navigateur (tests Node) : Spa. */
 export interface Circuit {
-  id: 'spa' | 'monza' | 'barcelona' | 'sepang' | 'silverstone'
+  id: 'spa' | 'monza' | 'barcelona' | 'sepang' | 'silverstone' | 'yas'
   name: string
   /** surface, barrières, voie des stands, herbe, public */
   trackDir: string
@@ -58,27 +58,37 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
     // Silverstone GP 2024 (E : secteurs et DRS estimés sur notre ligne centrale de 5 905,6 m, s = 0 au milieu de la voie des stands ; 2 zones : Wellington Straight, ligne droite des stands)
     drs: length => { const k = length / 5905.6; return [[5700 * k, length], [0, 200 * k], [1150 * k, 1700 * k]] },
   },
+  yas: {
+    id: 'yas', name: 'Yas Marina', trackDir: './track_yas/', sceneDir: './assets/yas/', marshals: null, spaPits: false,
+    optionalAssets: { barriers: false, pitlane: false, grassmask: true, crowd: false }, hasLods: false,
+    pit: { limitFromS: 0, limitToS: 0 }, gates: [1760, 3520],
+    // Yas Marina 2021 (E : secteurs au tiers du tour, DRS estimés sur notre ligne centrale de 5 281 m, s = 0 sur la voie des stands ; 2 zones : ligne droite arrière, longue ligne droite côté marina)
+    drs: () => [[1410, 2340], [2800, 3380]],
+  },
 }
 const KEY = 'w11.circuit'
 /** Sepang n'est proposé par le bouton de bascule que si la CI l'a assemblé (VITE_SEPANG=1) ; ?circuit=sepang reste toujours accepté. */
 const SEPANG = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SEPANG === '1'
 /** Silverstone n'est proposé par le bouton de bascule que si la CI a assemblé son paquet de données (VITE_SILVERSTONE=1) ; ?circuit=silverstone reste toujours accepté. */
 const SILVERSTONE = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SILVERSTONE === '1'
+/** Yas Marina n'est proposé par le bouton de bascule que si la CI a converti son GLB (VITE_YAS=1) ; ?circuit=yas reste toujours accepté. */
+const YAS = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_YAS === '1'
 function pick(): Circuit['id'] {
   try {
     const q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('circuit') : null
-    if (q === 'spa' || q === 'monza' || q === 'barcelona' || q === 'sepang' || q === 'silverstone') { localStorage.setItem(KEY, q); return q }
+    if (q === 'spa' || q === 'monza' || q === 'barcelona' || q === 'sepang' || q === 'silverstone' || q === 'yas') { localStorage.setItem(KEY, q); return q }
     const s = typeof localStorage !== 'undefined' ? localStorage.getItem(KEY) : null
-    if (s === 'spa' || s === 'monza' || s === 'barcelona' || (s === 'sepang' && SEPANG) || (s === 'silverstone' && SILVERSTONE)) return s
+    if (s === 'spa' || s === 'monza' || s === 'barcelona' || (s === 'sepang' && SEPANG) || (s === 'silverstone' && SILVERSTONE) || (s === 'yas' && YAS)) return s
   } catch { /* stockage indisponible : Spa */ }
   return 'spa'
 }
 export const CIRCUIT: Circuit = CIRCUITS[pick()]
-/** bascule Spa → Monza → Barcelone → Sepang → Silverstone (ceux qui sont assemblés) puis recharge la page (surface et tuiles sont chargées au démarrage) */
+/** bascule Spa → Monza → Barcelone → Sepang → Silverstone → Yas Marina (ceux qui sont assemblés) puis recharge la page (surface et tuiles sont chargées au démarrage) */
 export function switchCircuit() {
   const ids: Circuit['id'][] = ['spa', 'monza', 'barcelona']
   if (SEPANG) ids.push('sepang')
   if (SILVERSTONE) ids.push('silverstone')
+  if (YAS) ids.push('yas')
   const next = ids[(ids.indexOf(CIRCUIT.id) + 1) % ids.length]
   try { localStorage.setItem(KEY, next) } catch { /* ignoré */ }
   const u = new URL(location.href); u.searchParams.set('circuit', next); location.href = u.toString()
