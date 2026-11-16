@@ -12,6 +12,7 @@ import numpy as np
 import cv2
 from scipy.spatial import cKDTree
 from sepang_tables import SEATS, BARRIER_KIND, WALL_PRIORITY
+from build_pit import clip_segments, in_zone, GATE_R
 
 
 def build_crowd(tm, C, origin, trackdir, log=print):
@@ -79,10 +80,10 @@ def _footprints(tm, C, maxd=55.0):
     return np.array(list(seg.values()), dtype=np.float64)
 
 
-def build_barriers(tm, phys, mask_info, origin, trackdir, log=print):
+def build_barriers(tm, phys, mask_info, origin, trackdir, S_real=None, pit=None, log=print):
     t0 = time.time()
     C = phys['Cglb']
-    S = _footprints(tm, C)
+    S = _footprints(tm, C) if S_real is None else S_real.copy()
     log('barrières : %d segments bruts' % len(S))
     # 1. jamais de mur sur la chaussée : on retire tout segment qui touche l'emprise de la piste (dilatée de 0,5 m)
     mk = cv2.dilate(mask_info['mask'], np.ones((3, 3), np.uint8)); ms = mask_info['S']
@@ -95,6 +96,9 @@ def build_barriers(tm, phys, mask_info, origin, trackdir, log=print):
         bad |= hit(S[:, 0] + (S[:, 2] - S[:, 0]) * t, S[:, 1] + (S[:, 3] - S[:, 1]) * t)
     removed = int(bad.sum())
     S = S[~bad]
+    if pit is not None:                                  # porte d'entrée des stands : on coupe les barrières autour du chemin
+        n0 = len(S); S = clip_segments(S, pit['gate'], GATE_R)
+        log('barrières : porte d\'entrée des stands, %d -> %d segments' % (n0, len(S)))
     # 2. garde-fou : le contour « premier mur » (wallL / wallR) sert de barrière continue, comme avant les barrières réelles
     N = phys['N']; T = phys['T']; R = np.stack([-T[:, 1], T[:, 0]], 1)
     virt = []
@@ -108,11 +112,14 @@ def build_barriers(tm, phys, mask_info, origin, trackdir, log=print):
         okp = dn >= wall - 1.5
         for i in range(0, N, 2):
             j = (i + 2) % N
+            if pit is not None and sg > 0 and in_zone(i):
+                continue                                 # zone des stands : les vrais murs (muret, façade des garages) suffisent
             if okp[i] and okp[j] and not hit(np.array([P[i, 0], P[j, 0], (P[i, 0] + P[j, 0]) / 2]), np.array([P[i, 1], P[j, 1], (P[i, 1] + P[j, 1]) / 2])).any():
                 virt.append((P[i, 0], P[i, 1], P[j, 0], P[j, 1], 3))
     S = np.concatenate([S, np.array(virt, dtype=np.float64)])
     n = len(S)
     log('barrières : %d retirés (sur la piste), %d virtuels, %d au total' % (removed, len(virt), n))
+    S_glb = S.copy()
     # 3. repère jeu
     S[:, 0] -= origin[0]; S[:, 2] -= origin[0]; S[:, 1] -= origin[2]; S[:, 3] -= origin[2]
     seg = S[:, :4].astype(np.float32); kind = S[:, 4].astype(np.uint8)
@@ -149,4 +156,4 @@ def build_barriers(tm, phys, mask_info, origin, trackdir, log=print):
     size = os.path.getsize(os.path.join(trackdir, 'barriers.bin'))
     cnt = np.diff(off)
     log('barrières : %d cellules, %.1f segments/cellule (max %d), %.0f Ko (%.1fs)' % (len(ks), cnt.mean(), cnt.max(), size / 1024, time.time() - t0))
-    return n
+    return n, S_glb
