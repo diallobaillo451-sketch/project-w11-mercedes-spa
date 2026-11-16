@@ -74,7 +74,7 @@ export class RaceControl {
   }
   redFlag(why: string) {
     if (this.red) return
-    this.red = true; this.redT = this.sim.t; this.sc.active = false; this.sc.mode = 'park'; this.vsc = false
+    this.red = true; this.redT = this.sim.t; this.sc.active = false; this.sc.mode = 'park'; this.vsc = false; this.restartHold = false
     const order = this.sim.ordered().filter(r => !r.out)
     this.redOrder = order
     this.frozenOrder = order.slice()
@@ -135,7 +135,7 @@ export class RaceControl {
   /** extinction des feux : chrono de course à zéro, temps de réaction et qualité de départ de chaque pilote */
   go() {
     const S = this.sim
-    this.phase = 'racing'; this.lightsN = 0; this.goT = S.t
+    this.phase = 'racing'; this.lightsN = 0; this.goT = S.t; this.restartHold = false
     S.leaderT.fill(NaN)
     for (const r of S.cars) {
       r.dist = -S.road(r.s, 0); r.laps = 0; r.lapT0 = NaN; r.secT0 = NaN; r.lastS = r.s; (r as Racer & { _pd?: number })._pd = r.dist
@@ -172,13 +172,13 @@ export class RaceControl {
       // (plafond de vitesse sous SC : voir plus bas, selon l'écart à la voiture devant ; les voitures qui vont aux stands le respectent aussi)
       const ah = this.carAheadAny(r, true)
       const gSC = this.sc.mode !== 'park' ? S.road(r.s, this.sc.s) : 1e9
-      // on se serre derrière la voiture devant : plafond relevé (0,85 du rythme) tant qu'elle est à plus de 60 m, 0,66 près d'elle ou de la SC
+      // on se serre derrière la voiture devant : plafond relevé (0,8 du rythme) tant qu'elle est à plus de 60 m, 0,66 près d'elle ou de la SC
       const gAh = ah ? S.road(r.s, ah.s) : 1e9
-      vt = Math.min(vt, r.prof.v[i] * ((gSC > 0 && gSC < 600 && gSC < gAh) || gAh < 60 ? 0.66 : 0.85))
+      vt = Math.min(vt, r.prof.v[i] * ((gSC > 0 && gSC < 600 && gSC < gAh) || gAh < 60 ? 0.66 : 0.8))
       if (gSC > 0 && gSC < 600 && (!ah || S.road(r.s, ah.s) > gSC)) vt = Math.min(vt, Math.max(0, this.sc.v + (gSC - 45) * 0.5))
       else if (ah) { const g = S.road(r.s, ah.s); vt = Math.min(vt, Math.max(0, ah.v + (g - 28) * 0.5)) }
     }
-    if (this.sc.active && this.isUnlapping(r)) vt = Math.min(vt, r.prof.v[i] * 0.9)
+    if (this.sc.active && this.isUnlapping(r)) vt = Math.min(vt, r.prof.v[i] * 0.85)
     // reprise : tant que le leader n'a pas franchi la ligne de contrôle, on reste groupé derrière lui (pas de départ lancé avant la ligne)
     if (this.restartHold && !this.sc.active) { const toLine = S.road(r.s, 0); if (toLine > 0 && toLine < 2500) vt = Math.min(vt, r.prof.v[i] * 0.8) }
     // reprise après SC : pas de dépassement avant la ligne
