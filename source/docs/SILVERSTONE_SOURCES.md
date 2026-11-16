@@ -14,7 +14,9 @@ Modifications : recentrage sur la ligne de départ (origine = milieu de la voie 
 
 ## Estimé ou absent
 - Estimés : position de la ligne de départ, fins de secteurs (1 750 m et 4 500 m), zones DRS (Wellington Straight, ligne droite des stands).
-- Absents : voie des stands (pitlane.json), barrières précises (barriers.bin ; les murs viennent de la grille), herbe 3D (grassmask.bin), public (crowd), commissaires, occlusion ambiante pré-calculée, variantes LOD.
+- Voie des stands : chemin tracé sur l'asphalte des stands du modèle (`shared/silverstone/pitlane.json`) ; les couloirs d'entrée et de sortie sont ouverts dans la grille à l'assemblage (`open_pit_corridor.mjs`) ; limitation à 80 km/h de s = 5 678 à s = 320.
+- Public : environ 7 600 spectateurs assis sur les gradins des tribunes du modèle (`shared/silverstone/crowd_rows.json`, développé en `crowd.bin` à l'assemblage par `expand_crowd_rows.mjs`).
+- Absents : barrières précises (barriers.bin ; les murs viennent de la grille), herbe 3D (grassmask.bin), commissaires, garages 3D de Spa, occlusion ambiante pré-calculée, variantes LOD.
 - Arbres : ils gardent l'atlas de textures de Silverstone (la mise en page UV diffère de Monza) avec le rendu d'arbres du jeu.
 
 ## Publication

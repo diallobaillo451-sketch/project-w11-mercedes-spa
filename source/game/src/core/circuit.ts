@@ -53,8 +53,8 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
   },
   silverstone: {
     id: 'silverstone', name: 'Silverstone', trackDir: './track_silverstone/', sceneDir: './assets/silverstone/', marshals: null, spaPits: false,
-    optionalAssets: { barriers: false, pitlane: false, grassmask: false, crowd: false }, hasLods: false,
-    pit: { limitFromS: 0, limitToS: 0 }, gates: [1750, 4500],
+    optionalAssets: { barriers: false, pitlane: true, grassmask: false, crowd: true }, hasLods: false,
+    pit: { limitFromS: 5678, limitToS: 320 }, gates: [1750, 4500],
     // Silverstone GP 2024 (E : secteurs et DRS estimés sur notre ligne centrale de 5 905,6 m, s = 0 au milieu de la voie des stands ; 2 zones : Wellington Straight, ligne droite des stands)
     drs: length => { const k = length / 5905.6; return [[5700 * k, length], [0, 200 * k], [1150 * k, 1700 * k]] },
   },
