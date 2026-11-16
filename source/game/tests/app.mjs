@@ -4,7 +4,7 @@ import { chromium } from '@playwright/test'
 import fs from 'node:fs'
 const base = process.argv[2] || 'http://127.0.0.1:5199/'
 const circuit = process.env.CIRCUIT || 'spa'
-const expectedTiles = circuit === 'sepang' ? 1 : 13
+const expectedTiles = circuit === 'sepang' ? 1 : circuit === 'marina' ? 14 : 13
 const mobileTilesMin = circuit === 'sepang' ? 1 : 3
 const OUT = new URL('../../out/app/', import.meta.url).pathname
 fs.mkdirSync(OUT, { recursive: true })
@@ -106,7 +106,7 @@ for (const V of VIEWS) {
   const lap = await p.evaluate(() => { const g = window.__w11.game, t = g.session.timing; return t.lastLap ? { time: t.lastLap.time, sectors: t.lastLap.sectors, valid: t.lastLap.valid } : { time: null, sectors: [], valid: false, carS: g.car.s, speed: g.car.speed } })
   const lapMin = circuit === 'barcelona' ? 60 : 95, lapMax = circuit === 'barcelona' ? 130 : 115
   const lapInfo = lap.time === null ? `aucun tour fermé · s=${lap.carS.toFixed(1)} m · v=${(lap.speed * 3.6).toFixed(1)} km/h` : `${lap.time.toFixed(3)} s · S ${lap.sectors.map(x => x.toFixed(2)).join(' / ')}`
-  const lapTimeOk = circuit === 'sepang' ? lap.time !== null && Number.isFinite(lap.time) && lap.time > 0 : lap.time !== null && lap.time > lapMin && lap.time < lapMax
+  const lapTimeOk = (circuit === 'sepang' || circuit === 'marina') ? lap.time !== null && Number.isFinite(lap.time) && lap.time > 0 : lap.time !== null && lap.time > lapMin && lap.time < lapMax
   check(r, 'tour de démo chronométré (3 secteurs)', lap.sectors.length === 3 && lapTimeOk && (circuit !== 'sepang' || lap.valid), lapInfo)
   await p.evaluate(() => { window.__w11.fixedDt = 1 / 30 }); await p.waitForTimeout(800)
   await shot('10_demo_tv')

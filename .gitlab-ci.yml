@@ -121,6 +121,10 @@ marina_build:
       fi
       if [ -z "$G" ]; then echo 'Modèle Marina Bay absent de source/marina/ : conversion ignorée'; exit 0; fi
       ls -l "$G"
+      EXP=$(python3 -c "import struct,sys; h=open(sys.argv[1],'rb').read(12); print(struct.unpack('<I',h[8:12])[0] if len(h)==12 and h[:4]==b'glTF' else 0)" "$G")
+      SZ=$(stat -c%s "$G")
+      if [ "$EXP" -eq 0 ]; then echo 'Modèle Marina Bay illisible : le premier morceau (.glb.001) manque ou ce n est pas un GLB : conversion ignorée'; exit 0; fi
+      if [ "$SZ" -lt "$EXP" ]; then echo "Modèle Marina Bay incomplet : $SZ octets sur $EXP, il manque au moins un morceau : conversion ignorée"; exit 0; fi
       pip install --quiet --no-cache-dir numpy scipy opencv-python-headless pillow
       mkdir -p /tmp/hdr
       curl -fsSL --retry 3 --max-time 120 -o /tmp/hdr/moonless_golf_1k.hdr https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/textures/equirectangular/moonless_golf_1k.hdr || rm -f /tmp/hdr/moonless_golf_1k.hdr
@@ -194,3 +198,29 @@ silverstone_app_test:
       - source/out/app/
   rules:
     - if: $CI_COMMIT_BRANCH =~ /silverstone/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+# Marina Bay : test navigateur du jeu (Playwright + Chrome, rendu logiciel) après assemblage complet : démarrage sur ?circuit=marina, grille physique,
+# tuiles, shaders de nuit, tour de démo chronométré, captures d'écran en artefacts. Seulement sur les branches « marina » qui contiennent le modèle ; non bloquant.
+marina_app_test:
+  extends: .assemble
+  stage: test
+  allow_failure: true
+  script:
+    - !reference [.assemble, script]
+    - |
+      if [ ! -d public/assets/marina ]; then echo 'Marina Bay non assemblé (modèle incomplet ou conversion en échec) : test ignoré'; exit 0; fi
+      apt-get update -qq && apt-get install -y -qq wget ca-certificates > /dev/null
+      wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      apt-get install -y -qq ./google-chrome-stable_current_amd64.deb > /dev/null
+      (python3 -m http.server 5199 --directory public > /dev/null 2>&1 &)
+      sleep 2
+      cd source/game && CIRCUIT=marina node tests/app.mjs http://127.0.0.1:5199/
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - source/out/app/
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /marina/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      exists:
+        - source/marina/*.glb*
