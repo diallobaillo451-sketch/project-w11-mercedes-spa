@@ -161,3 +161,23 @@ silverstone_app_test:
       - source/out/app/
   rules:
     - if: $CI_COMMIT_BRANCH =~ /silverstone/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+# Silverstone : sessions du week-end (qualif puis course) simulées sans rendu, avec la voie des stands. Branches « silverstone » seulement, non bloquant.
+silverstone_sessions:
+  extends: .assemble
+  stage: test
+  allow_failure: true
+  script:
+    - !reference [.assemble, script]
+    - |
+      cd source/game
+      export TRACK_DIR=../../../public/track_silverstone/ PIT_FROM=5678 PIT_TO=320 LAP_MIN=75 LAP_MAX=135
+      npx --yes tsx tests/circuit_sessions.test.ts quali 0 7
+      npx --yes tsx tests/circuit_sessions.test.ts race 3 7
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - source/out/sessions/
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /silverstone/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
