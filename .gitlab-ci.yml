@@ -129,6 +129,29 @@ circuit_pipeline_unit:
   rules:
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
 
+# Mesure des IA (non bloquant) : tests Node du plateau + evaluation complete (course physique et 1D, SC, drapeau rouge, jaune, qualif), toutes les IA en physique.
+ai_eval:
+  stage: test
+  image: node:22
+  allow_failure: true
+  variables:
+    AI_PHYS_MAX: "20"
+  script:
+    - cd source/game
+    - npm ci --ignore-scripts --no-audit --no-fund
+    - |
+      for t in race_control race_sim pit_lane_rules pitlane weekend; do
+        echo "=== test $t"; timeout 300 node tests/$t.test.ts 2>&1 | tail -n 12
+      done
+    - timeout 2400 node tests/ai_eval.test.ts all 2>&1 | tee ../../ai_eval.log
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - ai_eval.log
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^claude\/ia-/ && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
 typecheck:
   stage: test
   image: node:22

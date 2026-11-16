@@ -12,7 +12,7 @@ import { AiDriver, type DriveCmd } from './driver.ts'
 import { AI_GRIP } from './tuning.ts'
 export type { DriveCmd } from './driver.ts'
 
-const MAX = 4
+const MAX = Math.max(1, Math.floor(Number((globalThis as any).process?.env?.AI_PHYS_MAX)) || 4) // 4 en jeu ; plus en test (AI_PHYS_MAX=20 : toutes les IA en physique)
 const SUB = 1 / 240
 /** gomme du modèle 1D → composé Pirelli du modèle physique */
 const COMP: Record<string, Compound> = { S: 'C4', M: 'C3', H: 'C2', I: 'I', W: 'W' }
@@ -46,7 +46,7 @@ export class HybridBank {
       const r = sim.cars[id]
       if (!r) continue
       const rank = ranked.indexOf(r)
-      if (rank >= 0 && rank < 6) keep.push(r)
+      if (rank >= 0 && rank < MAX + 2) keep.push(r)
     }
     const next: Racer[] = []
     for (const r of keep) { if (next.length < MAX) next.push(r) }
