@@ -25,6 +25,7 @@
       echo 'BARCELONA OK'
     - sha256sum -c SHA256SUMS
     - if [ -d public_sepang/assets/sepang ]; then echo 'VITE_SEPANG=1' > source/game/.env.production.local; fi
+    - if [ -d public_yas/assets/yas ]; then echo 'VITE_YAS=1' >> source/game/.env.production.local; fi
     - |
       silverstone_fetch() {
         S=shared/silverstone
