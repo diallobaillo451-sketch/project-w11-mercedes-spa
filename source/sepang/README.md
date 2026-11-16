@@ -50,6 +50,14 @@ Ce convertisseur est indépendant du pipeline Blender (il n'utilise que numpy/sc
 - `track_sepang/crowd.bin` : ~8 000 spectateurs assis sur les marches des tribunes du modèle (matériau M8), tournés vers la piste ;
 - `track_sepang/barriers.bin` : ~17 800 segments de barrières réelles (glissières, murs, grillages, muret des stands) lus par `collideBarriers`, avec un garde-fou continu (contour « premier mur ») ; tout segment qui touche l'emprise de la piste est retiré (aucun mur sur la chaussée).
 
+## Voie des stands (`build_pit.py`)
+
+`track_sepang/pitlane.json` : chemin de la voie rapide (373 points, ~745 m, x/z/s/d, format de `pitlane.ts`). Il suit le muret des stands (face côté stands + 2,5 m), et il est validé contre les barrières (≥ 1,28 m, aucun mur sous la voiture).
+
+L'entrée des stands du modèle est une route extérieure qui fait le tour de l'épingle, hors de la grille physique de ±45 m : le chemin entre donc par une COUPURE directe dans la clôture diagonale (s ≈ 5336–5368), à environ 200 m avant le début du muret. La coupure retire les barrières (physiques et visibles, rayon 2,6 m) et une bande d'asphalte visible est ajoutée à la scène sur la partie qui traverse de l'herbe ; le sol sous le chemin devient asphalte, et derrière le muret le sol « mur » redevient le vrai sol (asphalte) jusqu'à la façade des garages. La sortie est celle du modèle (le muret finit vers s ≈ 395, la voie rejoint la piste vers s ≈ 490).
+
+`circuit.ts` : `pitlane: true`, `pit: { limitFromS: 5322, limitToS: 395 }` (zone 80 km/h de 614 m). Les boîtes des équipes sont placées par le jeu au milieu de la zone (s ≈ 5498 → 225).
+
 ## Pas encore fait
 
-Voie des stands (`pitlane.json`), commissaires, tuiles + LOD (la scène est une seule tuile de 35 Mo), validation visuelle et essai de course en jeu.
+Commissaires, tuiles + LOD (la scène est une seule tuile de 35 Mo), modèle 3D de l'équipe aux stands, validation visuelle et essai de course en jeu (arrêt aux stands joueur et IA).
