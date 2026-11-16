@@ -54,7 +54,7 @@ const usedUris = g => { const out = new Set(); const mats = new Set()
 for (const t of tm.tiles) {
   const file = path.join(target, t.file); const g = rd(file); let changed = false
   for (const m of g.materials ?? []) {
-    const grp = GROUPS.find(G => G.re.test(m.name ?? '')); const p = grp && pick[grp.id]; if (!p) continue
+    const grp = GROUPS.find(G => G.re.test(m.extras?.w11_alias ?? m.name ?? '')); const p = grp && pick[grp.id]; if (!p) continue
     const bt = m.pbrMetallicRoughness?.baseColorTexture; if (!bt) continue
     g.images = g.images ?? []; g.textures = g.textures ?? []
     const old = g.textures[bt.index] ?? {}
