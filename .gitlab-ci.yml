@@ -38,6 +38,7 @@
         test "$(stat -c%s public_silverstone/track_silverstone/surface.bin)" -eq 4264132
       }
       if silverstone_fetch; then echo 'SILVERSTONE : paquet verifie'; echo 'VITE_SILVERSTONE=1' >> source/game/.env.production.local; else echo 'ATTENTION : Silverstone non assemble (paquet absent ou invalide)'; case "$CI_COMMIT_BRANCH" in *silverstone*) exit 1;; esac; fi
+    - if [ -d public_marina/assets/marina ]; then echo 'VITE_MARINA=1' >> source/game/.env.production.local; fi
     - cd source/game && npm ci && npx vite build && cd ../..
     - rm -f public/assets/index-*.js public/assets/index-*.css
     - cp -r source/game/dist/. public/
@@ -75,6 +76,13 @@
       else
         echo 'Silverstone non assemble : circuit indisponible'
       fi
+    - |
+      if [ -d public_marina/assets/marina ] && [ -d public_marina/track_marina ]; then
+        mkdir -p public/assets/marina public/track_marina
+        cp -r public_marina/assets/marina/. public/assets/marina/ && cp -r public_marina/track_marina/. public/track_marina/ && echo 'MARINA OK' && du -sh public/assets/marina public/track_marina
+      else
+        echo 'Marina Bay non assemblé (modèle absent de source/marina/ ou conversion en échec) : circuit indisponible'
+      fi
     - du -sh public
 
 # Sepang : conversion du GLB déposé dans source/sepang/ (surface physique + scène 3D). Sans GLB, seule la syntaxe des scripts est vérifiée.
@@ -91,6 +99,38 @@ sepang_build:
   artifacts:
     paths:
       - public_sepang
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH
+
+# Marina Bay (nuit) : conversion du modèle déposé dans source/marina/ (3 morceaux .glb.001 .glb.002 .glb.003, ou un seul .glb)
+# en surface physique + scène 3D + ciel de nuit + lampadaires. Sans modèle, seule la syntaxe des scripts est vérifiée.
+marina_build:
+  stage: build
+  image: python:3.12
+  script:
+    - python3 -m py_compile source/marina/*.py
+    - |
+      if ls source/marina/*.glb.0* > /dev/null 2>&1; then
+        cat $(ls source/marina/*.glb.0* | sort) > /tmp/marina.glb
+        G=/tmp/marina.glb
+      else
+        G=$(find source/marina -maxdepth 1 -name '*.glb' | head -n 1)
+      fi
+      if [ -z "$G" ]; then echo 'Modèle Marina Bay absent de source/marina/ : conversion ignorée'; exit 0; fi
+      ls -l "$G"
+      pip install --quiet --no-cache-dir numpy scipy opencv-python-headless pillow
+      mkdir -p /tmp/hdr
+      curl -fsSL --retry 3 --max-time 120 -o /tmp/hdr/moonless_golf_1k.hdr https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/textures/equirectangular/moonless_golf_1k.hdr || rm -f /tmp/hdr/moonless_golf_1k.hdr
+      HDR=
+      if [ -f /tmp/hdr/moonless_golf_1k.hdr ] && echo '4f597078024bd81429431e872d466d8808653ad62a8bc8c61d8052af7466c3aa  /tmp/hdr/moonless_golf_1k.hdr' | sha256sum -c -; then HDR='--hdr /tmp/hdr/moonless_golf_1k.hdr'; else echo 'HDRI de nuit indisponible ou invalide : ciel procédural'; fi
+      python3 source/marina/build_marina.py "$G" public_marina $HDR
+      du -sh public_marina/assets/marina public_marina/track_marina
+  artifacts:
+    paths:
+      - public_marina
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
