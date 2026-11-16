@@ -3,7 +3,7 @@
 """Conversion du GLB « Sepang International Circuit 2025 layout » en circuit du jeu.
 
 Usage : python3 build_sepang.py <circuit.glb> <dossier_sortie>
-Sortie : <sortie>/track_sepang/{surface.json,surface.bin,grassmask.bin,crowd.bin,barriers.bin}  et  <sortie>/assets/sepang/{tiles.json,base.gltf,base.bin,CREDITS.txt}
+Sortie : <sortie>/track_sepang/{surface.json,surface.bin,grassmask.bin,crowd.bin,barriers.bin,pitlane.json}  et  <sortie>/assets/sepang/{tiles.json,base.gltf,base.bin,CREDITS.txt}
 Les noms de matériaux du modèle ne sont jamais modifiés (voir sepang_tables.py).
 """
 import os, sys, json, time
@@ -11,7 +11,9 @@ import os, sys, json, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_physics import build_physics, ND
 from build_scene import build_scene
-from build_extras import build_crowd, build_barriers
+from build_extras import build_crowd, build_barriers, _footprints
+from build_pit import make_path, check_path, gate_points, apply_pit_to_surface, write_pitlane, strip_mesh, GATE_R
+from sepang_tables import WALL
 
 CREDITS = """Sepang International Circuit — modèle 3D « Sepang International Circuit 2025 layout »
 Auteur : Dave Love (Sketchfab) — licence Creative Commons Attribution 4.0 (CC BY 4.0)
@@ -29,9 +31,16 @@ def main():
     t0 = time.time()
     track = os.path.join(out, 'track_sepang'); scene = os.path.join(out, 'assets', 'sepang')
     r = build_physics(glb, track)
-    m = build_scene(glb, scene, r['origin'])
+    S_real = _footprints(r['tm'], r['Cglb'])
+    path = make_path(r, S_real)                                   # voie des stands (chemin) validée contre les barrières réelles
+    gate = gate_points(path)                                      # coupure de la clôture diagonale à l'entrée
+    nbar, S_final = build_barriers(r['tm'], r, r['mi'], r['origin'], track, S_real=S_real, pit=dict(gate=gate))
+    pdist = check_path(path, S_final, r['Cglb'], r['N'])
+    apply_pit_to_surface(r, path, S_final, track)                 # derrière le muret : vrai sol ; coupure : asphalte
+    write_pitlane(path, r['origin'], track)
+    strip = strip_mesh(path, r, r['origin'])
+    m = build_scene(glb, scene, r['origin'], cut=dict(points=gate, radius=GATE_R + 0.3, mats=set(WALL)), strip=strip)
     ncrowd = build_crowd(r['tm'], r['Cglb'], r['origin'], track)
-    nbar = build_barriers(r['tm'], r, r['mi'], r['origin'], track)
     with open(os.path.join(scene, 'CREDITS.txt'), 'w', encoding='utf-8') as f:
         f.write(CREDITS)
     # contrôles : un circuit incohérent ne doit jamais être publié
@@ -44,6 +53,8 @@ def main():
     assert m['tiles'][0]['tris'] > 300000, 'scène trop légère : %d triangles' % m['tiles'][0]['tris']
     assert ncrowd > 1000, 'public vide : %d personnes' % ncrowd
     assert nbar > 2000, 'barrières trop rares : %d segments' % nbar
+    assert pdist.min() > 1.0, 'la voie des stands touche une barrière (%.2f m)' % pdist.min()
+    assert os.path.getsize(os.path.join(track, 'pitlane.json')) > 2000, 'pitlane.json vide'
     print('SEPANG OK en %.0f s : N=%d, %.1f m, %d triangles' % (time.time() - t0, n, sj['length'], m['tiles'][0]['tris']))
 
 
