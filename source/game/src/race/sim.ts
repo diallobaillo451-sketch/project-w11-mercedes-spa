@@ -273,6 +273,8 @@ export class RaceSim {
     if (r.mode === 'dnf' || r.mode === 'redq' || r.mode === 'grid') { r.v = 0; r.lat = 0; return }
     if (r.mode === 'pit') { this.stepPit(r, dt); return }
     const i = r.idx = this.idxOf(r.s), ln = this.line
+    // qualif / essais : double jaune dans mon secteur = tour lancé abandonné (on lève, on refroidit les pneus, on relance au tour suivant)
+    if (this.kind !== 'race' && r.mode === 'push' && C.yellowAt(r.s) === 'double') { r.mode = 'cool'; r.lapValid = false }
     // ─ décision de rentrer
     if (r.wantPit && this.pit && this.road(r.s, this.pitEntryS) > 0 && this.road(r.s, this.pitEntryS) < r.v * dt + 0.5 && C.pitOpenFor(r)) { this.enterPit(r); return }
     // ─ vitesse cible
@@ -513,7 +515,7 @@ export class RaceSim {
   }
   /** stratégie d'arrêt (sec) : relais optimal sur l'horizon restant : arrêt à la fin de ce tour, plus tard ou jamais (règle des 2 gommes comprise).
    *  k = part du temps d'arrêt réellement perdue si on rentre maintenant (safety car 0,45, VSC 0,62, course 1) */
-  private stratDecide(r: Racer, k: number): { pit: boolean; c: Comp } | null {
+  private stratDecide(r: Racer, k: number, gain = 0): { pit: boolean; c: Comp } | null {
     const left = this.laps - r.laps
     if (left < 3 || r.tyre.c === 'I' || r.tyre.c === 'W') return null
     const ws = this.wearScale, sk = r.sk.tyre, cur = r.tyre.c
@@ -530,7 +532,7 @@ export class RaceSim {
       for (let m = 2; m <= left - 2; m++) { const later = this.stintCost(cur, a0, m, sk) + loss + this.stintCost(c, 0, left - m, sk); if (later < laterBest) laterBest = later }
     }
     const margin = 0.8 + (100 - this.difficulty) / 100 * 2.5
-    return { pit: nowBest + margin < noStop && nowBest <= laterBest, c: nowC }
+    return { pit: nowBest + margin + gain < noStop && nowBest + gain <= laterBest, c: nowC }
   }
   crash(r: Racer) {
     const heavy = this.rng.next() < 0.7
@@ -622,9 +624,20 @@ export class RaceSim {
       this.ctrl.release(r)
     }
   }
+  /** gomme la moins chère sur la distance restante (même loi que stratDecide) ; la règle des 2 gommes (sec) impose de changer si on n'en a utilisé qu'une */
+  private bestCompound(r: Racer, left: number): Comp {
+    const used = new Set<Comp>(r.tyre.used.filter(u => u !== 'I' && u !== 'W'))
+    let best: Comp = 'M', bc = Infinity
+    for (const c of ['S', 'M', 'H'] as Comp[]) {
+      if (used.size === 1 && used.has(c)) continue
+      const cost = this.stintCost(c, 0, Math.max(1, left), r.sk.tyre)
+      if (cost < bc) { bc = cost; best = c }
+    }
+    return best
+  }
   private fitNext(r: Racer) {
     const lapsLeft = this.laps - r.laps, wet = this.wetness()
-    let c: Comp = r.plan.find(p => p.lap >= r.laps)?.c ?? (lapsLeft * this.wearScale > 26 ? 'H' : 'M')
+    let c: Comp = r.plan.find(p => p.lap >= r.laps && p.lap - r.laps <= 1)?.c ?? this.bestCompound(r, lapsLeft)
     if (wet > 0.75) c = 'W'; else if (wet > 0.3) c = 'I'
     else if (!r.tyre.used.some(u => u !== c && u !== 'I' && u !== 'W') && r.tyre.used.length && r.tyre.used[0] === c) c = c === 'H' ? 'M' : 'H' // 2 gommes obligatoires (sec)
     r.tyre = { c, age: 0, temp: 0.75, flat: 0, punct: 0, used: [...r.tyre.used, c] }
@@ -699,8 +712,13 @@ export class RaceSim {
     if (r.dtPend > 0) r.wantPit = 'drive'
     if (r.sgPend > 0) r.wantPit = 'stop-go'
     // SC / VSC : arrêt « bon marché » quand le calcul de relais le préfère à un arrêt normal plus tard
-    if ((this.ctrl.sc.active || this.ctrl.vsc) && slick && r.wantPit === null && left > 2) { const d = this.stratDecide(r, this.ctrl.sc.active ? 0.45 : 0.62); if (d?.pit) { r.plan = [{ lap: r.laps + 1, c: d.c }]; r.wantPit = this.ctrl.sc.active ? 'safety car' : 'vsc' } }
-    if (this.ctrl.vsc && age > ty.cliff * 0.72 && left > 2) r.wantPit = r.wantPit ?? 'vsc'
+    if ((this.ctrl.sc.active || this.ctrl.vsc) && slick && r.wantPit === null && left > 2 && this.cars.filter(o => !o.out && (o.mode === 'pit' || o.wantPit !== null)).length < 6) {
+      // les voitures de tête ne cèdent pas leur place en piste pour un arrêt à peine moins cher ; la voie des stands ne se double pas : au plus 6 voitures à la fois
+      const sc = this.ctrl.sc.active, gain = (sc ? 4 : 6) + 8 * Math.exp(-(r.pos - 1) / 4) * (sc ? 1 : 1.25) + ((r as Racer & { _sb?: number })._sb ?? 0) * 1.5
+      const d = this.stratDecide(r, sc ? 0.45 : 0.62, gain)
+      if (d?.pit) { r.plan = [{ lap: r.laps + 1, c: d.c }]; r.wantPit = sc ? 'safety car' : 'vsc' }
+    }
+    /* VSC : voir le calcul de relais ci-dessus */
     const threat = this.cars.some(o => o !== r && !o.out && this.road(o.s, r.s) > 0 && this.road(o.s, r.s) < Math.max(40, o.v * 2.4) && o.v > r.v - 2)
     if (threat && age > ty.cliff * (this.difficulty > 70 ? 0.62 : 0.85) && left > 6 && this.difficulty > 55) r.wantPit = r.wantPit ?? 'undercut'
     // règle des 2 gommes (sec) : arrêt obligatoire avant la fin

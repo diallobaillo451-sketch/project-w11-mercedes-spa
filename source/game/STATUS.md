@@ -1,4 +1,7 @@
 
+## 2026-11-15 — IA : direction de course (drapeaux, SC, rouge, arrêts)
+- Corrigé : les voitures qui rentrent aux stands ignoraient le plafond SC ; la file se resserre sous SC, dédoublement plus tôt / plus vite, reprise groupée jusqu'à la ligne ; DRS interdit sous jaune ; prudence près d'une voiture arrêtée ; qualif : tour abandonné sous double jaune ; arrêts SC / VSC selon le gain et la place en piste ; gomme choisie par le calcul de relais. Détails : source/docs/IA_PILOTES.md. Non testé sur iPhone.
+
 ## 2026-11-15 — IA très rapides (même rythme en qualif et en course)
 - Bonus d'adhérence des IA physiques (× 1,08, race/tuning.ts) et plafond de vitesse commun 1D / physique (1,06 × √1,08), plateau 2,5 % plus rapide et écarts réels gardés à 50 %, plus de pénalité de course (+2 s), pleine puissance et essence de profil en course.
 - Réglage dans l'URL : ?aigrip= ?aik= ?aispread= ?aiboost= ; menu : Difficulté IA (85 rapide, 100 très rapide). Détails : source/docs/IA_PILOTES.md. Non testé sur iPhone.
