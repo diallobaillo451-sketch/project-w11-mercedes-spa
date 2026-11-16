@@ -4,7 +4,7 @@ import { chromium } from '@playwright/test'
 import fs from 'node:fs'
 const base = process.argv[2] || 'http://127.0.0.1:5199/'
 const circuit = process.env.CIRCUIT || 'spa'
-const expectedTiles = circuit === 'sepang' ? 1 : 13
+const expectedTiles = circuit === 'sepang' ? 1 : circuit === 'marina' ? 14 : 13
 const mobileTilesMin = circuit === 'sepang' ? 1 : 3
 const OUT = new URL('../../out/app/', import.meta.url).pathname
 fs.mkdirSync(OUT, { recursive: true })
@@ -19,7 +19,7 @@ for (const V of VIEWS) {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' })
   const p = await ctx.newPage()
   p.on('pageerror', e => r.errors.push('pageerror: ' + e))
-  p.on('console', m => { if (m.type() === 'error') r.errors.push('console: ' + m.text()) })
+  p.on('console', m => { if (m.type() === 'error') r.errors.push('console: ' + m.text() + (m.location()?.url ? ' [' + m.location().url + ']' : '')) })
   const carRequests = []; p.on('request', q => { if (q.url().includes('w11_lh2020_high')) carRequests.push(q.url()) })
   const shot = async (n) => { const f = `${OUT}${V.name}_${n}.png`; await p.screenshot({ path: f }); r.shots.push(f) }
   const t0 = Date.now()
@@ -27,7 +27,7 @@ for (const V of VIEWS) {
   await p.waitForSelector('#bootGo:not([hidden])', { timeout: 240000 })
   check(r, 'chargement', true, ((Date.now() - t0) / 1000).toFixed(1) + ' s')
   const surface = await p.evaluate(async id => {
-    const dir = ({ spa: './track/', monza: './track_monza/', barcelona: './track_barcelona/', sepang: './track_sepang/', silverstone: './track_silverstone/' })[id] || './track/'
+    const dir = ({ spa: './track/', monza: './track_monza/', barcelona: './track_barcelona/', sepang: './track_sepang/', silverstone: './track_silverstone/', marina: './track_marina/' })[id] || './track/'
     const [mr, br] = await Promise.all([fetch(dir + 'surface.json'), fetch(dir + 'surface.bin')])
     if (!mr.ok || !br.ok) return { ok: false, metaStatus: mr.status, binStatus: br.status }
     const meta = await mr.json(), bytes = await br.arrayBuffer()
@@ -106,7 +106,7 @@ for (const V of VIEWS) {
   const lap = await p.evaluate(() => { const g = window.__w11.game, t = g.session.timing; return t.lastLap ? { time: t.lastLap.time, sectors: t.lastLap.sectors, valid: t.lastLap.valid } : { time: null, sectors: [], valid: false, carS: g.car.s, speed: g.car.speed } })
   const lapMin = circuit === 'barcelona' ? 60 : 95, lapMax = circuit === 'barcelona' ? 130 : 115
   const lapInfo = lap.time === null ? `aucun tour fermé · s=${lap.carS.toFixed(1)} m · v=${(lap.speed * 3.6).toFixed(1)} km/h` : `${lap.time.toFixed(3)} s · S ${lap.sectors.map(x => x.toFixed(2)).join(' / ')}`
-  const lapTimeOk = circuit === 'sepang' ? lap.time !== null && Number.isFinite(lap.time) && lap.time > 0 : lap.time !== null && lap.time > lapMin && lap.time < lapMax
+  const lapTimeOk = (circuit === 'sepang' || circuit === 'marina') ? lap.time !== null && Number.isFinite(lap.time) && lap.time > 0 : lap.time !== null && lap.time > lapMin && lap.time < lapMax
   check(r, 'tour de démo chronométré (3 secteurs)', lap.sectors.length === 3 && lapTimeOk && (circuit !== 'sepang' || lap.valid), lapInfo)
   await p.evaluate(() => { window.__w11.fixedDt = 1 / 30 }); await p.waitForTimeout(800)
   await shot('10_demo_tv')

@@ -7,6 +7,7 @@
 | Pilote « rhp_bell_hp77_driver_f1 » | `driver_bell.glb` | MattDoesBlender | **CC BY-NC-SA 4.0** (non commercial, partage à l'identique) | https://sketchfab.com/3d-models/rhp-bell-hp77-driver-f1-2916ac047ea84abe9394c38e4fa2d4bd |
 | Circuit de Spa-Francorchamps (tracé 2022) | `spa_part1..8.glb` | Dave Love (Sketchfab Tyler_Dave) | CC BY 4.0 | https://sketchfab.com/3d-models/circuit-de-spa-francorchamps-2022-layout-ac681fbf548144498c130c3aa0adeb54 |
 | Circuit de Silverstone (tracé 2024) | `silverstone_circuit_2024_layout.glb` | Dave Love (Sketchfab Tyler_Dave) | CC BY 4.0 | https://sketchfab.com/3d-models/silverstone-circuit-2024-layout-bbaf4b12d5244c76998fd44f771fc0b3 |
+| Circuit de Marina Bay (Singapour, de nuit) | `marina_bay_street_circuit_6.glb` (déposé en 3 morceaux `.glb.001` à `.003` dans `source/marina/`) | Dave Bored SketchFab (Sketchfab Tyler_Dave) | CC BY 4.0 | https://sketchfab.com/3d-models/marina-bay-street-circuit-e665d831c57546609d4c15287a6107b7 |
 
 Conséquence : à cause du pilote (NC-SA), le jeu doit rester **gratuit et non commercial**, et les dérivés du pilote (casque/combinaison retexturés) sont distribués sous **CC BY-NC-SA 4.0**.
 
@@ -28,6 +29,7 @@ Conversion : `game/tools/make_detail.mjs` (1024², KTX2 UASTC + WebP de secours)
 | Usage | Fichiers jeu | Source | Licence |
 |---|---|---|---|
 | Ciel photographique HDRI (nuages, IBL des reflets) | `game/public/assets/sky/sky_4k.webp`, `sky_2k.webp` (mobile), `sky.json` | Poly Haven « Kloofendal 48d Partly Cloudy (Pure Sky) », Greg Zaal & Jarod Guest — https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky | CC0 1.0 |
+| Ciel de nuit de Marina Bay (Voie lactée, pollution lumineuse ; étoiles procédurales ajoutées, horizon remplacé par un halo de ville) | `assets/marina/sky/sky_4k.webp`, `sky_2k.webp`, `sky.json` (générés par la CI, `source/marina/marina_sky.py`) | Poly Haven « Moonless Golf », Greg Zaal — https://polyhaven.com/a/moonless_golf | CC0 1.0 |
 
 Conversion : `tools/make_sky.py` (hémisphère haut, disque solaire retiré, encodage HDR x/(1+x)). Choix : ciel partiellement nuageux avec soleil (cohérent avec les ombres nettes du jeu) plutôt que « Stuttgart Hillside » (couvert, horizon avec arbres nus et tour qui apparaîtraient derrière la forêt de Spa).
 
