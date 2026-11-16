@@ -24,6 +24,7 @@ import { Grass } from './grass.ts'
 import { Crowd } from './crowd.ts'
 import { applyWeathering } from './weathering.ts'
 import { SkyDome, loadSky } from './skydome.ts'
+import { NightLamps, loadLamps } from './night.ts'
 import { loadDetail, applyDetail, type DetailSet } from './detail.ts'
 import { applyBakedAO, stripBakedAO, BAKED_AO_DEFAULT } from './bakedAO.ts'
 import { ReflectionProbe } from './probe.ts'
@@ -213,7 +214,8 @@ export class Renderer {
     this.r.info.autoReset = false // compteurs sur l'image complète (toutes les passes), remis à zéro dans frame()
     // réglages d'éclairage surchargeables par l'URL (?tm=aces|agx&exp=&sun=&env=&hemi=) pour les comparaisons
     const P = new URLSearchParams(location.search), num = (k: string, d: number) => P.has(k) ? Number(P.get(k)) : d
-    this.look = { tm: P.get('tm') ?? 'aces', exp: num('exp', 0.85), sun: num('sun', 3.3), env: num('env', 0.3), hemi: num('hemi', 0.1), sat: num('sat', 1.0), con: num('con', 1.06) } // E : réglage visuel (comparatifs out/look/cmp_light.png)
+    const NT = CIRCUIT.night // nuit (Marina Bay) : lune, exposition et hémisphère de nuit par défaut (toujours surchargeables par l'URL)
+    this.look = { tm: P.get('tm') ?? 'aces', exp: num('exp', NT?.exp ?? 0.85), sun: num('sun', NT?.moon ?? 3.3), env: num('env', 0.3), hemi: num('hemi', NT?.hemi ?? 0.1), sat: num('sat', 1.0), con: num('con', 1.06) } // E : réglage visuel (comparatifs out/look/cmp_light.png)
     this.r.toneMapping = this.look.tm === 'agx' ? THREE.AgXToneMapping : THREE.ACESFilmicToneMapping
     this.r.toneMappingExposure = this.look.exp
     // rendu direct (iPhone : sans composeur) → même étalonnage que la passe HDR (saturation, contraste) dans le shader, avant ACES
@@ -221,6 +223,7 @@ export class Renderer {
       if (!C.tonemapping_fragment.includes('w11grade')) C.tonemapping_fragment = C.tonemapping_fragment.replace('gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );',
         `/*w11grade*/ { vec3 gc = max(gl_FragColor.rgb, 0.0); float gl = dot(gc, vec3(0.2126, 0.7152, 0.0722)); gc = max(mix(vec3(gl), gc, ${f(this.look.sat)}), 0.0); gl_FragColor.rgb = 0.22 * pow(gc / 0.22, vec3(${f(this.look.con)})); }\n\tgl_FragColor.rgb = toneMapping( gl_FragColor.rgb );`) }
     this.sun.intensity = this.look.sun; this.hemi.intensity = this.look.hemi
+    if (NT) this.sun.color.setHex(NT.moonColor) // lumière de lune bleutée
     this.r.shadowMap.enabled = true
     this.r.shadowMap.type = THREE.PCFShadowMap // r18x : PCF filtré (radius) ; PCFSoft n'existe plus
     this.scene.add(this.hemi, this.sun, this.sun.target, this.car)
@@ -247,6 +250,8 @@ export class Renderer {
     this.setupSun()
   }
   dome: SkyDome | null = null
+  /** nuit : halos et lumières des lampadaires (circuits de nuit seulement) */
+  night: NightLamps | null = null
   setupSun() {
     this.sun.castShadow = true
     const s = this.sun.shadow; s.mapSize.set(this.q.shadowMap, this.q.shadowMap)
@@ -259,12 +264,14 @@ export class Renderer {
     let skyOk = false
     if (P0.get('sky') !== '0') {
       try {
-        const { tex, meta } = await loadSky('./assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), KTX)
-        this.dome = new SkyDome(tex, meta, 215, n0('skyI', 3.2))
+        const { tex, meta } = await loadSky(CIRCUIT.skyDir ?? './assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), CIRCUIT.skyDir ? null : KTX /* ciel dédié (nuit) : WebP seulement, pas de .ktx2 à essayer */)
+        const NT = CIRCUIT.night
+        this.dome = new SkyDome(tex, meta, 215, n0('skyI', NT?.skyI ?? 3.2))
+        if (NT) this.dome.mat.uniforms.uSunI.value = n0('moonDisk', NT.moonDisk) // disque lunaire (même direction que la lumière directionnelle)
         this.sunDir.copy(this.dome.sunDir)
         this.scene.add(this.dome.mesh)
-        this.scene.environment = this.dome.envMap(this.r, 0x2c2e26); this.scene.environmentIntensity = n0('envH', 0.65) * this.q.envIntensity
-        this.scene.fog = new THREE.FogExp2(this.dome.fogColor(), n0('fog', 0.00032))
+        this.scene.environment = this.dome.envMap(this.r, 0x2c2e26); this.scene.environmentIntensity = n0('envH', NT?.env ?? 0.65) * this.q.envIntensity
+        this.scene.fog = new THREE.FogExp2(this.dome.fogColor(), n0('fog', NT?.fog ?? 0.00032))
         this.setupSun(); skyOk = true; dlog('ciel HDRI actif (soleil ' + meta.sun.elev.toFixed(1) + '°)')
       } catch (e) { dlog('ciel HDRI indisponible : ' + (e as Error).message) }
     }
@@ -306,6 +313,11 @@ export class Renderer {
     this.memLog('piste + voiture analysées')
     this.tilesAtStart = this.tiles.loaded.size
     this.scene.add(this.track)
+    // nuit : halos des lampadaires + quelques lumières réelles réaffectées aux lampadaires voisins (nombre FIXE → pas de recompilation des shaders) ; ?lamps=0 pour comparer
+    if (CIRCUIT.night && P0.get('lamps') !== '0') {
+      const ld = await loadLamps(CIRCUIT.trackDir + 'lamps.json')
+      if (ld) { this.night = new NightLamps(ld, CIRCUIT.night, q.name === 'low' ? 0 : this.mobile ? 3 : 6); this.scene.add(this.night.group); dlog(`lampadaires : ${this.night.n} halos, ${this.night.lights.length} lumières`) }
+    }
     this.rig = new CarRig(cg, an); this.w11G = cg; this.w11Rig = this.rig
     this.car.add(this.rig.root)
     // reflets réels de l'environnement sur la voiture (sonde cube dynamique), sinon IBL du ciel seul
@@ -731,6 +743,7 @@ export class Renderer {
     this.cams.shake = shake
     const follow = this.camFollow ?? this.car
     this.cams.update(follow, this.rig.eye, this.rig.tcam, c.speed, dt, c.gLat, c.gLong)
+    this.night?.update(this.car.position, this.cams.cam, this.canvas.height)
     this.crowd?.update(this.cams.cam.position)
     this.grass?.update(this.cams.cam.position, Math.max(0, this.grass.lastI), performance.now() / 1000)
     // pilote masqué en cockpit (la caméra est dans sa tête)
