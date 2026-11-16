@@ -10,6 +10,7 @@
 import copy, io, json, os, struct, time
 import numpy as np
 from PIL import Image
+from scipy.spatial import cKDTree
 from sepang_core import Glb
 from sepang_tables import DROP, FOLIAGE, CLASS, ALIAS, TEX_CAP, TEX_CAP_DEFAULT
 
@@ -17,11 +18,26 @@ TEX_SLOTS = [('pbrMetallicRoughness', 'baseColorTexture'), ('pbrMetallicRoughnes
              ('normalTexture',), ('occlusionTexture',), ('emissiveTexture',)]
 
 
-def build_scene(glb_path, outdir, origin, log=print):
+def build_scene(glb_path, outdir, origin, log=print, cut=None, strip=None):
     t0 = time.time()
     glb = Glb(glb_path)
     js = copy.deepcopy(glb.js)
     os.makedirs(outdir, exist_ok=True)
+
+    # 0. coupure de la clôture à l'entrée des stands : triangles de barrière près du chemin retirés (cut), bande d'asphalte ajoutée (strip)
+    filt = {}
+    if cut is not None:
+        ctree = cKDTree(cut['points'])
+        for mat, W, F, _uv, id_ in glb.world_primitives():
+            if mat in cut['mats']:
+                cen = (W[F[:, 0]] + W[F[:, 1]] + W[F[:, 2]]) / 3
+                dd, _ = ctree.query(cen[:, [0, 2]])
+                drop = dd < cut['radius']
+                if drop.any():
+                    filt[id_] = F[~drop]
+    for mi, m in enumerate(js['meshes']):
+        for pi, p in enumerate(m['primitives']):
+            p['_orig'] = (mi, pi)
 
     # 1. primitives gardées
     for m in js['meshes']:
@@ -62,13 +78,26 @@ def build_scene(glb_path, outdir, origin, log=print):
         a.pop('sparse', None)
         new_acc.append(a); acc_map[ai] = len(new_acc) - 1
         return acc_map[ai]
+    def copy_filtered(ai, arr, target):
+        a = copy.deepcopy(js['accessors'][ai])
+        dt = {5123: np.uint16, 5125: np.uint32, 5121: np.uint8}[a['componentType']]
+        raw = np.ascontiguousarray(arr.astype(dt)).tobytes()
+        a['bufferView'] = add_blob(raw, target); a['byteOffset'] = 0; a['count'] = int(len(arr))
+        a['min'] = [int(arr.min())]; a['max'] = [int(arr.max())]
+        a.pop('sparse', None)
+        new_acc.append(a)
+        return len(new_acc) - 1
     tris = 0
     for m in js['meshes']:
         for p in m['primitives']:
             p['attributes'] = {k: copy_accessor(v, 34962) for k, v in p['attributes'].items() if k in ('POSITION', 'NORMAL', 'TEXCOORD_0', 'COLOR_0')}
             if 'indices' in p:
-                p['indices'] = copy_accessor(p['indices'], 34963)
+                if p['_orig'] in filt and len(filt[p['_orig']]):
+                    p['indices'] = copy_filtered(p['indices'], filt[p['_orig']].reshape(-1), 34963)
+                else:
+                    p['indices'] = copy_accessor(p['indices'], 34963)
                 tris += new_acc[p['indices']]['count'] // 3
+            p.pop('_orig', None)
             p['material'] = mat_map[p['material']]
     geo_bytes = offset[0]
     log('géométrie : %d triangles, %.1f Mo' % (tris, geo_bytes / 1e6))
@@ -145,7 +174,23 @@ def build_scene(glb_path, outdir, origin, log=print):
     # 5. nœud racine : origine du monde = ligne de départ
     roots = js['scenes'][js.get('scene', 0)]['nodes']
     js['nodes'].append({'name': 'w11_origin', 'translation': [-origin[0], -origin[1], -origin[2]], 'children': list(roots)})
-    js['scenes'][js.get('scene', 0)]['nodes'] = [len(js['nodes']) - 1]
+    scene_nodes = [len(js['nodes']) - 1]
+    if strip is not None and 23 in mat_map:              # bande d'asphalte (déjà en repère jeu) : même matériau que la piste
+        V, Nn, UV, ix = strip
+        def add_acc(arr, comp, typ, target, minmax=False):
+            raw = np.ascontiguousarray(arr).tobytes()
+            a = {'bufferView': add_blob(raw, target), 'byteOffset': 0, 'componentType': comp, 'count': int(len(arr)), 'type': typ}
+            if minmax:
+                a['min'] = [float(x) for x in arr.min(0)]; a['max'] = [float(x) for x in arr.max(0)]
+            new_acc.append(a)
+            return len(new_acc) - 1
+        pos = add_acc(V, 5126, 'VEC3', 34962, True); nor = add_acc(Nn, 5126, 'VEC3', 34962)
+        uvv = add_acc(UV, 5126, 'VEC2', 34962); ii = add_acc(ix.astype(np.uint32), 5125, 'SCALAR', 34963)
+        js['meshes'].append({'name': 'w11_pit_strip', 'primitives': [{'attributes': {'POSITION': pos, 'NORMAL': nor, 'TEXCOORD_0': uvv}, 'indices': ii, 'material': mat_map[23]}]})
+        js['nodes'].append({'name': 'w11_pit_strip', 'mesh': len(js['meshes']) - 1})
+        scene_nodes.append(len(js['nodes']) - 1)
+        tris += len(ix) // 3
+    js['scenes'][js.get('scene', 0)]['nodes'] = scene_nodes
 
     js['accessors'] = new_acc; js['bufferViews'] = new_views
     js['images'] = new_images; js['textures'] = new_tex; js['materials'] = new_mats

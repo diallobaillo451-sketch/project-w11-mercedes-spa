@@ -182,6 +182,7 @@ def build_physics(glb_path, trackdir, debugdir=None, log=print):
     wallR = gaussian_filter1d(median_filter(wallR, 5, mode='wrap'), 1.0, mode='wrap')
     wallL = gaussian_filter1d(median_filter(wallL, 5, mode='wrap'), 1.0, mode='wrap')
     wallR = np.maximum(wallR, wr + 0.6); wallL = np.maximum(wallL, wl + 0.6)
+    gtyp = typ.copy()                                    # types réels du sol, avant d'écraser par « mur » derrière le premier mur
     for i in range(N):
         kr = JC + int(round(wallR[i] / DSTEP)); kl = JC - int(round(wallL[i] / DSTEP))
         typ[i, kr:] = 7; typ[i, :kl + 1] = 7
@@ -227,7 +228,7 @@ def build_physics(glb_path, trackdir, debugdir=None, log=print):
         os.makedirs(debugdir, exist_ok=True)
         np.save(os.path.join(debugdir, 'grid.npy'), grid)
         np.save(os.path.join(debugdir, 'C.npy'), np.stack([cx, cz], 1))
-    return dict(N=N, ds=ds, L=L, C=np.stack([cx, cz], 1), cy=cyo, wl=wl, wr=wr, wallL=wallL, wallR=wallR, origin=(ox, oy, oz), grid=grid, typ=typ, T=T, Cglb=C, mi=mi, tm=tm)
+    return dict(N=N, ds=ds, L=L, C=np.stack([cx, cz], 1), cy=cyo, wl=wl, wr=wr, wallL=wallL, wallR=wallR, origin=(ox, oy, oz), grid=grid, typ=typ, T=T, Cglb=C, mi=mi, tm=tm, gtyp=gtyp, rel_cm=rel_cm)
 
 
 if __name__ == '__main__':
