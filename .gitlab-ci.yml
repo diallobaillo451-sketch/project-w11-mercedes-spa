@@ -78,6 +78,7 @@
         fi
         mkdir -p public/assets/silverstone public/track_silverstone
         cp -r public_silverstone/assets/silverstone/. public/assets/silverstone/ && cp -r public_silverstone/track_silverstone/. public/track_silverstone/ && echo 'SILVERSTONE OK' && du -sh public/assets/silverstone public/track_silverstone
+        (cd shared/silverstone && sha256sum -c extras.sha256) && cp shared/silverstone/pitlane.json public/track_silverstone/pitlane.json && node source/tools/circuit_pipeline/open_pit_corridor.mjs public/track_silverstone && node source/tools/circuit_pipeline/expand_crowd_rows.mjs shared/silverstone/crowd_rows.json public/track_silverstone/surface.json public/track_silverstone/crowd.bin || { echo 'ATTENTION : voie des stands / public de Silverstone non ajoutes'; case "$CI_COMMIT_BRANCH" in *silverstone*) exit 1;; esac; }
       else
         echo 'Silverstone non assemble : circuit indisponible'
       fi
