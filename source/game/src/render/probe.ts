@@ -30,6 +30,7 @@ export class ReflectionProbe {
     }
   }
   setEvery(n: number) { this.every = Math.max(1, n | 0) }
+  dispose() { this.pmrt?.dispose(); this.pmrt = null; this.pm?.dispose(); this.pm = null; this.rt.dispose(); this.onFail = null }
   /** à appeler une fois par image, avant le rendu principal. hide : objets à masquer (la voiture elle-même). */
   update(r: THREE.WebGLRenderer, scene: THREE.Scene, at: THREE.Vector3, hide: THREE.Object3D[], force = false) {
     if (!force && ++this.tick % this.every) return

@@ -1,4 +1,4 @@
-/** Circuit actif. Choisi au démarrage (?circuit=spa|monza|barcelona|sepang|silverstone|marina, mémorisé dans le navigateur) : changer de circuit = recharger la page.
+/** Circuit actif. Le choix reste mémorisé et peut être changé dans le menu sans recharger la page.
  *  Hors navigateur (tests Node) : Spa. */
 import type { NightLook } from '../render/night.ts'
 export interface Circuit {
@@ -74,29 +74,42 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
   },
 }
 const KEY = 'w11.circuit'
-/** Sepang n'est proposé par le bouton de bascule que si la CI l'a assemblé (VITE_SEPANG=1) ; ?circuit=sepang reste toujours accepté. */
-const SEPANG = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SEPANG === '1'
-/** Silverstone n'est proposé par le bouton de bascule que si la CI a assemblé son paquet de données (VITE_SILVERSTONE=1) ; ?circuit=silverstone reste toujours accepté. */
-const SILVERSTONE = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SILVERSTONE === '1'
-/** Marina Bay (nuit) n'est proposé par le bouton de bascule que si la CI a assemblé ses données (VITE_MARINA=1) ; ?circuit=marina reste toujours accepté. */
-const MARINA = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_MARINA === '1'
+const ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env
+const SEPANG = ENV?.VITE_SEPANG === '1'
+const SILVERSTONE = ENV?.VITE_SILVERSTONE === '1'
+const MARINA = ENV?.VITE_MARINA === '1'
+const GP_TO_TRACK: Record<string, Circuit['id']> = { bel: 'spa', ita: 'monza', esp: 'barcelona', mys: 'sepang', gbr: 'silverstone', '70a': 'silverstone', sgp: 'marina' }
+const TRACK_TO_GP: Record<Circuit['id'], string> = { spa: 'bel', monza: 'ita', barcelona: 'esp', sepang: 'mys', silverstone: 'gbr', marina: 'sgp' }
+export function trackForGrandPrix(id: string): Circuit['id'] | null { return GP_TO_TRACK[id] ?? null }
+export function grandPrixForTrack(id: Circuit['id'], preferred?: string): string {
+  return preferred && GP_TO_TRACK[preferred] === id ? preferred : TRACK_TO_GP[id]
+}
+export function isCircuitAvailable(id: Circuit['id']): boolean {
+  if (id === 'spa' || id === 'monza' || id === 'barcelona') return true
+  return id === 'sepang' ? SEPANG : id === 'silverstone' ? SILVERSTONE : MARINA
+}
+export function selectableCircuitIds(): Circuit['id'][] { return (Object.keys(CIRCUITS) as Circuit['id'][]).filter(isCircuitAvailable) }
+function isCircuitId(id: string | null): id is Circuit['id'] { return !!id && Object.prototype.hasOwnProperty.call(CIRCUITS, id) }
 function pick(): Circuit['id'] {
   try {
     const q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('circuit') : null
-    if (q === 'spa' || q === 'monza' || q === 'barcelona' || q === 'sepang' || q === 'silverstone' || q === 'marina') { localStorage.setItem(KEY, q); return q }
+    if (isCircuitId(q) && isCircuitAvailable(q)) { localStorage.setItem(KEY, q); return q }
     const s = typeof localStorage !== 'undefined' ? localStorage.getItem(KEY) : null
-    if (s === 'spa' || s === 'monza' || s === 'barcelona' || (s === 'sepang' && SEPANG) || (s === 'silverstone' && SILVERSTONE) || (s === 'marina' && MARINA)) return s
+    if (isCircuitId(s) && isCircuitAvailable(s)) return s
   } catch { /* stockage indisponible : Spa */ }
   return 'spa'
 }
-export const CIRCUIT: Circuit = CIRCUITS[pick()]
-/** bascule Spa → Monza → Barcelone → Sepang → Silverstone → Marina Bay (ceux qui sont assemblés) puis recharge la page (surface et tuiles sont chargées au démarrage) */
-export function switchCircuit() {
-  const ids: Circuit['id'][] = ['spa', 'monza', 'barcelona']
-  if (SEPANG) ids.push('sepang')
-  if (SILVERSTONE) ids.push('silverstone')
-  if (MARINA) ids.push('marina')
-  const next = ids[(ids.indexOf(CIRCUIT.id) + 1) % ids.length]
-  try { localStorage.setItem(KEY, next) } catch { /* ignoré */ }
-  const u = new URL(location.href); u.searchParams.set('circuit', next); location.href = u.toString()
+export let CIRCUIT: Circuit = CIRCUITS[pick()]
+/** Sélectionne et mémorise une piste déjà assemblée, sans actualiser le document. */
+export function selectCircuit(id: string): Circuit | null {
+  if (!isCircuitId(id) || !isCircuitAvailable(id)) return null
+  CIRCUIT = CIRCUITS[id]
+  try { localStorage.setItem(KEY, id) } catch { /* ignoré */ }
+  try { const u = new URL(location.href); u.searchParams.set('circuit', id); history.replaceState(null, '', u) } catch { /* hors navigateur */ }
+  return CIRCUIT
+}
+/** bascule entre les circuits assemblés ; l'appelant charge la nouvelle scène à chaud. */
+export function switchCircuit(): Circuit | null {
+  const ids = selectableCircuitIds(), i = ids.indexOf(CIRCUIT.id)
+  return CIRCUITS[ids[(i + 1 + ids.length) % ids.length] ?? 'spa']
 }
