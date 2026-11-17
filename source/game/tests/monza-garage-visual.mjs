@@ -53,12 +53,15 @@ try {
       const o = scene?.getObjectByName('garage_lod_' + t + '_frame')
       return { team: t, exists: !!o, visible: !!o?.visible }
     })
-    let npcRoots = 0, uniformTextures = 0
+    let npcRoots = 0, uniformTextures = 0, garageTeamTextures = 0
     playerRoot?.children.forEach(ch => { let skinned = false; ch.traverse(o => { if (o.isSkinnedMesh) skinned = true }); if (skinned) npcRoots++ })
     playerRoot?.traverse(o => {
       if (!o.isMesh) return
       const mats = Array.isArray(o.material) ? o.material : [o.material]
-      for (const m of mats) if (m?.name === 'Material_0' && m.map?.isCompressedTexture) uniformTextures++
+      for (const m of mats) {
+        if (m?.name === 'Material_0' && m.map?.isCompressedTexture) uniformTextures++
+        if (m?.name === 'team_atlas' && m.map?.isCompressedTexture) garageTeamTextures++
+      }
     })
     const camera = w?.ren?.cams?.gPos?.toArray?.() ?? []
     let cameraError = Infinity
@@ -73,7 +76,14 @@ try {
     const doorRecords = [...(config.doors ?? []), ...(config.player_garage?.doors ?? []), ...(config.garages ?? []).flatMap(g => g.doors ?? [])]
     const trackDoorNodes = names.filter(n => /box-door/i.test(n))
     const hasNpcPaths = !!(config.player_garage?.npc_paths?.length || config.player_garage?.waypoints?.length)
-    return { screen: w?.screen, gameGarage: w?.game?.garage, pit: !!w?.game?.pit, pits: !!pits, screenState, lod, garageNodeCount: garageNodes.size, garageNodes: [...garageNodes], npcRoots, uniformTextures, camera, cameraError, doorRecords: doorRecords.length, trackDoorNodes, hasNpcPaths }
+    let garageDoorTriangles = 0, garageDoorMeshes = 0; const garageDoorTeams = new Set()
+    scene?.traverse(o => {
+      const count = o.userData?.w11GarageDoorTrianglesRemoved ?? 0
+      if (!count) return
+      garageDoorTriangles += count; garageDoorMeshes++
+      for (const t of o.userData?.w11GarageDoorTeamsRemoved ?? []) garageDoorTeams.add(t)
+    })
+    return { screen: w?.screen, gameGarage: w?.game?.garage, pit: !!w?.game?.pit, pits: !!pits, screenState, lod, garageNodeCount: garageNodes.size, garageNodes: [...garageNodes], npcRoots, uniformTextures, garageTeamTextures, camera, cameraError, doorRecords: doorRecords.length, trackDoorNodes, garageDoorTriangles, garageDoorMeshes, garageDoorTeams: [...garageDoorTeams], hasNpcPaths }
   })
   check('garage Monza joueur chargé', !!assetState.pits && !!assetState.gameGarage && assetState.pit, JSON.stringify({ pits: assetState.pits, garage: assetState.gameGarage, pit: assetState.pit }))
   const requiredNodes = [
@@ -90,7 +100,9 @@ try {
   check('dix garages LOD: équipe joueur masquée et neuf voisines visibles', assetState.lod.every(x => x.exists) && assetState.lod.filter(x => x.visible).length === 9 && assetState.lod.find(x => x.team === 'mercedes')?.visible === false, JSON.stringify(assetState.lod))
   check('PNJ animés réellement instanciés dans le garage joueur', assetState.npcRoots >= 12, `${assetState.npcRoots} groupes squelettiques instanciés`)
   check('tenues KTX2 réellement appliquées aux PNJ', assetState.uniformTextures > 0, `${assetState.uniformTextures} matériaux Material_0 avec texture compressée`)
+  check('texture de livrée du garage appliquée au matériau team_atlas', assetState.garageTeamTextures > 0, `${assetState.garageTeamTextures} matériaux team_atlas avec texture compressée`)
   check('caméra calculée depuis le milieu des deux ancres voiture', assetState.cameraError < 0.002, `écart ${assetState.cameraError.toFixed(4)} m; position ${JSON.stringify(assetState.camera)}`)
+  const expectedDoorTeams = assetState.lod.map(x => x.team)
 
   const before = await page.evaluate(() => {
     const w = window.__w11
@@ -113,9 +125,9 @@ try {
   check('ingénieurs du muret alternent watch/talk sur les sièges mesurés', pitwallActors.length === 40 && pitwallActors.every(a => a.sequence.includes('pitwall_watch') && a.sequence.includes('pitwall_talk')), `${pitwallActors.length}/40 acteurs du muret animés`)
   check('les routines ambiantes ne restent pas synchronisées sur un seul clip', changedAmbient >= 8, `${changedAmbient} acteurs ont changé de clip sur ${before.ambient.length}`)
   report.views.garage = { screenshot: interiorShot, camera: assetState.camera, ambientActors: after.ambient.length, changedAmbient }
-  if (assetState.doorRecords === 0 && assetState.trackDoorNodes.length === 0) report.blockers.push('Portes du box Monza: pits.json ne fournit aucune entrée doors[] et la scène ne contient aucun nœud box-door; les triangles de façade restent intacts faute d’ancre mesurée sûre.')
+  if (assetState.doorRecords !== 10 || assetState.garageDoorTriangles === 0 || expectedDoorTeams.some(t => !assetState.garageDoorTeams.includes(t))) report.blockers.push('Ouverture Monza: les dix cadres ne correspondent pas aux triangles des façades du circuit.')
   if (!assetState.hasNpcPaths) report.blockers.push('Déplacements des PNJ: les spots Monza sont mesurés, mais aucun itinéraire/waypoint n’est fourni; les personnages travaillent sur place avec les clips d’origine, sans trajet inventé.')
-  check('aucune découpe arbitraire de façade ou route PNJ inventée', assetState.doorRecords === 0 && assetState.trackDoorNodes.length === 0 && !assetState.hasNpcPaths, JSON.stringify({ doors: assetState.doorRecords, boxDoorNodes: assetState.trackDoorNodes, npcPaths: assetState.hasNpcPaths }))
+  check('portes des dix garages ouvertes via cadres mesurés; aucun itinéraire PNJ inventé', assetState.doorRecords === 10 && assetState.garageDoorTriangles > 0 && expectedDoorTeams.every(t => assetState.garageDoorTeams.includes(t)) && !assetState.hasNpcPaths, JSON.stringify({ doors: assetState.doorRecords, cutTriangles: assetState.garageDoorTriangles, cutMeshes: assetState.garageDoorMeshes, teams: assetState.garageDoorTeams, boxDoorNodes: assetState.trackDoorNodes, npcPaths: assetState.hasNpcPaths }))
 
   const stop = await page.evaluate(async () => {
     const data = await (await fetch('./track_monza/pits.json')).json()

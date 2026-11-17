@@ -1,17 +1,20 @@
-// Voie des stands praticable (Node) : node tests/pitlane.test.ts
-// Un pilote simple suit le chemin calculé (entrée Arrêt de Bus → stands → sortie après La Source) AVEC les barrières
-// réelles actives ; limiteur 80 km/h automatique dans la zone. Vérifie : aucun choc, arrivée en piste, vitesse limitée.
-import { readFileSync } from 'node:fs'
+// Voie des stands praticable : TRACK_DIR=<circuit> PIT_FROM=<s> PIT_TO=<s> node tests/pitlane.test.ts
+// Un pilote suit le chemin publié avec les collisions disponibles et le limiteur 80 km/h. Vérifie l'arrivée, l'absence de choc et la vitesse.
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Vehicle } from '../src/physics/vehicle.ts'
 import { TrackSurface, newSample } from '../src/track/surface.ts'
 import { Barriers } from '../src/track/barriers.ts'
 import { Pitlane } from '../src/track/pitlane.ts'
 const DT = 1 / 240
-const rd = (f: string) => readFileSync(new URL('../public/track/' + f, import.meta.url))
-const meta = JSON.parse(rd('surface.json').toString()); const bin = rd('surface.bin'); const bb = rd('barriers.bin')
+const defaultTrackDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../public/track')
+const trackDir = process.env.TRACK_DIR || defaultTrackDir
+const rd = (f: string) => readFileSync(path.join(trackDir, f))
+const meta = JSON.parse(rd('surface.json').toString()); const bin = rd('surface.bin')
 const tr = new TrackSurface(meta, new Uint16Array(bin.buffer, bin.byteOffset, bin.byteLength / 2))
-tr.barriers = new Barriers(bb.buffer.slice(bb.byteOffset, bb.byteOffset + bb.byteLength))
-const P = new Pitlane(JSON.parse(rd('pitlane.json').toString()), { limitFromS: 6790, limitToS: 200 })
+if (existsSync(path.join(trackDir, 'barriers.bin'))) { const bb = rd('barriers.bin'); tr.barriers = new Barriers(bb.buffer.slice(bb.byteOffset, bb.byteOffset + bb.byteLength)) }
+const P = new Pitlane(JSON.parse(rd('pitlane.json').toString()), { limitFromS: Number(process.env.PIT_FROM ?? 6790), limitToS: Number(process.env.PIT_TO ?? 200) })
 const car = new Vehicle(tr); car.setup.autoGear = true
 car.placeAt(P.s[0], P.d[0], 30)
 const smp = newSample()

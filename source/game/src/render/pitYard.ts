@@ -9,10 +9,12 @@ import type { FieldView } from './fieldView.ts'
 import { dlog } from '../diag.ts'
 
 interface NpcSpot { id: string; kind: string; pos: number[]; yaw: number; clip?: string }
+interface MonzaGarageDoor { action?: string; team?: string; center?: number[]; yaw?: number; width?: number; floor_y?: number; height?: number; depth?: number }
 interface PitFile {
   circuit?: string
   pitlane?: { points_xyzs?: number[][]; entry_s?: number; exit_s?: number }
   pit_exit_lights?: { pos?: number[] }
+  doors?: MonzaGarageDoor[]
   player_garage?: { npc_spots?: NpcSpot[] }
   garages?: { team: string; frame?: { pos: number[]; yaw: number }; pit_stop?: { pos: number[]; heading?: number[] }; car_park?: number[][]; lod_node?: string; pitwall?: { node: string; pos: number[]; yaw: number } }[]
 }
@@ -110,6 +112,103 @@ export function openGarageDoors(root: THREE.Object3D, g: { x: number; z: number;
   return removed
 }
 
+// Monza has no named box-door nodes: remove only the measured shutters using
+// its generated team frames and the known shutter tiles in the facade atlas.
+const processedMonzaDoorMeshes = new WeakSet<THREE.Mesh>()
+let currentMonzaDoorRecords: MonzaGarageDoor[] = []
+const isMonzaGarageLod = (o: THREE.Object3D) => {
+  for (let p: THREE.Object3D | null = o; p; p = p.parent) {
+    if (/^garage_lod_(?:mercedes|ferrari|redbull|mclaren|renault|alphatauri|racingpoint|alfaromeo|haas|williams)$/i.test(p.name)) return true
+  }
+  return false
+}
+const isMonzaBox = (mesh: THREE.Mesh, o: THREE.Object3D) => /^box(?:__|_M__)/i.test(mesh.name) || isMonzaGarageLod(o)
+const repeat01 = (v: number) => ((v % 1) + 1) % 1
+function monzaShutterRecord(mesh: THREE.Mesh, ids: number[], point: THREE.Vector3, normal: THREE.Vector3, records: MonzaGarageDoor[]) {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+  if (!materials.some(m => m.name === 'houses101' || m.name === 'houses102')) return null
+  const uv = mesh.geometry.getAttribute('uv')
+  if (!uv) return null
+  // houses101/102 share the Monza facade atlas: the metal shutter is the upper-left tile.
+  const tile = ids.map(i => [repeat01(uv.getX(i)), repeat01(uv.getY(i))])
+  if (tile.some(([u, v]) => u > 0.52 || v < 0.04 || v > 0.47)) return null
+  const nearest = records.reduce<{ record: MonzaGarageDoor; distance: number } | null>((best, door) => {
+    if (!door.center || door.yaw === undefined || door.floor_y === undefined) return best
+    const distance = Math.hypot(point.x - door.center[0], point.z - door.center[2])
+    return !best || distance < best.distance ? { record: door, distance } : best
+  }, null)
+  if (!nearest || nearest.distance > 35) return null
+  const door = nearest.record, sn = Math.sin(door.yaw!), cs = Math.cos(door.yaw!)
+  const frontNormal = Math.abs(normal.x * sn + normal.z * cs)
+  if (frontNormal < 0.82 || Math.abs(normal.y) > 0.3 || point.y < door.floor_y! + 0.04 || point.y > door.floor_y! + (door.height ?? 4) + 0.25) return null
+  return door
+}
+function triangleInMonzaDoor(point: THREE.Vector3, normal: THREE.Vector3, door: MonzaGarageDoor) {
+  if (!door.center || door.yaw === undefined || !door.width || !door.height || door.floor_y === undefined) return false
+  const dx = point.x - door.center[0], dz = point.z - door.center[2], cs = Math.cos(door.yaw), sn = Math.sin(door.yaw)
+  const localX = dx * cs - dz * sn, localZ = dx * sn + dz * cs
+  const frontNormal = Math.abs(normal.x * sn + normal.z * cs)
+  return Math.abs(localX) <= door.width * 0.5 + 0.08 && Math.abs(localZ) <= (door.depth ?? 0.8) * 0.5 && point.y >= door.floor_y + 0.04 && point.y <= door.floor_y + door.height && frontNormal >= 0.82 && Math.abs(normal.y) <= 0.3
+}
+function removeMonzaDoorTriangles(mesh: THREE.Mesh, records: MonzaGarageDoor[], monzaAtlas: boolean) {
+  const geometry = mesh.geometry, position = geometry.getAttribute('position'), sourceIndex = geometry.getIndex()
+  if (!position || position.count < 3) return { triangles: 0, teams: [] as string[] }
+  const indexCount = sourceIndex?.count ?? position.count
+  const groups = geometry.groups.length ? geometry.groups : [{ start: 0, count: indexCount, materialIndex: 0 }]
+  const kept: number[] = [], outGroups: { start: number; count: number; materialIndex: number }[] = []
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), ab = new THREE.Vector3(), ac = new THREE.Vector3(), normal = new THREE.Vector3(), center = new THREE.Vector3()
+  const teams = new Set<string>(); let removed = 0
+  const vertex = (i: number) => sourceIndex ? sourceIndex.getX(i) : i
+  for (const group of groups) {
+    const first = Math.max(0, group.start), end = Math.min(indexCount, group.start + group.count), startOut = kept.length
+    for (let i = first; i + 2 < end; i += 3) {
+      const ia = vertex(i), ib = vertex(i + 1), ic = vertex(i + 2)
+      a.fromBufferAttribute(position, ia).applyMatrix4(mesh.matrixWorld)
+      b.fromBufferAttribute(position, ib).applyMatrix4(mesh.matrixWorld)
+      c.fromBufferAttribute(position, ic).applyMatrix4(mesh.matrixWorld)
+      center.copy(a).add(b).add(c).multiplyScalar(1 / 3)
+      ab.subVectors(b, a); ac.subVectors(c, a); normal.crossVectors(ab, ac).normalize()
+      const hit = monzaAtlas ? monzaShutterRecord(mesh, [ia, ib, ic], center, normal, records) : records.find(door => door.action === 'remove' && triangleInMonzaDoor(center, normal, door))
+      if (hit) { removed++; if (hit.team) teams.add(hit.team); continue }
+      kept.push(ia, ib, ic)
+    }
+    const count = kept.length - startOut
+    if (geometry.groups.length && count) outGroups.push({ start: startOut, count, materialIndex: group.materialIndex ?? 0 })
+  }
+  if (removed) {
+    const filtered = geometry.clone(), IndexArray = position.count > 65535 ? Uint32Array : Uint16Array
+    filtered.setIndex(new THREE.BufferAttribute(new IndexArray(kept), 1)); filtered.clearGroups()
+    for (const group of outGroups) filtered.addGroup(group.start, group.count, group.materialIndex)
+    filtered.computeBoundingBox(); filtered.computeBoundingSphere(); mesh.geometry = filtered
+  }
+  mesh.userData.w11GarageDoorTrianglesRemoved = removed
+  mesh.userData.w11GarageDoorTeamsRemoved = [...teams]
+  return { triangles: removed, teams: [...teams] }
+}
+/** Open only Monza garage shutters; Spa keeps using openGarageDoors unchanged. */
+export function openMonzaGarageDoors(root: THREE.Object3D) {
+  const active = currentMonzaDoorRecords.filter(door => door.action === 'remove' && door.center && door.yaw !== undefined)
+  if (!active.length) return 0
+  root.updateWorldMatrix(true, true)
+  let removed = 0, meshes = 0
+  root.traverse(o => {
+    const mesh = o as THREE.Mesh
+    if (!mesh.isMesh || processedMonzaDoorMeshes.has(mesh)) return
+    const lodMesh = isMonzaGarageLod(o), boxMesh = isMonzaBox(mesh, o)
+    if (!boxMesh) return
+    const targets = active.filter(door => !!door.center && door.yaw !== undefined)
+    if (!targets.length) return
+    const lodTargets = lodMesh ? targets.map(door => ({ ...door, width: Math.max(door.width ?? 0, 12), height: Math.max(door.height ?? 0, 8), depth: Math.max(door.depth ?? 0.8, 4) })) : targets
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+    const monzaAtlas = !lodMesh && materials.some(material => material.name === 'houses101' || material.name === 'houses102')
+    const result = removeMonzaDoorTriangles(mesh, lodTargets, monzaAtlas)
+    if (result.triangles) mesh.userData.w11GarageDoorSource = lodMesh ? 'monza-lod' : 'monza-track'
+    processedMonzaDoorMeshes.add(mesh); removed += result.triangles; meshes++
+  })
+  if (removed) dlog('garages Monza : ' + removed + ' triangles de portes retirés sur ' + meshes + ' maillages')
+  return removed
+}
+
 export async function loadSpaPits(game: Game, ren: Renderer, fview: FieldView, team: string) {
   const res = await fetch('./assets/spa_pits/pits.json')
   if (!res.ok || !game.pit) return
@@ -201,6 +300,7 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
   if (!res.ok || !game.pit) { dlog('stands Monza indisponibles'); return }
   const pits = await res.json() as PitFile
   if (pits.circuit !== 'monza_2020' || !pits.garages?.length) { dlog('configuration stands Monza invalide'); return }
+  currentMonzaDoorRecords = pits.doors ?? []
   const ktx = ren.ktxAny(), root = new THREE.Group(); root.name = 'monza_pits'; ren.scene.add(root)
   for (const g of pits.garages) if (g.pit_stop) game.pit.setTeamBox(g.team, g.pit_stop.pos[0], g.pit_stop.pos[2])
   const mine = pits.garages.find(g => g.team === team) ?? pits.garages[0]
@@ -316,7 +416,7 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
     garage = src.scene; root.add(garage)
     garage.position.set(mine.frame.pos[0], mine.frame.pos[1], mine.frame.pos[2])
     garage.rotation.y = mine.frame.yaw
-    if (/^[a-z0-9_-]+$/i.test(mine.team)) await replaceMap(garage, `./assets/monza_pits/textures/team_${mine.team}.ktx2`, 'team')
+    if (/^[a-z0-9_-]+$/i.test(mine.team)) await replaceMap(garage, `./assets/monza_pits/textures/team_${mine.team}.ktx2`, 'team_atlas')
     fview.adoptScene(garage)
     garage.updateMatrixWorld(true)
     const fr = mine.frame, h = mine.pit_stop.heading ?? [-Math.cos(fr.yaw), 0, Math.sin(fr.yaw)]
@@ -333,7 +433,7 @@ export async function loadMonzaPits(game: Game, ren: Renderer, fview: FieldView,
     }
     dlog('garage Monza : caméra calée au milieu des deux ancres voiture (' + mine.team + ')')
   } catch (e) { dlog('garage Monza : ' + (e as Error).message) }
-  if (game.garage) openGarageDoors(ren.scene, game.garage)
+  if (game.garage) openMonzaGarageDoors(ren.scene)
   if (garage) {
     const skip = /^(mech_jack|mech_tyre|crew_front_4)/
     const allSpots = pits.player_garage?.npc_spots ?? []

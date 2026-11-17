@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:single": "vite build --mode single --outDir dist-single && node tools/inline-single.mjs",
     "test:physics": "node tests/physics.test.ts",
+    "test:pitlane": "node tests/pitlane.test.ts",
     "test:app": "node tests/app.mjs",
     "test:monza-pits": "node tests/monza-pits.test.mjs",
     "zip": "node tools/zip-dist.mjs"

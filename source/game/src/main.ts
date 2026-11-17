@@ -31,7 +31,7 @@ import { Weekend, WK_LABEL, WK_SHORT, WK_ORDER, newTelemetry, sampleTelemetry, s
 import { fmtClock } from './ui/kit.ts'
 import { FieldView } from './render/fieldView.ts'
 import { marshalBoardFallbackAllowed, pitExitLampFallbackAllowed } from './render/signals.ts'
-import { loadMonzaPits, loadSpaPits, monzaGarageAnimationState, openGarageDoors, updateGarageAnims } from './render/pitYard.ts'
+import { loadMonzaPits, loadSpaPits, monzaGarageAnimationState, openGarageDoors, openMonzaGarageDoors, updateGarageAnims } from './render/pitYard.ts'
 import { readPitAnchors } from './render/anchors.ts'
 import { PitScreens } from './render/pitScreens.ts'
 import { Engineer } from './race/engineer.ts'
@@ -179,13 +179,14 @@ function startSession(k: SessionKind | 'demo', keepRun = false) {
   setScreen('drive')
   setCam(k === 'demo' ? 'tv' : settings.camera)
   // essais et qualifs : la voiture sort de son garage (caméra à l'intérieur), puis le joueur reprend la main dans la voie des stands
-  if ((k === 'practice' || k === 'qualifying') && game.beginGarageExit()) setCam('garage')
+  const garageStart = ((k === 'practice' || k === 'qualifying') || (CIRCUIT.id === 'monza' && k === 'timetrial')) && game.beginGarageExit()
+  if (garageStart) setCam('garage')
   $('hSess').hidden = !run
   if (run) { game.car.fuel = run.fuel; run.started = true; run.goT = game.time; run.pen0 = game.penalties; run.tel = newTelemetry() }
-  lapsDone = 0; if (k === 'timetrial') { radio.say('radio_check', 0); radio.say('tour_lance_go', 0) } else if (k === 'practice') { radio.say('radio_check', 0); radio.say('sortie_garage', 0) }
+  lapsDone = 0; if (k === 'timetrial') { radio.say('radio_check', 0); radio.say(garageStart ? 'sortie_garage' : 'tour_lance_go', 0) } else if (k === 'practice') { radio.say('radio_check', 0); radio.say('sortie_garage', 0) }
   if (k === 'race') { radio.say('radio_check', 0); hud.toast('Course · tour de formation terminé, place aux feux', 2600) }
   else if (k === 'qualifying') { radio.say('radio_check', 0); radio.say('sortie_garage', 0); hud.toast((run?.id ? WK_LABEL[run.id] : 'Qualifications') + ' · départ des stands') }
-  else hud.toast(k === 'timetrial' ? 'Contre-la-montre · tour lancé' : k === 'practice' ? (run?.id ? WK_LABEL[run.id] : 'Essais libres') + ' · départ des stands' : 'Démo : pilote automatique')
+  else hud.toast(k === 'timetrial' ? 'Contre-la-montre · ' + (garageStart ? 'sortie du garage' : 'tour lancé') : k === 'practice' ? (run?.id ? WK_LABEL[run.id] : 'Essais libres') + ' · départ des stands' : 'Démo : pilote automatique')
 }
 function setScreen(s: Screen) {
   screen = s
@@ -695,10 +696,15 @@ async function main() {
     game = new Game(track, 'timetrial')
     if (pitData) game.pit = new Pitlane(pitData, CIRCUIT.pit)
     const bindPit = (root: THREE.Object3D) => {
-      if (!game.pit) return
+      if (!game.pit) {
+        if (CIRCUIT.id === 'monza') { fview?.adoptScene(root); openMonzaGarageDoors(root) }
+        return
+      }
       const a = readPitAnchors(root)
       if (game.adoptPitAnchors(a)) dlog('voie des stands : ancres du circuit (' + (game.pit.anchored ? 'chemin ' + game.pit.n + ' pts' : '') + ')')
-      fview?.adoptScene(root); openGarageDoors(root, game.garage)
+      fview?.adoptScene(root)
+      if (CIRCUIT.id === 'monza') openMonzaGarageDoors(root)
+      openGarageDoors(root, game.garage)
     }
     game.autopilot = true
     const QL = ['low', 'medium', 'high', 'ultra'] as const, q0 = (params.get('q') as typeof settings.quality) || settings.quality

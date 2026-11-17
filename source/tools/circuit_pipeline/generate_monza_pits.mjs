@@ -135,6 +135,14 @@ const wdx = garage.pitwall.pos[0] - garage.frame.pos[0], wdz = garage.pitwall.po
 const wallLocal = [wdx * Math.cos(yawSpa) - wdz * Math.sin(yawSpa), garage.pitwall.pos[1] - garage.frame.pos[1], wdx * Math.sin(yawSpa) + wdz * Math.cos(yawSpa)]
 const frontOffset = garage.pit_stop.local[2]
 const workOffset = 3.5
+const measuredDoorTemplates = (template.doors ?? []).filter(d => d.action === 'remove' && d.width > 0 && d.floor_y !== undefined && d.aabb_max?.length === 3)
+const median = values => { const sorted = [...values].sort((a, b) => a - b); return sorted[Math.floor(sorted.length / 2)] }
+if (!measuredDoorTemplates.length) throw new Error('pits.json template: dimensions de portes mesurées manquantes')
+const doorWidth = median(measuredDoorTemplates.map(d => d.width))
+const kitDoorHeight = median(measuredDoorTemplates.map(d => d.aabb_max[1] - d.floor_y))
+// La géométrie de façade Monza conserve des triangles de volet jusqu'à ~3.3 m au-dessus du seuil;
+// garder la largeur mesurée du kit mais laisser 4 m libres sur ce modèle de circuit.
+const doorHeight = Math.max(4, kitDoorHeight)
 
 const garages = teams.map(([team, name], k) => {
   const station = s0 + (k + 0.5) * (s1 - s0) / teams.length
@@ -160,6 +168,10 @@ const garages = teams.map(([team, name], k) => {
     car_park: [carPark.map(v => +v.toFixed(3))], box_station_m: +station.toFixed(3),
   }
 })
+const doors = garages.map(g => ({
+  team: g.team, action: 'remove', center: g.frame.pos, yaw: g.frame.yaw,
+  width: +doorWidth.toFixed(3), floor_y: g.frame.pos[1], height: +doorHeight.toFixed(3), depth: 0.8,
+}))
 
 const output = {
   circuit: 'monza_2020', season: 2020,
@@ -168,7 +180,7 @@ const output = {
     pitlane: 'track/pitlane.json, interpolated along route entry→exit',
     elevation: 'track/surface.json + surface.bin, same smoothing and height convention as TrackSurface.sample()',
     garage_anchor_template: 'shared/assets/spa_pits/pits.json; only local model-space pit_stop/car_park/pitwall offsets and npc_spots are reused',
-    note: 'Aucune coordonnée monde Spa. Frames, arrêts et muret sont calculés depuis la pitlane/surface Monza; les dix nœuds garages_lod sont repositionnés et aucun triangle de porte Spa n’est réutilisé.',
+    note: 'Aucune coordonnée monde ni aucun triangle Spa. Frames, arrêts, muret et ouvertures de portes sont calculés depuis la pitlane/surface Monza; seules les dimensions standard d’ouverture sont reprises des portes mesurées du kit.',
   },
   conventions: {
     frame: 'Repère circuit glTF Y-haut, mètres; origine au centre de façade, calculée depuis le bâtiment et la pitlane Monza.',
@@ -183,6 +195,7 @@ const output = {
     pitlane_station_range_m: [+s0.toFixed(3), +s1.toFixed(3)],
     work_offset_m: workOffset, garage_front_offset_m: +frontOffset.toFixed(3),
   },
+  doors,
   player_garage: { npc_spots: template.player_garage?.npc_spots ?? [] },
   garages,
 }

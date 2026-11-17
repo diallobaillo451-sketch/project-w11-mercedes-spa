@@ -9,6 +9,7 @@ import { marshalBoardFallbackAllowed, pitExitLampFallbackAllowed, shouldCreateFa
 import { createServer } from 'vite'
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
+const assetRoot = process.env.MONZA_ASSET_ROOT || repo
 const trackDir = process.env.MONZA_TRACK_DIR || path.join(repo, 'public/track_monza')
 const configPath = process.env.MONZA_PITS_CONFIG || path.join(repo, 'public/track_monza/pits.json')
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
@@ -25,6 +26,14 @@ const pit = new Pitlane(pitData, { limitFromS: 5405, limitToS: 70 })
 const expectedTeams = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
 assert.equal(config.circuit, 'monza_2020')
 assert.deepEqual(config.garages.map(g => g.team), expectedTeams, 'les dix équipes 2020 doivent avoir une case')
+assert.deepEqual(config.doors?.map(d => d.team), expectedTeams, 'chaque façade Monza doit avoir une ouverture ciblée')
+for (const door of config.doors) {
+  const garage = config.garages.find(g => g.team === door.team)
+  assert.equal(door.action, 'remove', `${door.team}: baie ouverte`)
+  assert.deepEqual(door.center, garage.frame.pos, `${door.team}: porte calée au centre de façade mesuré`)
+  assert.equal(door.yaw, garage.frame.yaw, `${door.team}: porte orientée selon le cadre mesuré`)
+  assert.ok(door.width >= 5.8 && door.width <= 6.4 && door.height >= 3.8 && door.height <= 4.2, `${door.team}: dimensions mesurées de l’ouverture`)
+}
 assert.ok(config.player_garage.npc_spots.length > 0, 'les postes PNJ locaux du garage doivent exister')
 assert.deepEqual(marshals.posts, [], 'Monza source ne fournit aucun poste mesuré : ne pas inventer de placement')
 assert.equal(marshals.signals?.length, 1, 'un feu natif mesuré de Monza est documenté')
@@ -94,7 +103,7 @@ if (process.env.CI || process.env.MONZA_REQUIRE_ASSETS === '1') {
       requiredFiles.push(`public/assets/spa_pits/npc_tex/npc_${kind}_${team}_${size}.ktx2`)
     }
   }
-  for (const file of requiredFiles) assert.ok(fs.statSync(path.join(repo, file)).size > 0, `asset runtime absent ou vide : ${file}`)
+  for (const file of requiredFiles) assert.ok(fs.statSync(path.join(assetRoot, file)).size > 0, `asset runtime absent ou vide : ${file}`)
   const playerGarage = readGlbNames(process.env.MONZA_PLAYER_GARAGE_GLB || path.join(repo, 'public/assets/monza_pits/garage_player.glb'))
   for (const node of ['jack_front_pivot', 'jack_rear_pivot', 'screen_1', 'screen_2', 'screen_3', 'pitbox_red', 'pitbox_green', 'pitbox_stop', 'car1_park']) {
     assert.ok(playerGarage.has(node), `ancre garage joueur absente : ${node}`)
@@ -164,4 +173,4 @@ for (const garage of config.garages) {
   pit.setTeamBox(garage.team, pos[0], pos[2])
 }
 assert.equal(pit.boxAt.size, 10, 'les dix arrêts doivent être enregistrés dans le runtime')
-console.log('MONZA PITS OK: 10 box, 10 stands du muret, côté piste, altitudes et ancres validées.')
+console.log('MONZA PITS OK: 10 box et portes ouvertes, 10 stands du muret, côté piste, altitudes et ancres validées.')
