@@ -58,15 +58,15 @@ export const CIRCUITS: Record<Circuit['id'], Circuit> = {
   },
   silverstone: {
     id: 'silverstone', name: 'Silverstone', trackDir: './track_silverstone/', sceneDir: './assets/silverstone/', marshals: null, spaPits: false,
-    optionalAssets: { barriers: false, pitlane: false, grassmask: false, crowd: false }, hasLods: false,
-    pit: { limitFromS: 0, limitToS: 0 }, gates: [1750, 4500],
+    optionalAssets: { barriers: false, pitlane: true, grassmask: false, crowd: false }, hasLods: false,
+    pit: { limitFromS: 5678, limitToS: 320 }, gates: [1750, 4500],
     // Silverstone GP 2024 (E : secteurs et DRS estimés sur notre ligne centrale de 5 905,6 m, s = 0 au milieu de la voie des stands ; 2 zones : Wellington Straight, ligne droite des stands)
     drs: length => { const k = length / 5905.6; return [[5700 * k, length], [0, 200 * k], [1150 * k, 1700 * k]] },
   },
   marina: {
     id: 'marina', name: 'Marina Bay (nuit)', trackDir: './track_marina/', sceneDir: './assets/marina/', marshals: null, spaPits: false,
-    optionalAssets: { barriers: false, pitlane: false, grassmask: true, crowd: false }, hasLods: false,
-    pit: { limitFromS: 0, limitToS: 0 }, gates: [1600, 3350],
+    optionalAssets: { barriers: false, pitlane: true, grassmask: true, crowd: false }, hasLods: false,
+    pit: { limitFromS: 4880, limitToS: 180 }, gates: [1600, 3350],
     // Marina Bay Street Circuit, de nuit (E : secteurs et DRS estimés sur notre ligne centrale de 5 022,6 m, s = 0 sur la ligne de départ ; 3 zones, la première chevauche la ligne)
     drs: length => { const k = length / 5022.6; return [[4880 * k, length], [0, 255 * k], [2985 * k, 3400 * k], [945 * k, 1290 * k]] },
     skyDir: './assets/marina/sky/',

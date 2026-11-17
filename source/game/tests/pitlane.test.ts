@@ -32,7 +32,8 @@ for (; t < 200 && !done; t += DT) {
   let k = 0; for (let j = i; j < Math.min(P.n - 2, i + 25); j++) { const ax = P.x[j + 1] - P.x[j], az = P.z[j + 1] - P.z[j], bx = P.x[j + 2] - P.x[j + 1], bz = P.z[j + 2] - P.z[j + 1]; k = Math.max(k, Math.abs(Math.atan2(ax * bz - az * bx, ax * bx + az * bz)) / 2) }
   const vT = Math.min(zone ? 30 : 40, Math.sqrt(9 / Math.max(k, 1e-3)))
   const v = car.speed
-  car.step(DT, { throttle: v < vT ? 0.7 : 0, brake: v > vT + 2 || (zone && v > 22.6) ? 0.6 : 0, steer: Math.max(-1, Math.min(1, e * 2.2)), pitLim: zone })
+  const pitBrake = i >= Math.max(0, P.iIn - 30) && i <= P.iOut && v > 21.8
+  car.step(DT, { throttle: !pitBrake && v < vT ? 0.7 : 0, brake: pitBrake || v > vT + 2 ? 0.6 : 0, steer: Math.max(-1, Math.min(1, e * 2.2)), pitLim: zone })
   if (car.impact > 0.15) { hits++; maxImp = Math.max(maxImp, car.impact) }
   if (process.env.DBG2 && zone && car.speed * 3.6 > 80.8) console.log("over", t.toFixed(2), (car.speed * 3.6).toFixed(1), "thr", car.throttleApplied.toFixed(2), "cut", car.pitLimCut.toFixed(2), "vy", car.vel[1].toFixed(2))
   if (zone && t - entered > 2) { vMaxZone = Math.max(vMaxZone, car.speed * 3.6); tZone += DT }

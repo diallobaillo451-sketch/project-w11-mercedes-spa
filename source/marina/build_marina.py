@@ -3,7 +3,7 @@
 
     python3 source/marina/build_marina.py <modele.glb> <sortie> [--hdr ciel_nuit.hdr] [--debug dossier]
 
-sortie/track_marina/  surface.json, surface.bin, grassmask.bin, lamps.json
+    sortie/track_marina/  surface.json, surface.bin, grassmask.bin, lamps.json, pitlane.json
 sortie/assets/marina/ tiles.json, base.gltf, t00…tNN (.gltf/.bin), tex/*.webp + ktx2.json, sky/ (sky.json, sky_4k.webp, sky_2k.webp), CREDITS.txt
 
 Les matériaux du modèle ne sont jamais renommés (la physique herbe/gravier passe par les tables de marina_tables.py, pas par les noms).
@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 from marina_core import Glb
 from marina_physics import build_physics
+from marina_pitlane import build_pitlane
 from marina_lamps import find_lamps, write_lamps
 from marina_scene import build_scene
 from marina_sky import build_sky
@@ -50,6 +51,7 @@ def main():
     log('== physique ==')
     cache = {}
     phys = build_physics(a.glb, track, dbg, log, analyze=False, tm_cache=cache)
+    build_pitlane(a.glb, track, log)
     sj = json.load(open(os.path.join(track, 'surface.json')))
     log('== lampadaires ==')
     O = np.array([sj['origin']['x'], sj['origin']['y'], sj['origin']['z']])
@@ -80,6 +82,7 @@ def main():
     assert 4500 < sj['length'] < 5600 and sj['N'] > 4500, 'longueur de piste inattendue : %s' % sj['length']
     for fn in ('surface.bin', 'grassmask.bin', 'lamps.json'):
         assert os.path.getsize(os.path.join(track, fn)) > 1000, fn
+    assert os.path.getsize(os.path.join(track, 'pitlane.json')) > 1000, 'pitlane.json'
     for fn in ('sky.json', 'sky_4k.webp', 'sky_2k.webp'):
         assert os.path.getsize(os.path.join(scene, 'sky', fn)) > 100, fn
     assert os.path.getsize(os.path.join(scene, 'tex', 'ktx2.json')) == 2

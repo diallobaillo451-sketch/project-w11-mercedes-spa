@@ -26,6 +26,7 @@
       done
       echo 'BARCELONA OK'
     - sha256sum -c SHA256SUMS
+    - node source/tools/circuit_pipeline/open_pit_corridor.mjs public/track_barcelona
     - if [ -d public_sepang/assets/sepang ]; then echo 'VITE_SEPANG=1' > source/game/.env.production.local; fi
     - |
       silverstone_fetch() {
@@ -92,13 +93,16 @@
         fi
         mkdir -p public/assets/silverstone public/track_silverstone
         cp -r public_silverstone/assets/silverstone/. public/assets/silverstone/ && cp -r public_silverstone/track_silverstone/. public/track_silverstone/ && echo 'SILVERSTONE OK' && du -sh public/assets/silverstone public/track_silverstone
+        (cd shared/silverstone && sha256sum -c pitlane.sha256) && cp shared/silverstone/pitlane.json public/track_silverstone/pitlane.json && node source/tools/circuit_pipeline/open_pit_corridor.mjs public/track_silverstone || { echo 'ATTENTION : voie des stands Silverstone non preparee'; case "$CI_COMMIT_BRANCH" in *pitlane-access*|*silverstone*) exit 1;; esac; }
       else
         echo 'Silverstone non assemble : circuit indisponible'
       fi
     - |
       if [ -d public_marina/assets/marina ] && [ -d public_marina/track_marina ]; then
         mkdir -p public/assets/marina public/track_marina
-        cp -r public_marina/assets/marina/. public/assets/marina/ && cp -r public_marina/track_marina/. public/track_marina/ && echo 'MARINA OK' && du -sh public/assets/marina public/track_marina
+        cp -r public_marina/assets/marina/. public/assets/marina/ && cp -r public_marina/track_marina/. public/track_marina/ || exit 1
+        node source/tools/circuit_pipeline/open_pit_corridor.mjs public/track_marina || { echo 'ATTENTION : voie des stands Marina non preparee'; case "$CI_COMMIT_BRANCH" in *pitlane-access*) exit 1;; esac; }
+        echo 'MARINA OK' && du -sh public/assets/marina public/track_marina
       else
         echo 'Marina Bay non assemblé (modèle absent de source/marina/ ou conversion en échec) : circuit indisponible'
       fi
@@ -106,6 +110,16 @@
     - |
       cd source/game
       TRACK_DIR="../../public/track_monza" PIT_FROM=5405 PIT_TO=70 npm run test:pitlane
+      for spec in 'barcelona 4245 329' 'sepang 5322 395' 'silverstone 5678 320' 'marina 4880 180'; do
+        set -- $spec
+        track_dir="../../public/track_$1"
+        if [ -f "$track_dir/pitlane.json" ]; then
+          TRACK_DIR="$track_dir" PIT_FROM="$2" PIT_TO="$3" npm run test:pitlane
+        else
+          echo "Pitlane assets absents pour $1"
+          case "$CI_COMMIT_BRANCH" in *pitlane-access*) exit 1;; esac
+        fi
+      done
       cd ../..
 
 # Sepang : conversion du GLB déposé dans source/sepang/ (surface physique + scène 3D). Sans GLB, seule la syntaxe des scripts est vérifiée.
