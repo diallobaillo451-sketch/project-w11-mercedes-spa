@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "circuit_id": "interlagos",
+  "visual_source_file": "failed_import_interlagos_circuit_2023_layout.glb",
+  "visual_source_sha256": "93cee26cfef3c75b5e0dce09f854ad797ad674519829ad07577d7634bfcdbe42",
+  "visual_source_license": "CC BY 4.0",
+  "visual_source_author": "Dave Love (Sketchfab: Tyler_Dave)",
+  "visual_source_url": "https://sketchfab.com/3d-models/failed-import-interlagos-circuit-2023-layout-4e5f0ebb2f2b48d289d5f6231c22512b",
+  "reference_route": "https://raw.githubusercontent.com/bacinger/f1-circuits/master/circuits/br-1940.geojson",
+  "reference_route_license": "MIT (bacinger/f1-circuits); unofficial community geometry, not an official survey",
+  "reference_route_id": "br-1940",
+  "normalization_length_m": 4309.0,
+  "normalization_length_source": "W11 2020 calendar row BRA: 4.309 km",
+  "source_route_length_m": 4302.504611319558,
+  "road_material_ids": [
+    90
+  ],
+  "normalization_scale": 0.9857623059656677,
+  "source_origin_xz_m": [
+    -478.20594042026204,
+    116.5667643441694
+  ],
+  "source_origin_y_m": 13.832137663723506,
+  "route_snap": {
+    "mask_coverage": 1.0,
+    "median_offset_m": 4.515566517544469,
+    "p90_offset_m": 8.20295529070947,
+    "route_length_before_m": 4310.858335717387,
+    "route_length_snapped_m": 4371.236325352123,
+    "road_width_p10_m": 9.0,
+    "road_width_p50_m": 12.5,
+    "road_width_p90_m": 15.5
+  },
+  "road_node_names": [
+    "Object_109"
+  ],
+  "route_alignment": {
+    "rotation_deg": 14.172741206934301,
+    "uniform_scale": 1.0020567248686965,
+    "mirror_y": true,
+    "translation_xz_m": [
+      -197.07022912282588,
+      -103.23477555968762
+    ],
+    "route_fit_mean_distance_m": 0.753173828125,
+    "route_fit_p90_distance_m": 2.4302263259887695,
+    "route_fit_p99_distance_m": 5.032217502593994,
+    "route_fit_within_3m_fraction": 0.9033457249070632,
+    "route_geometry_method": "community_geojson_fit_and_road_snap",
+    "reference_route_length_m": 4302.504611319558,
+    "snapped_road_length_m": 4371.236325352123,
+    "snap_coverage": 1.0,
+    "snap_p90_offset_m": 8.20295529070947,
+    "snap_road_width_p10_p50_p90_m": [
+      9.0,
+      12.5,
+      15.5
+    ]
+  },
+  "physics_surface": {
+    "length_m": 4308.999999999996,
+    "stations": 4309,
+    "grid_bytes": 3111098,
+    "road_width_p10_p50_p90_m": [
+      9.29264066645142,
+      12.500000000000002,
+      15.734200568673495
+    ],
+    "off_track_friction": "Grass fallback outside selected asphalt; surrounding mesh classes not asserted.",
+    "virtual_wall_median_m": 44.0
+  },
+  "scene": {
+    "tile_count": 13,
+    "texture_cap_px": 1024,
+    "lods": false,
+    "webp_meshopt": true,
+    "builder_log": "tiles.log"
+  },
+  "limitations": [
+    "No circuit-specific pitlane data was generated or imported.",
+    "No verified physical barriers, marshals, crowd, grass mask, runoff or kerb classification was inferred.",
+    "Sector timing and DRS remain provisional until their official positions are converted to this lap origin."
+  ]
+}

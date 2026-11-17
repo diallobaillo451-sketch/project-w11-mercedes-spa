@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "circuit_id": "imola",
+  "visual_source_file": "imola_circuit_2024_layout.glb",
+  "visual_source_sha256": "73ea4ad8b09ce2787fd96654762cfa9cc3339c0d0e085bdb5360bb671f2c57b4",
+  "visual_source_license": "CC BY 4.0",
+  "visual_source_author": "Dave Love (Sketchfab: Tyler_Dave)",
+  "visual_source_url": "https://sketchfab.com/3d-models/imola-circuit-2024-layout-72f958df3530472cb75464218b3d657c",
+  "reference_route": "https://raw.githubusercontent.com/bacinger/f1-circuits/master/circuits/it-1953.geojson",
+  "reference_route_license": "MIT (bacinger/f1-circuits); unofficial community geometry, not an official survey",
+  "reference_route_id": "it-1953",
+  "normalization_length_m": 4909.0,
+  "normalization_length_source": "W11 2020 calendar row Emilia-Romagna: 4.909 km",
+  "source_route_length_m": 4903.650667265442,
+  "road_material_ids": [
+    48,
+    49
+  ],
+  "normalization_scale": 0.9990523856177446,
+  "source_origin_xz_m": [
+    205.09595673267432,
+    -382.79478011639293
+  ],
+  "source_origin_y_m": -14.271548174690517,
+  "route_snap": {
+    "mask_coverage": 1.0,
+    "median_offset_m": 1.5846032924357036,
+    "p90_offset_m": 2.8657141795613836,
+    "route_length_before_m": 4903.112306837047,
+    "route_length_snapped_m": 4913.656251333223,
+    "road_width_p10_m": 10.0,
+    "road_width_p50_m": 10.5,
+    "road_width_p90_m": 14.0
+  },
+  "road_node_names": [
+    "Object_48",
+    "Object_49"
+  ],
+  "route_alignment": {
+    "rotation_deg": 358.2103293311565,
+    "uniform_scale": 0.9999999999999989,
+    "mirror_y": true,
+    "translation_xz_m": [
+      -97.25016996178122,
+      -62.356027296684
+    ],
+    "route_fit_mean_distance_m": 0.0,
+    "route_fit_p90_distance_m": 0.0,
+    "route_fit_p99_distance_m": 0.0,
+    "route_fit_within_3m_fraction": 1.0,
+    "route_geometry_method": "community_geojson_fit_and_road_snap",
+    "reference_route_length_m": 4903.650667265442,
+    "snapped_road_length_m": 4913.656251333223,
+    "snap_coverage": 1.0,
+    "snap_p90_offset_m": 2.8657141795613836,
+    "snap_road_width_p10_p50_p90_m": [
+      10.0,
+      10.5,
+      14.0
+    ]
+  },
+  "physics_surface": {
+    "length_m": 4908.9999999999945,
+    "stations": 4909,
+    "grid_bytes": 3544298,
+    "road_width_p10_p50_p90_m": [
+      10.409406818544884,
+      10.97880421759429,
+      14.05117553753722
+    ],
+    "off_track_friction": "Grass fallback outside selected asphalt; surrounding mesh classes not asserted.",
+    "virtual_wall_median_m": 44.0
+  },
+  "scene": {
+    "tile_count": 13,
+    "texture_cap_px": 1024,
+    "lods": false,
+    "webp_meshopt": true,
+    "builder_log": "tiles.log"
+  },
+  "limitations": [
+    "No circuit-specific pitlane data was generated or imported.",
+    "No verified physical barriers, marshals, crowd, grass mask, runoff or kerb classification was inferred.",
+    "Sector timing and DRS remain provisional until their official positions are converted to this lap origin."
+  ]
+}

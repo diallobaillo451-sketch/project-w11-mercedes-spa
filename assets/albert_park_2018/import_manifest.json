@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "circuit_id": "albertpark",
+  "visual_source_file": "albert_park_circuit_melbourne_2018_layout.glb",
+  "visual_source_sha256": "64a67a9d6ae4bbff377954d90accc401bcd4920131997b3f715d7520bdcd6a89",
+  "visual_source_license": "CC BY 4.0",
+  "visual_source_author": "Dave Love (Sketchfab: Tyler_Dave)",
+  "visual_source_url": "https://sketchfab.com/3d-models/albert-park-circuit-melbourne-2018-layout-98baf7817404430f9caaa5cee7a1c7a7",
+  "reference_route": "https://raw.githubusercontent.com/bacinger/f1-circuits/master/circuits/au-1953.geojson",
+  "reference_route_license": "MIT (bacinger/f1-circuits); unofficial community geometry, not an official survey",
+  "reference_route_id": "au-1953",
+  "normalization_length_m": 5303.0,
+  "normalization_length_source": "W11 2020 calendar row Australia: 5.303 km (2018 layout)",
+  "source_route_length_m": 5279.21924309097,
+  "road_material_ids": [
+    83
+  ],
+  "normalization_scale": 1.0018523336888852,
+  "source_origin_xz_m": [
+    -143.23079219782062,
+    431.7758086666384
+  ],
+  "source_origin_y_m": -124.68776033243155,
+  "route_snap": {
+    "mask_coverage": 0.9967735813247296,
+    "median_offset_m": 2.533238550248347,
+    "p90_offset_m": 4.939845339555812,
+    "route_length_before_m": 5268.562473498701,
+    "route_length_snapped_m": 5293.195236142247,
+    "road_width_p10_m": 11.0,
+    "road_width_p50_m": 11.5,
+    "road_width_p90_m": 14.0
+  },
+  "road_node_names": [
+    "Object_87"
+  ],
+  "route_alignment": {
+    "rotation_deg": 358.8802839821395,
+    "uniform_scale": 0.9980768854701013,
+    "mirror_y": true,
+    "translation_xz_m": [
+      -3.581275831627549,
+      38.680912257049805
+    ],
+    "route_fit_mean_distance_m": 0.1934889853000641,
+    "route_fit_p90_distance_m": 0.009134153835475445,
+    "route_fit_p99_distance_m": 4.522861003875732,
+    "route_fit_within_3m_fraction": 0.9848484848484849,
+    "route_geometry_method": "community_geojson_fit_and_road_snap",
+    "reference_route_length_m": 5279.21924309097,
+    "snapped_road_length_m": 5293.195236142247,
+    "snap_coverage": 0.9967735813247296,
+    "snap_p90_offset_m": 4.939845339555812,
+    "snap_road_width_p10_p50_p90_m": [
+      11.0,
+      11.5,
+      14.0
+    ]
+  },
+  "physics_surface": {
+    "length_m": 5303.000000000003,
+    "stations": 5303,
+    "grid_bytes": 3828766,
+    "road_width_p10_p50_p90_m": [
+      11.360351965582852,
+      11.549868661966187,
+      14.156262154933204
+    ],
+    "off_track_friction": "Grass fallback outside selected asphalt; surrounding mesh classes not asserted.",
+    "virtual_wall_median_m": 44.0
+  },
+  "scene": {
+    "tile_count": 13,
+    "texture_cap_px": 1024,
+    "lods": false,
+    "webp_meshopt": true,
+    "builder_log": "tiles.log"
+  },
+  "limitations": [
+    "No circuit-specific pitlane data was generated or imported.",
+    "No verified physical barriers, marshals, crowd, grass mask, runoff or kerb classification was inferred.",
+    "Sector timing and DRS remain provisional until their official positions are converted to this lap origin."
+  ]
+}
