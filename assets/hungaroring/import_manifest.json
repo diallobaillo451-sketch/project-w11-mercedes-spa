@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "circuit_id": "hungaroring",
+  "visual_source_file": "hungaroring_2020_layout.glb",
+  "visual_source_sha256": "077cc30c4b3bf3abf0f1789655f13db5de30c5809cf580fed14b7dc43a0b7c2a",
+  "visual_source_license": "Not declared in supplied GLB; local/offline use only until rights are confirmed.",
+  "reference_route": "https://raw.githubusercontent.com/bacinger/f1-circuits/master/circuits/hu-1986.geojson",
+  "reference_route_license": "MIT; unofficial community geometry, not an official survey.",
+  "reference_route_id": "hu-1986",
+  "reference_length_m": 4381.0,
+  "source_route_length_m": 4376.054,
+  "road_material_ids": [
+    16,
+    75,
+    77,
+    78,
+    4,
+    58
+  ],
+  "normalization_scale": 0.985810695876593,
+  "source_origin_xz_m": [
+    -337.9914782336926,
+    281.3856168389985
+  ],
+  "source_origin_y_m": 37.514723127990344,
+  "route_snap": {
+    "mask_coverage": 1.0,
+    "median_offset_m": 1.4837513876488175,
+    "p90_offset_m": 7.463088605469105,
+    "route_length_before_m": 4381.111151430434,
+    "route_length_snapped_m": 4444.0580918067335,
+    "road_width_p10_m": 9.5,
+    "road_width_p50_m": 13.0,
+    "road_width_p90_m": 25.5
+  },
+  "physics_surface": {
+    "length_m": 4380.999999999997,
+    "stations": 4381,
+    "grid_bytes": 3163082,
+    "road_width_p10_p50_p90_m": [
+      9.891175080642384,
+      13.599973310834175,
+      25.49685367358348
+    ],
+    "off_track_friction": "Grass fallback outside selected asphalt; surrounding mesh classes not asserted.",
+    "virtual_wall_median_m": 44.0
+  },
+  "scene": {
+    "tile_count": 13,
+    "texture_cap_px": 1024,
+    "lods": false,
+    "webp_meshopt": true,
+    "builder_log": "tiles.log"
+  },
+  "limitations": [
+    "No circuit-specific pitlane data was generated or imported.",
+    "No verified physical barriers, marshals, crowd, grass mask, runoff or kerb classification was inferred.",
+    "Sector timing and DRS remain provisional until their official positions are converted to this lap origin."
+  ]
+}

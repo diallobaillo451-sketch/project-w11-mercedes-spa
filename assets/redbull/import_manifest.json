@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "circuit_id": "redbull",
+  "visual_source_file": "redbull_ring_2025_layout.glb",
+  "visual_source_sha256": "1f6c82bd5e4e59e0feef47d902be9ef6d5132d63a3a69b77b2ddee432eea9413",
+  "visual_source_license": "Not declared in supplied GLB; local/offline use only until rights are confirmed.",
+  "reference_route": "https://raw.githubusercontent.com/bacinger/f1-circuits/master/circuits/at-1969.geojson",
+  "reference_route_license": "MIT; unofficial community geometry, not an official survey.",
+  "reference_route_id": "at-1969",
+  "reference_length_m": 4318.0,
+  "source_route_length_m": 4302.236,
+  "road_material_ids": [
+    79
+  ],
+  "normalization_scale": 1.0562320909731746,
+  "source_origin_xz_m": [
+    -395.09066284834864,
+    -268.48155527668814
+  ],
+  "source_origin_y_m": 401.3145053341882,
+  "route_snap": {
+    "mask_coverage": 1.0,
+    "median_offset_m": 4.893223428040018,
+    "p90_offset_m": 13.51515300236922,
+    "route_length_before_m": 4170.133773942429,
+    "route_length_snapped_m": 4088.116652488326,
+    "road_width_p10_m": 11.0,
+    "road_width_p50_m": 11.5,
+    "road_width_p90_m": 15.0
+  },
+  "physics_surface": {
+    "length_m": 4318.000000000002,
+    "stations": 4318,
+    "grid_bytes": 3117596,
+    "road_width_p10_p50_p90_m": [
+      12.254683729728649,
+      12.448492819569223,
+      19.68137724557328
+    ],
+    "off_track_friction": "Grass fallback outside selected asphalt; surrounding mesh classes not asserted.",
+    "virtual_wall_median_m": 44.0
+  },
+  "scene": {
+    "tile_count": 13,
+    "texture_cap_px": 1024,
+    "lods": false,
+    "webp_meshopt": true,
+    "builder_log": "tiles.log"
+  },
+  "limitations": [
+    "No circuit-specific pitlane data was generated or imported.",
+    "No verified physical barriers, marshals, crowd, grass mask, runoff or kerb classification was inferred.",
+    "Sector timing and DRS remain provisional until their official positions are converted to this lap origin."
+  ]
+}
