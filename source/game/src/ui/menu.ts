@@ -18,6 +18,7 @@ export interface MenuHost {
   /** voiture affichée/pilotée (id de CARS) */
   setCar(id: string): void
   shot(s: ShowShot): void
+  selectCircuit(id: string): void
   startQuick(): void
   startWeekend(fresh: boolean): void
   weekendInProgress(): string | null
@@ -54,12 +55,13 @@ export class Menu {
   refresh() { const p = this.pages[this.pages.length - 1]; if (!p) return; const n = this.build(p.id); p.el.replaceWith(n.el); p.el = n.el; this.chrome(); this.updHero() }
   private updHero() {
     const d = driverById(this.H.profile.driver), t = TEAMS[d.team], tc = teamAccent(d.team)
+    const selected = CIRCUITS.find(x => x.id === this.H.profile.circuit)
     this.root.style.setProperty('--tc', tc)
     this.hero.innerHTML = `<div class="num">${d.num}</div><div class="first">${flagEmoji(d.nat)} ${d.first}</div><div class="last">${d.last}</div><div class="team"><i></i>${t.name}</div>`
     this.hero.style.animation = 'none'; void this.hero.offsetWidth; this.hero.style.animation = ''
     const b = this.H.bestLap()
     this.top.innerHTML = ''
-    const c = h('div', 'ap-chip'); c.textContent = b ? 'Record Spa · ' + fmtTime(b) : 'Saison 2020'; this.top.append(c)
+    const c = h('div', 'ap-chip'); c.textContent = b ? `Record ${selected?.name ?? 'circuit'} · ` + fmtTime(b) : 'Saison 2020'; this.top.append(c)
   }
   private chrome() {
     const n = this.pages.length, cur = this.pages[n - 1]
@@ -113,7 +115,8 @@ export class Menu {
     const save = () => H.save()
     switch (id) {
       case 'home': {
-        title('Saison 2020 · Manche 7', 'Grand Prix de Belgique', 'Spa-Francorchamps · 7,004 km · 19 virages')
+        const selected = CIRCUITS.find(x => x.id === P.circuit)
+        title('Saison 2020 · sélection', selected?.gp ?? 'Grand Prix', `${selected?.name ?? 'Circuit'} · ${(selected?.km ?? 0).toFixed(3).replace('.', ',')} km · ${selected?.laps ?? 0} tours`)
         const tiles = h('div', 'ap-tiles')
         const t1 = h('button', 'ap-tile', `<div class="k">Course rapide</div><div class="n">Départ arrêté</div><div class="d">${P.laps} tour${P.laps > 1 ? 's' : ''} · feux rouges · drapeau à damier</div>${ICON_BG.flag}`)
         t1.style.setProperty('--c1', '#0f5a52'); t1.style.setProperty('--c2', '#062320')
@@ -170,9 +173,9 @@ export class Menu {
       }
       case 'circuit': {
         title(this.flow ? 'Étape 2 sur 4' : 'Calendrier', 'Circuit', 'Calendrier 2020 · 17 manches')
-        const g = group(...CIRCUITS.map(c => row({ title: c.gp === c.name ? c.name : `${c.name}`, sub: `M${c.round} · GP ${c.gp === '70e anniversaire' ? 'du 70e anniversaire' : 'de ' + c.gp} · ${c.km.toFixed(3).replace('.', ',')} km · ${c.laps} tours`,
-          check: c.id === P.circuit, disabled: !c.available, badge: c.available ? undefined : 'Piste à venir', onTap: () => { P.circuit = c.id; save(); this.refresh() } })))
-        el.append(g, footnote('Spa est jouable. Les autres tracés du calendrier sont dans Carrière : on les court dès que la piste est livrée, sinon la manche est simulée au barème 2020.'))
+        const g = group(...CIRCUITS.map(c => row({ title: c.name, sub: `M${c.round} · GP ${c.gp === '70e anniversaire' ? 'du 70e anniversaire' : 'de ' + c.gp} · ${c.km.toFixed(3).replace('.', ',')} km · ${c.laps} tours`,
+          check: c.id === P.circuit, disabled: !c.available, badge: c.available ? undefined : 'Piste à venir', onTap: () => { P.circuit = c.id; save(); H.selectCircuit(c.id); this.refresh() } })))
+        el.append(g, footnote('Spa, Monza, Barcelone, Sepang, Silverstone et Marina Bay sont sélectionnables quand leurs données sont assemblées. Les autres manches de la carrière sont simulées au barème 2020.'))
         return { id, el, title: 'Circuit', shot: 'side' }
       }
       case 'car': {
@@ -187,7 +190,8 @@ export class Menu {
         let st: HTMLElement & { set?: (x: number) => void }
         const setLaps = (v: number) => { P.laps = v; save(); st.set?.(v); this.footer('quick') }
         st = stepper(P.laps, LAP_STEPS, v => `${v} tour${v > 1 ? 's' : ''}`, v => { P.laps = v; save(); this.footer('quick') })
-        el.append(header('Course'), group(ctl('Tours', st), ctlCol('Distance', seg<number>([[3, 'Sprint'], [11, '25 %'], [22, '50 %'], [44, '100 %']], P.laps, setLaps), `${(P.laps * 7.004).toFixed(1).replace('.', ',')} km`)))
+        const selected = CIRCUITS.find(x => x.id === P.circuit)
+        el.append(header('Course'), group(ctl('Tours', st), ctlCol('Distance', seg<number>([[3, 'Sprint'], [11, '25 %'], [22, '50 %'], [44, '100 %']], P.laps, setLaps), `${(P.laps * (selected?.km ?? 7.004)).toFixed(1).replace('.', ',')} km`)))
         this.conditions(el)
         el.append(header('Adversaires'), group(
           row({ title: 'Plateau', sub: '19 monoplaces 2020 · course, essais et qualifications', value: '20 voitures' }),
@@ -222,7 +226,7 @@ export class Menu {
           row({ title: 'Difficulté', value: `${P.difficulty} %` }),
           row({ title: 'État', value: H.careerLabel() ?? 'Pas commencée' }),
         ))
-        el.append(footnote('Points 2020 : 25-18-15-12-10-8-6-4-2-1 et 1 point du meilleur tour s’il est dans les 10. Spa se court vraiment. Les autres manches du calendrier disponible sont simulées tant que leur piste n’est pas livrée. Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer ne sont pas au calendrier.'))
+        el.append(footnote('Points 2020 : 25-18-15-12-10-8-6-4-2-1 et 1 point du meilleur tour s’il est dans les 10. Les manches dont la piste est assemblée se courent réellement ; les autres sont simulées. Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer ne sont pas au calendrier.'))
         const saved = loadCareer()
         if (saved) {
           const pilots = table(saved.points).slice(0, 8)

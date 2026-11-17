@@ -10,6 +10,7 @@
     "test:physics": "node tests/physics.test.ts",
     "test:pitlane": "node tests/pitlane.test.ts",
     "test:app": "node tests/app.mjs",
+    "test:circuit-switch": "node tests/circuit-switch.mjs",
     "test:monza-pits": "node tests/monza-pits.test.mjs",
     "zip": "node tools/zip-dist.mjs"
   },

@@ -1,5 +1,6 @@
 /** Grille 2020 : 20 pilotes titulaires, 10 équipes (données dans drivers2020.json, partagées avec tools/drivers_paint.py). */
 import data from './drivers2020.json'
+import { isCircuitAvailable, trackForGrandPrix } from '../core/circuit.ts'
 export interface Team { name: string; short: string; c1: string; c2: string; c3: string; chest: string; chest2: string }
 export interface Driver { id: string; first: string; last: string; num: number; team: string; nat: string; flag: string[]; original?: boolean }
 export const TEAMS = data.teams as Record<string, Team>
@@ -7,8 +8,8 @@ export const DRIVERS = data.drivers as Driver[]
 export const driverById = (id: string) => DRIVERS.find(d => d.id === id) ?? DRIVERS[0]
 /** couleur d'accent lisible pour l'interface (la 1re couleur des équipes sombres est noire / bleu nuit) */
 export const teamAccent = (t: string) => ({ mercedes: '#00d2be', ferrari: '#dc0000', redbull: '#3671c6', mclaren: '#ff8700', renault: '#fff500', alphatauri: '#c8d1db', racingpoint: '#f596c8', alfaromeo: '#a6051a', haas: '#b6babd', williams: '#00a3e0' } as Record<string, string>)[t] ?? '#ffffff'
-/** Calendrier : manches 2020 dont on a un circuit, plus les tracés reçus hors calendrier 2020.
- *  Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer sont retirés. `available` = piste jouable aujourd'hui (Spa). */
+/** Calendrier 2020 et circuits ajoutés ; les manches dont le pack n’est pas disponible dans le build restent simulées.
+ *  Mugello, Sotchi, Portimão, Istanbul et Sakhir Outer sont retirés. La disponibilité est dérivée des packs assemblés. */
 export interface Circuit { id: string; name: string; gp: string; country: string; km: number; laps: number; available: boolean; round: number; career: boolean; night?: boolean; rain: number; air: [number, number] }
 const ROWS: [string, string, string, string, number, number, number, number, number, boolean?][] = [
   ['aut', 'Red Bull Ring', 'Autriche', 'AUT', 4.318, 71, 0.28, 14, 26],
@@ -32,7 +33,8 @@ const ROWS: [string, string, string, string, number, number, number, number, num
   ['mys', 'Sepang', 'Malaisie', 'MYS', 5.543, 56, 0.4, 26, 33],
 ]
 export const CIRCUITS: Circuit[] = ROWS.map(([id, name, gp, country, km, laps, rain, lo, hi, night], i) => ({
-  id, name, gp, country, km, laps, rain, air: [lo, hi] as [number, number], night: !!night, career: true, available: id === 'bel', round: i + 1,
+  id, name, gp, country, km, laps, rain, air: [lo, hi] as [number, number], night: !!night, career: true,
+  available: (() => { const track = trackForGrandPrix(id); return !!track && isCircuitAvailable(track) })(), round: i + 1,
 }))
 export interface Car { id: string; name: string; team: string; available: boolean }
 export const CARS: Car[] = [{ id: 'w11', name: 'Mercedes-AMG F1 W11 EQ Performance', team: 'mercedes', available: true },

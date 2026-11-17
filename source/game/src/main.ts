@@ -6,7 +6,7 @@ import { TrackSurface } from './track/surface.ts'
 import { Barriers } from './track/barriers.ts'
 import { Pitlane, type PitlaneData } from './track/pitlane.ts'
 import { Game } from './core/game.ts'
-import { CIRCUIT, switchCircuit } from './core/circuit.ts'
+import { CIRCUIT, grandPrixForTrack, isCircuitAvailable, selectCircuit, switchCircuit, trackForGrandPrix } from './core/circuit.ts'
 import { Renderer } from './render/renderer.ts'
 import { CAM_LABEL, CAM_ORDER, type CamMode } from './render/cameras.ts'
 import { Input } from './controls/input.ts'
@@ -74,12 +74,12 @@ function bootProgress(label: string, f: number) {
   $('bootText').textContent = label + (diag.safe ? ' · mode sans échec' : ''); ($('bootBar') as HTMLElement).style.width = Math.round(f * 100) + '%' }
 
 let pitData: PitlaneData | null = null
-/** bouton Circuit (menu) : Spa → Monza → Barcelone, recharge la page */
+/** bouton Circuit (menu) : passe au prochain circuit assemblé, sans recharger la page */
 function mountCircuitButton() {
   const b = document.createElement('button'); b.id = 'bCircuit'; b.type = 'button'; b.hidden = true
   b.textContent = 'Circuit : ' + CIRCUIT.name + ' ⇄'
   b.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:60;padding:7px 12px;border:0;border-radius:999px;background:rgba(20,20,24,.62);color:#fff;font:600 12px -apple-system,system-ui,sans-serif;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)'
-  b.addEventListener('click', () => switchCircuit())
+  b.addEventListener('click', () => { const next = switchCircuit(); if (next) void changeCircuit(next.id) })
   document.body.appendChild(b)
 }
 async function loadTrack(): Promise<TrackSurface> {
@@ -89,6 +89,81 @@ async function loadTrack(): Promise<TrackSurface> {
   const t = new TrackSurface(meta, new Uint16Array(bin)); if (bar) t.barriers = new Barriers(bar)
   pitData = CIRCUIT.optionalAssets.pitlane ? await fetch(CIRCUIT.trackDir + 'pitlane.json').then(r => r.ok ? r.json() : null).catch(() => null) : null
   return t
+}
+/** Installe les données d'une piste et ses ressources sur le renderer courant. */
+async function mountCircuitScene(prog: (label: string, f: number) => void, suppliedTrack?: TrackSurface, rebuild = false) {
+  if (rebuild) {
+    if (screens) { screens.dispose(); screens = null }
+    fview?.resetCircuit(); tower?.bind(null)
+    if (ren.show.active) ren.exitShowroom()
+    ren.clearCircuit()
+  }
+  const track = suppliedTrack ?? await loadTrack()
+  game = new Game(track, 'timetrial')
+  if (pitData) game.pit = new Pitlane(pitData, CIRCUIT.pit)
+  game.autopilot = true; game.setWeather(settings.weather)
+  const bindPit = (root: THREE.Object3D) => {
+    if (!game.pit) {
+      if (CIRCUIT.id === 'monza') { fview?.adoptScene(root); openMonzaGarageDoors(root) }
+      return
+    }
+    const a = readPitAnchors(root)
+    if (game.adoptPitAnchors(a)) dlog('voie des stands : ancres du circuit (' + (game.pit.anchored ? 'chemin ' + game.pit.n + ' pts' : '') + ')')
+    fview?.adoptScene(root)
+    if (CIRCUIT.id === 'monza') openMonzaGarageDoors(root)
+    openGarageDoors(root, game.garage)
+  }
+  ren.onTile = root => bindPit(root)
+  await ren.load(game, track, prog)
+  void ren.streamTiles(game)
+  fview ??= new FieldView(ren)
+  if (ren.track) { bindPit(ren.track); fview.adoptScene(ren.track) }
+  if (CIRCUIT.id === 'monza') await loadMonzaPits(game, ren, fview, driverById(settings.profile.driver).team).catch(e => dlog('stands Monza : ' + (e as Error).message))
+  else if (CIRCUIT.spaPits) void loadSpaPits(game, ren, fview, carOfTeam(driverById(settings.profile.driver).team)).catch(e => dlog('stands : ' + (e as Error).message))
+  screens = new PitScreens()
+  if (CIRCUIT.id === 'monza') dlog('écrans garage Monza : ' + screens.bind(fview.anchors) + '/3 ancres 3D')
+  engineer = new Engineer()
+  marshals = CIRCUIT.marshals ? await fetch(CIRCUIT.marshals).then(r => r.ok ? r.json() : null).catch(() => null) : null
+  prog('Plateau 2020…', 0.9)
+  await fview.preload((done, total, team) => prog('Voitures · ' + team, 0.9 + 0.08 * done / Math.max(1, total)))
+  if (rebuild) {
+    applyCarPhysics(settings.profile.car)
+    if (settings.profile.car !== ren.carId) await ren.setCar(settings.profile.car)
+    applySettings(); wireRadio(); wheel = ren.rig ? new WheelDisplay(ren.rig.root) : null; syncWheelPad()
+  }
+}
+let circuitChanging = false
+function updateCircuitBrand() {
+  document.title = 'PROJECT W11 — ' + CIRCUIT.name
+  const sub = document.getElementById('brandSub'); if (sub) sub.textContent = 'Mercedes-AMG F1 W11 EQ Performance · ' + CIRCUIT.name
+  const button = document.getElementById('bCircuit'); if (button) button.textContent = 'Circuit : ' + CIRCUIT.name + ' ⇄'
+}
+/** Change de circuit dans la session active, avec retour automatique à la piste précédente en cas d’échec. */
+async function changeCircuit(id: string, gpId?: string): Promise<boolean> {
+  if (circuitChanging) return false
+  const oldId = CIRCUIT.id, oldGp = settings.profile.circuit
+  const selected = selectCircuit(id)
+  if (!selected) return false
+  settings.profile.circuit = grandPrixForTrack(selected.id, gpId ?? oldGp); saveSettings(settings)
+  if (selected.id === oldId) { updateCircuitBrand(); menu?.refresh(); return true }
+  circuitChanging = true; run = null; game.autopilot = true
+  setScreen('boot'); $('bootGo').hidden = true; bootProgress('Chargement de ' + selected.name + '…', 0)
+  try {
+    await mountCircuitScene(bootProgress, undefined, true)
+    updateCircuitBrand(); ren.enterShowroom(); $('bootGo').hidden = false; setScreen('menu')
+    return true
+  } catch (e) {
+    dlog('circuit ' + selected.id + ' : ' + (e as Error).message)
+    const fallback = selectCircuit(oldId); settings.profile.circuit = oldGp; saveSettings(settings)
+    if (fallback) try {
+      await mountCircuitScene(bootProgress, undefined, true)
+      updateCircuitBrand(); ren.enterShowroom(); $('bootGo').hidden = false; setScreen('menu')
+      hud.toast('Circuit indisponible · retour à ' + fallback.name, 3600)
+      return false
+    } catch (restore) { dlog('restauration circuit : ' + (restore as Error).message) }
+    $('bootGo').hidden = false; $('bootText').textContent = 'Erreur de chargement · ' + selected.name
+    fatal((e as Error).message); return false
+  } finally { circuitChanging = false }
 }
 let appliedTyres = '', lastPunct = '00000000'
 function applySettings() {
@@ -337,6 +412,7 @@ function frame(now: number) {
   const fixed = (window as unknown as { __w11?: { fixedDt?: number } }).__w11?.fixedDt
   const dt = fixed ?? Math.min(0.1, dtMs / 1000)
   menuMusic.update(dt)
+  if (screen === 'boot') { if (ren.show.active) ren.showroomFrame(Math.min(dt, 0.05)); return }
   if (ren.show.active && (screen === 'menu' || screen === 'garage' || screen === 'results')) { ren.showroomFrame(Math.min(dt, 0.05)); garageTick(); if (screen === 'garage' && game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt); if (CIRCUIT.id === 'monza') { updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase, game.pitShow.lift); screens?.update(game.field, game.car, settings.weather) } return }
   updateGarageAnims(dt, game.field?.player.pitPhase || game.pitCrewPhase, CIRCUIT.id === 'monza' ? game.pitShow.lift : 0)
   if (screen === 'garage') { garageTick(); if (game.field && run?.started && !run.ended && game.field.kind !== 'race') game.field.update(dt) }
@@ -454,11 +530,14 @@ const newRun = (kind: Run['kind'], laps: number, minutes: number, fuel: number):
   raceT: 0, lightsT: 0, lightsN: 0, lightsHold: 0.4 + Math.random() * 2.4, lightsDone: false, started: false, ended: false, pen0: 0, fuel })
 const raceFuel = (laps: number) => Math.min(110, 2.45 * laps + 2) // E : ≈ 2,45 kg/tour à Spa (110 kg pour 44 tours)
 function applyDriver(id: string) { const d = driverById(id); void ren.setDriver(id, d.team !== 'mercedes'); radio.driver = id }
-function startQuick() {
+async function startQuick() {
+  const gp = settings.profile.circuit, track = trackForGrandPrix(gp)
+  if (!track || !isCircuitAvailable(track)) { hud.toast('Cette piste n’est pas assemblée pour le moment', 3000); return }
+  if (!await changeCircuit(track, gp)) return
   const P = settings.profile; run = newRun('quick', P.laps, 0, raceFuel(P.laps))
   settings.damage = settings.damage ?? 'real'; startSession('race', true); setScreen('drive')
 }
-function startCareer() {
+async function startCareer() {
   const P = settings.profile
   career = career ?? loadCareer()
   if (!career || career.driver !== P.driver) career = newCareer(P.driver, P.difficulty)
@@ -479,6 +558,8 @@ function startCareer() {
     menu.refresh()
     return
   }
+  const track = trackForGrandPrix(c.id)
+  if (!track || !isCircuitAvailable(track) || !await changeCircuit(track, c.id)) { hud.toast('La piste de cette manche n’est pas disponible', 3000); return }
   settings.weather = weather
   settings.damage = 'real'
   game.setWeather(weather)
@@ -489,19 +570,27 @@ function startCareer() {
   }
   wk = Weekend.create(plan)
   hud.toast(`${c.gp} · ${weather}${c.night ? ' · nuit' : ''} · ${careerEvents.join(', ') || 'rien à signaler'}`, 4200)
-  startWeekend(false)
+  await startWeekend(false)
 }
-function startWeekend(fresh: boolean) {
+async function startWeekend(fresh: boolean) {
   const P = settings.profile
   if (fresh || !wk) {
     const plan: WeekendPlan = { circuit: P.circuit, car: P.car, driver: P.driver, fpMin: [...P.fpMin] as [number, number, number], qMin: [...P.qMin] as [number, number, number], raceLaps: P.raceLaps,
       weather: settings.weather, damage: settings.damage, skip: P.shortWeekend ? ['FP1', 'FP2'] : [] }
     wk = Weekend.create(plan); wk.st.fuel = 30
   }
+  const gp = wk.st.plan.circuit, track = trackForGrandPrix(gp)
+  if (!track || !isCircuitAvailable(track)) { hud.toast('La piste du week-end n’est pas assemblée', 3000); return }
+  if (!await changeCircuit(track, gp)) return
   if (wk.st.plan.driver !== P.driver) { P.driver = wk.st.plan.driver; applyDriver(P.driver); saveSettings(settings) }
   settings.weather = wk.st.plan.weather as typeof settings.weather; settings.damage = wk.st.plan.damage
   newSessionRun(); if (wk.st.rem != null) run!.remaining = wk.st.rem
   openGarage()
+}
+async function startLegacyOnSelected(k: SessionKind | 'demo') {
+  const gp = settings.profile.circuit, track = trackForGrandPrix(gp)
+  if (!track || !isCircuitAvailable(track)) { hud.toast('Cette piste n’est pas assemblée pour le moment', 3000); return }
+  if (await changeCircuit(track, gp)) startSession(k)
 }
 /** joueur éliminé en Q1 / Q2 : les séances suivantes sont simulées (résultats approchés), on passe directement à la suite */
 function skipEliminated(): boolean {
@@ -693,43 +782,17 @@ async function main() {
     const track = await loadTrack()
     bootProgress('Trajectoire…', 0.05)
     await new Promise(r => setTimeout(r, 0))
-    game = new Game(track, 'timetrial')
-    if (pitData) game.pit = new Pitlane(pitData, CIRCUIT.pit)
-    const bindPit = (root: THREE.Object3D) => {
-      if (!game.pit) {
-        if (CIRCUIT.id === 'monza') { fview?.adoptScene(root); openMonzaGarageDoors(root) }
-        return
-      }
-      const a = readPitAnchors(root)
-      if (game.adoptPitAnchors(a)) dlog('voie des stands : ancres du circuit (' + (game.pit.anchored ? 'chemin ' + game.pit.n + ' pts' : '') + ')')
-      fview?.adoptScene(root)
-      if (CIRCUIT.id === 'monza') openMonzaGarageDoors(root)
-      openGarageDoors(root, game.garage)
-    }
-    game.autopilot = true
     const QL = ['low', 'medium', 'high', 'ultra'] as const, q0 = (params.get('q') as typeof settings.quality) || settings.quality
     const qn = (params.has('q') ? q0 : QL[Math.max(0, QL.indexOf(q0 as typeof QL[number]) - diag.drop)]) as typeof settings.quality
     // KTX2 (textures compressées GPU) sur mobile, ou forcé par ?ktx=1 ; ?ktx=0 pour le désactiver
     const ktx = params.has('ktx') ? params.get('ktx') !== '0' : diag.mobile
     ren = new Renderer($('gl') as HTMLCanvasElement, qn, { safe: diag.safe, mobile: diag.mobile, ktx, onLost: () => gpuLost() })
-    ren.onTile = root => bindPit(root)
     diag.preset = (diag.safe ? 'sans échec (' + ren.q.name + ')' : ren.q.name) + ' · DPR max ' + ren.q.dprMax + (ktx ? ' · KTX2' : ' · WebP')
     dlog('préréglage ' + diag.preset)
-    await ren.load(game, track, bootProgress)
-    void ren.streamTiles(game) // reste de la piste en arrière-plan (tuiles proches d'abord)
-    fview = new FieldView(ren)
-    if (ren.track) { bindPit(ren.track); fview.adoptScene(ren.track) }
-    if (CIRCUIT.id === 'monza') await loadMonzaPits(game, ren, fview, driverById(settings.profile.driver).team).catch(e => dlog('stands Monza : ' + (e as Error).message))
-    else if (CIRCUIT.spaPits) void loadSpaPits(game, ren, fview, carOfTeam(driverById(settings.profile.driver).team)).catch(e => dlog('stands : ' + (e as Error).message))
-    screens = new PitScreens()
-    if (CIRCUIT.id === 'monza') dlog('écrans garage Monza : ' + screens.bind(fview.anchors) + '/3 ancres 3D')
-    engineer = new Engineer()
+    await mountCircuitScene(bootProgress, track)
     career = loadCareer()
-    bootProgress('Plateau 2020…', 0.9)
-    await fview.preload((done, total, team) => bootProgress('Voitures · ' + team, 0.9 + 0.08 * done / Math.max(1, total)))
     hud = new Hud()
     tower = new Tower()
-    marshals = CIRCUIT.marshals ? await fetch(CIRCUIT.marshals).then(r => r.ok ? r.json() : null).catch(() => null) : null
     $('bSkipF').addEventListener('click', () => skipFormation())
     void radio.load().then(() => dlog('radio : banque chargée')).catch(e => dlog('radio indisponible : ' + (e as Error).message))
     wireRadio()
@@ -748,9 +811,10 @@ async function main() {
     menu = new Menu($('menu'), {
       profile: S.profile, get weather() { return S.weather }, set weather(v) { S.weather = v }, get damage() { return S.damage }, set damage(v) { S.damage = v },
       save: () => saveSettings(S), setDriver: id => applyDriver(id), setCar: id => { applyCarPhysics(id); void ren.setCar(id).catch(e => dlog('voiture ' + id + ' : ' + (e as Error).message)) }, shot: sh => ren.show.setShot(sh),
+      selectCircuit: id => { const track = trackForGrandPrix(id); if (track) void changeCircuit(track, id) },
       startQuick: () => startQuick(), startWeekend: fresh => startWeekend(fresh),
       weekendInProgress: () => wk && !wk.done ? `${WK_SHORT[wk.cur]} · ${WK_LABEL[wk.cur]}` : null,
-      startLegacy: k => startSession(k), openPanel: w => openPanel(w), bestLap: () => game.storedBest,
+      startLegacy: k => startLegacyOnSelected(k), openPanel: w => openPanel(w), bestLap: () => game.storedBest,
       careerLabel: () => {
         const c = career ?? loadCareer(); if (!c) return null
         const cal = careerCalendar(); const gp = cal[Math.min(c.round, cal.length - 1)]
@@ -783,7 +847,7 @@ async function main() {
     $('bootGo').addEventListener('click', go)
     last = performance.now(); requestAnimationFrame(frame)
     if (params.has('auto')) { await go(); const k = params.get('auto') as SessionKind | 'demo'; if (k) startSession(k) }
-    ;(window as unknown as { __w11: unknown }).__w11 = { game, ren, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, wheel, menu, startQuick, startWeekend, endSession, openGarage, monzaGarageAnimationState, updateGarageAnims, get run() { return run }, get wk() { return wk }, get fview() { return fview }, get tower() { return tower }, skipFormation, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
+    ;(window as unknown as { __w11: unknown }).__w11 = { get game() { return game }, get ren() { return ren }, input, audio, settings, setCam, startSession, setScreen, openPanel, AudioEngine, get wheel() { return wheel }, get menu() { return menu }, startQuick, startWeekend, endSession, openGarage, changeCircuit, get circuitId() { return CIRCUIT.id }, monzaGarageAnimationState, updateGarageAnims, get run() { return run }, get wk() { return wk }, get fview() { return fview }, get tower() { return tower }, skipFormation, get screen() { return screen }, wAct: (a: string) => document.querySelector<HTMLElement>(`[data-w="${a}"]`)?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) }
     ;(window as unknown as { __w11diag: unknown }).__w11diag = diag
   } catch (e) {
     console.error(e)

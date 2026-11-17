@@ -4,7 +4,7 @@
  *  avant les feux. Ancres Ty consommées si elles sont dans la scène, ignorées sinon. */
 import * as THREE from 'three'
 import type { RaceSim, Racer } from '../race/sim.ts'
-import { loadGLB, type Renderer } from './renderer.ts'
+import { disposeTree, loadGLB, type Renderer } from './renderer.ts'
 import { carOfTeam, teamAccent } from '../data/drivers.ts'
 import { dlog } from '../diag.ts'
 import { bindLivery, readableLivery } from './livery.ts'
@@ -266,6 +266,20 @@ export class FieldView {
     const gb = this.gpuBytes()
     dlog(`plateau : ${this.views.length} voitures, ${this.protos.size} équipes en ${Math.round(performance.now() - t0)} ms · LOD1 ${this.stats.tris1 | 0} tris, LOD2 ${this.stats.tris2 | 0} · GPU ≈ ${(gb.tex / 1048576).toFixed(1)} + ${(gb.geo / 1048576).toFixed(1)} Mo`)
   }
+  /** Vide les instances et accessoires du circuit précédent sans détruire les prototypes d’IA déjà en mémoire. */
+  resetCircuit() {
+    const geos = new Set<THREE.BufferGeometry>(), mats = new Set<THREE.Material>(), tx = new Set<THREE.Texture>()
+    for (const v of this.views) {
+      v.obj.removeFromParent(); v.blob.removeFromParent(); geos.add(v.blob.geometry)
+      for (const m of v.tyreMaterials) mats.add(m)
+      for (const m of [v.blob.material].flat()) { mats.add(m); for (const val of Object.values(m)) if ((val as THREE.Texture)?.isTexture) tx.add(val as THREE.Texture) }
+    }
+    for (const m of mats) m.dispose(); for (const g of geos) g.dispose(); for (const t of tx) t.dispose()
+    for (const child of [...this.root.children]) { this.root.remove(child); disposeTree(child) }
+    this.views = []; this.ready = false; this.sc = null; this.scLights = []; this.scBar = []
+    this.lamps.clear(); this.anchors.clear(); this.jack0.clear(); this.pitGantry = null; this.pitRed = null; this.pitGreen = null; this.boards = null; this.lampState.clear()
+    this.marshalBoardFallback = true; this.pitExitLampFallback = true
+  }
   private buildViews(sim: RaceSim) {
     for (const v of this.views) { v.obj.removeFromParent(); v.blob.removeFromParent(); for (const m of v.tyreMaterials) m.dispose() }
     this.views = []
@@ -424,10 +438,8 @@ export class FieldView {
     return { tex, geo }
   }
   dispose() {
-    const geos = new Set<THREE.BufferGeometry>(), mats = new Set<THREE.Material>(), tx = new Set<THREE.Texture>()
-    this.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; geos.add(m.geometry); for (const mt of [m.material].flat()) if (!this.shared.has(mt)) mats.add(mt) })
-    for (const mt of mats) { for (const val of Object.values(mt)) if ((val as THREE.Texture)?.isTexture) tx.add(val as THREE.Texture); mt.dispose() }
-    for (const g of geos) g.dispose(); for (const t of tx) t.dispose()
-    this.root.removeFromParent(); this.views = []; this.ready = false
+    this.root.removeFromParent(); disposeTree(this.root)
+    for (const p of this.protos.values()) { disposeTree(p.l1); disposeTree(p.l2) }
+    this.protos.clear(); this.shared.clear(); this.views = []; this.ready = false
   }
 }

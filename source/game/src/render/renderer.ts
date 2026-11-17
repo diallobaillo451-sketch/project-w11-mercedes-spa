@@ -33,16 +33,33 @@ import { applyWet, wetU, SkidMarks, RainStreaks, LensDrops, DebrisView } from '.
 import { W11 } from '../physics/params.ts'
 import type { Game, Pose } from '../core/game.ts'
 import type { TrackSurface } from '../track/surface.ts'
-import { CIRCUIT } from '../core/circuit.ts'
+import { CIRCUIT, type Circuit } from '../core/circuit.ts'
 
 export type Progress = (label: string, frac: number) => void
 /** Téléchargement avec progression (fetch + flux), puis analyse glTF (meshopt). */
 /** libère géométries, matériaux et textures d'un sous-arbre (hors pilote W11 déplacé avant l'appel) */
 export function disposeTree(root: THREE.Object3D) {
-  const tx = new Set<THREE.Texture>()
-  root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; m.geometry.dispose()
-    for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as unknown as Record<string, unknown>[]) { for (const v of Object.values(mt)) if ((v as THREE.Texture)?.isTexture) tx.add(v as THREE.Texture); (mt as unknown as THREE.Material).dispose() } })
+  const tx = new Set<THREE.Texture>(), geo = new Set<THREE.BufferGeometry>(), mats = new Set<THREE.Material>(), seen = new Set<object>()
+  const collect = (v: unknown): void => {
+    if (!v || typeof v !== 'object') return
+    if ((v as THREE.Texture).isTexture) { tx.add(v as THREE.Texture); return }
+    if (seen.has(v as object)) return
+    seen.add(v as object)
+    if (Array.isArray(v)) { for (const x of v) collect(x); return }
+    if (Object.getPrototypeOf(v) === Object.prototype) for (const x of Object.values(v)) collect(x)
+  }
+  root.traverse(o => {
+    const x = o as THREE.Object3D & { geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[] }
+    if (x.geometry) geo.add(x.geometry)
+    for (const mt of (Array.isArray(x.material) ? x.material : x.material ? [x.material] : [])) {
+      if (mats.has(mt)) continue
+      mats.add(mt)
+      for (const v of Object.values(mt)) collect(v)
+    }
+  })
   for (const t of tx) t.dispose()
+  for (const m of mats) m.dispose()
+  for (const g of geo) g.dispose()
 }
 export async function loadGLB(url: string, onp: (f: number) => void, ktx: KTX2Loader | null = null): Promise<GLTF> {
   const r = await fetch(url); if (!r.ok) throw new Error(url + ' : HTTP ' + r.status)
@@ -64,17 +81,45 @@ const ALBEDO_FIX: Record<string, [number, number]> = {
   'asph_new': [0.95, 0.3], 'groove1': [0.85, 0.35], 'groove2': [0.85, 0.35], 'groove3': [0.85, 0.35], 'groove_custom': [0.85, 0.35],
   'Parking': [0.8, 0.3], 'sand': [0.7, 0.2], 'misc': [0.8, 0.5], 'walls': [0.85, 0.4], 'new_AO': [0.85, 0.5],
 }
-const TRACK_DIR = CIRCUIT.sceneDir
+/** Ajustements conservateurs sur les matériaux déjà classés par le convertisseur (pas de textures ni géométrie ajoutées). */
+function tuneCircuitMaterial(m: THREE.MeshPhysicalMaterial, circuit: Circuit, hasAlbedoFix: boolean) {
+  const u = m.userData as { w11_pbr?: string; w11_class?: string; w11_blueAccent?: boolean }
+  if (u.w11_pbr === circuit.id) return
+  const cls = (u.w11_class ?? '').toLowerCase(), name = m.name.replace(/\.\d+$/, '').toLowerCase()
+  const road = /^(road|asphalt|track|overlay)$/.test(cls) || /asph|asphalt|road[-_ ]?(main|surface|ext|tile)?/.test(name)
+  const kerb = /^(kerb|curb)$/.test(cls) || /kerb|curb|vibreur/.test(name)
+  const paint = cls === 'paint' || /paint|line|marking/.test(name)
+  const grass = cls === 'grass' || /grass|turf/.test(name)
+  const gravel = cls === 'gravel' || /gravel|sand|runoff/.test(name)
+  const building = cls === 'building' || /building|facade|city/.test(name)
+  const water = cls === 'water' || /water|bay/.test(name)
+  if (road) { if (!hasAlbedoFix && circuit.id !== 'spa') m.color.multiplyScalar(circuit.id === 'barcelona' ? 0.92 : 0.86); m.roughness = Math.max(m.roughness, 0.84); m.metalness = Math.min(m.metalness, 0.02) }
+  else if (kerb) { if (circuit.id !== 'spa') m.color.multiplyScalar(0.96); m.roughness = Math.max(m.roughness, 0.78); m.metalness = Math.min(m.metalness, 0.02) }
+  else if (paint) { if (circuit.id !== 'spa') m.color.multiplyScalar(0.96); m.roughness = Math.max(m.roughness, 0.72); m.metalness = Math.min(m.metalness, 0.02) }
+  else if (grass || gravel || building) { m.roughness = Math.max(m.roughness, 0.82); m.metalness = Math.min(m.metalness, 0.04) }
+  else if (water) { m.roughness = Math.max(0.18, Math.min(m.roughness, 0.34)); m.metalness = Math.max(m.metalness, 0.06) }
+  if (circuit.id === 'marina' && cls === 'building' && !u.w11_blueAccent) {
+    const old = m.onBeforeCompile
+    m.onBeforeCompile = (shader, renderer) => {
+      old.call(m, shader, renderer)
+      const mark = '#include <emissivemap_fragment>'
+      shader.fragmentShader = shader.fragmentShader.replace(mark, `${mark}\n#ifdef USE_MAP\n  float w11_blueMask = smoothstep(0.035, 0.18, diffuseColor.b - max(diffuseColor.r, diffuseColor.g));\n  totalEmissiveRadiance += diffuseColor.rgb * vec3(0.10, 0.22, 0.58) * w11_blueMask * 0.55;\n#endif`)
+    }
+    m.customProgramCacheKey = () => 'w11-marina-existing-blue-texels-v1'
+    u.w11_blueAccent = true; m.needsUpdate = true
+  }
+  u.w11_pbr = circuit.id
+}
 /** tuiles chargées avant le départ : décor global + celles dont la sphère englobante passe à moins de NEAR_M m de la voiture (au moins 3) ; E */
 const NEAR_M = 150
 export interface TileInfo { id: string; file: string; nodes: number; tris: number; cx: number; cz: number; r: number; geoBytes: number; tex: string[] }
 export interface TileManifest { version: number; tiles: TileInfo[]; texSizes: Record<string, number> }
 /** matériaux partagés entre tuiles (extras.mid) → chaque texture n'est décodée et envoyée au GPU qu'une fois */
-const SHARED_MATS = new Map<number, Promise<THREE.Material>>()
+const SHARED_MATS = new Map<string, Promise<THREE.Material>>()
 const SHARED_TEX = new Map<string, Promise<THREE.Texture>>()
 /** KTX2 UASTC (tools/make_ktx2.py) : transcodé en ASTC (iPhone) / BC7 / ETC2 → ~4× moins de mémoire GPU que le WebP
  *  décodé en RGBA, et pas de copie décodée côté CPU. Repli automatique sur le WebP si le transcodage échoue. */
-let KTX: KTX2Loader | null = null, KTX_LIST: Record<string, [number, number]> = {}
+let KTX: KTX2Loader | null = null
 const GL_FILTER: Record<number, THREE.TextureFilter> = { 9728: THREE.NearestFilter, 9729: THREE.LinearFilter, 9984: THREE.NearestMipmapNearestFilter, 9985: THREE.LinearMipmapNearestFilter, 9986: THREE.NearestMipmapLinearFilter, 9987: THREE.LinearMipmapLinearFilter }
 const GL_WRAP: Record<number, THREE.Wrapping> = { 33071: THREE.ClampToEdgeWrapping, 33648: THREE.MirroredRepeatWrapping, 10497: THREE.RepeatWrapping }
 function texBytes(t: THREE.Texture) {
@@ -104,7 +149,7 @@ function placeholder(key: string) {
   const t = new THREE.DataTexture(new Uint8Array(64).fill(150), 4, 4); t.flipY = false; t.needsUpdate = true
   t.userData.ph = key; return t
 }
-function tileLoader(): GLTFLoader {
+function tileLoader(sceneDir: string, epoch: number, isCurrent: () => boolean, ktxList: Record<string, [number, number]>): GLTFLoader {
   const l = new GLTFLoader(); l.setMeshoptDecoder(MeshoptDecoder)
   l.register(parser => {
     // textures partagées entre tuiles, clé = fichier + échantillonneur (sinon une copie GPU par tuile)
@@ -112,23 +157,24 @@ function tileLoader(): GLTFLoader {
     parser.loadTextureImage = (ti: number, si: number, ld: THREE.Loader) => {
       const sd = parser.json.images[si], td = parser.json.textures[ti]
       if (typeof sd.uri !== 'string') return orig(ti, si, ld)
-      const key = sd.uri + '|' + JSON.stringify(parser.json.samplers?.[td.sampler] ?? {})
+      const key = `${sceneDir}|${epoch}|${sd.uri}|` + JSON.stringify(parser.json.samplers?.[td.sampler] ?? {})
       let p = SHARED_TEX.get(key)
       if (!p) {
         const m = /tex\/([0-9a-f]+)\.webp$/.exec(sd.uri)
-        if (m && KTX && KTX_LIST[m[1]] && LAZY) {
-          const url = TRACK_DIR + 'tex/' + m[1] + '.ktx2', smp = parser.json.samplers?.[td.sampler] ?? {}
+        if (m && KTX && ktxList[m[1]] && LAZY) {
+          const url = sceneDir + 'tex/' + m[1] + '.ktx2', smp = parser.json.samplers?.[td.sampler] ?? {}
           PH_WAIT.add(key)
           const job = LAZY_CHAIN.then(() => loadKtx(url, smp)); LAZY_CHAIN = job.catch(() => {})
           void job.catch(e => { dlog('KTX2 → repli WebP ' + m[1] + ' : ' + (e as Error).message); return orig(ti, si, ld) })
-            .then(t => { diag.texBytes += texBytes(t); PH_READY.set(key, t); PH_WAIT.delete(key); SHARED_TEX.set(key, Promise.resolve(t)); onLazyReady?.(key) })
+            .then(t => { if (!isCurrent()) { t.dispose(); PH_WAIT.delete(key); return }
+              diag.texBytes += texBytes(t); PH_READY.set(key, t); PH_WAIT.delete(key); SHARED_TEX.set(key, Promise.resolve(t)); onLazyReady?.(key) })
             .catch(e => { PH_WAIT.delete(key); dlog('texture ' + m[1] + ' : ' + (e as Error).message) })
           p = Promise.resolve(placeholder(key) as THREE.Texture)
           SHARED_TEX.set(key, p)
           return p
         }
-        p = (m && KTX && KTX_LIST[m[1]]) ? loadKtx(TRACK_DIR + 'tex/' + m[1] + '.ktx2', parser.json.samplers?.[td.sampler] ?? {}).catch(e => { dlog('KTX2 → repli WebP ' + m[1] + ' : ' + (e as Error).message); return orig(ti, si, ld) }) : orig(ti, si, ld)
-        p = p.then(t => { diag.texBytes += texBytes(t); return t })
+        p = (m && KTX && ktxList[m[1]]) ? loadKtx(sceneDir + 'tex/' + m[1] + '.ktx2', parser.json.samplers?.[td.sampler] ?? {}).catch(e => { dlog('KTX2 → repli WebP ' + m[1] + ' : ' + (e as Error).message); return orig(ti, si, ld) }) : orig(ti, si, ld)
+        p = p.then(t => { if (!isCurrent()) { t.dispose(); throw new Error('chargement de piste annulé') } diag.texBytes += texBytes(t); return t })
         SHARED_TEX.set(key, p)
       }
       return p
@@ -136,7 +182,8 @@ function tileLoader(): GLTFLoader {
     return { name: 'w11_shared_materials', loadMaterial(i: number) {
     const mid = (parser.json.materials?.[i]?.extras as { mid?: number } | undefined)?.mid
     if (mid == null) return null
-    let p = SHARED_MATS.get(mid); if (!p) { p = parser.loadMaterial(i); SHARED_MATS.set(mid, p) }
+    const key = `${sceneDir}|${epoch}|${mid}`
+    let p = SHARED_MATS.get(key); if (!p) { p = parser.loadMaterial(i).then(mt => { if (!isCurrent()) mt.dispose(); return mt }); SHARED_MATS.set(key, p) }
     return p
   },
   // alias d'exécution : le fichier garde ses noms de matériaux d'origine (la physique en dépend, on ne les renomme jamais) ;
@@ -148,6 +195,14 @@ function tileLoader(): GLTFLoader {
     })
   } } as never })
   return l
+}
+function clearTrackCaches() {
+  for (const p of SHARED_TEX.values()) void p.then(t => t.dispose()).catch(() => {})
+  for (const p of SHARED_MATS.values()) void p.then(m => m.dispose()).catch(() => {})
+  SHARED_TEX.clear(); SHARED_MATS.clear()
+  for (const t of PH_READY.values()) t.dispose()
+  PH_READY.clear(); PH_WAIT.clear(); LAZY = false
+  LAZY_CHAIN = new Promise<void>(r => { lazyGo = r })
 }
 // Garde-fous NaN dans les shaders (WebKit : points noirs sur la carrosserie) : normale nulle/dégénérée → normalize(0) = NaN
 // sur les GPU qui suivent strictement la norme (Metal sur iPhone aussi). On remplace par une normale valide.
@@ -176,6 +231,11 @@ export class Renderer {
   track: THREE.Group | null = null
   /** tuile ajoutée : le jeu y cherche les ancres de la voie des stands */
   onTile: ((root: THREE.Object3D) => void) | null = null
+  circuit: Circuit = CIRCUIT
+  private sceneDir = CIRCUIT.sceneDir
+  private loadEpoch = 0
+  private streamGeneration = 0
+  private ktxList: Record<string, [number, number]> = {}
   tiles: { man: TileManifest; loaded: Set<string>; total: number; bytes: number } | null = null
   fxLevel = 0
   tilesAtStart = 0
@@ -228,6 +288,28 @@ export class Renderer {
     this.r.shadowMap.type = THREE.PCFShadowMap // r18x : PCF filtré (radius) ; PCFSoft n'existe plus
     this.scene.add(this.hemi, this.sun, this.sun.target, this.car)
   }
+  /** Met l’ancienne piste hors service et libère ses ressources sans détruire le contexte WebGL ni la voiture/menu. */
+  clearCircuit() {
+    this.loadEpoch++; this.streamGeneration++; this.streaming = false
+    this.prefetched = 0; this.probe?.dispose(); this.probe = null; this.probeSize = 0
+    this.composer?.dispose(); this.composer = null; this.gtao = null; this.bloom = null
+    this.scene.environment?.dispose(); this.scene.environment = null; this.scene.background = null; this.scene.fog = null
+    this.sun.shadow.map?.dispose(); this.sun.shadow.map = null
+    this.scene.overrideMaterial?.dispose(); this.scene.overrideMaterial = null
+    if (this.rig) this.rig.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
+      for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) if ('envMap' in mt) { mt.envMap = null; mt.envMapIntensity = 1; mt.needsUpdate = true } })
+    const keep = new Set<THREE.Object3D>([this.hemi, this.sun, this.sun.target, this.car])
+    for (const child of [...this.scene.children]) if (!keep.has(child) && child.name !== 'field') { this.scene.remove(child); disposeTree(child) }
+    for (const root of this.parked.values()) disposeTree(root)
+    this.parked.clear(); this.lodIn.clear(); this.ctex.clear(); clearTrackCaches()
+    if (this.detail) for (const pair of Object.values(this.detail.tex)) { pair.col.dispose(); pair.nrm.dispose() }
+    this.detail = null; this.grass = null; this.crowd = null; this.dome = null; this.night = null
+    this.track = null; this.tiles = null; this.cams = undefined!; this.fx = undefined!
+    this.skid = undefined!; this.rain = undefined!; this.drops = undefined!; this.debrisV = undefined!
+    this.ktxList = {}; this.circuit = CIRCUIT; this.sceneDir = CIRCUIT.sceneDir
+    this.bakedAO = null; this.tilesAtStart = 0; this.lastTile = '—'; this.dbgDone = false
+    this.wx = { sid: -1, base: null, cloud: -1, nDeb: 0 }; this.skK = [0, 0, 0, 0]
+  }
   /** Ciel physique (Preetham) + IBL préfiltrée (PMREM) — soleil réaliste ~38° de haut, après-midi à Spa. */
   buildSky() {
     const sky = new Sky(); sky.scale.setScalar(9000)
@@ -258,14 +340,25 @@ export class Renderer {
     const R = this.q.shadowRange; Object.assign(s.camera, { left: -R, right: R, top: R, bottom: -R, near: 1, far: 400 }); s.camera.updateProjectionMatrix()
     { const P = new URLSearchParams(location.search); s.bias = P.has('sb') ? Number(P.get('sb')) : -0.00025; s.normalBias = P.has('snb') ? Number(P.get('snb')) : 0.035; s.radius = 3; if (P.get('sh') === '0') this.sun.castShadow = false }
   }
+  private syncCircuitLook(circuit: Circuit) {
+    const p = new URLSearchParams(location.search), n = circuit.night
+    if (!p.has('exp')) this.look.exp = n?.exp ?? 0.85
+    if (!p.has('sun')) this.look.sun = n?.moon ?? 3.3
+    if (!p.has('hemi')) this.look.hemi = n?.hemi ?? 0.1
+    this.r.toneMappingExposure = this.look.exp; this.sun.intensity = this.look.sun; this.hemi.intensity = this.look.hemi
+    this.sun.color.setHex(n?.moonColor ?? 0xfff1e0)
+  }
   async load(game: Game, track: TrackSurface, prog: Progress) {
+    const circuit = CIRCUIT, sceneDir = circuit.sceneDir, epoch = ++this.loadEpoch
+    this.streamGeneration++; this.streaming = false; this.circuit = circuit; this.sceneDir = sceneDir; this.ktxList = {}
+    this.syncCircuitLook(circuit)
     // ciel photographique HDRI (CC0) ; repli : ciel physique Preetham (?sky=0 pour comparer)
     const P0 = new URLSearchParams(location.search), n0 = (k: string, d: number) => P0.has(k) ? Number(P0.get(k)) : d
     let skyOk = false
     if (P0.get('sky') !== '0') {
       try {
-        const { tex, meta } = await loadSky(CIRCUIT.skyDir ?? './assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), CIRCUIT.skyDir ? null : KTX /* ciel dédié (nuit) : WebP seulement, pas de .ktx2 à essayer */)
-        const NT = CIRCUIT.night
+        const { tex, meta } = await loadSky(circuit.skyDir ?? './assets/sky/', false, Math.min(this.r.capabilities.getMaxAnisotropy(), 4), circuit.skyDir ? null : KTX /* ciel dédié (nuit) : WebP seulement, pas de .ktx2 à essayer */)
+        const NT = circuit.night
         this.dome = new SkyDome(tex, meta, 215, n0('skyI', NT?.skyI ?? 3.2))
         if (NT) this.dome.mat.uniforms.uSunI.value = n0('moonDisk', NT.moonDisk) // disque lunaire (même direction que la lumière directionnelle)
         this.sunDir.copy(this.dome.sunDir)
@@ -282,16 +375,16 @@ export class Renderer {
     // chargés avant le départ, le reste en arrière-plan, du plus proche au plus loin. Textures partagées (une seule copie GPU).
     // voiture : version KTX2 (59 textures en ASTC, ~60 Mo GPU au lieu de ~235 Mo de WebP décodé) dès que KTX2 est actif
     const cu = `./assets/w11_lh2020_${q.car}.glb`, cuK = `./assets/w11_lh2020_${q.car}_ktx2.glb`
-    const man = await (await fetch(TRACK_DIR + 'tiles.json')).json() as TileManifest
+    const man = await (await fetch(sceneDir + 'tiles.json')).json() as TileManifest
     this.tiles = { man, loaded: new Set(), total: man.tiles.length, bytes: 0 }
     if (KTX) {
       try {
-        KTX_LIST = await (await fetch(TRACK_DIR + 'tex/ktx2.json')).json()
-        diag.ktx = true; dlog('KTX2 actif (' + Object.keys(KTX_LIST).length + ' textures)')
+        this.ktxList = await (await fetch(sceneDir + 'tex/ktx2.json')).json()
+        diag.ktx = true; dlog('KTX2 actif (' + Object.keys(this.ktxList).length + ' textures)')
       } catch {
         // Manifeste absent = textures de piste en WebP, pas absence de support KTX2.
         // Garder KTX pour la W11 et les textures communes évite un pic mémoire sur mobile.
-        KTX_LIST = {}; diag.ktx = true
+        this.ktxList = {}; diag.ktx = true
         dlog('ktx2.json absent → piste WebP; KTX2 voiture conservée')
       }
     }
@@ -307,19 +400,19 @@ export class Renderer {
       try { this.detail = await loadDetail('./assets/detail/', KTX, an); dlog('détail gravier/herbe actif') } catch (e) { dlog('détail indisponible : ' + (e as Error).message) }
     }
     this.memLog('avant chargement')
-    const [cg] = await Promise.all([(KTX ? loadGLB(cuK, f => { fc = f; upd() }, KTX).catch(e => { dlog('voiture KTX2 → repli WebP : ' + (e as Error).message); return loadGLB(cu, f => { fc = f; upd() }) }) : loadGLB(cu, f => { fc = f; upd() })),
-      ...first.map(t => this.loadTile(t).then(() => { ft += w(t); upd() }))])
+    const carLoad = this.rig ? Promise.resolve(null) : (KTX ? loadGLB(cuK, f => { fc = f; upd() }, KTX).catch(e => { dlog('voiture KTX2 → repli WebP : ' + (e as Error).message); return loadGLB(cu, f => { fc = f; upd() }) }) : loadGLB(cu, f => { fc = f; upd() }))
+    const [cg] = await Promise.all([carLoad, ...first.map(t => this.loadTile(t, false, epoch, sceneDir).then(() => { ft += w(t); upd() }))])
+    if (epoch !== this.loadEpoch) throw new Error('Chargement de circuit annulé')
     prog('Préparation des matériaux', 1)
     this.memLog('piste + voiture analysées')
     this.tilesAtStart = this.tiles.loaded.size
     this.scene.add(this.track)
     // nuit : halos des lampadaires + quelques lumières réelles réaffectées aux lampadaires voisins (nombre FIXE → pas de recompilation des shaders) ; ?lamps=0 pour comparer
-    if (CIRCUIT.night && P0.get('lamps') !== '0') {
-      const ld = await loadLamps(CIRCUIT.trackDir + 'lamps.json')
-      if (ld) { this.night = new NightLamps(ld, CIRCUIT.night, q.name === 'low' ? 0 : this.mobile ? 3 : 6); this.scene.add(this.night.group); dlog(`lampadaires : ${this.night.n} halos, ${this.night.lights.length} lumières`) }
+    if (circuit.night && P0.get('lamps') !== '0') {
+      const ld = await loadLamps(circuit.trackDir + 'lamps.json')
+      if (ld) { this.night = new NightLamps(ld, circuit.night, q.name === 'low' ? 0 : this.mobile ? 3 : 6); this.scene.add(this.night.group); dlog(`lampadaires : ${this.night.n} halos, ${this.night.lights.length} lumières`) }
     }
-    this.rig = new CarRig(cg, an); this.w11G = cg; this.w11Rig = this.rig
-    this.car.add(this.rig.root)
+    if (!this.rig && cg) { this.rig = new CarRig(cg, an); this.w11G = cg; this.w11Rig = this.rig; this.car.add(this.rig.root) }
     // reflets réels de l'environnement sur la voiture (sonde cube dynamique), sinon IBL du ciel seul
     const P = new URLSearchParams(location.search)
     // WebKit (Safari, donc tout navigateur iPhone) : la sonde cube filtrée PMREM rend la carrosserie NOIRE (vu dans
@@ -334,16 +427,16 @@ export class Renderer {
     this.fx = new Effects(q.particles); this.scene.add(this.fx.group)
     this.skid = new SkidMarks(); this.rain = new RainStreaks(); this.drops = new LensDrops(); this.debrisV = new DebrisView()
     this.scene.add(this.skid.mesh, this.rain.mesh, this.debrisV.group)
-    this.rig.onPartLost = (_w, p) => { for (let i = 0; i < 4; i++) this.fx.spark([p.x, p.y, p.z], game.car.vel, 2) }
+    this.rig!.onPartLost = (_w, p) => { for (let i = 0; i < 4; i++) this.fx.spark([p.x, p.y, p.z], game.car.vel, 2) }
     // herbe 3D en bord de piste (pas en qualité basse ; ?grass=0 pour comparer)
-    if (CIRCUIT.optionalAssets.grassmask && q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
-      const gm = await fetch(CIRCUIT.trackDir + 'grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+    if (circuit.optionalAssets.grassmask && q.name !== 'low' && new URLSearchParams(location.search).get('grass') !== '0') {
+      const gm = await fetch(circuit.trackDir + 'grassmask.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
       if (gm) this.grass = new Grass(track, gm, q.name === 'medium' ? 0.6 : 1.0, q.name === 'medium' ? 8000 : 14000, 34, this.detail?.tex.grass ?? null); if (this.grass) { this.scene.add(this.grass.mesh)
       dlog(`herbe 3D : ${this.grass.n} touffes (fenêtre ≤ ${this.grass.cap})`) }
     }
     // public des tribunes (toutes qualités : ≤ 36 triangles par personne près, 4 loin)
-    if (CIRCUIT.optionalAssets.crowd && new URLSearchParams(location.search).get('crowd') !== '0') {
-      const cb = await fetch(CIRCUIT.trackDir + 'crowd.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
+    if (circuit.optionalAssets.crowd && new URLSearchParams(location.search).get('crowd') !== '0') {
+      const cb = await fetch(circuit.trackDir + 'crowd.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)
       if (cb) { this.crowd = new Crowd(cb); this.scene.add(this.crowd.group); dlog(`public : ${this.crowd.chunks.length} blocs`) }
     }
     // mobile : démarrage SANS composeur (cibles HalfFloat MSAA), sans sonde cube, ombre 1024 → upgrade() après stabilité
@@ -354,7 +447,7 @@ export class Renderer {
     // compile tous les shaders avant la première image (évite les saccades au premier virage)
     prog('Compilation des shaders', 1)
     this.syncCar(game, 0)
-    this.cams.update(this.car, this.rig.eye, this.rig.tcam, 0, 0.016, 0, 0)
+    this.cams.update(this.car, this.rig!.eye, this.rig!.tcam, 0, 0.016, 0, 0)
     await this.r.compileAsync(this.scene, this.cams.cam)
     if (ps > 0) this.attachProbe(ps)
     this.memLog('shaders compilés')
@@ -402,9 +495,12 @@ export class Renderer {
     diag.gpu = e
   }
   /** charge une tuile, applique corrections d'albédo, AO cuite et ombres, précompile ses shaders puis l'ajoute. */
-  async loadTile(t: TileInfo, lod = false) {
-    const g = await tileLoader().loadAsync(TRACK_DIR + (lod ? t.file.replace('.gltf', '_lod.gltf') : t.file))
+  async loadTile(t: TileInfo, lod = false, epoch = this.loadEpoch, sceneDir = this.sceneDir) {
+    const target = this.track
+    if (!target || epoch !== this.loadEpoch) return
+    const g = await tileLoader(sceneDir, epoch, () => epoch === this.loadEpoch, this.ktxList).loadAsync(sceneDir + (lod ? t.file.replace('.gltf', '_lod.gltf') : t.file))
     const root = g.scene, q = this.q, an = this.an
+    if (epoch !== this.loadEpoch) { disposeTree(root); return }
     root.traverse(o => {
       const m = o as THREE.Mesh
       if (!m.isMesh) return
@@ -416,6 +512,7 @@ export class Renderer {
         // correction d'albédo PBR : textures d'asphalte trop claires (moy. sRGB 180 ≈ 0,46 linéaire ; asphalte réel ≈ 0,08–0,15)
         const fix = ALBEDO_FIX[s.name.replace(/\.\d+$/, '')]
         if (fix && !s.userData.fixed) { s.userData.fixed = true; s.color.multiplyScalar(fix[0]); if ('specularIntensity' in s) s.specularIntensity = Math.min(s.specularIntensity ?? 1, fix[1]) }
+        tuneCircuitMaterial(s, this.circuit, !!fix)
       }
     })
     // arbres : normales sphériques, alpha-to-coverage affûté, vent, translucidité (src/render/trees.ts) ; ?trees=0 pour comparer
@@ -438,11 +535,13 @@ export class Renderer {
     root.updateMatrixWorld(true)
     if (this.cams) { // streaming en jeu : shaders compilés et textures envoyées au GPU avant l'ajout (pas de saccade visible)
       await this.r.compileAsync(root, this.cams.cam, this.scene)
+      if (epoch !== this.loadEpoch) { disposeTree(root); return }
       root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
         for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'alphaMap'] as const) if (mt[k]) this.r.initTexture(mt[k]!) })
     }
     this.swapPlaceholders(root)
-    this.track!.add(root)
+    if (epoch !== this.loadEpoch || target !== this.track) { disposeTree(root); return }
+    target.add(root)
     this.onTile?.(root)
     if (lod) this.lodIn.set(t.id, root); else { this.tiles!.loaded.add(t.id); this.tiles!.bytes += t.geoBytes }
     this.lastTile = t.id + (lod ? ' (LOD)' : '')
@@ -599,10 +698,10 @@ export class Renderer {
   /** après « Prêt » : toutes les textures KTX2 de la piste téléchargées en arrière-plan (3 à la fois) dans le cache HTTP /
    *  service worker → les tuiles suivantes arrivent complètes sans attendre le réseau. Aucun envoi au GPU ici. */
   prefetched = 0
-  private async prefetchTextures() {
+  private async prefetchTextures(epoch: number, sceneDir: string, ktxList: Record<string, [number, number]>) {
     if (!KTX) return
-    const ids = Object.keys(KTX_LIST); let i = 0
-    const one = async () => { while (i < ids.length) { const id = ids[i++]; try { const r = await fetch(TRACK_DIR + 'tex/' + id + '.ktx2'); await r.arrayBuffer(); this.prefetched++ } catch { /* réessayé au chargement de la tuile */ } } }
+    const ids = Object.keys(ktxList); let i = 0
+    const one = async () => { while (i < ids.length && epoch === this.loadEpoch) { const id = ids[i++]; try { const r = await fetch(sceneDir + 'tex/' + id + '.ktx2'); await r.arrayBuffer(); this.prefetched++ } catch { /* réessayé au chargement de la tuile */ } } }
     await Promise.all([one(), one(), one()])
     dlog('textures piste en cache : ' + this.prefetched + '/' + ids.length)
   }
@@ -610,24 +709,28 @@ export class Renderer {
   async streamTiles(game: Game) {
     if (this.streaming || !this.tiles) return
     this.streaming = true
+    const token = ++this.streamGeneration, epoch = this.loadEpoch, sceneDir = this.sceneDir
+    const ktxList = this.ktxList
     lazyGo()
-    void this.prefetchTextures()
+    void this.prefetchTextures(epoch, sceneDir, ktxList)
     // toutes les plateformes : tuiles proches en pleine qualité, le lointain en LOD (le frustum ne charge pas 1,3 M de triangles)
-    return this.streamNear(game)
+    return this.streamNear(game, token, epoch, sceneDir)
   }
   /** mobile : seules les tuiles à moins de NEAR_MOB m de la voiture sont dans la scène (au GPU) ; au-delà de FAR_MOB elles
    *  sont retirées et leurs tampons GPU libérés (géométrie gardée en mémoire JS → ré-ajout sans nouveau téléchargement).
    *  Une seule opération par pas (≥ 250 ms) → envois au GPU étalés sur plusieurs images. Le décor « base » reste. */
-  private async streamNear(game: Game) {
+  private async streamNear(game: Game, token: number, epoch: number, sceneDir: string) {
     // pleine qualité < FULL m ; LOD (géométrie simplifiée, mêmes textures) jusqu'à AHEAD m devant / BEHIND m derrière ; au-delà retirée
-    const mobile = this.mobile, hasLods = CIRCUIT.hasLods
+    const mobile = this.mobile, hasLods = this.circuit.hasLods
     const FULL = mobile ? 600 : 850, AHEAD = mobile ? 1500 : 2000, BEHIND = mobile ? 800 : 1100, HYST = 200
     const T = this.tiles!, wait = (ms: number) => new Promise(r => setTimeout(r, ms))
     let prev: number[] | null = null, fx = 0, fz = 1
-    const drop = (root: THREE.Object3D) => { this.track!.remove(root); root.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose() }) }
-    for (;;) {
+    const drop = (scene: THREE.Group, root: THREE.Object3D) => { scene.remove(root); root.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose() }) }
+    while (token === this.streamGeneration && epoch === this.loadEpoch) {
       await wait(250)
-      if (!this.track) continue
+      if (token !== this.streamGeneration || epoch !== this.loadEpoch) break
+      const scene = this.track
+      if (!scene) break
       const p = game.pose(this.pose).pos
       if (prev) { const dx = p[0] - prev[0], dz = p[2] - prev[2], l = Math.hypot(dx, dz); if (l > 2) { fx = dx / l; fz = dz / l; prev = [p[0], p[1], p[2]] } } else prev = [p[0], p[1], p[2]]
       const d = (t: TileInfo) => Math.max(0, Math.hypot(t.cx - p[0], t.cz - p[2]) - t.r)
@@ -635,27 +738,30 @@ export class Renderer {
       const tl = T.man.tiles.filter(t => t.id !== 'base'), full = (t: TileInfo) => T.loaded.has(t.id) && !this.parked.has(t.id)
       // 1) retirer ce qui sort de la fenêtre
       const out = tl.find(t => (full(t) || this.lodIn.has(t.id)) && d(t) > lim(t) + HYST)
-      if (out) { if (full(out)) { const r = this.track.getObjectByName('tile_' + out.id); if (r) { drop(r); this.parked.set(out.id, r) } }
-        const l = this.lodIn.get(out.id); if (l) { drop(l); this.lodIn.delete(out.id) }
+      if (out) { if (full(out)) { const r = scene.getObjectByName('tile_' + out.id); if (r) { drop(scene, r); this.parked.set(out.id, r) } }
+        const l = this.lodIn.get(out.id); if (l) { drop(scene, l); this.lodIn.delete(out.id) }
         this.memLog('tuile ' + out.id + ' retirée (loin)'); continue }
       // 2) pleine qualité pour la plus proche qui en manque (puis on retire son LOD)
       const near = tl.filter(t => !full(t) && d(t) < FULL).sort((a, b) => d(a) - d(b))[0]
       if (near) {
         const pk = this.parked.get(near.id)
-        if (pk) { this.parked.delete(near.id); this.swapPlaceholders(pk); this.track.add(pk); this.lastTile = near.id; this.memLog('tuile ' + near.id + ' remise') }
-        else try { await this.loadTile(near) } catch (e) { dlog('tuile ' + near.id + ' : ' + (e as Error).message); await wait(3000); continue }
-        const l = this.lodIn.get(near.id); if (l) { drop(l); this.lodIn.delete(near.id) }
+        if (pk) { this.parked.delete(near.id); this.swapPlaceholders(pk); scene.add(pk); this.lastTile = near.id; this.memLog('tuile ' + near.id + ' remise') }
+        else try { await this.loadTile(near, false, epoch, sceneDir) } catch (e) { if (token !== this.streamGeneration || epoch !== this.loadEpoch) break; dlog('tuile ' + near.id + ' : ' + (e as Error).message); await wait(3000); continue }
+        if (token !== this.streamGeneration || epoch !== this.loadEpoch) break
+        const l = this.lodIn.get(near.id); if (l) { drop(scene, l); this.lodIn.delete(near.id) }
         continue
       }
       // 3) LOD pour les tuiles lointaines visibles qui n'ont rien
       const lodT = hasLods ? tl.filter(t => !full(t) && !this.lodIn.has(t.id) && d(t) < lim(t)).sort((a, b) => d(a) - d(b))[0] : undefined
-      if (lodT) { try { await this.loadTile(lodT, true) } catch (e) { dlog('LOD ' + lodT.id + ' : ' + (e as Error).message); await wait(3000) } continue }
+      if (lodT) { try { await this.loadTile(lodT, true, epoch, sceneDir) } catch (e) { if (token !== this.streamGeneration || epoch !== this.loadEpoch) break; dlog('LOD ' + lodT.id + ' : ' + (e as Error).message); await wait(3000) } continue }
       // 4) pleine qualité → LOD quand la tuile s'éloigne
       const dn = tl.find(t => full(t) && d(t) > FULL + HYST && d(t) < lim(t))
-      if (hasLods && dn) { if (!this.lodIn.has(dn.id)) try { await this.loadTile(dn, true) } catch (e) { dlog('LOD ' + dn.id + ' : ' + (e as Error).message) }
-        const r = this.track.getObjectByName('tile_' + dn.id); if (r) { drop(r); this.parked.set(dn.id, r) } this.memLog('tuile ' + dn.id + ' → LOD'); continue }
+      if (hasLods && dn) { if (!this.lodIn.has(dn.id)) try { await this.loadTile(dn, true, epoch, sceneDir) } catch (e) { if (token !== this.streamGeneration || epoch !== this.loadEpoch) break; dlog('LOD ' + dn.id + ' : ' + (e as Error).message) }
+        if (token !== this.streamGeneration || epoch !== this.loadEpoch) break
+        const r = scene.getObjectByName('tile_' + dn.id); if (r) { drop(scene, r); this.parked.set(dn.id, r) } this.memLog('tuile ' + dn.id + ' → LOD'); continue }
       await wait(750)
     }
+    if (token === this.streamGeneration) this.streaming = false
   }
   get tilesInScene() { return this.track ? this.track.children.length : 0 }
   /** effets adaptatifs (jamais la géométrie ni les textures de la piste) : 0 = tout ; 1 = sans GTAO ; 2 = + sans bloom ;

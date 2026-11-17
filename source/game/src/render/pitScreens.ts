@@ -26,6 +26,7 @@ export class PitScreens {
       this.tex.push(t)
     }
   }
+  dispose() { this.dom?.remove(); this.dom = null; for (const t of this.tex) t.dispose() }
   /** pose la texture sur le plan d'ancre (UV 0..1). Retourne combien d'écrans ont trouvé une ancre. */
   bind(anchors: Map<string, Anchor>) {
     this.bound = 0
