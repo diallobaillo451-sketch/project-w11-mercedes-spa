@@ -17,13 +17,7 @@ export class ReflectionProbe {
   private filter(r: THREE.WebGLRenderer) {
     if (!this.pm) this.pm = new THREE.PMREMGenerator(r)
     const prev = r.getRenderTarget()
-    const filtered = this.pm.fromCubemap(this.rt.texture as unknown as THREE.CubeTexture, this.pmrt as never)
-    // Certains WebGL/Safari renvoient une cible vide lorsque le PMREM ne peut
-    // pas être généré (format flottant ou framebuffer indisponible). Le rendu
-    // principal doit continuer avec la cubemap non filtrée, pas planter sur
-    // `pmrt.width`.
-    if (!filtered) { this.ok = true; this.check = { fallback: true }; return }
-    this.pmrt = filtered
+    this.pmrt = this.pm.fromCubemap(this.rt.texture as unknown as THREE.CubeTexture, this.pmrt as never)
     r.setRenderTarget(prev)
     if (this.ok === null) { // vérification une fois : quelques texels de la carte filtrée
       const w = this.pmrt.width, h = this.pmrt.height, a = new Uint16Array(4 * w * h)
