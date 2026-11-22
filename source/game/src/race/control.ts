@@ -21,16 +21,13 @@ export class RaceControl {
   posts: Post[] = []
   incidents: Incident[] = []
   cases: Case[] = []; private caseN = 0
-  /** safety car : position piste, vitesse, état (garée / déployée / en tête / rentre), gyrophares */
   sc = { active: false, mode: 'park' as 'park' | 'out' | 'lead' | 'in', s: 0, d: 0, v: 0, lights: false, lapsLed: 0, caught: false, inThisLap: false, tEnd: 0, prof: null as Float64Array | null, T: 0, dist: 0, wx: 0, wy: 0, wz: 0, hx: 0, hz: -1, pitP: 0 }
   vsc = false; vscEnding = 0; vscEnd = 0
   red = false; redT = 0; resumeAt = 0; private redOrder: Racer[] = []
-  /** ordre et écarts figés au drapeau rouge (le classement live ne bouge plus) */
   frozenOrder: Racer[] | null = null
   unlap = false
   lightsN = 0; lightsT = 0; lightsHold = 0; goT = -1; private gridT = 0; jumpRef = { s: 0, ok: false }
   greenT = 0
-  /** feu de case : rouge pendant le travail, vert au lâcher */
   boxLight: 'red' | 'green' = 'red'
   private boxGreenUntil = 0
   private blueFor = new Map<number, { t: number; posts: number; warned: boolean }>()
@@ -42,7 +39,6 @@ export class RaceControl {
     this.buildSC()
     if (sim.kind === 'race') this.phase = 'pre'
   }
-  // ───────────── postes de commissaires (placeholders tous les ~230 m, côtés alternés ; remplacés par marshals.json)
   buildPosts(json?: { posts: { n?: number; id?: number; s: number; side?: number | string; x?: number; z?: number }[] }) {
     const L = this.sim.L
     if (json?.posts?.length) { this.posts = json.posts.map((p, k) => ({ n: p.n ?? p.id ?? k + 1, s: this.sim.wrapS(p.s * L / 6998.256), side: typeof p.side === 'string' ? (p.side === 'right' ? 1 : -1) : p.side ?? (k % 2 ? 1 : -1), panel: 'off' as Panel, flag: 'off' as Panel, x: p.x, z: p.z })).sort((a, b) => a.s - b.s); return }
@@ -51,7 +47,6 @@ export class RaceControl {
   }
   postBefore(s: number) { let best = this.posts[0], g = 1e9; for (const p of this.posts) { const d = this.sim.road(p.s, s); if (d >= 0 && d < g) { g = d; best = p } } return best }
   postAfter(s: number) { let best = this.posts[0], g = 1e9; for (const p of this.posts) { const d = this.sim.road(s, p.s); if (d > 0 && d < g) { g = d; best = p } } return best }
-  // ───────────── safety car : Mercedes-AMG GT Black Series (730 ch, 800 N·m, ~1 600 kg avec équipage) — sa propre physique
   private buildSC() {
     const P = { m: 1600, ClA: 1.2, CdA: 0.82, power: (v: number) => Math.min(537e3 * 0.86, 800 * 9.5 * 3.2 * Math.max(v, 3) / 0.34 / 3.2), muM: 1.22, muA: 1.0, vCap: 325 / 3.6, tracFrac: 0.5, brakeK: 0.95 }
     const v = speedProfile(this.sim.track, this.sim.line, P, 1)
@@ -83,14 +78,12 @@ export class RaceControl {
     for (const r of this.sim.cars) if (!r.player && !r.out && r.mode !== 'garage') { r.wantPit = 'drapeau rouge'; if (this.sim.kind !== 'race') r.mode = r.mode === 'pit' ? r.mode : 'in' }
   }
   redSlot(r: Racer) { if (!this.red || this.sim.kind !== 'race') return null; const k = this.redOrder.indexOf(r); return k < 0 ? null : k }
-  // ───────────── boucle
   update(dt: number) {
     const S = this.sim
     if (S.kind === 'race') this.startProcedure(dt)
     for (const inc of this.incidents.slice()) if (S.t > inc.until && !(inc.r && inc.r.mode === 'spun')) this.endIncident(inc)
-    if (this.vsc && S.t > this.vscEnd && !this.vscEnding) { this.vscEnding = S.t + 8; this.msg('FIN DE VSC — la piste redevient verte dans quelques secondes', 'rc') }
-    if (this.vscEnding && S.t > this.vscEnding) { this.vsc = false; this.vscEnding = 0; this.vscEnd = 0; this.greenT = S.t + 6; this.msg('PISTE LIBRE', 'flag') }
-    if (this.vsc && S.t > this.vscEnd + 90) { this.vsc = false; this.vscEnding = 0; this.greenT = S.t + 4; this.msg('PISTE LIBRE (timeout VSC)', 'flag') }
+    if (this.vsc && S.t > this.vscEnd && !this.vscEnding) { this.vscEnding = S.t + 12; this.msg('FIN DE VSC — la piste redevient verte dans quelques secondes', 'rc') }
+    if (this.vscEnding && S.t > this.vscEnding) { this.vsc = false; this.vscEnding = 0; this.greenT = S.t + 10; this.msg('PISTE LIBRE', 'flag') }
     if (this.sc.active) this.scLogic(dt)
     if (this.red) this.redLogic()
     this.bluesLogic(dt)
@@ -124,39 +117,6 @@ export class RaceControl {
     const S = this.sim
     for (const r of S.cars) { if (r.out) continue; if (!r.player) { S.placeOnGrid(r); r.mode = 'grid'; r.tyre.temp = Math.max(r.tyre.temp, 0.85) } }
     this.phase = 'gridding'; this.gridT = 31; this.placePlayerRequest = true
-  }
-  /** Bouton SKIP : termine immédiatement SC / VSC / drapeau rouge et reprend la course. */
-  skipSafety() {
-    const S = this.sim
-    let done = false
-    if (this.sc.active) {
-      this.sc.active = false; this.sc.mode = 'park'; this.sc.lights = false; this.sc.inThisLap = false
-      this.unlap = false; this.restartHold = true; this.drsResumeT = S.t + 2 * (S.leader()?.prof?.T ?? 110)
-      this.msg('SAFETY CAR IGNORÉE — reprise après la ligne de contrôle', 'rc')
-      done = true
-    }
-    if (this.vsc || this.vscEnding) {
-      this.vsc = false; this.vscEnding = 0; this.vscEnd = 0; this.greenT = S.t + 5
-      this.msg('VSC IGNORÉE — PISTE LIBRE', 'flag')
-      done = true
-    }
-    if (this.red) {
-      this.red = false; this.frozenOrder = null; this.redOrder = []
-      this.restartHold = true; this.greenT = S.t + 8
-      this.phase = 'racing'
-      // Une voiture déjà rangée dans la file rouge doit retrouver un état
-      // pilotable, sinon le bouton semble fonctionner mais la course reste
-      // figée côté IA.
-      for (const r of S.cars) {
-        if (r.out || r.mode !== 'redq') continue
-        r.mode = 'race'; r.v = 0
-        if (S.pit) { const k = S.pit.n - 1; r.s = S.wrapS(S.pit.s[k]); r.d = S.pit.d[k]; r.pitP = 0; r.pitLat = 0 }
-      }
-      this.msg('DRAPEAU ROUGE IGNORÉ — reprise de la course', 'rc')
-      done = true
-    }
-    if (!done) this.msg('Rien à passer (pas de SC / VSC / rouge actif)', 'info')
-    return done
   }
   formationLeft(r: Racer) { return r.mode === 'grid' ? 0 : Math.max(0, -r.dist) }
   go() {
@@ -250,12 +210,6 @@ export class RaceControl {
     let vt = pr[i] * 0.9
     if (ld) { const gl = S.road(ld.s, C.s); if (gl > 0 && gl < 120) C.caught = true; if (C.mode === 'out' && gl > 0 && gl < 1500 && !C.caught) vt *= 0.75 }
     if (C.caught && C.mode === 'out') { C.mode = 'lead'; this.msg('La safety car a pris la tête de la course', 'rc') }
-    // Après un retour depuis les stands, la SC peut ne jamais se recaler sur
-    // le leader. Elle ne doit jamais bloquer la course indéfiniment.
-    if (C.mode === 'out' && S.t > C.tEnd + 120) {
-      C.mode = 'lead'; C.caught = true
-      this.msg('SAFETY CAR EN TÊTE — fin de neutralisation préparée', 'rc')
-    }
     if (C.mode === 'lead' && !this.unlap && S.t > C.tEnd - 110) {
       const lead = S.leader(); let any = false
       for (const r of S.cars) { const lapped = !r.out && r !== lead && r.dist < lead.dist - S.L * 0.5 && S.road(lead.s, r.s) > 0 && S.road(lead.s, r.s) < 1500; (r as Racer & { _unlap?: boolean })._unlap = lapped && !r.player; if (lapped) any = true }
@@ -267,11 +221,8 @@ export class RaceControl {
     if (C.mode === 'lead' && S.t > C.tEnd && !pending && !C.inThisLap && this.incidents.every(x => x.kind !== 'crash' || S.t > x.until)) {
       if (S.road(C.s, 0) > 0 && S.road(C.s, 0) < 200) { C.inThisLap = true; this.msg('SAFETY CAR RENTRE À LA FIN DE CE TOUR', 'rc') }
     }
-    if (C.mode === 'lead' && S.t > C.tEnd + 220 && !C.inThisLap) {
-      C.inThisLap = true; C.lights = false; this.msg('SAFETY CAR RENTRE (timeout)', 'rc')
-    }
     if (C.inThisLap) { C.lights = false; const toPit = S.road(C.s, S.pitEntryS); if (toPit > 0 && toPit < C.v * dt + 1) { C.mode = 'in'; C.pitP = 0 } }
-    if (C.mode === 'in') { C.pitP += 22 * dt; C.v = 22; if (!S.pitLen || C.pitP > S.pitLen * 0.4) { C.active = false; C.mode = 'park'; this.restartHold = true; this.drsResumeT = S.t + 2 * S.leader().prof.T; this.msg('Reprise : dépassements autorisés après la ligne de contrôle', 'rc') }
+    if (C.mode === 'in') { C.pitP += 22 * dt; C.v = 22; if (S.pitLen && C.pitP > S.pitLen * 0.4) { C.active = false; C.mode = 'park'; this.restartHold = true; this.drsResumeT = S.t + 2 * S.leader().prof.T; this.msg('Reprise : dépassements autorisés après la ligne de contrôle', 'rc') }
       this.scPose(); return }
     C.v = Math.max(0, C.v + Math.max(-12 * dt, Math.min(5.5 * dt, vt - C.v)))
     C.s = S.wrapS(C.s + C.v * dt); C.d += (S.line.e[i] - C.d) * Math.min(1, dt)
@@ -295,7 +246,7 @@ export class RaceControl {
       this.scDeploy('reprise après drapeau rouge')
     }
   }
-  private bluesLogic(dt: number) {}
+  private bluesLogic(_dt: number) {}
   private panels() {}
   private stewards() {
     const S = this.sim
@@ -305,7 +256,7 @@ export class RaceControl {
     }
   }
   private decide(c: Case) {
-    const r = c.a, S = this.sim
+    const r = c.a
     const P: Record<string, string> = { '5s': 'PÉNALITÉ DE 5 S', '10s': 'PÉNALITÉ DE 10 S', drive: 'DRIVE-THROUGH', sg: 'STOP-AND-GO 10 S', grid3: 'RECUL DE 3 PLACES SUR LA GRILLE', grid5: 'RECUL DE 5 PLACES SUR LA GRILLE', none: 'AUCUNE ACTION SUPPLÉMENTAIRE', warn: 'AVERTISSEMENT', del: 'TEMPS SUPPRIMÉ' }
     if (c.pen === '5s') r.pen += 5; else if (c.pen === '10s') r.pen += 10; else if (c.pen === 'drive') r.dtPend++; else if (c.pen === 'sg') r.sgPend++
     else if (c.pen === 'grid3') r.gridPen += 3; else if (c.pen === 'grid5') r.gridPen += 5
