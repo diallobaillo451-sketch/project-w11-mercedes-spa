@@ -79,7 +79,12 @@ export class Pitlane {
   }
   inSpeedZone(x: number, z: number) {
     const q = this.probe(x, z)
-    return q.dist < 6 && q.p >= this.cum[this.iIn] - 1 && q.p <= this.cum[this.iOut] + 1
+    // Plus strict : < 4.2 m du chemin ET clairement côté stands (pas la ligne de course)
+    // avant : dist < 6 déclenchait en passant à côté de la ligne blanche hors pits
+    if (q.dist >= 4.2) return false
+    if (q.p < this.cum[this.iIn] - 1 || q.p > this.cum[this.iOut] + 1) return false
+    // lane !== off OU écart latéral net vers les stands
+    return q.lane !== 'off' || (q.lat * this.workSign > 0.8)
   }
   /** point le plus proche (recherche locale autour du dernier, puis globale si loin) */
   nearest(x: number, z: number) {
@@ -90,8 +95,12 @@ export class Pitlane {
     this.last = best
     return { i: best, dist: Math.sqrt(bd) }
   }
-  /** la voiture est-elle dans la zone limitée (à moins de 6 m du chemin, entre les lignes) ? */
-  inLimitZone(x: number, z: number) { const r = this.nearest(x, z); return r.dist < 6 && r.i >= this.iIn && r.i <= this.iOut }
+  /** la voiture est-elle dans la zone limitée (à moins de 4.2 m du chemin, entre les lignes, côté stands) ? */
+  inLimitZone(x: number, z: number) {
+    const q = this.probe(x, z)
+    if (q.dist >= 4.2 || q.i < this.iIn || q.i > this.iOut) return false
+    return q.lane !== 'off' || (q.lat * this.workSign > 0.8)
+  }
   /** mât du feu de sortie : dernier point encore dans la voie (pas sur l'asphalte de course), décalé vers les garages */
   exitStand(): { x: number; z: number; yaw: number } {
     let i = Math.min(this.iExit, this.n - 1)
