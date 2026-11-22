@@ -1,4 +1,4 @@
-Bahrain International Circuit — offline W11 preparation.
-Visual GLB: supplied by the user; the file did not declare an author/license. Do not redistribute until rights are confirmed.
-Reference route: https://raw.githubusercontent.com/bacinger/f1-circuits/master/circuits/bh-2002.geojson (MIT, unofficial community geometry; fitted to the supplied model).
-Edits: non-destructive uniform scene transform, WebP texture conversion, meshopt packing, and an approximate physical surface grid.
+Bahrain International Circuit — modèle 3D « bahrain international circuit ».
+Modifications : recentrage sur la ligne de départ, réduction des textures, découpage en tuiles, compression meshopt,
+calcul de la surface physique (surface.bin), des barrières et du masque d'herbe. Les noms de matériaux d'origine sont conservés.
+Les logos présents dans les textures appartiennent à leurs propriétaires respectifs.
