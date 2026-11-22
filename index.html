@@ -4,53 +4,49 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="W11" />
-<meta name="theme-color" content="#000000" />
-<link rel="manifest" href="./manifest.webmanifest" />
-<link rel="apple-touch-icon" href="./icons/icon-180.png" />
-<link rel="icon" href="./icons/icon-192.png" />
-<title>PROJECT W11</title>
-  <script type="module" crossorigin src="./assets/index-CXIhL6cB.js"></script>
+<meta name="theme-color" content="#0a0a0c" />
+<title>PROJECT W11 — Mercedes-AMG F1 W11 · Spa</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" />
+  <script type="module" crossorigin src="./assets/index-C-5RAHOD.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CMAc5gQ4.css">
 </head>
 <body>
-<canvas id="gl"></canvas>
+<div id="app">
+<canvas id="c"></canvas>
 
 <div id="boot" class="screen">
-  <div class="brand"><div class="logo">W11</div><div id="brandSub" class="sub">Mercedes-AMG F1 W11 EQ Performance</div></div>
-  <div class="bar"><i id="bootBar"></i></div>
-  <div id="bootText" class="hint">Chargement…</div>
+  <div class="bootcard">
+    <div class="logo">PROJECT W11</div>
+    <div class="sub">Mercedes-AMG F1 W11 · Spa-Francorchamps</div>
+    <div id="bootMsg">Chargement…</div>
+    <div class="bar"><i id="bootBar"></i></div>
   <button id="bootGo" class="btn primary" hidden>Toucher pour démarrer</button>
-  <div class="fine">Projet de fan non officiel · aucune affiliation</div>
+  </div>
 </div>
 
-<div id="menu" hidden></div>
-<div id="garage" hidden></div>
-<div id="results" hidden></div>
-<div id="lights" hidden><i></i><i></i><i></i><i></i><i></i></div>
+<div id="menu" class="screen" hidden></div>
 
 <div id="panel" class="screen" hidden>
-  <div class="glass card wide">
+  <div class="panelcard">
     <div class="phead"><span id="panelTitle"></span><button class="btn small" id="panelClose">OK</button></div>
-    <div id="panelBody" class="pbody"></div>
+    <div id="panelBody"></div>
   </div>
 </div>
 
 <div id="hud" hidden>
-  <div class="top">
+  <div class="htop">
     <div style="display:flex;gap:6px"><div class="pill" id="hLap">Tour —</div><div class="pill sesschip" id="hSess" hidden></div></div>
-    <div class="timebox glass">
-      <div id="hTime" class="time">--:--.---</div>
-      <div class="secs"><i id="s0"></i><i id="s1"></i><i id="s2"></i></div>
-      <div class="sub2"><span id="hLast">Dernier —</span> · <span id="hBest">Meilleur —</span></div>
-    </div>
+    <div class="pill" id="hDelta">—</div>
+    <div class="pill" id="hPos" hidden>P—</div>
+  </div>
+  <div class="flagban" id="flag" hidden></div>
+  <div class="hbot">
     <div class="tbtn"><button id="bWheel" class="ico" title="Volant : réglages">◎ Volant</button><button id="bCam" class="ico">◉</button><button id="bPause" class="ico">❚❚</button></div>
   </div>
-  <div id="hFlag" class="flagban" hidden></div>
-  <div id="hDelta" class="deltachip" hidden></div>
-  <div id="wheelPad" class="glass wpad" hidden>
+  <div id="wheel" class="wheel" hidden>
+    <div class="wtitle">Réglages volant</div>
     <div class="wrow"><span class="wl">BBAL</span><button class="wb" data-w="bb-">−</button><b id="wBB">57,5</b><button class="wb" data-w="bb+">+</button>
       <span class="wl">DIFF IN</span><button class="wb" data-w="din-">−</button><b id="wDin">3</b><button class="wb" data-w="din+">+</button>
       <span class="wl">DIFF OUT</span><button class="wb" data-w="dout-">−</button><b id="wDout">5</b><button class="wb" data-w="dout+">+</button></div>
@@ -59,42 +55,31 @@
     <div class="wrow"><button class="wk drs" data-w="drs">DRS</button><button class="wk pit" data-w="pit" id="wPit">PIT 80</button><button class="wk ot" data-w="ot" id="wOt">OT</button>
       <button class="wk" data-w="n">N</button><button class="wk radio" data-w="radio">RADIO</button><button class="wk" data-w="ack">ACK</button></div>
   </div>
-  <div id="toast" class="toast"></div>
   <button id="bSkipF" hidden>Passer le tour de formation ›</button>
-  <div id="dash" class="dash glass">
-    <div class="leds" id="leds"></div>
-    <div class="dmain">
-      <div class="tyres"><i id="t0"></i><i id="t1"></i><i id="t2"></i><i id="t3"></i></div>
-      <div class="spd"><b id="hSpd">0</b><small>km/h</small></div>
-      <div class="gear" id="hGear">N</div>
-      <div class="ers"><div class="ersbar"><i id="hErs"></i></div><small id="hErsMode">ERS</small></div>
-    </div>
-    <div class="flags"><span id="hDrs" class="tag">DRS</span><span id="hBias" class="tag">BB 57,5</span><span id="hMode" class="tag">QUALI</span></div>
+  <div id="steerZone" class="steer"><div id="steerKnob"></div></div>
+  <div class="pedals">
+    <div class="ped" id="pBrake"><i></i><span>FREIN</span></div>
+    <div class="ped" id="pThrottle"><i></i><span>GAZ</span></div>
   </div>
-  <div id="controls">
-    <div id="steerZone"><div id="steerKnob"></div></div>
-    <div id="pBrake" class="pedal brake"><span>FREIN</span><div class="fill"></div></div>
-    <div id="pThrottle" class="pedal thr"><span>GAZ</span><div class="fill"></div></div>
-    <div class="aux">
+  <div class="abtnrow">
       <button id="bDrs" class="abtn">DRS</button>
       <button id="bDas" class="abtn">DAS</button>
       <button id="bDown" class="abtn">−</button>
       <button id="bUp" class="abtn">+</button>
       <button id="bPit" class="abtn">PIT</button>
       <button id="bOt" class="abtn">OT</button>
-    </div>
   </div>
-  <div id="perf" class="perf" hidden></div>
 </div>
 
 <div id="pause" class="screen" hidden>
-  <div class="glass card">
+  <div class="pausecard">
     <div class="ptitle">Pause</div>
     <button class="btn primary" data-act="resume">Reprendre</button>
+    <button class="btn" data-act="skipSafety" id="pSkipSC">Passer SC / VSC / Rouge ›</button>
     <button class="btn" data-act="garage" id="pGarage" hidden>Rentrer au garage</button>
     <button class="btn" data-act="restart" id="pRestart">Recommencer</button>
     <button class="btn" data-act="reset">Remettre en piste</button>
-    <div class="row">
+    <div class="prow">
       <button class="btn ghost" data-act="setup">Réglages</button>
       <button class="btn ghost" data-act="options">Options</button>
       <button class="btn ghost" data-act="menu" id="pMenu">Menu</button>
@@ -102,6 +87,8 @@
   </div>
 </div>
 
-<div id="rotate" class="screen"><div class="phone"></div><div>Tourne l’iPhone en mode paysage</div></div>
+<div id="garage" class="screen" hidden></div>
+<div id="results" class="screen" hidden></div>
+</div>
 </body>
 </html>
