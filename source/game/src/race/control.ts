@@ -144,6 +144,14 @@ export class RaceControl {
       this.red = false; this.frozenOrder = null; this.redOrder = []
       this.restartHold = true; this.greenT = S.t + 8
       this.phase = 'racing'
+      // Une voiture déjà rangée dans la file rouge doit retrouver un état
+      // pilotable, sinon le bouton semble fonctionner mais la course reste
+      // figée côté IA.
+      for (const r of S.cars) {
+        if (r.out || r.mode !== 'redq') continue
+        r.mode = 'race'; r.v = 0
+        if (S.pit) { const k = S.pit.n - 1; r.s = S.wrapS(S.pit.s[k]); r.d = S.pit.d[k]; r.pitP = 0; r.pitLat = 0 }
+      }
       this.msg('DRAPEAU ROUGE IGNORÉ — reprise de la course', 'rc')
       done = true
     }
@@ -242,6 +250,12 @@ export class RaceControl {
     let vt = pr[i] * 0.9
     if (ld) { const gl = S.road(ld.s, C.s); if (gl > 0 && gl < 120) C.caught = true; if (C.mode === 'out' && gl > 0 && gl < 1500 && !C.caught) vt *= 0.75 }
     if (C.caught && C.mode === 'out') { C.mode = 'lead'; this.msg('La safety car a pris la tête de la course', 'rc') }
+    // Après un retour depuis les stands, la SC peut ne jamais se recaler sur
+    // le leader. Elle ne doit jamais bloquer la course indéfiniment.
+    if (C.mode === 'out' && S.t > C.tEnd + 120) {
+      C.mode = 'lead'; C.caught = true
+      this.msg('SAFETY CAR EN TÊTE — fin de neutralisation préparée', 'rc')
+    }
     if (C.mode === 'lead' && !this.unlap && S.t > C.tEnd - 110) {
       const lead = S.leader(); let any = false
       for (const r of S.cars) { const lapped = !r.out && r !== lead && r.dist < lead.dist - S.L * 0.5 && S.road(lead.s, r.s) > 0 && S.road(lead.s, r.s) < 1500; (r as Racer & { _unlap?: boolean })._unlap = lapped && !r.player; if (lapped) any = true }
@@ -257,7 +271,7 @@ export class RaceControl {
       C.inThisLap = true; C.lights = false; this.msg('SAFETY CAR RENTRE (timeout)', 'rc')
     }
     if (C.inThisLap) { C.lights = false; const toPit = S.road(C.s, S.pitEntryS); if (toPit > 0 && toPit < C.v * dt + 1) { C.mode = 'in'; C.pitP = 0 } }
-    if (C.mode === 'in') { C.pitP += 22 * dt; C.v = 22; if (S.pitLen && C.pitP > S.pitLen * 0.4) { C.active = false; C.mode = 'park'; this.restartHold = true; this.drsResumeT = S.t + 2 * S.leader().prof.T; this.msg('Reprise : dépassements autorisés après la ligne de contrôle', 'rc') }
+    if (C.mode === 'in') { C.pitP += 22 * dt; C.v = 22; if (!S.pitLen || C.pitP > S.pitLen * 0.4) { C.active = false; C.mode = 'park'; this.restartHold = true; this.drsResumeT = S.t + 2 * S.leader().prof.T; this.msg('Reprise : dépassements autorisés après la ligne de contrôle', 'rc') }
       this.scPose(); return }
     C.v = Math.max(0, C.v + Math.max(-12 * dt, Math.min(5.5 * dt, vt - C.v)))
     C.s = S.wrapS(C.s + C.v * dt); C.d += (S.line.e[i] - C.d) * Math.min(1, dt)

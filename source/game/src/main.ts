@@ -245,6 +245,10 @@ function wireUi() {
     else if (a === 'garage') openGarage()
     else if (a === 'setup' || a === 'options' || a === 'about') openPanel(a)
     else if (a === 'resume') setScreen('drive')
+    else if (a === 'skipSafety') {
+      const F = game.field
+      if (F?.ctrl.skipSafety()) { hud.toast('Neutralisation passée · la course reprend', 2200); setScreen('drive') }
+    }
     else if (a === 'restart') { if (run?.kind === 'quick') startQuick(); else startSession(mode) }
     else if (a === 'reset') { game.resetCar(); setScreen('drive') }
     else if (a === 'menu') { if (run?.kind === 'weekend') saveRun(); run = null; game.autopilot = true; setCam('tv'); menu.reset(); setScreen('menu') }
