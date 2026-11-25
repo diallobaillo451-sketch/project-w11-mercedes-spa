@@ -10,7 +10,6 @@ import { dlog } from '../diag.ts'
 import { bindLivery, readableLivery } from './livery.ts'
 import { collectAnchors, type Anchor } from './anchors.ts'
 import { cloneTyreMaterials, setTyreCompoundColor } from './tyreColor.ts'
-import { CarLODManager, HD_MAX_DISTANCE, LOD_HYSTERESIS } from './carLODManager.ts'
 
 type Mat = THREE.MeshStandardMaterial
 interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean; spin0: number; steer0: number }
@@ -19,7 +18,9 @@ const TEAMS = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatau
 /** Distances (m). Les voitures les plus proches de la caméra utilisent le modèle HD (≈ 47 k tris, UV et textures d'origine,
  *  livrée complète) ; ensuite LOD1 (≈ 21 k) puis LOD2 (≈ 6 k). Le LOD1/LOD2 n'a pas d'UV propres : sa livrée est approximée,
  *  donc on le garde pour les voitures éloignées, où l'approximation ne se voit plus. */
-const LOD_HI = HD_MAX_DISTANCE, LOD1 = 120, LOD2 = 450, LOD1_NOHI = 60
+const LOD_HI = 36, LOD1 = 120, LOD2 = 450, LOD1_NOHI = 60
+/** nombre maximal de voitures HD affichées en même temps (les plus proches), selon le préréglage — le reste retombe en LOD1 */
+const HI_BUDGET: Record<string, number> = { low: 2, medium: 4, high: 6, ultra: 8 }
 /** Modèle SC remplaçable (Mercedes-AMG GT Black Series optimisé, plus tard sous shared/assets/safety_car/). */
 export const SAFETY_CAR_LOD = './cars/safetycar_lod1.glb'
 export const SAFETY_CAR_HI = './cars/safetycar_hi.glb'
@@ -206,10 +207,7 @@ export class FieldView {
   private lampState = new Map<number, string>()
   private protos = new Map<string, { l0: THREE.Object3D | null; l1: THREE.Object3D; l2: THREE.Object3D }>()
   private camPos = new THREE.Vector3()
-  private lodManager = new CarLODManager()
-  private lodFrustum = new THREE.Frustum()
-  private lodProjection = new THREE.Matrix4()
-  private lodSphere = new THREE.Sphere(new THREE.Vector3(), 3.2)
+  private rank: { v: CarView; d: number }[] = []
   ready = false
   private ren: Renderer
   private shared = new Set<THREE.Material>()
@@ -290,8 +288,8 @@ export class FieldView {
       const p = this.protos.get(r.team); if (!p) continue
       // niveaux : [HD] → LOD1 → LOD2 → rien. Géométries et matériaux sont partagés entre les clones (aucune copie GPU).
       const lod = new THREE.LOD(), h = p.l0 ? p.l0.clone() : null, a = p.l1.clone(), b = p.l2.clone()
-      if (h) { lod.addLevel(h, 0); lod.addLevel(a, LOD_HI, LOD_HYSTERESIS); lod.addLevel(b, LOD1, LOD_HYSTERESIS) } else { lod.addLevel(a, 0); lod.addLevel(b, LOD1_NOHI, LOD_HYSTERESIS) }
-      const culled = new THREE.Object3D(); culled.name = 'ai_lod3_culled'; lod.addLevel(culled, LOD2, LOD_HYSTERESIS)
+      if (h) { lod.addLevel(h, 0); lod.addLevel(a, LOD_HI); lod.addLevel(b, LOD1) } else { lod.addLevel(a, 0); lod.addLevel(b, LOD1_NOHI) }
+      lod.addLevel(new THREE.Object3D(), LOD2)
       lod.matrixAutoUpdate = false; lod.name = 'ai_' + r.id
       const parts = h ? [h, a, b] : [a, b]
       const wheels = parts.flatMap(collectWheels), drsPivots = parts.flatMap(collectDrs)
@@ -354,25 +352,12 @@ export class FieldView {
   update(sim: RaceSim, dt: number, cam: THREE.Camera) {
     if (!this.ready) return
     const t = performance.now() / 1000
-    // La politique LOD travaille sur les voitures visibles ; la sélection HD est bornée par le preset,
-    // puis les transitions LOD1 → LOD2 → LOD3 sont gérées avec hystérésis.
-    cam.updateMatrixWorld()
+    // budget HD : seules les voitures les plus proches de la caméra (et à moins de LOD_HI m) passent en haute définition
     cam.getWorldPosition(this.camPos)
-    this.lodProjection.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)
-    this.lodFrustum.setFromProjectionMatrix(this.lodProjection)
-    const tiers = this.lodManager.update(this.views.map(v => {
-      const r = v.r, dx = r.wx - this.camPos.x, dy = r.wy - this.camPos.y, dz = r.wz - this.camPos.z
-      const goneAt = (r as Racer & { _goneAt?: number })._goneAt
-      const gone = !!(r as Racer & { _gone?: boolean })._gone || (goneAt !== undefined && sim.t > goneAt)
-      const hidden = r.mode === 'garage' || (!!r.out && r.mode === 'dnf' && r.v < 0.5 && gone)
-      this.lodSphere.center.set(r.wx, r.wy, r.wz)
-      return { id: String(r.id), distanceSq: dx * dx + dy * dy + dz * dz, visible: !hidden && this.lodFrustum.intersectsSphere(this.lodSphere), hasHD: v.hasHi, lod1Distance: v.hasHi ? LOD1 : LOD1_NOHI, lod2Distance: LOD2 }
-    }), this.ren.q.name)
-    for (const v of this.views) {
-      const tier = tiers.get(String(v.r.id)) ?? 3
-      const level = v.hasHi ? tier : tier - 1
-      for (let i = 0; i < v.obj.levels.length; i++) v.obj.levels[i].object.visible = i === level
-    }
+    const hiMax = HI_BUDGET[this.ren.q.name] ?? 2, rank = this.rank; rank.length = 0
+    for (const v of this.views) if (v.hasHi) { const dx = v.r.wx - this.camPos.x, dy = v.r.wy - this.camPos.y, dz = v.r.wz - this.camPos.z; rank.push({ v, d: dx * dx + dy * dy + dz * dz }) }
+    rank.sort((x, y) => x.d - y.d)
+    for (let i = 0; i < rank.length; i++) rank[i].v.obj.levels[1].distance = i < hiMax ? LOD_HI : 0
     for (const v of this.views) {
       const r = v.r
       if (v.tyreCompound !== r.tyre.c) { v.tyreCompound = r.tyre.c; setTyreCompoundColor(v.tyreMaterials, v.tyreCompound) }
@@ -400,6 +385,7 @@ export class FieldView {
       m4.setPosition(r.wx, r.wy + (jacked ? 0.09 : 0), r.wz)
       v.obj.matrix.copy(m4); v.obj.matrixWorldNeedsUpdate = true
       v.blob.matrix.copy(m4); v.blob.matrix.elements[13] = r.wy + 0.03; v.blob.matrixWorldNeedsUpdate = true
+      v.obj.update(cam)
       v.spin -= r.v / 0.33 * dt
       const steer = Math.max(-0.42, Math.min(0.42, r.steer ?? 0))
       const wheelsOff = phase === 'off'
@@ -463,7 +449,7 @@ export class FieldView {
     this.root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; geos.add(m.geometry); for (const mt of [m.material].flat()) if (!this.shared.has(mt)) mats.add(mt) })
     for (const mt of mats) { for (const val of Object.values(mt)) if ((val as THREE.Texture)?.isTexture) tx.add(val as THREE.Texture); mt.dispose() }
     for (const g of geos) g.dispose(); for (const t of tx) t.dispose()
-    this.root.removeFromParent(); this.views = []; this.lodManager.reset(); this.ready = false
+    this.root.removeFromParent(); this.views = []; this.ready = false
   }
 }
 function paintLight(node: THREE.Object3D | undefined, green: boolean) {
