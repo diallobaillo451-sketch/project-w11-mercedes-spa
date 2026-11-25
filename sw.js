@@ -2,7 +2,7 @@
 // Note iOS : Safari peut purger ce cache après quelques semaines sans utilisation ; pas de mise à jour en arrière-plan.
 // v3 : piste pleine qualité en tuiles (assets/spa/*) mises en cache à mesure qu'elles arrivent → jeu complet hors ligne
 // après une première session ; tiles.json en réseau d'abord (mise à jour), le reste en cache d'abord.
-const V = 'w11-v12-circuits'
+const V = 'w11-v12-look'
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(V).then(c => c.addAll(['./', './index.html', './manifest.webmanifest', './assets/spa/tiles.json']).catch(() => {}))) })
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())) })
 self.addEventListener('fetch', e => {
