@@ -14,9 +14,14 @@ import { paintLight, shouldCreateFallbackMarshalBoards } from './signals.ts'
 
 type Mat = THREE.MeshStandardMaterial
 interface WheelRef { spin: THREE.Object3D; steer: THREE.Object3D | null; front: boolean; spin0: number; steer0: number }
-interface CarView { r: Racer; obj: THREE.LOD; wheels: WheelRef[]; tyreMaterials: THREE.MeshStandardMaterial[]; tyreCompound: Racer['tyre']['c']; blob: THREE.Mesh; pitch: number; roll: number; spin: number }
+interface CarView { r: Racer; obj: THREE.LOD; wheels: WheelRef[]; tyreMaterials: THREE.MeshStandardMaterial[]; tyreCompound: Racer['tyre']['c']; blob: THREE.Mesh; pitch: number; roll: number; spin: number; hasHi: boolean; drsPivots: THREE.Object3D[]; drsPos: number }
 const TEAMS = ['mercedes', 'ferrari', 'redbull', 'mclaren', 'renault', 'alphatauri', 'racingpoint', 'alfaromeo', 'haas', 'williams']
-const LOD1 = 28, LOD2 = 450
+/** Distances (m). Les voitures les plus proches de la caméra utilisent le modèle HD (≈ 47 k tris, UV et textures d'origine,
+ *  livrée complète) ; ensuite LOD1 (≈ 21 k) puis LOD2 (≈ 6 k). Le LOD1/LOD2 n'a pas d'UV propres : sa livrée est approximée,
+ *  donc on le garde pour les voitures éloignées, où l'approximation ne se voit plus. */
+const LOD_HI = 36, LOD1 = 120, LOD2 = 450, LOD1_NOHI = 60
+/** nombre maximal de voitures HD affichées en même temps (les plus proches), selon le préréglage — le reste retombe en LOD1 */
+const HI_BUDGET: Record<string, number> = { low: 2, medium: 4, high: 6, ultra: 8 }
 /** Modèle SC remplaçable (Mercedes-AMG GT Black Series optimisé, plus tard sous shared/assets/safety_car/). */
 export const SAFETY_CAR_LOD = './cars/safetycar_lod1.glb'
 export const SAFETY_CAR_HI = './cars/safetycar_hi.glb'
@@ -28,10 +33,10 @@ function blobTex() {
   const gr = g.createRadialGradient(32, 32, 4, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(1, 'rgba(0,0,0,0)')
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t
 }
-function dropTopMip(t: THREE.Texture) {
+function dropTopMip(t: THREE.Texture, keep = 256) {
   const ct = t as THREE.CompressedTexture
   if (!ct.isCompressedTexture || !ct.mipmaps || ct.mipmaps.length < 2) return
-  const m0 = ct.mipmaps[0] as { width: number; height: number }; if (m0.width <= 256) return
+  const m0 = ct.mipmaps[0] as { width: number; height: number }; if (m0.width <= keep) return
   ct.mipmaps = ct.mipmaps.slice(1); const m1 = ct.mipmaps[0] as { width: number; height: number }
   ;(ct.image as { width: number; height: number }) = { width: m1.width, height: m1.height } as never; ct.needsUpdate = true
 }
@@ -44,6 +49,9 @@ function collectWheels(root: THREE.Object3D): WheelRef[] {
   }
   return wheels
 }
+/** Volet DRS : le nœud « DRS_pivot » (bord de fuite du volet, vérifié sur les 9 voitures) tourne autour de X ; +25° = volet à plat, comme le W11 du joueur. */
+const DRS_RAD = 25 * Math.PI / 180
+function collectDrs(root: THREE.Object3D): THREE.Object3D[] { const out: THREE.Object3D[] = []; root.traverse(n => { if (n.name.startsWith('DRS_pivot')) out.push(n) }); return out }
 /** maillages dont la quantification a explosé (un logo de jante à 8 m, lu comme une roue qui flotte) */
 function hideExploded(root: THREE.Object3D) {
   const s = new THREE.Vector3()
@@ -203,11 +211,13 @@ export class FieldView {
     }
   }
   private lampState = new Map<number, string>()
-  private protos = new Map<string, { l1: THREE.Object3D; l2: THREE.Object3D }>()
+  private protos = new Map<string, { l0: THREE.Object3D | null; l1: THREE.Object3D; l2: THREE.Object3D }>()
+  private camPos = new THREE.Vector3()
+  private rank: { v: CarView; d: number }[] = []
   ready = false
   private ren: Renderer
   private shared = new Set<THREE.Material>()
-  stats = { tris1: 0, tris2: 0, texMB: 0 }
+  stats = { tris0: 0, tris1: 0, tris2: 0, texMB: 0 }
   constructor(ren: Renderer) { this.ren = ren; this.root.name = 'field'; ren.scene.add(this.root) }
 
   /** modèle HD au repos (pas la voiture du joueur, qui a déjà bougé) : sert d'atlas d'UV puis sa géométrie est jetée */
@@ -218,11 +228,14 @@ export class FieldView {
   }
   private async proto(team: string) {
     const hi = await this.teamHi(team)
+    // résolution des textures d'équipe : Basse = comme avant (−1 mip), Moyenne = 512 px conservés, Haute/Ultra = pleine résolution.
+    // Mercedes (modèle W11 à 59 textures) garde −1 mip partout : la mémoire GPU reste sous contrôle.
+    const tier = this.ren.q.name, keep = team === 'mercedes' ? 256 : tier === 'low' ? 256 : tier === 'medium' ? 512 : 8192
     const mats: Mat[] = []
     hi.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
       for (const mt of [m.material].flat() as Mat[]) {
         if (mats.includes(mt)) continue
-        for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'] as const) { const t = mt[k]; if (t) dropTopMip(t) }
+        for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'] as const) { const t = mt[k]; if (t) dropTopMip(t, keep) }
         readableLivery(mt); mats.push(mt)
       } })
     const id = team === 'mercedes' ? 'mercedes' : carOfTeam(team)
@@ -234,17 +247,22 @@ export class FieldView {
       g.scene.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; m.frustumCulled = true; m.castShadow = false; m.receiveShadow = false })
       if (r.hit === 0) dlog(`livrée ${team} : aucun matériau relié (${r.miss} manqués)`)
     }
-    hi.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose() })
+    // Le modèle HD est CONSERVÉ pour les voitures d'équipe (géométrie ≈ 1,5 Mo par équipe) : il sert aux voitures proches.
+    // Mercedes : le W11 du joueur (232 k tris) est trop lourd pour l'IA → on jette sa géométrie comme avant et on garde son LOD1 (52 k tris).
+    let l0: THREE.Object3D | null = null
+    if (team === 'mercedes') hi.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.geometry.dispose() })
+    else { l0 = hi; hi.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return; m.frustumCulled = true; m.castShadow = false; m.receiveShadow = false }) }
     let seat = [0, 0, 0]
     if (id !== 'mercedes') { try { const meta = await (await fetch(`./cars/${id}.json`)).json() as { seat_gltf?: number[] }; seat = meta.seat_gltf ?? seat } catch { /* casque au défaut */ } }
     const hm = new THREE.MeshStandardMaterial({ color: teamAccent(team), roughness: 0.35, metalness: 0.1 })
-    for (const g of [g1, g2]) {
-      const h = new THREE.Mesh(new THREE.SphereGeometry(0.14, g === g1 ? 10 : 6, g === g1 ? 8 : 4), hm)
-      h.scale.set(1, 0.92, 1.12); h.position.set(seat[0], 0.83 + seat[1], -0.2 + seat[2]); h.name = 'helmet'; h.castShadow = false; g.scene.add(h)
+    for (const [root, seg] of [[l0, 16], [g1.scene, 10], [g2.scene, 6]] as [THREE.Object3D | null, number][]) {
+      if (!root) continue
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.14, seg, Math.max(4, seg - 2)), hm)
+      h.scale.set(1, 0.92, 1.12); h.position.set(seat[0], 0.83 + seat[1], -0.2 + seat[2]); h.name = 'helmet'; h.castShadow = false; root.add(h)
     }
     const tri = (o: THREE.Object3D) => { let n = 0; o.traverse(x => { const m = x as THREE.Mesh; if (m.isMesh) n += (m.geometry.index?.count ?? m.geometry.attributes.position.count) / 3 }); return n }
-    this.stats.tris1 = Math.max(this.stats.tris1, tri(g1.scene)); this.stats.tris2 = Math.max(this.stats.tris2, tri(g2.scene))
-    this.protos.set(team, { l1: g1.scene, l2: g2.scene })
+    if (l0) this.stats.tris0 = Math.max(this.stats.tris0, tri(l0)); this.stats.tris1 = Math.max(this.stats.tris1, tri(g1.scene)); this.stats.tris2 = Math.max(this.stats.tris2, tri(g2.scene))
+    this.protos.set(team, { l0, l1: g1.scene, l2: g2.scene })
   }
   /** pendant l'écran de chargement : toutes les équipes, avant les feux */
   async preload(on?: (done: number, total: number, team: string) => void) {
@@ -264,7 +282,7 @@ export class FieldView {
     await this.ensureSC()
     this.ready = true
     const gb = this.gpuBytes()
-    dlog(`plateau : ${this.views.length} voitures, ${this.protos.size} équipes en ${Math.round(performance.now() - t0)} ms · LOD1 ${this.stats.tris1 | 0} tris, LOD2 ${this.stats.tris2 | 0} · GPU ≈ ${(gb.tex / 1048576).toFixed(1)} + ${(gb.geo / 1048576).toFixed(1)} Mo`)
+    dlog(`plateau : ${this.views.length} voitures, ${this.protos.size} équipes en ${Math.round(performance.now() - t0)} ms · HD ${this.stats.tris0 | 0} tris, LOD1 ${this.stats.tris1 | 0} tris, LOD2 ${this.stats.tris2 | 0} · GPU ≈ ${(gb.tex / 1048576).toFixed(1)} + ${(gb.geo / 1048576).toFixed(1)} Mo`)
   }
   /** Vide les instances et accessoires du circuit précédent sans détruire les prototypes d’IA déjà en mémoire. */
   resetCircuit() {
@@ -288,13 +306,16 @@ export class FieldView {
     for (const r of sim.cars) {
       if (r.player) continue
       const p = this.protos.get(r.team); if (!p) continue
-      const lod = new THREE.LOD(), a = p.l1.clone(), b = p.l2.clone()
-      lod.addLevel(a, 0); lod.addLevel(b, LOD1); lod.addLevel(new THREE.Object3D(), LOD2)
+      // niveaux : [HD] → LOD1 → LOD2 → rien. Géométries et matériaux sont partagés entre les clones (aucune copie GPU).
+      const lod = new THREE.LOD(), h = p.l0 ? p.l0.clone() : null, a = p.l1.clone(), b = p.l2.clone()
+      if (h) { lod.addLevel(h, 0); lod.addLevel(a, LOD_HI); lod.addLevel(b, LOD1) } else { lod.addLevel(a, 0); lod.addLevel(b, LOD1_NOHI) }
+      lod.addLevel(new THREE.Object3D(), LOD2)
       lod.matrixAutoUpdate = false; lod.name = 'ai_' + r.id
-      const wheels = [...collectWheels(a), ...collectWheels(b)]
-      const tyreMaterials = cloneTyreMaterials([a, b]); setTyreCompoundColor(tyreMaterials, r.tyre.c)
+      const parts = h ? [h, a, b] : [a, b]
+      const wheels = parts.flatMap(collectWheels), drsPivots = parts.flatMap(collectDrs)
+      const tyreMaterials = cloneTyreMaterials(parts); setTyreCompoundColor(tyreMaterials, r.tyre.c)
       const blob = new THREE.Mesh(bg, bm); blob.matrixAutoUpdate = false; blob.renderOrder = 1
-      this.root.add(lod, blob); this.views.push({ r, obj: lod, wheels, tyreMaterials, tyreCompound: r.tyre.c, blob, pitch: 0, roll: 0, spin: 0 })
+      this.root.add(lod, blob); this.views.push({ r, obj: lod, wheels, tyreMaterials, tyreCompound: r.tyre.c, blob, pitch: 0, roll: 0, spin: 0, hasHi: !!h, drsPivots, drsPos: 0 })
     }
   }
   /** Remplace le modèle de safety car (GLB affiché + GLB haute définition pour les matériaux). */
@@ -354,6 +375,12 @@ export class FieldView {
   update(sim: RaceSim, dt: number, cam: THREE.Camera) {
     if (!this.ready) return
     const t = performance.now() / 1000
+    // budget HD : seules les voitures les plus proches de la caméra (et à moins de LOD_HI m) passent en haute définition
+    cam.getWorldPosition(this.camPos)
+    const hiMax = HI_BUDGET[this.ren.q.name] ?? 2, rank = this.rank; rank.length = 0
+    for (const v of this.views) if (v.hasHi) { const dx = v.r.wx - this.camPos.x, dy = v.r.wy - this.camPos.y, dz = v.r.wz - this.camPos.z; rank.push({ v, d: dx * dx + dy * dy + dz * dz }) }
+    rank.sort((x, y) => x.d - y.d)
+    for (let i = 0; i < rank.length; i++) rank[i].v.obj.levels[1].distance = i < hiMax ? LOD_HI : 0
     for (const v of this.views) {
       const r = v.r
       if (v.tyreCompound !== r.tyre.c) { v.tyreCompound = r.tyre.c; setTyreCompoundColor(v.tyreMaterials, v.tyreCompound) }
@@ -386,6 +413,9 @@ export class FieldView {
       const steer = Math.max(-0.42, Math.min(0.42, r.steer ?? 0))
       const wheelsOff = phase === 'off'
       for (const w of v.wheels) { w.spin.visible = !wheelsOff; w.spin.rotation.x = w.spin0 + v.spin; if (w.steer) w.steer.rotation.y = w.steer0 + steer }
+      // DRS : ouvert quand il est accordé ET que la voiture est dans une zone ; ouverture / fermeture ≈ 0,12 s
+      const drsT = r.drs && sim.inZone(r.s) ? 1 : 0
+      if (v.drsPos !== drsT && v.drsPivots.length) { v.drsPos += Math.sign(drsT - v.drsPos) * Math.min(Math.abs(drsT - v.drsPos), dt * 8); const a = v.drsPos * DRS_RAD; for (const pv of v.drsPivots) pv.rotation.x = a }
     }
     if (this.sc) {
       const S = sim.ctrl.sc, on = S.active && S.mode !== 'park'; this.sc.visible = on
