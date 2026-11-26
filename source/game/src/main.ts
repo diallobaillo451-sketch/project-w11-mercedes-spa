@@ -69,9 +69,16 @@ const params = new URLSearchParams(location.search)
 decideSafe(params)
 
 let lastLabel = ''
+function setBootMessage(text: string) {
+  const msg = document.getElementById('bootMsg') ?? document.getElementById('bootText')
+  if (msg) msg.textContent = text
+}
 function bootProgress(label: string, f: number) {
   diag.lastProgress = performance.now(); if (label !== lastLabel) { lastLabel = label; dlog(label) }
-  $('bootMsg').textContent = label + (diag.safe ? ' · mode sans échec' : ''); ($('bootBar') as HTMLElement).style.width = Math.round(f * 100) + '%' }
+  setBootMessage(label + (diag.safe ? ' · mode sans échec' : ''))
+  const bar = $('bootBar') as HTMLElement
+  bar.style.width = Math.round(f * 100) + '%'
+}
 
 let pitData: PitlaneData | null = null
 /** bouton Circuit (menu) : Spa → Monza → Barcelone, recharge la page */
@@ -127,6 +134,7 @@ function setupField(k: SessionKind | 'demo') {
   }
   const F = game.startField({ kind, laps: run.laps, player, grid, exclude, sessionLen: kind === 'race' ? undefined : run.remaining, posts: marshals })
   F.difficulty = settings.profile.difficulty
+  F.hullCollisions = new URLSearchParams(location.search).get('hull') === '1' // SAT expérimental : désactivé par défaut ; ?hull=1 pour comparer
   F.hybridOn = new URLSearchParams(location.search).get('hybrid') !== '0' // ?hybrid=0 : IA en 1D seule (comparer la fluidité)
   if (kind === 'race') F.planRace()
   if (kind === 'race') {
@@ -401,6 +409,13 @@ function frame(now: number) {
     if (note?.text) { hud.toast(note.text, note.critical ? 4200 : 2800); if (!note.say) audio.radio() }
     screens?.update(game.field, c, game.env.weather)
     screens?.setDom((game.inPit || screen === 'drive' && c.speed < 1 && game.inPit) && (screens?.bound ?? 0) === 0)
+    if (fview && game.field) {
+      // TV / spectateur : tous les modèles au détail maximal ; la physique complète se concentre sur la voiture regardée (pas sur le joueur arrêté)
+      const tv = ren.cams?.mode === 'tv' || !!game.spectate
+      fview.tvBoost = tv
+      game.field.focus = game.spectate === 'tv' ? game.field.leader() : game.spectate ? (fview.views.find(x => x.r.id === game.spectate)?.r ?? null) : null
+      game.field.hybridMax = tv && !adapt.lock30 && adapt.fx < 3 ? 6 : 4
+    }
     if (game.spectate && game.spectate !== 'tv' && fview) {
       const step = Math.floor(game.spectateT / 8)
       if (step !== Math.floor((game.spectateT - dt) / 8)) {
@@ -436,8 +451,8 @@ function frame(now: number) {
   const dl = game.session.timing.delta, de = $('hDelta'), dtxt = isNaN(dl) || game.autopilot ? '' : (dl >= 0 ? '+' : '−') + Math.abs(dl).toFixed(2)
   if (de.textContent !== dtxt) { de.textContent = dtxt; de.hidden = !dtxt || !fe.hidden; de.className = 'deltachip ' + (dl <= 0 ? 'neg' : 'pos') }
   if (settings.adaptive && adapt.sample(dtMs)) { if (ren.scale !== adapt.scale) ren.setScale(adapt.scale); ren.setFx(adapt.fx) }
-  fpsAcc += dtMs; fpsN++
-  if (fpsN >= 30) { diag.fps = 1000 * fpsN / fpsAcc; if (settings.perf) $('perf').textContent = `${(1000 * fpsN / fpsAcc).toFixed(0)} i/s · ${ren.r.info.render.calls} appels · éch. ${adapt.scale.toFixed(2)} · fx ${adapt.fx} · piste ${ren.tiles?.loaded.size ?? 0}/${ren.tiles?.total ?? 0}`; fpsAcc = 0; fpsN = 0 }
+  fpsAcc += dtMs; fpsN++; adapt.track(dtMs)
+  if (fpsN >= 30) { diag.fps = 1000 * fpsN / fpsAcc; if (settings.perf) $('perf').textContent = `${(1000 * fpsN / fpsAcc).toFixed(0)} i/s · ${ren.r.info.render.calls} appels · éch. ${adapt.scale.toFixed(2)} · fx ${adapt.fx} · piste ${ren.tiles?.loaded.size ?? 0}/${ren.tiles?.total ?? 0} · ${adapt.stats()}`; fpsAcc = 0; fpsN = 0 }
   const ka = $('steerKnob'); ka.style.setProperty('--s', String(st.steer))
 }
 
@@ -705,8 +720,11 @@ async function main() {
     const qn = (params.has('q') ? q0 : QL[Math.max(0, QL.indexOf(q0 as typeof QL[number]) - diag.drop)]) as typeof settings.quality
     // KTX2 (textures compressées GPU) sur mobile, ou forcé par ?ktx=1 ; ?ktx=0 pour le désactiver
     const ktx = params.has('ktx') ? params.get('ktx') !== '0' : diag.mobile
-    ren = new Renderer($('c') as HTMLCanvasElement, qn, { safe: diag.safe, mobile: diag.mobile, ktx, onLost: () => gpuLost() })
+    const canvas = document.getElementById('c') ?? document.getElementById('gl')
+    if (!canvas) throw new Error('Canvas de rendu introuvable')
+    ren = new Renderer(canvas as HTMLCanvasElement, qn, { safe: diag.safe, mobile: diag.mobile, ktx, onLost: () => gpuLost() })
     ren.onTile = root => bindPit(root)
+    adapt.setNoPost(!ren.q.gtao && !ren.q.bloom)
     diag.preset = (diag.safe ? 'sans échec (' + ren.q.name + ')' : ren.q.name) + ' · DPR max ' + ren.q.dprMax + (ktx ? ' · KTX2' : ' · WebP')
     dlog('préréglage ' + diag.preset)
     await ren.load(game, track, bootProgress)
@@ -759,7 +777,7 @@ async function main() {
     bootProgress('Prêt', 1)
     bootDone()
     $('bootGo').hidden = false
-    $('bootMsg').textContent = 'Prêt · mode paysage recommandé'
+    setBootMessage('Prêt · mode paysage recommandé')
     const go = async () => {
       $('bootGo').removeEventListener('click', go)
       // dans le geste, SANS attendre : déverrouillage audio iOS puis autorisation gyroscope (les deux appels partent
@@ -779,7 +797,7 @@ async function main() {
     ;(window as unknown as { __w11diag: unknown }).__w11diag = diag
   } catch (e) {
     console.error(e)
-    $('bootMsg').textContent = 'Erreur de chargement : ' + (e as Error).message
+    setBootMessage('Erreur de chargement : ' + (e as Error).message)
     fatal('Le jeu n’a pas pu démarrer', (e as Error).message)
   }
   if ('serviceWorker' in navigator && import.meta.env.PROD && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => {})

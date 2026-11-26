@@ -749,6 +749,8 @@ export class RaceSim {
   // ───────────── contacts
   private contacts() {
     const A = this.cars
+    // joueur ↔ voitures : enveloppes orientées en repère monde (SAT), avant les contacts en repère piste
+    if (this.hullCollisions && this.hybridOn && this.player.player && this.vehicle) for (const o of A) if (o !== this.player) this.hullContact(this.player, o)
     for (let a = 0; a < A.length; a++) for (let b = a + 1; b < A.length; b++) {
       const p = A[a], q = A[b]
       if (!this.onTrack(p) || !this.onTrack(q)) continue
@@ -759,7 +761,7 @@ export class RaceSim {
       const dvLong = rear.v - front.v, dvLat = Math.min(6, Math.abs(dr(q) - dr(p)))
       const ovS = CL - 0.4 - Math.abs(ds), ovD = CW - 0.1 - Math.abs(dd)
       const sideHit = ovD < ovS * 0.6
-      if (p.player || q.player) { this.playerContact(p.player ? p : q, p.player ? q : p, sideHit); continue }
+      if (p.player || q.player) { if (!this.hullCollisions || !this.hybridOn) this.playerContact(p.player ? p : q, p.player ? q : p, sideHit); continue }
       if (sideHit) { const sg = Math.sign(dd) || 1; p.d -= sg * ovD * 0.5; q.d += sg * ovD * 0.5 }
       else { rear.v = Math.max(0, Math.min(rear.v, front.v) - Math.max(0, dvLong) * 0.2); front.v += Math.max(0, dvLong) * 0.3; const sg = Math.sign(dd) || 1; p.d -= sg * 0.3; q.d += sg * 0.3 }
       this.contactDamage(rear, front, sideHit ? dvLat * 1.5 : dvLong, sideHit)
@@ -784,6 +786,79 @@ export class RaceSim {
         if (!rear.player) rear.v = Math.min(rear.v, Math.max(0, (ds > 0 ? q : p).v - 0.6))
       }
     }
+  }
+  /** voiture suivie en mode TV / spectateur : la physique complète (hybride) se recentre sur elle ; null = le joueur */
+  focus: Racer | null = null
+  /** nombre maximal d'IA en physique complète : 4 en jeu, davantage en mode TV */
+  hybridMax = 4
+  /** SAT expérimental : désactivé par défaut jusqu'à correction des impacts répétés. */
+  hullCollisions = false
+  private hn = { nx: 0, nz: 0, pen: 0 }
+  /** une épave (abandon) encore visible sur la piste est un obstacle plein : plus de traversée */
+  private wreckSolid(r: Racer) {
+    if (r.mode !== 'dnf') return false
+    const x = r as Racer & { _gone?: boolean; _goneAt?: number }
+    return !x._gone && !(x._goneAt !== undefined && this.t > x._goneAt)
+  }
+  /** deux rectangles orientés (théorème de l'axe séparateur) : normale unitaire de B vers A et pénétration minimale, ou null s'ils ne se touchent pas */
+  private hullOverlap(ax: number, az: number, afx: number, afz: number, bx: number, bz: number, bfx: number, bfz: number) {
+    const HL = 2.7, HW = 0.95 // demi-longueur / demi-largeur d'une F1 2020 (5,4 × 1,9 m : 5,5 × 2,0 m moins la tolérance aileron / roue)
+    const dx = ax - bx, dz = az - bz, arx = -afz, arz = afx, brx = -bfz, brz = bfx
+    let best = Infinity, bnx = 0, bnz = 0
+    for (let k = 0; k < 4; k++) {
+      const ux = k === 0 ? afx : k === 1 ? arx : k === 2 ? bfx : brx
+      const uz = k === 0 ? afz : k === 1 ? arz : k === 2 ? bfz : brz
+      const ra = HL * Math.abs(afx * ux + afz * uz) + HW * Math.abs(arx * ux + arz * uz)
+      const rb = HL * Math.abs(bfx * ux + bfz * uz) + HW * Math.abs(brx * ux + brz * uz)
+      const proj = dx * ux + dz * uz, ov = ra + rb - Math.abs(proj)
+      if (ov <= 0) return null
+      if (ov < best) { best = ov; const sg = proj >= 0 ? 1 : -1; bnx = ux * sg; bnz = uz * sg }
+    }
+    this.hn.nx = bnx; this.hn.nz = bnz; this.hn.pen = best
+    return this.hn
+  }
+  /** contact joueur ↔ voiture, enveloppes orientées (SAT) : sortie d'interpénétration à chaque pas (plus de traversée, épaves comprises),
+   *  impulsion symétrique (le joueur et l'IA reçoivent la même ; Vehicle.carHit des deux côtés si l'IA est en physique complète), dégâts et pénalités comme avant */
+  private hullContact(pl: Racer, ai: Racer) {
+    const c = this.vehicle; if (!c || !this.onTrack(pl)) return
+    const wreck = this.wreckSolid(ai)
+    if (!wreck && !this.onTrack(ai)) return
+    const dx = pl.wx - ai.wx, dz = pl.wz - ai.wz
+    if (dx * dx + dz * dz > 38) return // plus de 6,2 m entre centres : aucun contact possible
+    const pf = Math.hypot(c.R[6], c.R[8]) || 1, pfx = -c.R[6] / pf, pfz = -c.R[8] / pf
+    const af = Math.hypot(ai.hx, ai.hz) || 1, afx = ai.hx / af, afz = ai.hz / af
+    const hit = this.hullOverlap(pl.wx, pl.wz, pfx, pfz, ai.wx, ai.wz, afx, afz)
+    if (!hit) return
+    const nx = hit.nx, nz = hit.nz, pen = hit.pen // n : de l'IA vers le joueur
+    const av = this.drives(ai) ? (this.hybridBank?.vehicleOf(ai) ?? null) : null
+    const avx = wreck ? 0 : av ? av.vel[0] : ai.hx * ai.v, avz = wreck ? 0 : av ? av.vel[2] : ai.hz * ai.v
+    const dvn = -((c.vel[0] - avx) * nx + (c.vel[2] - avz) * nz) // > 0 : elles se rapprochent
+    // 1) sortir de l'interpénétration (≤ 0,35 m par pas) : une IA physique partage à parts égales ; une IA 1D ou une épave ne se déplace pas, le joueur reprend tout
+    const push = Math.min(0.35, pen + 0.01), kp = av ? 0.5 : 1
+    c.pos[0] += nx * push * kp; c.pos[2] += nz * push * kp; pl.wx = c.pos[0]; pl.wz = c.pos[2]
+    if (av) { av.pos[0] -= nx * push * (1 - kp); av.pos[2] -= nz * push * (1 - kp); ai.wx = av.pos[0]; ai.wz = av.pos[2] }
+    else if (!wreck) { ai.d += (ai.d - pl.d >= 0 ? 1 : -1) * 0.05; ai.off = ai.d; ai.sepT = 0.45 }
+    if (dvn <= 0.05) return
+    // 2) impulsion : mêmes règles pour les deux voitures (masses égales : 0,55 × la vitesse de rapprochement chacune) ; contre une épave, tout pour le joueur
+    const fwd = -(c.R[6] * nx + c.R[8] * nz) // > 0 : l'IA est derrière le joueur
+    const right = c.R[0] * nx + c.R[2] * nz
+    const side = Math.abs(right) > Math.abs(fwd)
+    const part = side ? (right > 0 ? (fwd < 0 ? 10 : 12) : (fwd < 0 ? 11 : 13)) : fwd < 0 ? 1 : (this.rng.next() < 0.5 ? 2 : 12 + (right > 0 ? 0 : 1))
+    c.carHit(nx, nz, dvn, part)
+    // L'IA 1D ne reçoit pas de vitesse latérale : donner au joueur le complément
+    // de l'impulsion évite de recompter le même contact à chaque tick.
+    if (!wreck && !av && side) { c.vel[0] += nx * dvn * 0.45; c.vel[2] += nz * dvn * 0.45 }
+    if (wreck) { c.vel[0] += nx * dvn * 0.55; c.vel[2] += nz * dvn * 0.55 }
+    else if (av) {
+      const nfa = afx * nx + afz * nz, nra = -afz * nx + afx * nz // composantes de n sur l'avant et la droite de l'IA
+      av.carHit(-nx, -nz, dvn, side ? (nra > 0 ? (nfa > 0 ? 11 : 13) : (nfa > 0 ? 10 : 12)) : nfa > 0 ? 1 : 2)
+      ai.v = Math.max(0, av.forwardSpeed()) // sinon nudge() annulerait l'impulsion reçue
+    } else {
+      ai.v = Math.max(0, ai.v - dvn * 0.55 * (afx * nx + afz * nz))
+      ai.d += (ai.d - pl.d >= 0 ? 1 : -1) * Math.min(0.4, dvn * 0.05); ai.lat *= 0.3
+    }
+    const rearIsPlayer = !side && fwd < 0
+    this.contactDamage(rearIsPlayer ? pl : ai, rearIsPlayer ? ai : pl, dvn, side)
   }
   private contactDamage(rear: Racer, front: Racer, dv: number, side: boolean) {
     if ((globalThis as any).process?.env?.CDBG && dv > 2.5) console.log('CONTACT', this.t.toFixed(2), rear.code, front.code, 'dv', dv.toFixed(1), 'side', side, 's', rear.s.toFixed(0), front.s.toFixed(0), 'd', rear.d.toFixed(2), front.d.toFixed(2), 'v', rear.v.toFixed(1), front.v.toFixed(1), rear.mode, front.mode, rear.off?.toFixed(1), front.off?.toFixed(1), rear.err?.kind, front.err?.kind)

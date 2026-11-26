@@ -156,14 +156,14 @@
 .rs-big small{font-size:11px;color:var(--a-txt2);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
 .rs-big b{display:block;font-size:18px;white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin-top:2px}
 /* feux de départ */
-#lights{position:fixed;top:calc(52px + var(--safe-t));left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:6;padding:8px 10px;border-radius:16px;background:rgba(10,10,12,.72);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#lights{position:fixed;top:calc(52px + var(--safe-t));left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:6;padding:8px 10px;border-radius:16px;background:rgba(10,10,12,.84)}
 #lights i{width:26px;height:26px;border-radius:13px;background:#2a0b0b;box-shadow:inset 0 0 0 2px #120404;transition:background .06s}
 #lights i.on{background:radial-gradient(circle at 40% 35%,#ff8a80,#ff1a10 55%,#a00);box-shadow:0 0 16px #ff2a1a}
 .sesschip{font-variant-numeric:tabular-nums}
 @media (max-height:420px){.ap-large{font-size:26px}.ap-tile{min-height:104px}.ap-hero .num{font-size:52px}.ap-hero .last{font-size:24px}}
 @media (prefers-reduced-motion:reduce){.ap-page,.ap-panel,.ap-tile,.ap-btn{transition-duration:.01s!important;animation-duration:.01s!important}}
 /* lot 8 C : tour de chronométrage + messages de la direction de course */
-#tower{position:absolute;top:calc(44px + var(--safe-t));left:calc(8px + var(--safe-l));width:128px;pointer-events:auto;font:600 10.5px -apple-system,system-ui;font-variant-numeric:tabular-nums;color:#fff;background:rgba(12,12,16,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:10px;padding:3px 0;overflow:hidden;z-index:6}
+#tower{position:absolute;top:calc(44px + var(--safe-t));left:calc(8px + var(--safe-l));width:128px;pointer-events:auto;font:600 10.5px -apple-system,system-ui;font-variant-numeric:tabular-nums;color:#fff;background:rgba(12,12,16,.82);border-radius:10px;padding:3px 0;overflow:hidden;z-index:6}
 #tower .th{font:800 9.5px -apple-system,system-ui;letter-spacing:.06em;padding:2px 8px 3px;color:#ffd400}
 #tower .tr{display:grid;grid-template-columns:16px 3px 30px 1fr 10px;gap:4px;align-items:center;height:14.5px;padding:0 6px}
 #tower .tr b{text-align:right;font-weight:700;color:#ddd}#tower .tr i{height:10px;border-radius:1px}#tower .tr em{font-style:normal;text-align:right;color:#cfd3da}#tower .tr u{text-decoration:none;font-weight:800;font-size:9px;text-align:center}

@@ -396,7 +396,10 @@ export class Renderer {
     const sh = this.sun.shadow.mapSize.x ** 2 * 4, probe = this.probe ? this.probeSize ** 2 * 6 * 8 * 1.33 : 0
     return { tex, geo, rt, sh: sh + probe, total: tex + geo + rt + sh + probe }
   }
+  private memLogT = 0
   memLog(lbl: string) {
+    // en jeu, une tuile qui entre ou sort ne doit pas relancer un parcours complet de la scène (pic d'image au pire moment) : au plus une estimation toutes les 20 s
+    if (this.cams && lbl.startsWith('tuile ')) { const now = performance.now(); if (now - this.memLogT < 20000) return; this.memLogT = now }
     const m = this.r.info.memory, e = this.gpuEstimate(), M = (b: number) => (b / 1048576).toFixed(0)
     dlog(`${lbl} · GPU ≈ ${M(e.total)} Mo (tex ${M(e.tex)}, géo ${M(e.geo)}, cibles ${M(e.rt)}, ombre ${M(e.sh)}) · info.memory géo ${m.geometries} tex ${m.textures} · tuile ${this.lastTile}`)
     diag.gpu = e
@@ -438,8 +441,12 @@ export class Renderer {
     root.updateMatrixWorld(true)
     if (this.cams) { // streaming en jeu : shaders compilés et textures envoyées au GPU avant l'ajout (pas de saccade visible)
       await this.r.compileAsync(root, this.cams.cam, this.scene)
+      const texs = new Set<THREE.Texture>()
       root.traverse(o => { const m = o as THREE.Mesh; if (!m.isMesh) return
-        for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'alphaMap'] as const) if (mt[k]) this.r.initTexture(mt[k]!) })
+        for (const mt of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'alphaMap'] as const) if (mt[k]) texs.add(mt[k]!) })
+      // envoi au GPU étalé : une grosse texture d'un coup = un pic d'image ; on travaille ~4 ms puis on rend la main (les images continuent d'être dessinées)
+      let tu = performance.now()
+      for (const tx of texs) { this.r.initTexture(tx); if (performance.now() - tu > 4) { await new Promise<void>(res => setTimeout(res, 0)); tu = performance.now() } }
     }
     this.swapPlaceholders(root)
     this.track!.add(root)
