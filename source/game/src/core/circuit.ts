@@ -114,6 +114,13 @@ export const CIRCUIT_GP_CODE: Record<CircuitId, string> = {
   redbull: 'aut', bahrain: 'bhr', hungaroring: 'hun', interlagos: 'bra', imola: 'emi', albertpark: 'mel',
 }
 
+const GP_TO_CIRCUIT: Partial<Record<string, CircuitId>> = Object.fromEntries(
+  Object.entries(CIRCUIT_GP_CODE).map(([id, gp]) => [gp, id as CircuitId]),
+)
+// Deux manches du calendrier 2020 réutilisent un circuit déjà présent.
+GP_TO_CIRCUIT.sty = 'redbull'
+GP_TO_CIRCUIT['70a'] = 'silverstone'
+
 const KEY = 'w11.circuit'
 const ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {}
 /** circuits proposés par le bouton seulement si le build a leurs données ; ?circuit=<id> reste accepté. */
@@ -122,6 +129,15 @@ const ENABLED: Record<CircuitId, boolean> = {
   sepang: ENV.VITE_SEPANG === '1', silverstone: ENV.VITE_SILVERSTONE === '1', marina: ENV.VITE_MARINA === '1',
   redbull: ENV.VITE_REDBULL === '1', bahrain: ENV.VITE_BAHRAIN === '1', hungaroring: ENV.VITE_HUNGARORING === '1',
   interlagos: ENV.VITE_INTERLAGOS === '1', imola: ENV.VITE_IMOLA === '1', albertpark: ENV.VITE_ALBERT_PARK === '1',
+}
+/** Piste physique correspondant au code d’une manche du calendrier 2020. */
+export function trackForGrandPrix(gp: string): CircuitId | null { return GP_TO_CIRCUIT[gp] ?? null }
+/** Vrai seulement si la piste et ses ressources sont incluses dans ce build. */
+export function isCircuitEnabled(id: CircuitId): boolean { return ENABLED[id] }
+/** Utilisé par le menu de sélection (distinct de la carrière, qui peut simuler une manche). */
+export function isGrandPrixSelectable(gp: string): boolean {
+  const id = trackForGrandPrix(gp)
+  return !!id && isCircuitEnabled(id)
 }
 function isCircuitId(id: string | null): id is CircuitId { return id !== null && Object.prototype.hasOwnProperty.call(CIRCUITS, id) }
 function pick(): CircuitId {

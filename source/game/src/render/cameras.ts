@@ -51,7 +51,7 @@ export class CameraRig {
         this.tmp2.copy(ck ? eye : tcam); if (ck) { this.tmp2.x += this.hp[0]; this.tmp2.z += this.hp[1] }
         this.pos.copy(this.tmp2).applyMatrix4(car.matrixWorld)
         // vibrations : moteur (haute fréquence, très faible), revêtement (vitesse), vibreurs/herbe/chocs (this.shake)
-        const sp = Math.min(1, speed / 90), buf = sp * sp * (ck ? 0.0007 : 0.0032) // buffeting aéro ∝ v², bien plus marqué sur la T-cam (fixée à la carrosserie)
+        const sp = Math.min(1, speed / 90), buf = sp * sp * (ck ? 0.0007 : 0) // conserve le léger buffeting du cockpit, sans le nouvel effet T-cam
         const a = this.shake * (ck ? 0.006 : 0.009) + sp * 0.0006, eng = 0.00025
         this.pos.x += Math.sin(t * 61) * a + Math.sin(t * 173) * eng + (Math.sin(t * 83 + 3) + 0.5 * Math.sin(t * 137 + 1)) * buf
         this.pos.y += Math.sin(t * 47 + 1) * a + Math.sin(t * 211 + 2) * eng + (Math.sin(t * 97 + 2) + 0.5 * Math.sin(t * 151)) * buf
@@ -59,9 +59,9 @@ export class CameraRig {
         c.quaternion.copy(q)
         // regard : ~3° sous l'horizon, tête inclinée par les G latéraux (≤ 3°), légère anticipation dans les virages
         if (ck) { c.rotateY(THREE.MathUtils.clamp(gLat * 0.008, -0.05, 0.05)); c.rotateZ(THREE.MathUtils.clamp(-gLat * 0.01, -0.05, 0.05)); c.rotateX(THREE.MathUtils.clamp(gLong * 0.004, -0.03, 0.03) - 0.05) }
-        else { c.rotateX(-0.05); c.rotateZ(Math.sin(t * 29) * sp * sp * 0.0018) }
+        else c.rotateX(-0.05)
         // champ vertical réaliste (≈ 56° → ~98° horizontal en paysage 19,5:9) ; réglable dans Options
-        fov = ck ? this.cockpitFov + 3 * sp ** 1.4 : 62 + 12 * sp ** 1.3 // sensation de vitesse : le champ s'élargit avec la vitesse (T-cam 62° → 74°)
+        fov = ck ? this.cockpitFov + 3 * sp ** 1.4 : 62 // l’élargissement de la vitesse reste propre au cockpit ; T-cam revient à 62°
         break
       }
       case 'close': case 'chase': {

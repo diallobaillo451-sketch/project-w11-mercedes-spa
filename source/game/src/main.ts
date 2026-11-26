@@ -6,7 +6,7 @@ import { TrackSurface } from './track/surface.ts'
 import { Barriers } from './track/barriers.ts'
 import { Pitlane, type PitlaneData } from './track/pitlane.ts'
 import { Game } from './core/game.ts'
-import { CIRCUIT, switchCircuit } from './core/circuit.ts'
+import { CIRCUIT, CIRCUIT_GP_CODE, isCircuitEnabled, switchCircuit, trackForGrandPrix } from './core/circuit.ts'
 import { Renderer } from './render/renderer.ts'
 import { CAM_LABEL, CAM_ORDER, type CamMode } from './render/cameras.ts'
 import { Input } from './controls/input.ts'
@@ -44,6 +44,7 @@ import { fmtT } from './race/control.ts'
 const $ = (id: string) => document.getElementById(id)!
 const show = (id: string, on: boolean) => { $(id).hidden = !on }
 const settings = loadSettings()
+if (trackForGrandPrix(settings.profile.circuit) !== CIRCUIT.id) settings.profile.circuit = CIRCUIT_GP_CODE[CIRCUIT.id]
 document.title = 'PROJECT W11 — ' + CIRCUIT.name
 const brandSub = document.getElementById('brandSub'); if (brandSub) brandSub.textContent = 'Mercedes-AMG F1 W11 EQ Performance · ' + CIRCUIT.name
 let game: Game, ren: Renderer
@@ -767,6 +768,14 @@ async function main() {
     menu = new Menu($('menu'), {
       profile: S.profile, get weather() { return S.weather }, set weather(v) { S.weather = v }, get damage() { return S.damage }, set damage(v) { S.damage = v },
       save: () => saveSettings(S), setDriver: id => applyDriver(id), setCar: id => { applyCarPhysics(id); void ren.setCar(id).catch(e => dlog('voiture ' + id + ' : ' + (e as Error).message)) }, shot: sh => ren.show.setShot(sh),
+      selectCircuit: id => {
+        const circuit = trackForGrandPrix(id)
+        if (!circuit || !isCircuitEnabled(circuit)) return false
+        S.profile.circuit = id; saveSettings(S)
+        if (circuit === CIRCUIT.id) return false
+        const u = new URL(location.href); u.searchParams.set('circuit', circuit); u.searchParams.delete('auto'); location.href = u.toString()
+        return true
+      },
       startQuick: () => startQuick(), startWeekend: fresh => startWeekend(fresh),
       weekendInProgress: () => wk && !wk.done ? `${WK_SHORT[wk.cur]} · ${WK_LABEL[wk.cur]}` : null,
       startLegacy: k => startSession(k), openPanel: w => openPanel(w), bestLap: () => game.storedBest,
