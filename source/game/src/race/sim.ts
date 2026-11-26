@@ -794,6 +794,8 @@ export class RaceSim {
   /** SAT activé par défaut pour l'essai; l'application accepte ?hull=0 pour le désactiver. */
   hullCollisions = true
   private hn = { nx: 0, nz: 0, pen: 0 }
+  /** Évite de recompter chaque tick le même choc tant que les enveloppes se chevauchent. */
+  private hullImpactAt = new Map<number, number>()
   /** une épave (abandon) encore visible sur la piste est un obstacle plein : plus de traversée */
   private wreckSolid(r: Racer) {
     if (r.mode !== 'dnf') return false
@@ -839,6 +841,9 @@ export class RaceSim {
     if (av) { av.pos[0] -= nx * push * (1 - kp); av.pos[2] -= nz * push * (1 - kp); ai.wx = av.pos[0]; ai.wz = av.pos[2] }
     else if (!wreck) { ai.d += (ai.d - pl.d >= 0 ? 1 : -1) * 0.05; ai.off = ai.d; ai.sepT = 0.45 }
     if (dvn <= 0.05) return
+    const lastImpact = this.hullImpactAt.get(ai.i)
+    if (lastImpact !== undefined && this.t - lastImpact < 0.75) return
+    this.hullImpactAt.set(ai.i, this.t)
     // 2) impulsion : mêmes règles pour les deux voitures (masses égales : 0,55 × la vitesse de rapprochement chacune) ; contre une épave, tout pour le joueur
     const fwd = -(c.R[6] * nx + c.R[8] * nz) // > 0 : l'IA est derrière le joueur
     const right = c.R[0] * nx + c.R[2] * nz

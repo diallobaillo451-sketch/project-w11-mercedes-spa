@@ -181,6 +181,24 @@ export class Game {
     this.prev.q[0] = c.q[0]; this.prev.q[1] = c.q[1]; this.prev.q[2] = c.q[2]; this.prev.q[3] = c.q[3]
     this.prevWheels = c.wheels.map(w => ({ c: w.c, angle: w.angle, steer: w.steer }))
   }
+  /** En session, l'autopilote garde une marge au lieu de traverser le peloton sur la ligne idéale. */
+  private followFieldTraffic(ctl: Controls) {
+    const F = this.field
+    if (!F) return
+    const p = F.player, speed = Math.max(0, this.car.forwardSpeed())
+    let lead: { gap: number; v: number } | null = null
+    for (const r of F.cars) {
+      if (r === p || r.mode === 'garage' || r.mode === 'dnf' || r.mode === 'spun' || r.mode === 'grid' || r.mode === 'formation' || r.mode === 'redq' || r.mode === 'pit' || r.mode === 'in' || r.mode === 'out') continue
+      const gap = F.road(p.s, r.s)
+      if (gap > 0 && gap < 250 && Math.abs(r.d - p.d) < 5.5 && (!lead || gap < lead.gap)) lead = { gap, v: r.v }
+    }
+    if (!lead) return
+    const closing = Math.max(0, speed - lead.v), safe = 12 + speed * 0.85 + closing * closing / 16
+    if (lead.gap < safe) {
+      ctl.throttle = 0
+      ctl.brake = Math.max(ctl.brake, Math.min(1, 0.2 + (safe - lead.gap) * 0.08 + closing * 0.08))
+    }
+  }
   /** Avance la simulation du temps réel écoulé (s). */
   advance(realDt: number) {
     this.events = {}; this.shifts = 0; this.maxScrape = 0; this.maxImpact = 0
@@ -191,10 +209,11 @@ export class Game {
       this.snapshot()
       if (this.garageExit) { this.stepGarageExit(); this.time += DT; this.acc -= DT; n++; continue }
       const ctl = this.autopilot ? this.auto.control(this.car) : this.ctl
+      if (this.autopilot && this.field) this.followFieldTraffic(ctl)
       if (this.inPit) ctl.pitLim = true
       ctl.noReverse = false
       if (this.holdT > 0 && this.inPit && this.pitStopT > 0) { ctl.throttle = 0; ctl.brake = 1; ctl.noReverse = true }
-      if (this.field && (this.field.ctrl.phase === 'lights' || this.field.ctrl.phase === 'gridding') && !this.autopilot && this.car.speed < 3) { ctl.throttle = Math.min(ctl.throttle, 0.25); ctl.brake = Math.max(ctl.brake, this.field.ctrl.phase === 'lights' ? 1 : 0); ctl.noReverse = true }
+      if (this.field && (this.field.ctrl.phase === 'lights' || this.field.ctrl.phase === 'gridding') && this.car.speed < 3) { ctl.throttle = Math.min(ctl.throttle, 0.25); ctl.brake = Math.max(ctl.brake, this.field.ctrl.phase === 'lights' ? 1 : 0); ctl.noReverse = true }
       this.car.step(DT, ctl)
       if (this.car.shiftEvent) { this.shifts++; this.ctl.shiftUp = false; this.ctl.shiftDown = false }
       this.maxScrape = Math.max(this.maxScrape, this.car.scrape); this.maxImpact = Math.max(this.maxImpact, this.car.impact)
