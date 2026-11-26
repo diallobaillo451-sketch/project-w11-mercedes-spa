@@ -1,15 +1,18 @@
-/** Radio de l'ingénieur (bibliothèque FR, /workspace/w11-shared/radio → public/radio/bank.*) :
- *  - banque unique (un seul téléchargement, décodage à la demande, cache) ;
- *  - file à priorités (3 = critique, coupe le message en cours), anti-répétition, délai minimal entre messages ;
- *  - assemblage de clips (40–80 ms de silence) : temps au tour, delta, secteur ;
- *  - filtre radio dans le jeu : passe-bande 300 Hz–3,4 kHz, légère saturation, compression, souffle ; bips ffmpeg ;
- *  - bulle HUD style Apple avec la photo (portrait générique, personne réelle non imitée) et le texte. */
+/** Radio de l'ingénieur : banque FR, décodage à la demande, cache et file à priorités.
+ *  La banque historique reste intacte ; scriptbank.* ajoute les répliques contextuelles.
+ *  Filtre radio 300 Hz–3,4 kHz, saturation douce, compression, souffle et bulle HUD. */
 type Rng = [number, number]
-interface Bank { messages: Record<string, { p: number; cat: string; v: { r: Rng; t: string; ms: number }[] }>; clips: Record<string, { r: Rng; t: string; ms: number }>; sfx: Record<string, Rng> }
-interface Item { parts: { r: Rng; t: string }[]; text: string; p: number; key: string }
+type Source = 'primary' | 'scripts'
+type Role = 'engineer' | 'driver'
+interface Variant { r: Rng; t: string; ms: number }
+interface Message { p: number; cat: string; role?: Role; v: Variant[] }
+interface Bank { messages: Record<string, Message>; clips?: Record<string, Variant>; sfx?: Record<string, Rng> }
+interface Part { r: Rng; t: string; source?: Source }
+interface Item { parts: Part[]; text: string; p: number; key: string; role?: Role }
 export class Radio {
   enabled = true; volume = 0.9
   private bank: Bank | null = null; private bin: ArrayBuffer | null = null
+  private scriptBank: Bank | null = null; private scriptBin: ArrayBuffer | null = null
   private ctx: BaseAudioContext | null = null; private out: GainNode | null = null; private dest: AudioNode | null = null
   private cache = new Map<string, Promise<AudioBuffer>>()
   private q: Item[] = []; private busy = false; private cur: { srcs: AudioBufferSourceNode[]; p: number } | null = null
@@ -18,6 +21,14 @@ export class Radio {
   async load(base = './radio/') {
     const [j, b] = await Promise.all([fetch(base + 'bank.json').then(r => r.json()), fetch(base + 'bank.bin').then(r => r.arrayBuffer())])
     this.bank = j as Bank; this.bin = b
+    // La banque complémentaire est facultative pour rester compatible avec les anciennes copies.
+    try {
+      const [sj, sb] = await Promise.all([
+        fetch(base + 'scriptbank.json').then(r => r.ok ? r.json() : null),
+        fetch(base + 'scriptbank.bin').then(r => r.ok ? r.arrayBuffer() : null),
+      ])
+      if (sj && sb) { this.scriptBank = sj as Bank; this.scriptBin = sb }
+    } catch { this.scriptBank = null; this.scriptBin = null }
   }
   /** branche la radio sur le contexte audio du jeu (après le geste iOS) */
   attach(ctx: BaseAudioContext, dest: AudioNode) {
@@ -34,27 +45,30 @@ export class Radio {
     ;(this as unknown as { inp: AudioNode }).inp = hp
   }
   setVolume(v: number) { this.volume = v; if (this.out) this.out.gain.value = v * 1.4 }
-  private buf(r: Rng): Promise<AudioBuffer> {
-    const k = r[0] + ':' + r[1]; let p = this.cache.get(k)
-    if (!p) { p = this.ctx!.decodeAudioData(this.bin!.slice(r[0], r[0] + r[1])); this.cache.set(k, p) }
+  private buf(r: Rng, source: Source = 'primary'): Promise<AudioBuffer> {
+    const data = source === 'scripts' ? this.scriptBin : this.bin
+    const k = source + ':' + r[0] + ':' + r[1]; let p = this.cache.get(k)
+    if (!p) { p = this.ctx!.decodeAudioData(data!.slice(r[0], r[0] + r[1])); this.cache.set(k, p) }
     return p
   }
-  /** message de la bibliothèque (variante au hasard, jamais la même deux fois de suite) ; cool = délai anti-répétition (s) */
+  /** message de la banque historique ou des scripts ; variante au hasard, jamais la même deux fois de suite. */
   driver = 'ham'
   say(id: string, cool = 20) {
-    const m = this.bank?.messages[id]; if (!m || !this.enabled) return
+    const primary = this.bank?.messages[id], supplemental = this.scriptBank?.messages[id]
+    const m = primary ?? supplemental, source: Source = primary ? 'primary' : 'scripts'
+    if (!m || !this.enabled) return
     const now = performance.now() / 1000; if (now - (this.lastAt.get(id) ?? -1e9) < cool) return
     this.lastAt.set(id, now)
-    // la banque est enregistrée pour Lewis : avec un autre pilote, on écarte les variantes qui l'appellent par son prénom
+    // la banque historique peut appeler Lewis ; les scripts restent neutres et tous pilotes.
     const ok = m.v.map((v, j) => this.driver === 'ham' || !/Lewis/.test(v.t) ? j : -1).filter(j => j >= 0); if (!ok.length) return
     let i = ok[Math.floor(Math.random() * ok.length)]; if (ok.length > 1 && i === this.lastVar.get(id)) i = ok[(ok.indexOf(i) + 1) % ok.length]
     this.lastVar.set(id, i)
-    this.push({ parts: [{ r: m.v[i].r, t: m.v[i].t }], text: m.v[i].t, p: m.p, key: id })
+    this.push({ parts: [{ r: m.v[i].r, t: m.v[i].t, source }], text: m.v[i].t, p: m.p, key: id, role: m.role })
   }
   /** suite de clips assemblés (ex. ['seg_temps_au_tour','seg_une_minute','num_41','dixieme_7','seg_secondes']) */
   sayClips(ids: string[], p = 1, key = ids.join(',')) {
-    if (!this.bank || !this.enabled) return
-    const parts = ids.map(i => this.bank!.clips[i]).filter(Boolean).map(c => ({ r: c.r, t: c.t }))
+    if (!this.bank || !this.enabled || !this.bank.clips) return
+    const parts = ids.map(i => this.bank!.clips![i]).filter(Boolean).map(c => ({ r: c.r, t: c.t, source: 'primary' as Source }))
     if (parts.length !== ids.length) return
     this.push({ parts, text: parts.map(x => x.t.replace(/[.:]$/, '')).join(' ').replace(/ virgule /g, ',') + '.', p, key })
   }
@@ -71,35 +85,37 @@ export class Radio {
     void this.pump()
   }
   private async pump() {
-    if (this.busy || !this.ctx || !this.out || !this.bank) return
+    if (this.busy || !this.ctx || !this.out || !this.bank || !this.bank.sfx) return
     const it = this.q.shift(); if (!it) return
     this.busy = true
     try {
       const ctx = this.ctx, sfx = this.bank.sfx
-      const [op, cl, hs, ...bs] = await Promise.all([this.buf(sfx.open), this.buf(sfx.close), this.buf(sfx.hiss), ...it.parts.map(p => this.buf(p.r))])
+      const [op, cl, hs, ...bs] = await Promise.all([this.buf(sfx.open), this.buf(sfx.close), this.buf(sfx.hiss), ...it.parts.map(p => this.buf(p.r, p.source))])
       const inp = (this as unknown as { inp: AudioNode }).inp
       let t = Math.max(ctx.currentTime + 0.05, this.lastEnd + 0.6)
       const srcs: AudioBufferSourceNode[] = [], play = (b: AudioBuffer, at: number, to: AudioNode, g = 1) => { const s = ctx.createBufferSource(); s.buffer = b; const gn = ctx.createGain(); gn.gain.value = g; s.connect(gn); gn.connect(to); s.start(at); srcs.push(s); return s }
       play(op, t, this.out, 0.55); t += op.duration * 0.85
       const t0 = t
-      for (let i = 0; i < bs.length; i++) { play(bs[i], t, inp); t += bs[i].duration + (i < bs.length - 1 ? 0.04 + Math.random() * 0.04 : 0) } // 40–80 ms entre clips
+      for (let i = 0; i < bs.length; i++) { play(bs[i], t, inp); t += bs[i].duration + (i < bs.length - 1 ? 0.04 + Math.random() * 0.04 : 0) }
       const hiss = play(hs, t0 - 0.05, this.out, 0.5); hiss.loop = true; hiss.stop(t + 0.1)
       play(cl, t + 0.05, this.out, 0.55); t += 0.05 + cl.duration
       this.cur = { srcs, p: it.p }; this.lastEnd = t
-      this.bubble(it.text, (t0 - ctx.currentTime) * 1000, (t - ctx.currentTime) * 1000)
+      this.bubble(it.text, (t0 - ctx.currentTime) * 1000, (t - ctx.currentTime) * 1000, it.role)
       await new Promise(r => { const last = srcs[srcs.length - 1]; last.onended = r; setTimeout(r, (t - ctx.currentTime) * 1000 + 400) })
     } catch (e) { console.warn('radio', e) }
     this.cur = null; this.busy = false
     if (this.q.length) void this.pump()
   }
-  /** bulle radio (style Apple) avec photo de l'ingénieur, affichée pendant le message */
-  private bubble(text: string, inMs: number, endMs: number) {
+  /** bulle radio avec la photo générique de l’ingénieur ou une étiquette pilote. */
+  private bubble(text: string, inMs: number, endMs: number, role: Role = 'engineer') {
     if (!this.el) {
       this.el = document.createElement('div'); this.el.className = 'radiob'
-      this.el.innerHTML = '<img src="./radio/engineer.webp" alt=""><div><b>Ingénieur · Radio</b><span></span></div><i class="rwave"></i>'
+      this.el.innerHTML = '<img src="./radio/engineer.webp" alt=""><div><b></b><span></span></div><i class="rwave"></i>'
       document.body.appendChild(this.el)
     }
     const el = this.el
+    el.querySelector('b')!.textContent = role === 'driver' ? 'Pilote · Radio' : 'Ingénieur · Radio'
+    const img = el.querySelector('img')!; img.hidden = role === 'driver'
     setTimeout(() => { el.querySelector('span')!.textContent = text; el.classList.add('on') }, Math.max(0, inMs - 150))
     clearTimeout((el as unknown as { _t: number })._t); (el as unknown as { _t: number })._t = window.setTimeout(() => el.classList.remove('on'), endMs + 600)
   }

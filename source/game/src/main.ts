@@ -187,9 +187,9 @@ function startSession(k: SessionKind | 'demo', keepRun = false) {
   if ((k === 'practice' || k === 'qualifying') && game.beginGarageExit()) setCam('garage')
   $('hSess').hidden = !run
   if (run) { game.car.fuel = run.fuel; run.started = true; run.goT = game.time; run.pen0 = game.penalties; run.tel = newTelemetry() }
-  lapsDone = 0; if (k === 'timetrial') { radio.say('radio_check', 0); radio.say('tour_lance_go', 0) } else if (k === 'practice') { radio.say('radio_check', 0); radio.say('sortie_garage', 0) }
-  if (k === 'race') { radio.say('radio_check', 0); hud.toast('Course · tour de formation terminé, place aux feux', 2600) }
-  else if (k === 'qualifying') { radio.say('radio_check', 0); radio.say('sortie_garage', 0); hud.toast((run?.id ? WK_LABEL[run.id] : 'Qualifications') + ' · départ des stands') }
+  lapsDone = 0; if (k === 'timetrial') { radio.say('radio_check', 0); radio.say('script_timetrial_start', 0) } else if (k === 'practice') { radio.say('radio_check', 0); radio.say('script_practice_start', 0) }
+  if (k === 'race') { radio.say('radio_check', 0); radio.say('script_race_start', 0); hud.toast('Course · tour de formation terminé, place aux feux', 2600) }
+  else if (k === 'qualifying') { radio.say('radio_check', 0); radio.say('script_qualifying_start', 0); hud.toast((run?.id ? WK_LABEL[run.id] : 'Qualifications') + ' · départ des stands') }
   else hud.toast(k === 'timetrial' ? 'Contre-la-montre · tour lancé' : k === 'practice' ? (run?.id ? WK_LABEL[run.id] : 'Essais libres') + ' · départ des stands' : 'Démo : pilote automatique')
 }
 function setScreen(s: Screen) {
@@ -272,7 +272,6 @@ function wireUi() {
   input.bindTap($('bDrs'), () => { input.st.drs = true })
   input.bindHold($('bDas'), v => { input.st.das = v })
   // ---- volant : boutons et rotatifs (reliés à la physique)
-  const RADIO = ['Bono : « Rythme cible 1:41,5, pneus dans la fenêtre »', 'Bono : « Batterie OK pour le tour »', 'Bono : « Attention au vent dans Kemmel »', 'Bono : « Mode Strat 1 autorisé »', 'Bono : « Freins AV un peu chauds, BB +0,5 »', 'Bono : « Le gravier sort à Raidillon, reste propre »']
   const wAct = (a: string) => {
     const c = game.car, S = settings.setup, cl = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
     switch (a) {
@@ -291,8 +290,8 @@ function wireUi() {
       case 'pit': ws.pitLim = !ws.pitLim; wheel?.say(ws.pitLim ? 'LIMITEUR 80 km/h' : 'LIMITEUR OFF'); audio.beep(ws.pitLim ? 1320 : 880); break
       case 'ot': ws.ot = !ws.ot; if (ws.ot) { ws.prevErs = settings.ersMode; c.ers.mode = 'overtake'; ws.otT = 8 } else c.ers.mode = settings.ersMode; wheel?.say(ws.ot ? 'OVERTAKE' : 'OT OFF'); break
       case 'n': if (c.speed < 2) { c.gear = 0; wheel?.say('NEUTRE') } else wheel?.say('N : à l’arrêt seulement'); break
-      case 'radio': { const m = RADIO[Math.floor(Math.random() * RADIO.length)]; hud.toast(m, 3200); wheel?.say('RADIO'); audio.radio(); break }
-      case 'ack': game.session.setFlag('none', 0); wheel?.say('OK'); break
+      case 'radio': radio.say('script_driver_call', 0); wheel?.say('RADIO'); break
+      case 'ack': game.session.setFlag('none', 0); radio.say('script_driver_ack', 0); wheel?.say('OK'); break
     }
     applySettings(); syncWheelPad()
   }
@@ -663,7 +662,7 @@ function runPost(dt: number) {
   } else if (r.kind === 'weekend') {
     r.remaining = Math.max(0, r.remaining - dt)
     const txt = `${WK_SHORT[r.id!]} · ${fmtClock(r.remaining)}`; if (sc.textContent !== txt) sc.textContent = txt; sc.hidden = false
-    if (r.remaining <= 0 && !r.chequered) { r.chequered = true; game.session.setFlag('chequered', 999); radio.say('fin_session_rentre', 0); hud.toast('Drapeau à damier · termine ton tour', 3200) }
+    if (r.remaining <= 0 && !r.chequered) { r.chequered = true; game.session.setFlag('chequered', 999); radio.say('script_finish', 0); hud.toast('Drapeau à damier · termine ton tour', 3200) }
     // franchissement de la ligne (tour bouclé ou tour de sortie) après le damier, ou entrée aux stands → fin de séance
     const line = game.session.timing.laps.length + (game.session.timing.lapStart >= 0 ? 1 : 0)
     if (r.lineSeen == null || !r.chequered) r.lineSeen = line
@@ -678,37 +677,41 @@ let radioPoll = 0, lapsDone = 0
 function wireRadio() {
   const b = game.bus, live = () => screen === 'drive' && !game.autopilot
   b.on('lap', e => { if (e.t !== 'lap' || !live()) return; lapsDone++
-    if (!e.valid) { radio.say('tour_annule_limites', 5); return }
-    if (e.best) { radio.say('meilleur_perso', 5); radio.sayClips(['seg_temps_au_tour', ...radio.timeClips(e.time)], 1, 'laptime') }
-    else { radio.sayClips(['seg_temps_au_tour', ...radio.timeClips(e.time)], 1, 'laptime'); const dl = e.time - (game.storedBest ?? e.time); if (dl > 1.5) radio.say('pousser', 60); else if (dl < 0.6) radio.say('rythme_bon', 60) } })
+    if (!e.valid) { radio.say('script_lap_invalid', 5); return }
+    const prior = game.storedBest, dl = e.time - (prior ?? e.time)
+    const id = e.best ? 'lap_best' : prior == null ? 'lap_complete' : dl > 1.5 ? 'lap_loss' : dl < 0.6 ? 'lap_improve' : 'lap_complete'
+    radio.say('script_' + id, e.best ? 5 : 45)
+    radio.sayClips(['seg_temps_au_tour', ...radio.timeClips(e.time)], 1, 'laptime') })
   b.on('sector', e => { if (e.t !== 'sector' || !live() || e.n === 3) return; const dl = game.session.timing.delta
-    if (!isNaN(dl) && dl < -0.15) radio.sayClips(['seg_secteur', 'num_' + e.n, 'seg_violet'], 1, 'sector')
-    else if (!isNaN(dl) && dl > 0.6) radio.say('perte_temps_secteur', 90) })
-  b.on('invalid', e => { if (e.t === 'invalid' && live()) radio.say('limites_piste', 15) })
+    if (!isNaN(dl) && dl < -0.15) { radio.say('script_sector_fast', 45); radio.sayClips(['seg_secteur', 'num_' + e.n, 'seg_violet'], 1, 'sector') }
+    else if (!isNaN(dl) && dl > 0.6) radio.say('script_sector_loss', 90) })
+  b.on('invalid', e => { if (e.t === 'invalid' && live()) radio.say('script_track_limits', 15) })
   b.on('flag', e => { if (e.t !== 'flag' || !live()) return; const f = e.flag
-    radio.say(f === 'yellow' ? 'drapeau_jaune' : f === 'double' ? 'double_jaune' : f === 'blackwhite' ? 'avertissement' : f === 'red' ? 'drapeau_rouge' : f === 'green' ? 'drapeau_vert' : '', 8) })
-  b.on('impact', e => { if (e.t === 'impact' && live() && e.k > 0.6) radio.say('contact', 30) })
+    const id = f === 'yellow' ? 'flag_yellow' : f === 'double' ? 'flag_double' : f === 'red' ? 'flag_red' : f === 'green' ? 'flag_green' : f === 'blackwhite' ? 'avertissement' : ''
+    if (id) radio.say(id === 'avertissement' ? id : 'script_' + id, f === 'red' || f === 'double' ? 0 : 8) })
+  b.on('impact', e => { if (e.t === 'impact' && live() && e.k > 0.6) radio.say('script_contact', 30) })
   b.on('damage', e => { if (e.t !== 'damage' || !live() || settings.damage === 'off') return; const d = game.car.damage
-    radio.say(d.frontWing > 0.4 ? 'degats_aileron' : d.floor > 0.4 ? 'degats_fond' : 'degats_mineurs', 25) })
-  b.on('pitEntry', () => { if (live()) radio.say('limiteur', 30) })
-  b.on('pitExit', () => { if (live()) radio.say('sortie_stands', 30) })
-  b.on('pitSpeeding', () => { if (live()) radio.say('exces_vitesse_stands', 30) })
-  b.on('repair', () => { if (live()) radio.say('arret_ok', 30) })
-  b.on('reset', () => { if (live()) radio.say('calme', 120) })
+    radio.say(d.frontWing > 0.4 ? 'script_damage_front' : d.floor > 0.4 ? 'script_damage_floor' : 'script_damage_minor', 25) })
+  b.on('pitEntry', () => { if (live()) radio.say('script_pit_entry', 30) })
+  b.on('pitExit', () => { if (live()) radio.say('script_pit_exit', 30) })
+  b.on('pitSpeeding', () => { if (live()) radio.say('script_pit_speed', 30) })
+  b.on('repair', () => { if (live()) radio.say('script_pit_stop', 30) })
+  b.on('reset', () => { if (live()) radio.say('script_reset', 120) })
 }
 /** télémétrie lue toutes les 2 s : pneus hors fenêtre, freins, ERS vide, blocage de roue */
 function radioTelemetry(dt: number) {
   { const c = game.car, k = c.wheels.map(w => w.tyre.puncture > 0 ? 1 : 0).join('') + c.damage.wheelOff.map(o => o ? 1 : 0).join('')
     if (k !== lastPunct) { const n = ['avant gauche', 'avant droite', 'arrière gauche', 'arrière droite']
       const i = c.wheels.findIndex((w, j) => w.tyre.puncture > 0 && lastPunct[j] !== '1'), j = c.damage.wheelOff.findIndex((o, q) => o && lastPunct[4 + q] !== '1')
-      if (j >= 0) hud.toast('Roue arrachée · ' + n[j] + ' — rentre au stand'); else if (i >= 0) hud.toast('Crevaison · ' + n[i] + ' — rentre au stand')
+      if (j >= 0) { hud.toast('Roue arrachée · ' + n[j] + ' — rentre au stand'); radio.say('script_wheel_off', 0) }
+      else if (i >= 0) { hud.toast('Crevaison · ' + n[i] + ' — rentre au stand'); radio.say('script_puncture', 0) }
       lastPunct = k } }
   radioPoll += dt; if (radioPoll < 2 || screen !== 'drive' || game.autopilot) return; radioPoll = 0
   const c = game.car, w = c.wheels, T = w.reduce((a, x) => a + x.tyre.temp, 0) / 4
-  if (T > 118) radio.say('pneus_temp_haute', 120); else if (T < 62 && c.speed > 40 && lapsDone >= 1) radio.say('pneus_temp_basse', 120)
-  if (w.some(x => x.brakeT > 1050)) radio.say('freins_temp', 120)
-  if (c.ers.soc < 0.4e6 && c.speed > 50) radio.say('recharge_ers', 150)
-  if (w.some(x => x.contact && x.omega * x.r < c.speed * 0.4 && c.speed > 25 && game.ctl.brake > 0.5)) radio.say('blocage', 45)
+  if (T > 118) radio.say('script_tyre_hot', 120); else if (T < 62 && c.speed > 40 && lapsDone >= 1) radio.say('script_tyre_cold', 120)
+  if (w.some(x => x.brakeT > 1050)) radio.say('script_brake_hot', 120)
+  if (c.ers.soc < 0.4e6 && c.speed > 50) radio.say('script_ers_low', 150)
+  if (w.some(x => x.contact && x.omega * x.r < c.speed * 0.4 && c.speed > 25 && game.ctl.brake > 0.5)) radio.say('script_wheel_lock', 45)
 }
 
 async function main() {
