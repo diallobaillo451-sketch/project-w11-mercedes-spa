@@ -314,13 +314,71 @@ export class RaceControl {
     this.cases.push({ id, t: this.sim.t, a, b, what, state: 'noted', tInv: this.sim.t + 2, tDec: this.sim.t + delay, pen, reason })
     this.msg(`INCIDENT NOTÉ — ${a.code}${b ? ' / ' + b.code : ''} · ${what}`, 'rc')
   }
-  incident(r: Racer | null, s: number, kind: Incident['kind'], until: number) {
-    const sev = kind === 'crash' || kind === 'stopped' ? 'double' : 'yellow'
-    this.incidents.push({ r, s, kind, sev, until: this.sim.t + until, t: this.sim.t })
+  /** Responsabilité des collisions en course : contact arrière, changement de trajectoire ou incident de course. */
+  collision(rear: Racer, front: Racer, dv: number, side: boolean) {
+    const S = this.sim
+    if (S.kind !== 'race' || (this.phase !== 'racing' && this.phase !== 'chequered')) return
+    const key = rear.i * 100 + front.i
+    const last = (this as RaceControl & { _ck?: Map<number, number> })._ck ?? new Map<number, number>()
+    ;(this as RaceControl & { _ck?: Map<number, number> })._ck = last
+    if ((last.get(key) ?? -99) > S.t - 5) return
+    last.set(key, S.t)
+    const hurt = (r: Racer) => r.dmg.fw > 0.3 || r.tyre.punct > 0 || r.mode === 'spun' || !!r.out
+    let culprit: Racer | null = null, victim: Racer | null = null
+    if (!side && dv > 4 && !front.err) { culprit = rear; victim = front }
+    else if (side) {
+      const toward = (a: Racer, b: Racer) => (a.player ? a.lat : ((a as Racer & { _dr?: number })._dr ?? 0)) * Math.sign(b.d - a.d)
+      const ta = toward(rear, front), tb = toward(front, rear)
+      if (Math.max(ta, tb) > 0.9) { culprit = ta > tb ? rear : front; victim = culprit === rear ? front : rear }
+    }
+    if (!culprit) {
+      if (dv > 5 || hurt(rear) || hurt(front)) this.caseNew(rear, front, 'contact', 'none', 'incident de course', 12)
+      return
+    }
+    const pen = hurt(victim!) ? '10s' : '5s'
+    this.caseNew(culprit, victim, side ? 'collision (changement de trajectoire)' : 'collision par l’arrière', pen, 'a provoqué une collision')
+  }
+  impeding(r: Racer, victim: Racer) {
+    if (this.sim.kind === 'qualifying') this.caseNew(r, victim, 'gêne en qualifications', 'grid3', `a gêné ${victim.code} dans son tour rapide`, 25)
+  }
+  trackLimits(r: Racer) {
+    const S = this.sim
+    if (S.kind !== 'race') { if (r.mode === 'push' || r.player) this.msg(`${r.code} : temps du tour SUPPRIMÉ (limites de piste)`, 'rc'); return }
+    if (this.phase !== 'racing') return
+    r.warnings++
+    if (r.warnings <= 3) this.msg(`Limites de piste : ${r.code} · avertissement ${r.warnings}${r.warnings === 3 ? ' · DRAPEAU NOIR ET BLANC' : ''}`, 'rc')
+    if (r.warnings === 3) r.bw = true
+    if (r.warnings >= 4) { this.caseNew(r, null, 'limites de piste répétées', '5s', 'non-respect répété des limites de piste', 6); r.warnings = 2 }
+  }
+  incident(r: Racer | null, s: number, kind: Incident['kind'], until?: number) {
+    const S = this.sim
+    const onTrack = r ? Math.abs(r.d) < (r.d < 0 ? S.track.wl[r.idx] : S.track.wr[r.idx]) + 1 : true
+    const sev: Incident['sev'] = kind === 'crash' || (kind === 'stopped' && onTrack) || (kind === 'spin' && onTrack) ? 'double' : 'yellow'
+    const endsAt = S.t + (until ?? (kind === 'crash' ? 120 + S.rng.next() * 90 : kind === 'stopped' ? 60 + S.rng.next() * 40 : 12))
+    this.incidents.push({ r, s, kind, sev, until: endsAt, t: S.t })
+    const where = `poste ${this.postBefore(s).n}`
+    if (kind === 'spin') this.msg(`${r?.code ?? ''} en tête-à-queue (${where}) · ${sev === 'double' ? 'double drapeau jaune' : 'drapeau jaune'}`, 'flag')
+    if (kind === 'crash' || kind === 'stopped') {
+      this.msg(`${kind === 'crash' ? 'ACCIDENT' : 'VOITURE ARRÊTÉE'} : ${r?.code ?? ''} (${where}) · double drapeau jaune`, 'flag')
+      const x = S.rng.next()
+      if (S.kind === 'race' && this.phase === 'racing') {
+        const bad = this.incidents.filter(q => q.kind === 'crash' && S.t - q.t < 30).length
+        if (kind === 'crash' && (bad >= 2 || x < 0.04)) this.redFlag(bad >= 2 ? 'plusieurs voitures accidentées' : 'barrière endommagée')
+        else if (kind === 'crash' && x < 0.6) this.scDeploy(`accident de ${r?.code}`)
+        else if (x < 0.85) this.vscDeploy(`${r?.code} arrêté en bord de piste`)
+      } else if (S.kind !== 'race' && kind === 'crash') this.redFlag(`${r?.code} dans le mur`)
+    }
   }
   endIncident(inc: Incident) {
-    const i = this.incidents.indexOf(inc); if (i >= 0) this.incidents.splice(i, 1)
+    const i = this.incidents.indexOf(inc)
+    if (i >= 0) this.incidents.splice(i, 1)
+    if (inc.r?.mode === 'dnf') {
+      inc.r.out = inc.r.out ?? 'Accident'
+      ;(inc.r as Racer & { _goneAt?: number })._goneAt = this.sim.t + 8
+    }
+    if (!this.sc.active && !this.vsc && !this.red) this.msg(`Poste ${this.postBefore(inc.s).n} : piste dégagée, drapeau vert`, 'flag')
   }
+  clearIncident(r: Racer) { for (const inc of this.incidents.slice()) if (inc.r === r && inc.kind === 'spin') this.endIncident(inc) }
   yellowAt(s: number): Panel | '' {
     for (const inc of this.incidents) {
       const d = this.sim.road(s, inc.s)

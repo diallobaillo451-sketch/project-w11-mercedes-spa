@@ -12,7 +12,7 @@ import { AiDriver, type DriveCmd } from './driver.ts'
 import { AI_GRIP } from './tuning.ts'
 export type { DriveCmd } from './driver.ts'
 
-const MAX = 4
+const MAX = 6 // emplacements alloués ; sim.hybridMax (4 en jeu, 6 en mode TV) borne le nombre réellement actif
 const SUB = 1 / 240
 /** gomme du modèle 1D → composé Pirelli du modèle physique */
 const COMP: Record<string, Compound> = { S: 'C4', M: 'C3', H: 'C2', I: 'I', W: 'W' }
@@ -31,26 +31,31 @@ export class HybridBank {
     }
   }
   active(r: Racer) { return this.slots.some(s => s.r === r) }
+  /** corps rigide d'une IA en physique complète (null si elle est en 1D) : contacts, impulsions */
+  vehicleOf(r: Racer): Vehicle | null { for (const s of this.slots) if (s.r === r) return s.v; return null }
   /** choisit 2 devant + 2 derrière, en gardant celles qui sont encore dans le top 6 */
   pick(sim: RaceSim, near: Set<number>) {
-    const p = sim.player
-    const pool = sim.cars.filter(o => o !== p && sim.onTrack(o) && o.mode !== 'pit' && o.mode !== 'grid' && o.mode !== 'garage' && o.mode !== 'dnf' && o.mode !== 'redq' && o.mode !== 'spun')
+    const pl = sim.player
+    // mode TV / spectateur : la physique complète se recentre sur la voiture regardée (le joueur est alors arrêté ou hors course)
+    const p = sim.focus && sim.focus !== pl ? sim.focus : pl
+    const cap = Math.max(1, Math.min(MAX, Math.round(sim.hybridMax))), half = Math.ceil(cap / 2)
+    const pool = sim.cars.filter(o => o !== pl && sim.onTrack(o) && o.mode !== 'pit' && o.mode !== 'grid' && o.mode !== 'garage' && o.mode !== 'dnf' && o.mode !== 'redq' && o.mode !== 'spun')
     const gap = (o: Racer) => sim.road(p.s, o.s)
     const ahead = pool.filter(o => gap(o) >= 0).sort((a, b) => gap(a) - gap(b))
     const behind = pool.filter(o => gap(o) < 0).sort((a, b) => gap(b) - gap(a))
-    const ideal: Racer[] = [...ahead.slice(0, 2), ...behind.slice(0, 2)]
-    for (const o of [...ahead.slice(2), ...behind.slice(2)]) { if (ideal.length >= MAX) break; ideal.push(o) }
+    const ideal: Racer[] = [...ahead.slice(0, half), ...behind.slice(0, cap - half)]
+    for (const o of [...ahead.slice(half), ...behind.slice(cap - half)]) { if (ideal.length >= cap) break; ideal.push(o) }
     const ranked = pool.slice().sort((a, b) => Math.abs(gap(a)) - Math.abs(gap(b)))
     const keep: Racer[] = []
     for (const id of near) {
       const r = sim.cars[id]
       if (!r) continue
       const rank = ranked.indexOf(r)
-      if (rank >= 0 && rank < 6) keep.push(r)
+      if (rank >= 0 && rank < cap + 2) keep.push(r)
     }
     const next: Racer[] = []
-    for (const r of keep) { if (next.length < MAX) next.push(r) }
-    for (const r of ideal) { if (next.length >= MAX) break; if (!next.includes(r)) next.push(r) }
+    for (const r of keep) { if (next.length < cap) next.push(r) }
+    for (const r of ideal) { if (next.length >= cap) break; if (!next.includes(r)) next.push(r) }
     near.clear()
     for (const r of next) near.add(r.i)
     const want = new Set(next)

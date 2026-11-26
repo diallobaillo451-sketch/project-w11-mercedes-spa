@@ -8,7 +8,7 @@ export const SPA_Q: Record<string, number> = {
 /** grille réelle de Spa 2020 (ordre de qualification) — P */
 export const SPA_GRID = ['ham', 'bot', 'ver', 'ric', 'alb', 'oco', 'sai', 'per', 'str', 'nor', 'kvy', 'gas', 'lec', 'vet', 'rus', 'rai', 'gro', 'gio', 'lat', 'mag']
 /** pole position réelle 2020 par circuit (référence de rythme) — P */
-export const POLE_2020: Record<string, number> = { bel: 101.252, ita: 78.887, esp: 75.584 }
+export const POLE_2020: Record<string, number> = { bel: 101.252, ita: 78.887, esp: 75.584, aut: 62.939, sty: 79.273, bhr: 87.264, hun: 73.447 }
 /** profil pilote (E) : cons = régularité (erreurs), craft = science de la course (attaque/défense/départ),
  *  wet = aisance sous la pluie, tyre = gestion des pneus (dégradation ×). Échelle 0–1, ordres de grandeur tirés des
  *  classements 2020 (erreurs, dépassements, résultats sous la pluie), pas de données officielles. */

@@ -328,11 +328,17 @@ export class FieldView {
       mt.emissive.setRGB(c[0], c[1], c[2]); mt.emissiveIntensity = ex.w11_on_intensity ?? 6
     }
   }
+  /** vrai en caméra TV / spectateur : toutes les IA gardent le meilleur modèle bien plus loin (le zoom télé les agrandit) et ne sont plus masquées */
+  tvBoost = false
   update(sim: RaceSim, dt: number, cam: THREE.Camera) {
     if (!this.ready) return
     const t = performance.now() / 1000
+    // niveaux de détail : seuils exprimés pour un champ de 60° ; un champ étroit (zoom TV) agrandit les voitures à l'écran, donc le meilleur modèle reste plus loin
+    const zk = Math.max(0.8, Math.min(8, Math.tan(Math.PI / 6) / Math.tan(Math.max(3, Math.min(120, (cam as THREE.PerspectiveCamera).fov || 60)) * Math.PI / 360)))
+    const d1 = (this.tvBoost ? 150 : 55) * zk, d2 = (this.tvBoost ? 1200 : 450) * zk
     for (const v of this.views) {
       const r = v.r
+      v.obj.levels[1].distance = d1; v.obj.levels[2].distance = d2
       if (v.tyreCompound !== r.tyre.c) { v.tyreCompound = r.tyre.c; setTyreCompoundColor(v.tyreMaterials, v.tyreCompound) }
       const goneAt = (r as Racer & { _goneAt?: number })._goneAt
       const gone = !!(r as Racer & { _gone?: boolean })._gone || (goneAt !== undefined && sim.t > goneAt)

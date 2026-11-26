@@ -33,7 +33,7 @@ input[type=range]{width:100%;accent-color:var(--teal);height:22px}
 /* HUD */
 #hud{position:fixed;inset:0;z-index:5;pointer-events:none}
 #hud .top{position:absolute;top:calc(6px + var(--safe-t));left:calc(10px + var(--safe-l));right:calc(10px + var(--safe-r));display:flex;justify-content:space-between;align-items:flex-start}
-.pill{background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;font-weight:600;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.pill{background:rgba(14,14,18,.72);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;font-weight:600}
 .pill.inv{color:var(--red)}
 .timebox{padding:4px 14px 5px;border-radius:14px;text-align:center;min-width:170px}
 .time{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
@@ -41,7 +41,7 @@ input[type=range]{width:100%;accent-color:var(--teal);height:22px}
 .secs i.p{background:var(--purple)}.secs i.g{background:var(--green)}.secs i.y{background:var(--yellow)}
 .sub2{font-size:10px;opacity:.75;font-variant-numeric:tabular-nums}
 .tbtn{display:flex;gap:6px;pointer-events:auto}
-.ico{width:40px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--glass);color:#fff;font-size:14px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.ico{width:40px;height:34px;border-radius:10px;border:1px solid var(--line);background:rgba(14,14,18,.72);color:#fff;font-size:14px}
 #bCam{width:auto;min-width:40px;padding:0 10px;font-size:12px;font-weight:600}
 .toast{position:absolute;top:calc(74px + var(--safe-t));left:50%;transform:translateX(-50%);font-weight:700;font-size:15px;padding:6px 14px;border-radius:10px;background:rgba(0,0,0,.55);opacity:0;transition:opacity .3s}
 .toast.show{opacity:1}
@@ -112,7 +112,7 @@ body.ck .dash .flags{display:none}
 
 .qwarn{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 4px);transform:translateX(-50%);z-index:60;background:rgba(255,59,48,.88);color:#fff;font:600 11px/1.3 -apple-system,system-ui,sans-serif;padding:4px 10px;border-radius:10px;pointer-events:none}
 /* bulle radio de l'ingénieur (style Apple : verre dépoli, coins arrondis, photo ronde) */
-.radiob{position:fixed;top:calc(env(safe-area-inset-top) + 64px);left:calc(env(safe-area-inset-left) + 12px);z-index:55;display:flex;align-items:center;gap:10px;max-width:min(46vw,380px);padding:8px 14px 8px 8px;border-radius:22px;background:rgba(28,28,30,.62);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);border:1px solid rgba(255,255,255,.14);color:#fff;font:500 13px/1.25 -apple-system,system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.35);opacity:0;transform:translateY(-8px) scale(.97);transition:opacity .25s,transform .25s;pointer-events:none}
+.radiob{position:fixed;top:calc(env(safe-area-inset-top) + 64px);left:calc(env(safe-area-inset-left) + 12px);z-index:55;display:flex;align-items:center;gap:10px;max-width:min(46vw,380px);padding:8px 14px 8px 8px;border-radius:22px;background:rgba(28,28,30,.84);border:1px solid rgba(255,255,255,.14);color:#fff;font:500 13px/1.25 -apple-system,system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.35);opacity:0;transform:translateY(-8px) scale(.97);transition:opacity .25s,transform .25s;pointer-events:none}
 .radiob.on{opacity:1;transform:none}
 .radiob img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #00d2be;flex:none}
 .radiob b{display:block;font-size:11px;font-weight:600;color:#00d2be;letter-spacing:.02em;margin-bottom:2px}

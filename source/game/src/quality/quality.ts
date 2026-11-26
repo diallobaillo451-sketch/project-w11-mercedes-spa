@@ -28,13 +28,30 @@ export function defaultQuality(): QualityName {
 // Netteté d'abord : on retire les effets coûteux AVANT de toucher à la résolution, qui ne descend jamais sous 0,85.
 // Si 60 i/s restent hors d'atteinte, la cadence passe à 30 i/s régulières en pleine résolution (lock30) plutôt que de flouter.
 export const ADAPT_LADDER: [number, number][] = [[1, 0], [1, 1], [1, 2], [1, 3], [0.92, 3], [0.85, 3]]
+/** sans GTAO ni bloom (iPhone en Haute) : les paliers 1 et 2 coupent des effets absents et ne changent rien → on les saute, la réaction à une surcharge est 2 à 3× plus rapide */
+export const ADAPT_LADDER_NOPOST: [number, number][] = [[1, 0], [1, 3], [0.92, 3], [0.85, 3]]
 export class AdaptiveResolution {
   step = 0; private acc = 0; private n = 0; private hold = 0
+  private ladder = ADAPT_LADDER
+  private ft = new Float32Array(120); private fti = 0
   /** 60 i/s intenables même sans effets → 30 i/s régulières, résolution pleine */
   lock30 = false
   enabled = true
-  get scale() { return ADAPT_LADDER[this.step][0] }
-  get fx() { return ADAPT_LADDER[this.step][1] }
+  get scale() { return this.ladder[this.step][0] }
+  get fx() { return this.ladder[this.step][1] }
+  /** dernier palier à pleine résolution : au-delà on baisse la résolution, c'est donc ici qu'on bascule à 30 i/s */
+  private get lastFx() { let k = 0; for (let i = 0; i < this.ladder.length; i++) if (this.ladder[i][0] === 1) k = i; return k }
+  /** à appeler une fois le moteur de rendu créé : échelle sans paliers inutiles (n'agit que tant que rien n'a été dégradé) */
+  setNoPost(on: boolean) { const want = on ? ADAPT_LADDER_NOPOST : ADAPT_LADDER; if (want !== this.ladder && this.step === 0 && !this.lock30) this.ladder = want }
+  /** enregistre la durée d'une image (anneau de 120) pour l'overlay de performances */
+  track(ms: number) { this.ft[this.fti++ % 120] = Math.min(ms, 1000) }
+  /** p95 / pire image / images > 25 ms sur les ~2 dernières secondes : la moyenne cache les saccades */
+  stats() {
+    const n = Math.min(this.fti, 120); if (n < 10) return ''
+    const a = Array.from(this.ft.subarray(0, n)).sort((x, y) => x - y)
+    let spikes = 0; for (const v of a) if (v > 25) spikes++
+    return `p95 ${a[Math.floor(n * 0.95)].toFixed(0)} ms · pire ${a[n - 1].toFixed(0)} · >25 ms ×${spikes}`
+  }
   reset() { this.step = 0; this.acc = 0; this.n = 0; this.hold = 0; this.lock30 = false; this.targetMs = this.baseMs }
   baseMs = 1000 / 60
   /** Retourne true si le palier a changé (descend au-delà de 19,5 ms/image, remonte sous 14,5 ms). */
@@ -48,8 +65,8 @@ export class AdaptiveResolution {
     const avg = this.acc / this.n; this.acc = 0; this.n = 0
     const old = this.step
     if (avg > this.targetMs * 1.17) {
-      if (this.step === 3 && !this.lock30 && this.targetMs < 25) { this.lock30 = true; this.targetMs = 1000 / 30; this.step = 1; this.hold = 120; return true }
-      this.step = Math.min(ADAPT_LADDER.length - 1, this.step + 1)
+      if (this.step === this.lastFx && !this.lock30 && this.targetMs < 25) { this.lock30 = true; this.targetMs = 1000 / 30; this.step = this.ladder === ADAPT_LADDER ? 1 : 0; this.hold = 120; return true }
+      this.step = Math.min(this.ladder.length - 1, this.step + 1)
     }
     else if (avg < this.targetMs * 0.87 && this.step > 0) this.step--
     if (old !== this.step) { this.hold = 90; return true }
