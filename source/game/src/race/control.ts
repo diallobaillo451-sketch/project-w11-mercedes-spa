@@ -320,4 +320,22 @@ export class RaceControl {
   }
   msg(text: string, kind: Msg['kind'] = 'info') { this.sim.msg(text, kind) }
   pitExitGreen() { return this.boxLight === 'green' || this.greenT > this.sim.t }
+  bestLap(r: Racer, T: number) {
+    const S = this.sim
+    if (!this.fastest || T < this.fastest.t) { const was = this.fastest; this.fastest = { r, t: T }; if (was && S.kind === 'race' && this.phase === 'racing') this.msg(`Meilleur tour : ${r.code} ${fmtT(T)}`, 'info') }
+  }
+  lapDone(r: Racer, _T: number, _valid: boolean) {
+    const S = this.sim
+    if (S.kind === 'race' && (this.phase === 'racing' || this.phase === 'chequered')) {
+      const ld = S.leader()
+      if (r === ld && r.laps >= S.laps && !S.chequered) { S.chequered = true; this.phase = 'chequered'; this.msg(`DRAPEAU À DAMIER — victoire de ${r.code}`, 'flag') }
+      if (S.chequered && !r.finished) { r.finished = true; r.finishT = S.t; if (!r.player) r.mode = 'cool' }
+      if (this.restartHold && r === ld) this.restartHold = false
+      const k = r as Racer & { _dtLap?: number }
+      if ((r.dtPend > 0 || r.sgPend > 0) && k._dtLap !== undefined && r.laps > k._dtLap && !r.out) { r.out = 'Disqualifié (pénalité non purgée)'; r.mode = r.player ? r.mode : 'dnf'; this.msg(`DRAPEAU NOIR — ${r.code} disqualifié (pénalité non purgée)`, 'pen') }
+      if (S.chequered && S.cars.every(c => c.finished || c.out)) this.phase = 'done'
+    }
+  }
 }
+export function fmtT(t: number) { if (!isFinite(t)) return '—'; const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s.toFixed(3).padStart(6, '0')}` }
+void TYRE
