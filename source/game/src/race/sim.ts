@@ -791,8 +791,8 @@ export class RaceSim {
   focus: Racer | null = null
   /** nombre maximal d'IA en physique complète : 4 en jeu, davantage en mode TV */
   hybridMax = 4
-  /** SAT expérimental : désactivé par défaut jusqu'à correction des impacts répétés. */
-  hullCollisions = false
+  /** SAT activé par défaut pour l'essai; l'application accepte ?hull=0 pour le désactiver. */
+  hullCollisions = true
   private hn = { nx: 0, nz: 0, pen: 0 }
   /** une épave (abandon) encore visible sur la piste est un obstacle plein : plus de traversée */
   private wreckSolid(r: Racer) {

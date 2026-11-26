@@ -134,7 +134,7 @@ function setupField(k: SessionKind | 'demo') {
   }
   const F = game.startField({ kind, laps: run.laps, player, grid, exclude, sessionLen: kind === 'race' ? undefined : run.remaining, posts: marshals })
   F.difficulty = settings.profile.difficulty
-  F.hullCollisions = new URLSearchParams(location.search).get('hull') === '1' // SAT expérimental : désactivé par défaut ; ?hull=1 pour comparer
+  F.hullCollisions = new URLSearchParams(location.search).get('hull') !== '0' // SAT actif par défaut pour le test ; ?hull=0 pour le désactiver
   F.hybridOn = new URLSearchParams(location.search).get('hybrid') !== '0' // ?hybrid=0 : IA en 1D seule (comparer la fluidité)
   if (kind === 'race') F.planRace()
   if (kind === 'race') {
@@ -333,6 +333,16 @@ const aFrame: AudioFrame = { rpm: 0, throttle: 0, speed: 0, slip: 0, kerb: 0, gr
   grass: 0, cam: 'chase', src: [0, 0, 0], fwd: [0, 0, -1], lis: [0, 0, 0], lisF: [0, 0, -1], lisU: [0, 1, 0] }
 const rightV = new THREE.Vector3(), camPrev = new THREE.Vector3(), carW = new THREE.Vector3(), tmp = new THREE.Vector3()
 let last = performance.now(), fpsAcc = 0, fpsN = 0, prevDist = 0
+const frameTimes = new Float32Array(120)
+let frameTimeN = 0
+function trackFrame(ms: number) { frameTimes[frameTimeN++ % frameTimes.length] = Math.min(ms, 1000) }
+function frameStats() {
+  const n = Math.min(frameTimeN, frameTimes.length)
+  if (n < 10) return ''
+  const a = Array.from(frameTimes.subarray(0, n)).sort((x, y) => x - y)
+  let spikes = 0; for (const v of a) if (v > 25) spikes++
+  return `p95 ${a[Math.floor(n * 0.95)].toFixed(0)} ms · pire ${a[n - 1].toFixed(0)} · >25 ms ×${spikes}`
+}
 let skipAcc = 0
 function frame(now: number) {
   requestAnimationFrame(frame)
@@ -451,8 +461,8 @@ function frame(now: number) {
   const dl = game.session.timing.delta, de = $('hDelta'), dtxt = isNaN(dl) || game.autopilot ? '' : (dl >= 0 ? '+' : '−') + Math.abs(dl).toFixed(2)
   if (de.textContent !== dtxt) { de.textContent = dtxt; de.hidden = !dtxt || !fe.hidden; de.className = 'deltachip ' + (dl <= 0 ? 'neg' : 'pos') }
   if (settings.adaptive && adapt.sample(dtMs)) { if (ren.scale !== adapt.scale) ren.setScale(adapt.scale); ren.setFx(adapt.fx) }
-  fpsAcc += dtMs; fpsN++; adapt.track(dtMs)
-  if (fpsN >= 30) { diag.fps = 1000 * fpsN / fpsAcc; if (settings.perf) $('perf').textContent = `${(1000 * fpsN / fpsAcc).toFixed(0)} i/s · ${ren.r.info.render.calls} appels · éch. ${adapt.scale.toFixed(2)} · fx ${adapt.fx} · piste ${ren.tiles?.loaded.size ?? 0}/${ren.tiles?.total ?? 0} · ${adapt.stats()}`; fpsAcc = 0; fpsN = 0 }
+  fpsAcc += dtMs; fpsN++; trackFrame(dtMs)
+  if (fpsN >= 30) { diag.fps = 1000 * fpsN / fpsAcc; if (settings.perf) $('perf').textContent = `${(1000 * fpsN / fpsAcc).toFixed(0)} i/s · ${ren.r.info.render.calls} appels · éch. ${adapt.scale.toFixed(2)} · fx ${adapt.fx} · piste ${ren.tiles?.loaded.size ?? 0}/${ren.tiles?.total ?? 0} · ${frameStats()}`; fpsAcc = 0; fpsN = 0 }
   const ka = $('steerKnob'); ka.style.setProperty('--s', String(st.steer))
 }
 
@@ -724,7 +734,6 @@ async function main() {
     if (!canvas) throw new Error('Canvas de rendu introuvable')
     ren = new Renderer(canvas as HTMLCanvasElement, qn, { safe: diag.safe, mobile: diag.mobile, ktx, onLost: () => gpuLost() })
     ren.onTile = root => bindPit(root)
-    adapt.setNoPost(!ren.q.gtao && !ren.q.bloom)
     diag.preset = (diag.safe ? 'sans échec (' + ren.q.name + ')' : ren.q.name) + ' · DPR max ' + ren.q.dprMax + (ktx ? ' · KTX2' : ' · WebP')
     dlog('préréglage ' + diag.preset)
     await ren.load(game, track, bootProgress)
