@@ -10,6 +10,7 @@
     "test:physics": "node tests/physics.test.ts",
     "test:app": "node tests/app.mjs",
     "test:radio-scripts": "node tests/radio-scripts.test.mjs",
+    "test:ai": "node tests/ai_difficulty.test.ts",
     "zip": "node tools/zip-dist.mjs"
   },
   "dependencies": {

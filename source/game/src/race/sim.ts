@@ -22,6 +22,7 @@ import { RaceControl } from './control.ts'
 import { boxHit, solveImpulse, type Hit } from './contact.ts'
 import { HybridBank, type DriveCmd } from './hybrid.ts'
 import { AI_GRIP, AI_SPREAD, AI_BOOST_T, physKFor } from './tuning.ts'
+import { aiDifficultyTuning } from './ai-difficulty.ts'
 
 interface CBody { r: Racer; v: Vehicle | null; x: number; z: number; fx: number; fz: number; vx: number; vz: number; m: number }
 interface Contact { a: CBody; b: CBody; h: Hit; dv: number }
@@ -264,8 +265,8 @@ export class RaceSim {
     const wet = this.wetness()
     if (wet > 0.15) { const slick = r.tyre.c === 'S' || r.tyre.c === 'M' || r.tyre.c === 'H'; dl += slick ? wet * 28 : r.tyre.c === 'W' && wet < 0.6 ? (0.6 - wet) * 10 : 0; dl += wet * (1.1 - r.sk.wet) * 8 - (r.tyre.c === 'I' || r.tyre.c === 'W' ? ty.delta * Math.min(1, wet * 1.6) : 0) }
     if (this.kind === 'race') dl += r.fuel * 0.008 * this.L / 7004 // IA : même rythme en course qu'en qualif (plus de pénalité mode moteur / gestion de pneus, carburant ÷ 4) ; ancien réglage : // mode moteur course + gestion pneus (≈2 s vs Q, Spa 2020 : tours de course 1:47,5–1:49 vs pole 1:41,25), carburant (E : 0,035 s/kg)
-    const diff = 0.88 + 0.14 * (this.difficulty / 100)
-    return r.kq * T / (T + dl) * diff
+    const difficulty = aiDifficultyTuning(this.difficulty)
+    return r.kq * T / (T + dl) * difficulty.pace
   }
   /** vraie physique (Vehicle) pour cette IA ce pas-ci */
   drives(r: Racer) {
@@ -393,6 +394,7 @@ export class RaceSim {
    *  direction, jamais au freinage), drapeaux bleus et trafic de qualif (on s'écarte), retour sur la trajectoire */
   private tactics(r: Racer, ahead: Racer | null, gA: number, behind: Racer | null, gB: number, dt: number) {
     const C = this.ctrl, ln = this.line, i = r.idx
+    const difficulty = aiDifficultyTuning(this.difficulty)
     r.attackT = Math.max(0, r.attackT - dt); r.yieldT = Math.max(0, r.yieldT - dt); r.sepT = Math.max(0, r.sepT - dt)
     const edgeL = this.track.wlR[i] - 0.9, edgeR = this.track.wrR[i] - 0.9
     // céder le passage (bleu en course, trafic en qualif) : on se range du côté opposé à la trajectoire et on lève le pied
@@ -416,7 +418,7 @@ export class RaceSim {
     }
     if (ahead && gA < 1.2 * Math.max(20, r.v) && C.mayOvertake(r, ahead)) {
       const qi = (i + Math.round(gA / this.ds)) % this.N, pot = Math.min(r.prof.v[qi] * this.paceKCache(r), r.prof.vP[qi]) * (r.drs ? 1.03 : 1)
-      if (pot > ahead.v + 0.4 || C.isBlue(ahead, r) || ahead.mode === 'out' || ahead.mode === 'cool' || ahead.mode === 'in' || ahead.err) {
+      if (pot > ahead.v + difficulty.overtakeMargin || C.isBlue(ahead, r) || ahead.mode === 'out' || ahead.mode === 'cool' || ahead.mode === 'in' || ahead.err) {
         if (r.attackT === 0) {
           // côté : intérieur du prochain virage (point de corde de la trajectoire)
           let apex = i, vmin = 1e9; for (let j = 0; j < 300 / this.ds; j += 4) { const q = (i + j) % this.N; if (ln.v[q] < vmin) { vmin = ln.v[q]; apex = q } }
@@ -425,7 +427,7 @@ export class RaceSim {
           if (ahead.off !== null && (C.isBlue(ahead, r) || ahead.mode !== 'push')) side = ahead.off > ahead.d - 0.01 + (ln.e[i] - ahead.d) * 0 && ahead.off > 0 ? -1 : 1
           r.side = side
         }
-        r.attackT = 1.5
+        r.attackT = difficulty.attackDuration
         r.off = Math.max(-edgeL, Math.min(edgeR, ahead.d + r.side * 2.3))
         return
       }
@@ -475,7 +477,7 @@ export class RaceSim {
     if (r.dmg.fw > 0.3) M *= 1.5
     const late = r.attackT > 0 ? 2.5 : 1, push = r.mode === 'push' ? 1.4 : 1
     if (r.mode === 'sc' || this.ctrl.sc.active || this.ctrl.vsc) M *= 0.15
-    const diffM = 1.5 - 0.95 * (this.difficulty / 100)
+    const diffM = aiDifficultyTuning(this.difficulty).mistakeMultiplier
     const p = (x: number) => this.rng.next() < x * w * M * f * diffM
     const phys = this.drives(r) // voiture physique : ses vrais accidents viennent de la physique (driver.ts), pas de tirages au sort
     if (!phys && p(0.0003 * (wet > 0.3 ? 2 : 1))) { this.crash(r); return }
@@ -535,7 +537,7 @@ export class RaceSim {
       if (now < nowBest) { nowBest = now; nowC = c }
       for (let m = 2; m <= left - 2; m++) { const later = this.stintCost(cur, a0, m, sk) + loss + this.stintCost(c, 0, left - m, sk); if (later < laterBest) laterBest = later }
     }
-    const margin = 0.8 + (100 - this.difficulty) / 100 * 2.5
+    const margin = aiDifficultyTuning(this.difficulty).strategyMargin
     return { pit: nowBest + margin + gain < noStop && nowBest + gain <= laterBest, c: nowC }
   }
   crash(r: Racer) {
@@ -724,27 +726,29 @@ export class RaceSim {
     }
     /* VSC : voir le calcul de relais ci-dessus */
     const threat = this.cars.some(o => o !== r && !o.out && this.road(o.s, r.s) > 0 && this.road(o.s, r.s) < Math.max(40, o.v * 2.4) && o.v > r.v - 2)
-    if (threat && age > ty.cliff * (this.difficulty > 70 ? 0.62 : 0.85) && left > 6 && this.difficulty > 55) r.wantPit = r.wantPit ?? 'undercut'
+    const difficulty = aiDifficultyTuning(this.difficulty).value
+    if (threat && age > ty.cliff * (difficulty > 70 ? 0.62 : 0.85) && left > 6 && difficulty > 55) r.wantPit = r.wantPit ?? 'undercut'
     // règle des 2 gommes (sec) : arrêt obligatoire avant la fin
     if (left === 2 && slick && wet < 0.2 && new Set(r.tyre.used.filter(u => u !== 'I' && u !== 'W')).size < 2) r.wantPit = r.wantPit ?? 'gomme obligatoire'
   }
   /** stratégie de départ : top 10 sur la gomme de leur meilleur Q2 (tendre), les autres choisissent ; 1 arrêt prévu */
   planRace() {
+    const difficulty = aiDifficultyTuning(this.difficulty)
     for (const r of this.cars) {
       if (r.player) continue
       const top10 = r.slot < 10
       r.tyre.c = top10 ? 'S' : this.rng.next() < 0.7 ? 'M' : this.rng.next() < 0.6 ? 'H' : 'S'
-      r.tyre.used = [r.tyre.c]; (r as Racer & { _sb?: number })._sb = (this.rng.next() - 0.5) * 2 * (1 + (100 - this.difficulty) / 100 * 2)
+      r.tyre.used = [r.tyre.c]; (r as Racer & { _sb?: number })._sb = (this.rng.next() - 0.5) * 2 * (1 + (100 - difficulty.value) / 100 * 2)
       const life = TYRE[r.tyre.c].cliff / this.wearScale
-      const agg = 0.55 + 0.4 * (this.difficulty / 100)
-      const two = this.laps >= 20 && this.rng.next() < (this.difficulty > 60 ? 0.45 : 0.15)
+      const agg = difficulty.strategyAggression
+      const two = this.laps >= 20 && this.rng.next() < (difficulty.value > 60 ? 0.45 : 0.15)
       if (two) {
         const a = Math.max(2, Math.round(this.laps * (0.28 + this.rng.next() * 0.08)))
         const b = Math.max(a + 2, Math.round(this.laps * (0.62 + this.rng.next() * 0.08)))
         r.plan = [{ lap: a, c: 'M' }, { lap: Math.min(this.laps - 2, b), c: 'H' }]
       } else {
         let lap = Math.round(Math.min(this.laps - 2, Math.max(2, life * (0.7 + this.rng.next() * 0.3 * agg))))
-        if (this.rng.next() < (this.difficulty < 50 ? 0.22 : 0.08)) lap = Math.max(2, Math.min(this.laps - 1, lap + (this.rng.next() < 0.5 ? -2 : 3)))
+        if (this.rng.next() < (difficulty.value < 50 ? 0.22 : 0.08)) lap = Math.max(2, Math.min(this.laps - 1, lap + (this.rng.next() < 0.5 ? -2 : 3)))
         const second: Comp = r.tyre.c === 'H' ? 'M' : (this.laps - lap) * this.wearScale > 24 ? 'H' : 'M'
         r.plan = [{ lap, c: second }]
       }
