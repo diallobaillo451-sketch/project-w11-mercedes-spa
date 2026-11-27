@@ -43,6 +43,7 @@ export class Radio {
     this.out = ctx.createGain(); this.out.gain.value = this.volume * 1.4
     hp.connect(lp); lp.connect(pk); pk.connect(sh); sh.connect(cp); cp.connect(this.out); this.out.connect(dest)
     ;(this as unknown as { inp: AudioNode }).inp = hp
+    void this.pump()
   }
   setVolume(v: number) { this.volume = v; if (this.out) this.out.gain.value = v * 1.4 }
   private buf(r: Rng, source: Source = 'primary'): Promise<AudioBuffer> {

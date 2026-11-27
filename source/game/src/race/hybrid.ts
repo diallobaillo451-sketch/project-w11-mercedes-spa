@@ -59,12 +59,19 @@ export class HybridBank {
     near.clear()
     for (const r of next) near.add(r.i)
     const want = new Set(next)
-    for (const s of this.slots) if (s.r && !want.has(s.r)) { s.r.q = null; s.r = null }
+    for (const s of this.slots) if (s.r && !want.has(s.r)) { this.release(sim, s) }
     for (const r of next) {
       if (this.slots.some(x => x.r === r)) continue
       const s = this.slots.find(x => !x.r)
       if (s) this.assign(sim, s, r)
     }
+  }
+  /** retour au modèle 1D : la dérive latérale reprend le cap réel de la voiture (la voiture 1D se dessine « tangente + dérive ») → pas de saut de cap visible */
+  private release(sim: RaceSim, s: Slot) {
+    const r = s.r; if (!r) return
+    const c = sim.track.centre(r.s), R = s.v.R, hx = -R[6], hz = -R[8], n = Math.hypot(hx, hz)
+    if (n > 1e-6 && r.v > 3) { const a = Math.atan2((hx * -c.tz + hz * c.tx) / n, (hx * c.tx + hz * c.tz) / n); if (Number.isFinite(a) && Math.abs(a) < 0.5) r.lat = r.v * Math.tan(a) }
+    r.q = null; s.r = null
   }
   /** une IA passe en physique : gomme + température du modèle 1D, pièces neuves puis dégâts du modèle 1D, cap de la ligne de course, batterie pleine */
   private assign(sim: RaceSim, s: Slot, r: Racer) {
@@ -80,7 +87,8 @@ export class HybridBank {
     // cap : direction de la ligne de course (pas de coup de volant à l'apparition)
     const L = sim.line, T = sim.track, N = L.N, i = r.idx, a = (i + 4) % N, b = (i - 4 + N) % N
     const lx = L.x[a] - L.x[b], lz = L.z[a] - L.z[b]
-    const yaw = r.v > 5 ? Math.atan2(T.tx[i] * lz - T.tz[i] * lx, T.tx[i] * lx + T.tz[i] * lz) : 0
+    // cap affiché en 1D (tangente + dérive) : promotion sans saut visible ; dérive extrême → direction de la ligne.
+    const yaw1D = Math.atan2(r.lat, Math.max(3, r.v)), yaw = r.v > 5 ? (Math.abs(r.lat) < r.v * 0.4 ? yaw1D : Math.atan2(T.tx[i] * lz - T.tz[i] * lx, T.tx[i] * lx + T.tz[i] * lz)) : 0
     v.placeAt(r.s, r.d, Math.max(0, r.v), yaw)
     v.fuel = W11.fuelQuali
     v.ers.soc = 3.4e6; v.ers.newLap()
@@ -93,7 +101,7 @@ export class HybridBank {
     for (const s of this.slots) {
       const r = s.r
       if (!r) continue
-      if (!sim.near.has(r.i) || !sim.onTrack(r)) { r.q = null; s.r = null; continue }
+      if (!sim.near.has(r.i) || !sim.onTrack(r)) { this.release(sim, s); continue }
       const v = s.v
       v.fuel = W11.fuelQuali // IA : masse d'essence du profil de vitesse, en course comme en qualif (même rythme) ; qualif / essais : la masse du profil de vitesse (essence de qualif), pas les 30 kg du modèle 1D
       v.damage.frontWing = Math.max(v.damage.frontWing, r.dmg.fw)

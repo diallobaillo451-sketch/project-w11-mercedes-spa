@@ -733,6 +733,34 @@ export class Vehicle {
     this.impact = Math.max(this.impact, Math.min(1, dvn / 15)); this.impactPos = [this.pos[0] - nx, this.pos[1], this.pos[2] - nz]; this.hitKind = 5
     this.applyHit(dvn, part, [-nx, 0, -nz])
   }
+  private _c3 = [0, 0, 0]
+  /** centre géométrique de l'empreinte au sol (monde, plan XZ) : le CdG est décalé du centre du modèle (contacts entre voitures) */
+  centreXZ(out: number[]) { const w = this.toWorld(-this.cg[0], 0, -this.cg[2], this._c3); out[0] = this.pos[0] + w[0]; out[1] = this.pos[2] + w[2]; return out }
+  /** vitesse monde (x, z) du point lié à la voiture situé en (rx, rz) du CdG (même convention que les chocs contre les murs) */
+  pointVel(rx: number, rz: number, out: number[]) {
+    const wW = this.toWorld(this.wb[0], this.wb[1], this.wb[2], this._c3)
+    out[0] = this.vel[0] + wW[1] * rz; out[1] = this.vel[2] - wW[1] * rx
+    return out
+  }
+  /** inverse de la masse effective (1/kg) pour une impulsion le long de n (monde, plan) appliquée au point relatif (rx, rz) : masse + inertie */
+  invMassAt(nx: number, nz: number, rx: number, rz: number) {
+    const I = W11.inertia, R = this.R, a = rz * nx - rx * nz // (r × n) est vertical ; passage au repère caisse
+    const bx = R[1] * a, by = R[4] * a, bz = R[7] * a
+    return 1 / this.mass + bx * bx / I.pitch + by * by / I.yaw + bz * bz / I.roll
+  }
+  /** impulsion monde (Jx, Jz) en kg·m/s au point relatif (rx, rz) : vitesse + vitesse de rotation (ramenée à la hauteur du CdG : pas de retournement parasite) */
+  applyImpulse(rx: number, rz: number, Jx: number, Jz: number) {
+    const I = W11.inertia, R = this.R, tq = rz * Jx - rx * Jz
+    this.vel[0] += Jx / this.mass; this.vel[2] += Jz / this.mass
+    this.wb[0] += R[1] * tq / I.pitch; this.wb[1] += R[4] * tq / I.yaw; this.wb[2] += R[7] * tq / I.roll
+  }
+  /** effets + dégâts d'un choc contre une autre voiture (l'impulsion est appliquée par le solveur de sim.ts, via applyImpulse).
+   *  n = normale monde de l'AUTRE voiture vers celle-ci, dvn = vitesse normale de rapprochement (m/s), part = zone touchée (voir applyHit) */
+  carContact(nx: number, nz: number, rx: number, rz: number, dvn: number, part: number) {
+    if (dvn <= 0) return
+    this.impact = Math.max(this.impact, Math.min(1, dvn / 15)); this.impactPos = [this.pos[0] + rx, this.pos[1], this.pos[2] + rz]; this.hitKind = 5
+    this.applyHit(dvn, part, [-nx, 0, -nz])
+  }
   /** pièces qui se détachent (une seule fois chacune) → débris (pos/vitesse monde) pour le rendu et la piste */
   private emitDebris(pa: number[]) {
     const D = this.damage, v = this.vel

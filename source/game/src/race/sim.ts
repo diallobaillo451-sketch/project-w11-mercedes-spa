@@ -19,8 +19,12 @@ import type { Vehicle } from '../physics/vehicle.ts'
 import { drsZones, type SessionKind } from '../core/session.ts'
 import { SPA_Q, POLE_2020, SKILL, PIT_CREW, RELIAB, GARAGE_ORDER, TYRE, type Comp, type Skill } from './data.ts'
 import { RaceControl } from './control.ts'
+import { boxHit, solveImpulse, type Hit } from './contact.ts'
 import { HybridBank, type DriveCmd } from './hybrid.ts'
 import { AI_GRIP, AI_SPREAD, AI_BOOST_T, physKFor } from './tuning.ts'
+
+interface CBody { r: Racer; v: Vehicle | null; x: number; z: number; fx: number; fz: number; vx: number; vz: number; m: number }
+interface Contact { a: CBody; b: CBody; h: Hit; dv: number }
 
 export class Rng {
   s: number
@@ -746,8 +750,13 @@ export class RaceSim {
       }
     }
   }
-  // ───────────── contacts
+  // ───────────── contacts : SAT et impulsions si activés ; le mode diagnostic legacy reste disponible.
   private contacts() {
+    if (!this.hullCollisions) { this.legacyContacts(); return }
+    this.rigidContacts()
+  }
+  // ───────────── contacts
+  private legacyContacts() {
     const A = this.cars
     // joueur ↔ voitures : enveloppes orientées en repère monde (SAT), avant les contacts en repère piste
     if (this.hullCollisions && this.hybridOn && this.player.player && this.vehicle) for (const o of A) if (o !== this.player) this.hullContact(this.player, o)
@@ -864,6 +873,104 @@ export class RaceSim {
     }
     const rearIsPlayer = !side && fwd < 0
     this.contactDamage(rearIsPlayer ? pl : ai, rearIsPlayer ? ai : pl, dvn, side)
+  }
+  private cBodies: CBody[] = []
+  private cPool: CBody[] = []
+  private cHits: Contact[] = []
+  private cSeen = new Map<number, number>()
+  private cT = [0, 0]; private cLa = [0, 0]; private cLb = [0, 0]; private cVa = [0, 0]; private cVb = [0, 0]
+  private cBody(r: Racer, k: number): CBody | null {
+    const b = (this.cPool[k] ??= { r, v: null, x: 0, z: 0, fx: 0, fz: 1, vx: 0, vz: 0, m: 790 })
+    b.r = r
+    const v = r.player ? this.vehicle : this.hybridBank && this.hybridOn ? this.hybridBank.vehicleOf(r) : null
+    if (v) {
+      const R = v.R, fx = -R[6], fz = -R[8], n = Math.hypot(fx, fz)
+      if (!(n > 1e-6)) return null
+      v.centreXZ(this.cT); b.v = v; b.x = this.cT[0]; b.z = this.cT[1]; b.fx = fx / n; b.fz = fz / n; b.vx = v.vel[0]; b.vz = v.vel[2]; b.m = v.mass
+      return Number.isFinite(b.x + b.z + b.vx + b.vz) ? b : null
+    }
+    b.v = null; b.m = 790
+    if (r.player) { b.x = r.wx; b.z = r.wz; b.fx = r.hx; b.fz = r.hz; b.vx = r.v * r.hx; b.vz = r.v * r.hz; return b }
+    const c = this.track.centre(r.s), c2 = this.track.centre(this.wrapS(r.s + 3)), rx = -c.tz, rz = c.tx
+    b.x = c.x + rx * r.d; b.z = c.z + rz * r.d
+    const a = r.mode === 'spun' ? r.spin : Math.atan2(r.lat, Math.max(3, r.v)), ca = Math.cos(a), sa = Math.sin(a) // même cap que pose()
+    b.fx = c.tx * ca + rx * sa; b.fz = c.tz * ca + rz * sa
+    // vitesse monde : r.v est l'avance le long de l'axe de la piste → le long de la tangente × (1 − κ·d) (plus lent à l'intérieur d'une courbe), + dérive latérale
+    const kap = Math.atan2(c.tx * c2.tz - c.tz * c2.tx, c.tx * c2.tx + c.tz * c2.tz) / 3, sp = r.v * Math.max(0.3, 1 - kap * r.d)
+    b.vx = c.tx * sp + rx * r.lat; b.vz = c.tz * sp + rz * r.lat
+    return Number.isFinite(b.x + b.z + b.fx + b.fz + b.vx + b.vz) ? b : null
+  }
+  private rigidContacts() {
+    // Les épaves restent des obstacles immobiles, selon le comportement actuel.
+    if (this.hybridOn && this.player.player && this.vehicle) for (const r of this.cars) {
+      if (r !== this.player && r.mode === 'dnf' && this.wreckSolid(r)) this.hullContact(this.player, r)
+    }
+    const B = this.cBodies; B.length = 0
+    for (const r of this.cars) { if (!this.onTrack(r) || r.mode === 'dnf') continue; const b = this.cBody(r, B.length); if (b) B.push(b) }
+    const H = this.cHits; H.length = 0
+    for (let i = 0; i < B.length; i++) for (let j = i + 1; j < B.length; j++) {
+      const a = B[i], b = B[j]
+      if (Math.abs(a.x - b.x) > 6.2 || Math.abs(a.z - b.z) > 6.2) continue
+      const h = boxHit(a, b); if (h) H.push({ a, b, h, dv: 0 })
+    }
+    if (!H.length) return
+    for (let it = 0; it < 2; it++) for (const c of H) if (c.a.v || c.b.v) this.cSolveVel(c, it === 0)
+    for (const c of H) this.cSolvePos(c)
+    for (const c of H) this.cReport(c)
+  }
+  private cLever(b: CBody, h: Hit, out: number[]) { if (b.v) { out[0] = h.px - b.v.pos[0]; out[1] = h.pz - b.v.pos[2] } else { out[0] = 0; out[1] = 0 } return out }
+  private cSolveVel(c: Contact, first: boolean) {
+    const { a, b, h } = c, la = this.cLever(a, h, this.cLa), lb = this.cLever(b, h, this.cLb), va = this.cVa, vb = this.cVb
+    if (a.v) a.v.pointVel(la[0], la[1], va); else { va[0] = a.vx; va[1] = a.vz }
+    if (b.v) b.v.pointVel(lb[0], lb[1], vb); else { vb[0] = b.vx; vb[1] = b.vz }
+    const iA = a.v ? a.v.invMassAt(h.nx, h.nz, la[0], la[1]) : 1 / a.m, iB = b.v ? b.v.invMassAt(h.nx, h.nz, lb[0], lb[1]) : 1 / b.m
+    const s = solveImpulse(h.nx, h.nz, vb[0] - va[0], vb[1] - va[1], iA, iB)
+    if (!s) return
+    if (first) c.dv = -s.vn
+    const Jx = s.j * h.nx + s.jt * s.tx, Jz = s.j * h.nz + s.jt * s.tz
+    this.cGive(b, lb, Jx, Jz); this.cGive(a, la, -Jx, -Jz)
+  }
+  private cGive(b: CBody, l: number[], Jx: number, Jz: number) {
+    if (b.v) { b.v.applyImpulse(l[0], l[1], Jx, Jz); return }
+    const dx = Jx / b.m, dz = Jz / b.m, r = b.r
+    b.vx += dx; b.vz += dz
+    r.v = Math.max(0, r.v + dx * b.fx + dz * b.fz) // composante longitudinale
+    r.lat += -dx * b.fz + dz * b.fx // composante latérale (vers la droite de la voiture)
+  }
+  private cShift(b: CBody, dx: number, dz: number) {
+    b.x += dx; b.z += dz
+    if (b.v) { b.v.pos[0] += dx; b.v.pos[2] += dz; b.r.wx = b.v.pos[0]; b.r.wz = b.v.pos[2]; return }
+    const r = b.r, c = this.track.centre(r.s), ds = dx * c.tx + dz * c.tz, dd = dx * -c.tz + dz * c.tx
+    r.s = this.wrapS(r.s + ds); r.dist += ds; r.d += dd
+    if (!r.player) { r.off = r.d; r.sepT = 0.4 } // la trajectoire voulue suit le décalage un instant
+  }
+  private cSolvePos(c: Contact) {
+    const { a, b, h } = c, k = Math.min(Math.max(0.15, Math.min(1.2, c.dv * 0.02)), Math.max(0, h.depth - 0.01) * 0.6) // plafond : 15 cm / pas, davantage à grande vitesse de choc
+    if (k <= 0) return
+    const sa = a.r.player ? 0.3 : b.r.player ? 0.7 : 0.5
+    this.cShift(a, -h.nx * k * sa, -h.nz * k * sa); this.cShift(b, h.nx * k * (1 - sa), h.nz * k * (1 - sa))
+  }
+  /** dégâts (zone touchée, effets) sur les corps rigides, puis dégâts du modèle 1D et règles (commissaires) : une fois par accrochage, pas à chaque pas */
+  private cReport(c: Contact) {
+    const { a, b, h } = c
+    const key = a.r.i * 64 + b.r.i, was = this.cSeen.get(key); this.cSeen.set(key, this.t)
+    const side = Math.abs(h.nx * a.fx + h.nz * a.fz) < 0.55 || Math.abs(h.nx * b.fx + h.nz * b.fz) < 0.55
+    const bAhead = (b.x - a.x) * a.fx + (b.z - a.z) * a.fz > 0
+    const rear = bAhead ? a : b, front = bAhead ? b : a
+    let dv = c.dv
+    if (!a.v && !b.v) { // deux IA 1D : écarts de vitesse du modèle piste (comme avant)
+      const dr = (x: Racer) => (x as Racer & { _dr?: number })._dr ?? 0
+      dv = side ? Math.min(6, Math.abs(dr(b.r) - dr(a.r))) : Math.max(0, rear.r.v - front.r.v)
+      if (!side) { rear.r.v = Math.min(rear.r.v, Math.max(0, front.r.v - 0.6)) } // pas de ricochet : l'arrière ne dépasse pas l'avant
+    }
+    if (dv < 0.3 || (was !== undefined && this.t >= was && this.t - was < 0.3 && dv < 8)) return // contact qui dure : déjà signalé
+    for (const [x, sg] of [[a, -1], [b, 1]] as [CBody, number][]) {
+      const v = x.v; if (!v) continue
+      const ntx = h.nx * sg, ntz = h.nz * sg, R = v.R, fwd = -(R[6] * ntx + R[8] * ntz), right = R[0] * ntx + R[2] * ntz
+      const part = side ? (right > 0 ? (fwd < 0 ? 10 : 12) : (fwd < 0 ? 11 : 13)) : fwd < 0 ? 1 : (this.rng.next() < 0.5 ? 2 : 12 + (right > 0 ? 0 : 1))
+      v.carContact(ntx, ntz, h.px - v.pos[0], h.pz - v.pos[2], dv, part)
+    }
+    this.contactDamage(rear.r, front.r, side && (a.v || b.v) ? dv * 1.5 : dv, side)
   }
   private contactDamage(rear: Racer, front: Racer, dv: number, side: boolean) {
     if ((globalThis as any).process?.env?.CDBG && dv > 2.5) console.log('CONTACT', this.t.toFixed(2), rear.code, front.code, 'dv', dv.toFixed(1), 'side', side, 's', rear.s.toFixed(0), front.s.toFixed(0), 'd', rear.d.toFixed(2), front.d.toFixed(2), 'v', rear.v.toFixed(1), front.v.toFixed(1), rear.mode, front.mode, rear.off?.toFixed(1), front.off?.toFixed(1), rear.err?.kind, front.err?.kind)
